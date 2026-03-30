@@ -40,8 +40,8 @@ object AppContainer {
     val schoolRepository: SchoolRepository by lazy {
         SchoolRepositoryImpl(
             apiService = neisApiService,
-            officeCode = "T10",
-            schoolCode = "9290083"
+            officeCode = "J10",
+            schoolCode = "7679399"
         )
     }
 }

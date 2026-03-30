@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="timetable_card_radius">20dp</dimen>
+    <dimen name="timetable_card_stroke">1dp</dimen>
+    <dimen name="timetable_row_spacing">10dp</dimen>
+    <dimen name="timetable_row_padding_horizontal">16dp</dimen>
+    <dimen name="timetable_row_padding_vertical">14dp</dimen>
+    <dimen name="timetable_period_badge_width">68dp</dimen>
+    <dimen name="timetable_period_badge_height">36dp</dimen>
+    <dimen name="timetable_subject_margin_start">14dp</dimen>
+</resources>

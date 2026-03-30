@@ -16,6 +16,9 @@ import com.bsbarron.midschoolapp.ui.home.HomeViewModel
 import com.bsbarron.midschoolapp.ui.home.HomeViewModelFactory
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private lateinit var homeViewModel: HomeViewModel
@@ -36,11 +39,18 @@ class MainActivity : AppCompatActivity() {
         )[HomeViewModel::class.java]
 
         val classSummaryText: TextView = findViewById(R.id.classSummaryText)
+        val dateLabelText: TextView = findViewById(R.id.dateLabelText)
         val todaySummaryText: TextView = findViewById(R.id.todaySummaryText)
+        val mealMetaText: TextView = findViewById(R.id.mealMetaText)
         val mealMenuText: TextView = findViewById(R.id.mealMenuText)
-        val scheduleTitleText: TextView = findViewById(R.id.scheduleTitleText)
+        val scheduleSummaryText: TextView = findViewById(R.id.scheduleSummaryText)
         val settingsButton: MaterialButton = findViewById(R.id.settingsButton)
         val timetableButton: MaterialButton = findViewById(R.id.openTimetableButton)
+        val scheduleButton: MaterialButton = findViewById(R.id.openScheduleButton)
+
+        dateLabelText.text = LocalDate.now().format(
+            DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
+        )
 
         classSummaryText.text = getString(
             R.string.home_student_info_format,
@@ -56,15 +66,23 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, TimetableActivity::class.java))
         }
 
+        scheduleButton.setOnClickListener {
+            startActivity(Intent(this, ScheduleActivity::class.java))
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 homeViewModel.uiState.collect { state ->
                     if (state.mealSummary.isNotBlank()) {
-                        mealMenuText.text = state.mealSummary.replace("<br/>", "\n")
+                        mealMenuText.text = state.mealSummary
+                    }
+
+                    if (state.mealMeta.isNotBlank()) {
+                        mealMetaText.text = state.mealMeta
                     }
 
                     if (state.eventSummary.isNotBlank()) {
-                        scheduleTitleText.text = state.eventSummary
+                        scheduleSummaryText.text = state.eventSummary
                     }
 
                     if (state.errorMessage != null) {

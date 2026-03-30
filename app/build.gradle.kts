@@ -1,6 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { input ->
+            load(input)
+        }
+    }
+}
+
+val neisApiKey = localProperties.getProperty("NEIS_API_KEY", "")
 
 android {
     namespace = "com.bsbarron.midschoolapp"
@@ -19,7 +32,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "NEIS_BASE_URL", "\"https://open.neis.go.kr/\"")
-        buildConfigField("String", "NEIS_API_KEY", "\"sample\"")
+        buildConfigField("String", "NEIS_API_KEY", "\"$neisApiKey\"")
     }
 
     buildTypes {

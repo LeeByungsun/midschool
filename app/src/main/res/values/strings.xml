@@ -6,7 +6,7 @@
     <string name="home_student_info_format">%1$s학년 %2$s반</string>
     <string name="home_today_summary_title">오늘의 학교생활</string>
     <string name="home_today_summary_body">오늘 급식과 학사 일정을 먼저 확인하고, 시간표는 별도 화면에서 자세히 볼 수 있어요.</string>
-    <string name="home_today_summary_error">나이스 데이터를 아직 연결하지 않았거나 인증키가 설정되지 않아 샘플 홈 화면으로 표시 중입니다.</string>
+    <string name="home_today_summary_error">나이스 데이터를 불러오지 못해 일부 정보는 기본 화면으로 표시 중입니다.</string>
     <string name="home_settings_button">설정</string>
     <string name="home_timetable_title">오늘 시간표</string>
     <string name="home_timetable_button">시간표 보러 가기</string>
@@ -14,10 +14,8 @@
     <string name="home_meal_menu">잡곡밥, 근대된장국, 제육볶음, 계란말이, 배추김치, 요구르트</string>
     <string name="home_meal_meta">점심 • 842 kcal</string>
     <string name="home_schedule_title">학사 일정</string>
-    <string name="home_schedule_item_1">학생자치회의</string>
-    <string name="home_schedule_item_1_detail">점심시간 이후 시청각실</string>
-    <string name="home_schedule_item_2">동아리 신청 마감</string>
-    <string name="home_schedule_item_2_detail">오늘 오후 5시까지 제출</string>
+    <string name="home_schedule_button">월간 일정 보기</string>
+    <string name="home_schedule_empty">이번 달 일정이 여기에 표시됩니다.</string>
     <string name="home_timer_title">집중력 타이머</string>
     <string name="home_timer_time">25:00</string>
     <string name="home_timer_subtitle">하교 후 수학 복습 1세트</string>
@@ -38,5 +36,19 @@
     <string name="settings_saved">설정이 저장되었어요.</string>
     <string name="settings_back">뒤로 가기</string>
     <string name="timetable_title">시간표</string>
-    <string name="timetable_placeholder">이 화면에 학년과 반에 맞는 일별 시간표를 넣을 예정입니다. 다음 단계에서 나이스 API와 연결하면 실제 시간표가 표시됩니다.</string>
+    <string name="timetable_loading">시간표를 불러오는 중입니다.</string>
+    <string name="timetable_empty">이 날짜에는 등록된 시간표가 없어요.</string>
+    <string name="timetable_error">시간표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</string>
+    <string name="timetable_previous_day">이전 날</string>
+    <string name="timetable_next_day">다음 날</string>
+    <string name="timetable_today">오늘</string>
+    <string name="timetable_missing_student_info">설정에서 학년과 반을 먼저 입력해 주세요.</string>
+    <string name="timetable_period_format">%1$s교시</string>
+    <string name="timetable_no_subject">과목 정보 없음</string>
+    <string name="schedule_previous_month">이전 달</string>
+    <string name="schedule_next_month">다음 달</string>
+    <string name="schedule_month_placeholder">2026년 3월</string>
+    <string name="schedule_loading">학사 일정을 불러오는 중입니다.</string>
+    <string name="schedule_empty_month">이 달에는 등록된 학사 일정이 없어요.</string>
+    <string name="schedule_no_title">행사명 없음</string>
 </resources>
