@@ -18,9 +18,16 @@
     <string name="home_schedule_empty">이번 달 일정이 여기에 표시됩니다.</string>
     <string name="home_timer_title">집중력 타이머</string>
     <string name="home_timer_time">25:00</string>
-    <string name="home_timer_subtitle">하교 후 수학 복습 1세트</string>
+    <string name="home_timer_subtitle">집중 프리셋을 선택해 시작해 보세요.</string>
     <string name="home_timer_start">시작</string>
-    <string name="home_timer_preset">45분 모드</string>
+    <string name="home_timer_pause">일시정지</string>
+    <string name="home_timer_resume">계속</string>
+    <string name="home_timer_restart">다시 시작</string>
+    <string name="home_timer_reset">초기화</string>
+    <string name="home_timer_remaining">남은 시간</string>
+    <string name="home_timer_focus_label">집중 40분</string>
+    <string name="home_timer_break_label">휴식 10분</string>
+    <string name="home_timer_deep_label">초집중 25분</string>
     <string name="splash_subtitle">시간표, 급식, 일정, 집중력 타이머를 한곳에서</string>
     <string name="setup_title">처음 설정</string>
     <string name="setup_description">앱에서 시간표와 학교 정보를 맞춤으로 보여주기 위해 학년과 반을 먼저 입력해 주세요.</string>
@@ -32,6 +39,12 @@
     <string name="setup_error_empty">학년과 반을 모두 입력해 주세요.</string>
     <string name="settings_title">설정</string>
     <string name="settings_description">학년과 반을 수정하면 시간표와 학교 정보 조회 기준도 함께 바뀝니다.</string>
+    <string name="settings_timer_display_title">타이머 표시 방식</string>
+    <string name="settings_timer_display_count">숫자 카운트로 보기</string>
+    <string name="settings_timer_display_ring">원형 진행으로 보기</string>
+    <string name="settings_timer_alert_title">타이머 완료 알림</string>
+    <string name="settings_timer_alert_notification">알림음 사용</string>
+    <string name="settings_timer_alert_vibration">진동 사용</string>
     <string name="settings_save_button">저장하기</string>
     <string name="settings_saved">설정이 저장되었어요.</string>
     <string name="settings_back">뒤로 가기</string>
@@ -51,4 +64,8 @@
     <string name="schedule_loading">학사 일정을 불러오는 중입니다.</string>
     <string name="schedule_empty_month">이 달에는 등록된 학사 일정이 없어요.</string>
     <string name="schedule_no_title">행사명 없음</string>
+    <string name="timer_notification_title">집중 타이머가 끝났어요</string>
+    <string name="timer_notification_body">설정한 시간이 모두 지나서 알려드려요.</string>
+    <string name="timer_notification_channel_name">집중 타이머 알림</string>
+    <string name="timer_notification_channel_description">집중 타이머 완료 시 알림과 진동을 보냅니다.</string>
 </resources>

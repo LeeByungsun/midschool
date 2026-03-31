@@ -81,6 +81,62 @@
             android:textColor="@color/text_primary"
             android:textColorHint="@color/text_secondary" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="@string/settings_timer_display_title"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/timerDisplayCountRadio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_timer_display_count"
+                android:textColor="@color/text_primary" />
+
+            <RadioButton
+                android:id="@+id/timerDisplayRingRadio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/settings_timer_display_ring"
+                android:textColor="@color/text_primary" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="@string/settings_timer_alert_title"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Switch
+            android:id="@+id/timerNotificationSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/settings_timer_alert_notification"
+            android:textColor="@color/text_primary" />
+
+        <Switch
+            android:id="@+id/timerVibrationSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_timer_alert_vibration"
+            android:textColor="@color/text_primary" />
+
         <Button
             android:id="@+id/saveSettingsButton"
             android:layout_width="match_parent"
