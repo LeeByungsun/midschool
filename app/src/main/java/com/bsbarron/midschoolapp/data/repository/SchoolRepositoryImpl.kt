@@ -4,11 +4,13 @@ import com.bsbarron.midschoolapp.data.model.MealInfo
 import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
+import javax.inject.Inject
+import javax.inject.Named
 
-class SchoolRepositoryImpl(
+class SchoolRepositoryImpl @Inject constructor(
     private val apiService: NeisApiService,
-    private val officeCode: String,
-    private val schoolCode: String
+    @param:Named("officeCode") private val officeCode: String,
+    @param:Named("schoolCode") private val schoolCode: String
 ) : SchoolRepository {
 
     override suspend fun getMeals(date: String?): Result<List<MealInfo>> = runCatching {

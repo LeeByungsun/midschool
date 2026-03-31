@@ -15,19 +15,24 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.bsbarron.midschoolapp.MainActivity
 import com.bsbarron.midschoolapp.R
-import com.bsbarron.midschoolapp.UserPreferences
+import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class TimerAlarmReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) {
-        UserPreferences.clearTimerState(context)
+    @Inject lateinit var preferencesRepository: PreferencesRepository
 
-        if (!UserPreferences.isTimerNotificationEnabled(context)) {
+    override fun onReceive(context: Context, intent: Intent?) {
+        preferencesRepository.clearTimerState()
+
+        if (!preferencesRepository.isTimerNotificationEnabled()) {
             return
         }
 
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val vibrationEnabled = UserPreferences.isTimerVibrationEnabled(context)
+        val vibrationEnabled = preferencesRepository.isTimerVibrationEnabled()
         val channelId = if (vibrationEnabled) CHANNEL_VIBRATE else CHANNEL_SOUND_ONLY
         createChannel(notificationManager, context, channelId, vibrationEnabled)
 
