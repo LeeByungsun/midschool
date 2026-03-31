@@ -6,15 +6,19 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.bsbarron.midschoolapp.data.AppContainer
+import com.bsbarron.midschoolapp.data.repository.SchoolRepository
 import com.bsbarron.midschoolapp.util.isVisibleSchedule
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ScheduleActivity : AppCompatActivity() {
+    @Inject lateinit var schoolRepository: SchoolRepository
     private lateinit var monthTitleText: TextView
     private lateinit var scheduleListText: TextView
     private var currentMonth: YearMonth = YearMonth.now()
@@ -51,7 +55,7 @@ class ScheduleActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val monthKey = currentMonth.format(DateTimeFormatter.ofPattern("yyyyMM"))
-            val result = AppContainer.schoolRepository.getSchedules(monthKey)
+            val result = schoolRepository.getSchedules(monthKey)
             val schedules = result.getOrDefault(emptyList())
                 .filter { it.isVisibleSchedule() }
                 .sortedBy { it.date }

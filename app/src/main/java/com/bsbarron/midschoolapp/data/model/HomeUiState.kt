@@ -1,6 +1,9 @@
 package com.bsbarron.midschoolapp.data.model
 
 data class HomeUiState(
+    val dateLabel: String = "",
+    val classSummary: String = "",
+    val todaySummaryText: String = "",
     val mealSummary: String = "",
     val mealMeta: String = "",
     val eventSummary: String = "",

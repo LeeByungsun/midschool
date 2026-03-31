@@ -3,113 +3,59 @@ package com.bsbarron.midschoolapp
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.LinearLayout
-import android.widget.ImageButton
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import com.bsbarron.midschoolapp.data.AppContainer
+import androidx.lifecycle.repeatOnLifecycle
+import com.bsbarron.midschoolapp.data.model.TimetableItem
+import com.bsbarron.midschoolapp.ui.timetable.TimetableViewModel
 import com.google.android.material.card.MaterialCardView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
+@AndroidEntryPoint
 class TimetableActivity : AppCompatActivity() {
-    private lateinit var dateTitleText: TextView
-    private lateinit var classInfoText: TextView
-    private lateinit var statusText: TextView
+    private val viewModel: TimetableViewModel by viewModels()
     private lateinit var timetableContainer: LinearLayout
-    private var currentDate: LocalDate = LocalDate.now()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_timetable)
 
-        val backButton: ImageButton = findViewById(R.id.timetableBackButton)
-        val previousDayButton: TextView = findViewById(R.id.previousDayButton)
-        val todayButton: TextView = findViewById(R.id.todayButton)
-        val nextDayButton: TextView = findViewById(R.id.nextDayButton)
-        dateTitleText = findViewById(R.id.timetableDateTitleText)
-        classInfoText = findViewById(R.id.timetableClassInfoText)
-        statusText = findViewById(R.id.timetableStatusText)
+        val backButton = findViewById<android.widget.ImageButton>(R.id.timetableBackButton)
+        val previousDayButton = findViewById<TextView>(R.id.previousDayButton)
+        val todayButton = findViewById<TextView>(R.id.todayButton)
+        val nextDayButton = findViewById<TextView>(R.id.nextDayButton)
+        val dateTitleText = findViewById<TextView>(R.id.timetableDateTitleText)
+        val classInfoText = findViewById<TextView>(R.id.timetableClassInfoText)
+        val statusText = findViewById<TextView>(R.id.timetableStatusText)
         timetableContainer = findViewById(R.id.timetableContainer)
 
         backButton.setOnClickListener { finish() }
-        previousDayButton.setOnClickListener {
-            currentDate = currentDate.minusDays(1)
-            loadTimetable()
-        }
-        todayButton.setOnClickListener {
-            currentDate = LocalDate.now()
-            loadTimetable()
-        }
-        nextDayButton.setOnClickListener {
-            currentDate = currentDate.plusDays(1)
-            loadTimetable()
-        }
-
-        loadTimetable()
-    }
-
-    private fun loadTimetable() {
-        val grade = UserPreferences.getGrade(this)
-        val classroom = UserPreferences.getClassroom(this)
-
-        dateTitleText.text = currentDate.format(
-            DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
-        )
-        classInfoText.text = if (grade.isNotBlank() && classroom.isNotBlank()) {
-            getString(R.string.home_student_info_format, grade, classroom)
-        } else {
-            getString(R.string.timetable_missing_student_info)
-        }
-
-        if (grade.isBlank() || classroom.isBlank()) {
-            timetableContainer.removeAllViews()
-            statusText.text = getString(R.string.timetable_missing_student_info)
-            return
-        }
-
-        statusText.text = getString(R.string.timetable_loading)
-        timetableContainer.removeAllViews()
+        previousDayButton.setOnClickListener { viewModel.showPreviousDay() }
+        todayButton.setOnClickListener { viewModel.showToday() }
+        nextDayButton.setOnClickListener { viewModel.showNextDay() }
 
         lifecycleScope.launch {
-            val result = AppContainer.schoolRepository.getTimetable(
-                grade = grade,
-                classroom = classroom,
-                date = currentDate.format(DateTimeFormatter.BASIC_ISO_DATE)
-            )
-
-            val items = result.getOrDefault(emptyList())
-                .sortedWith(
-                    compareBy(
-                        { it.period.toIntOrNull() ?: Int.MAX_VALUE },
-                        { it.period }
-                    )
-                )
-
-            when {
-                result.isFailure -> {
-                    statusText.text = getString(R.string.timetable_error)
-                }
-
-                items.isEmpty() -> {
-                    statusText.text = getString(R.string.timetable_empty)
-                }
-
-                else -> {
-                    statusText.text = ""
-                    items.forEach { item ->
-                        timetableContainer.addView(createTimetableRow(item.period, item.subject))
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    dateTitleText.text = state.dateTitle
+                    classInfoText.text = state.classInfoText
+                    statusText.text = state.statusText
+                    timetableContainer.removeAllViews()
+                    state.items.forEach { item ->
+                        timetableContainer.addView(createTimetableRow(item))
                     }
                 }
             }
         }
     }
 
-    private fun createTimetableRow(period: String, subject: String): MaterialCardView {
+    private fun createTimetableRow(item: TimetableItem): MaterialCardView {
         val context = this
         val card = MaterialCardView(context).apply {
             radius = resources.getDimension(R.dimen.timetable_card_radius)
@@ -137,7 +83,7 @@ class TimetableActivity : AppCompatActivity() {
         }
 
         val periodBadge = TextView(context).apply {
-            text = getString(R.string.timetable_period_format, period)
+            text = getString(R.string.timetable_period_format, item.period)
             gravity = Gravity.CENTER
             setTextColor(getColor(R.color.white))
             setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13f)
@@ -150,7 +96,7 @@ class TimetableActivity : AppCompatActivity() {
         }
 
         val subjectText = TextView(context).apply {
-            text = subject.ifBlank { getString(R.string.timetable_no_subject) }
+            text = item.subject.ifBlank { getString(R.string.timetable_no_subject) }
             setTextColor(getColor(R.color.text_primary))
             setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16f)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
