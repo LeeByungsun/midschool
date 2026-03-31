@@ -19,12 +19,12 @@ val neisApiKey = localProperties.getProperty("NEIS_API_KEY", "")
 
 android {
     namespace = "com.bsbarron.midschoolapp"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.bsbarron.midschoolapp"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
