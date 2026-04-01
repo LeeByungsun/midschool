@@ -2,46 +2,78 @@ package com.bsbarron.midschoolapp
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import androidx.activity.viewModels
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import com.bsbarron.midschoolapp.databinding.ActivityMainBinding
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bsbarron.midschoolapp.data.model.HomeUiState
+import com.bsbarron.midschoolapp.ui.compose.PrimaryButton
+import com.bsbarron.midschoolapp.ui.compose.ScreenScaffold
+import com.bsbarron.midschoolapp.ui.compose.SectionCard
+import com.bsbarron.midschoolapp.ui.compose.TimerRing
 import com.bsbarron.midschoolapp.ui.home.HomeViewModel
 import com.bsbarron.midschoolapp.ui.timer.TimerPreset
+import com.bsbarron.midschoolapp.ui.timer.TimerUiState
 import com.bsbarron.midschoolapp.ui.timer.TimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
     private val homeViewModel: HomeViewModel by viewModels()
     private val timerViewModel: TimerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.lifecycleOwner = this
+        setContent {
+            val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
+            val timerState by timerViewModel.uiState.collectAsStateWithLifecycle()
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+            LaunchedEffect(Unit) {
+                homeViewModel.loadHomeData()
+            }
+
+            MainScreen(
+                homeState = homeState,
+                timerState = timerState,
+                onSettingsClick = {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                },
+                onOpenTimetable = {
+                    startActivity(Intent(this, TimetableActivity::class.java))
+                },
+                onOpenSchedule = {
+                    startActivity(Intent(this, ScheduleActivity::class.java))
+                },
+                onPresetSelected = timerViewModel::selectPreset,
+                onTimerPrimaryClick = timerViewModel::toggleTimer,
+                onTimerResetClick = timerViewModel::resetTimer
+            )
         }
-
-        bindClicks()
-        bindHomeState()
-        bindTimerState()
-
-        homeViewModel.loadHomeData()
     }
 
     override fun onResume() {
@@ -49,70 +81,157 @@ class MainActivity : AppCompatActivity() {
         homeViewModel.refreshHeader()
         timerViewModel.refreshDisplayMode()
     }
+}
 
-    private fun bindClicks() {
-        binding.settingsButton.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
-        binding.openTimetableButton.setOnClickListener {
-            startActivity(Intent(this, TimetableActivity::class.java))
-        }
-        binding.openScheduleButton.setOnClickListener {
-            startActivity(Intent(this, ScheduleActivity::class.java))
-        }
-        binding.focusPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.FOCUS) }
-        binding.breakPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.BREAK) }
-        binding.deepPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.DEEP_FOCUS) }
-        binding.timerPrimaryButton.setOnClickListener { timerViewModel.toggleTimer() }
-        binding.timerResetButton.setOnClickListener { timerViewModel.resetTimer() }
-    }
-
-    private fun bindHomeState() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                homeViewModel.uiState.collect { state ->
-                    binding.dateLabelText.text = state.dateLabel
-                    binding.classSummaryText.text = state.classSummary
-                    binding.todaySummaryText.text = state.todaySummaryText
-                    if (state.mealSummary.isNotBlank()) binding.mealMenuText.text = state.mealSummary
-                    if (state.mealMeta.isNotBlank()) binding.mealMetaText.text = state.mealMeta
-                    if (state.eventSummary.isNotBlank()) binding.scheduleSummaryText.text = state.eventSummary
-                }
+@Composable
+private fun MainScreen(
+    homeState: HomeUiState,
+    timerState: TimerUiState,
+    onSettingsClick: () -> Unit,
+    onOpenTimetable: () -> Unit,
+    onOpenSchedule: () -> Unit,
+    onPresetSelected: (TimerPreset) -> Unit,
+    onTimerPrimaryClick: () -> Unit,
+    onTimerResetClick: () -> Unit
+) {
+    ScreenScaffold(
+        title = stringResourceSafe(R.string.app_name),
+        actions = {
+            OutlinedButton(onClick = onSettingsClick) {
+                Text(text = stringResourceSafe(R.string.home_settings_button))
             }
         }
-    }
-
-    private fun bindTimerState() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                timerViewModel.uiState.collect { state ->
-                    binding.timerCountText.text = state.displayTimeText
-                    binding.timerSubtitleText.text = state.subtitle
-                    binding.timerPrimaryButton.text = getString(state.buttonTextRes)
-                    binding.timerRingView.setTimerState(
-                        progressFraction = state.progressFraction,
-                        timeText = state.displayTimeText,
-                        labelText = getString(R.string.home_timer_remaining)
+    ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            item {
+                SectionCard(
+                    title = stringResourceSafe(R.string.home_school_name),
+                    subtitle = homeState.dateLabel
+                ) {
+                    Text(
+                        text = homeState.classSummary,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
-                    binding.timerCountText.visibility = if (state.isCountMode) View.VISIBLE else View.GONE
-                    binding.timerRingView.visibility = if (state.isCountMode) View.GONE else View.VISIBLE
-                    updatePresetSelection(state.selectedPreset)
+                    Text(
+                        text = homeState.todaySummaryText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
+            item {
+                SectionCard(
+                    title = stringResourceSafe(R.string.home_meal_title),
+                    subtitle = homeState.mealMeta
+                ) {
+                    Text(text = homeState.mealSummary)
+                }
+            }
+            item {
+                SectionCard(
+                    title = stringResourceSafe(R.string.home_schedule_title),
+                    subtitle = null
+                ) {
+                    Text(text = homeState.eventSummary)
+                    PrimaryButton(
+                        text = stringResourceSafe(R.string.home_schedule_button),
+                        onClick = onOpenSchedule
+                    )
+                }
+            }
+            item {
+                SectionCard(
+                    title = stringResourceSafe(R.string.home_timetable_title),
+                    subtitle = null
+                ) {
+                    Text(
+                        text = homeState.classSummary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    PrimaryButton(
+                        text = stringResourceSafe(R.string.home_timetable_button),
+                        onClick = onOpenTimetable
+                    )
+                }
+            }
+            item {
+                TimerSection(
+                    state = timerState,
+                    onPresetSelected = onPresetSelected,
+                    onPrimaryClick = onTimerPrimaryClick,
+                    onResetClick = onTimerResetClick
+                )
+            }
         }
-    }
-
-    private fun updatePresetSelection(selectedPreset: TimerPreset) {
-        val selectedColor = getColor(R.color.brand_blue_soft)
-        val defaultColor = getColor(R.color.surface_card)
-        binding.focusPresetCard.setCardBackgroundColor(
-            if (selectedPreset == TimerPreset.FOCUS) selectedColor else defaultColor
-        )
-        binding.breakPresetCard.setCardBackgroundColor(
-            if (selectedPreset == TimerPreset.BREAK) selectedColor else defaultColor
-        )
-        binding.deepPresetCard.setCardBackgroundColor(
-            if (selectedPreset == TimerPreset.DEEP_FOCUS) selectedColor else defaultColor
-        )
     }
 }
+
+@Composable
+private fun TimerSection(
+    state: TimerUiState,
+    onPresetSelected: (TimerPreset) -> Unit,
+    onPrimaryClick: () -> Unit,
+    onResetClick: () -> Unit
+) {
+    SectionCard(
+        title = stringResourceSafe(R.string.home_timer_title),
+        subtitle = state.subtitle
+    ) {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TimerPreset.entries.forEach { preset ->
+                val isSelected = state.selectedPreset == preset
+                AssistChip(
+                    onClick = { onPresetSelected(preset) },
+                    label = { Text(text = stringResourceSafe(preset.subtitleRes)) },
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                if (isSelected) {
+                    Text(
+                        text = "",
+                        modifier = Modifier.width(0.dp)
+                    )
+                }
+            }
+        }
+
+        if (state.isCountMode) {
+            Text(
+                text = state.displayTimeText,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            TimerRing(
+                progressFraction = state.progressFraction,
+                timeText = state.displayTimeText,
+                labelText = stringResourceSafe(R.string.home_timer_remaining),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            PrimaryButton(
+                text = stringResourceSafe(state.buttonTextRes),
+                onClick = onPrimaryClick,
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedButton(
+                onClick = onResetClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+            ) {
+                Text(text = stringResourceSafe(R.string.home_timer_reset))
+            }
+        }
+    }
+}
+
+@Composable
+private fun stringResourceSafe(resId: Int): String = androidx.compose.ui.res.stringResource(id = resId)

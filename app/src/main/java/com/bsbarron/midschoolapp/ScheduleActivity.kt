@@ -1,85 +1,72 @@
 package com.bsbarron.midschoolapp
 
 import android.os.Bundle
-import android.widget.ImageButton
-import android.widget.TextView
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.bsbarron.midschoolapp.data.repository.SchoolRepository
-import com.bsbarron.midschoolapp.util.isVisibleSchedule
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bsbarron.midschoolapp.ui.compose.ScreenScaffold
+import com.bsbarron.midschoolapp.ui.compose.ScrollColumn
+import com.bsbarron.midschoolapp.ui.compose.SectionCard
+import com.bsbarron.midschoolapp.ui.schedule.ScheduleUiState
+import com.bsbarron.midschoolapp.ui.schedule.ScheduleViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScheduleActivity : AppCompatActivity() {
-    @Inject lateinit var schoolRepository: SchoolRepository
-    private lateinit var monthTitleText: TextView
-    private lateinit var scheduleListText: TextView
-    private var currentMonth: YearMonth = YearMonth.now()
+    private val viewModel: ScheduleViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_schedule)
-
-        val backButton: ImageButton = findViewById(R.id.scheduleBackButton)
-        val previousButton: TextView = findViewById(R.id.previousMonthButton)
-        val nextButton: TextView = findViewById(R.id.nextMonthButton)
-        monthTitleText = findViewById(R.id.scheduleMonthTitleText)
-        scheduleListText = findViewById(R.id.scheduleListText)
-
-        backButton.setOnClickListener { finish() }
-        previousButton.setOnClickListener {
-            currentMonth = currentMonth.minusMonths(1)
-            loadSchedule()
+        setContent {
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            ScheduleScreen(
+                uiState = uiState,
+                onBack = ::finish,
+                onPreviousMonth = viewModel::showPreviousMonth,
+                onNextMonth = viewModel::showNextMonth
+            )
         }
-        nextButton.setOnClickListener {
-            currentMonth = currentMonth.plusMonths(1)
-            loadSchedule()
-        }
-
-        loadSchedule()
     }
+}
 
-    private fun loadSchedule() {
-        monthTitleText.text = currentMonth.format(
-            DateTimeFormatter.ofPattern("yyyy년 M월", Locale.KOREAN)
-        )
-        scheduleListText.text = getString(R.string.schedule_loading)
-
-        lifecycleScope.launch {
-            val monthKey = currentMonth.format(DateTimeFormatter.ofPattern("yyyyMM"))
-            val result = schoolRepository.getSchedules(monthKey)
-            val schedules = result.getOrDefault(emptyList())
-                .filter { it.isVisibleSchedule() }
-                .sortedBy { it.date }
-
-            scheduleListText.text = if (schedules.isEmpty()) {
-                getString(R.string.schedule_empty_month)
-            } else {
-                schedules.joinToString("\n\n") { event ->
-                    val dateLabel = runCatching {
-                        LocalDate.parse(event.date, DateTimeFormatter.BASIC_ISO_DATE).format(
-                            DateTimeFormatter.ofPattern("M월 d일 (E)", Locale.KOREAN)
-                        )
-                    }.getOrDefault(event.date)
-
-                    buildString {
-                        append(dateLabel)
-                        append("\n")
-                        append(event.title.ifBlank { getString(R.string.schedule_no_title) })
-                        if (event.description.isNotBlank()) {
-                            append("\n")
-                            append(event.description)
-                        }
+@Composable
+private fun ScheduleScreen(
+    uiState: ScheduleUiState,
+    onBack: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit
+) {
+    ScreenScaffold(
+        title = androidx.compose.ui.res.stringResource(R.string.home_schedule_title),
+        onBack = onBack
+    ) {
+        ScrollColumn {
+            SectionCard(title = uiState.monthTitle) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(onClick = onPreviousMonth) {
+                        Text(text = androidx.compose.ui.res.stringResource(R.string.schedule_previous_month))
+                    }
+                    OutlinedButton(onClick = onNextMonth) {
+                        Text(text = androidx.compose.ui.res.stringResource(R.string.schedule_next_month))
                     }
                 }
+                Text(text = uiState.scheduleText)
             }
         }
     }
