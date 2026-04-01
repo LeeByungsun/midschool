@@ -21,6 +21,7 @@ class SettingsActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_settings)
 
+        // 설정 화면은 입력값이 많아서 항목별 위젯을 분명하게 나눠 잡아둔다.
         val backButton = findViewById<android.widget.ImageButton>(R.id.backButton)
         val gradeInput = findViewById<android.widget.EditText>(R.id.settingsGradeInput)
         val classInput = findViewById<android.widget.EditText>(R.id.settingsClassInput)
@@ -33,6 +34,7 @@ class SettingsActivity : AppCompatActivity() {
         backButton.setOnClickListener { finish() }
 
         saveButton.setOnClickListener {
+            // 저장 직전의 화면 값만 ViewModel에 전달해 단일 저장 경로를 유지한다.
             viewModel.updateGrade(gradeInput.text.toString().trim())
             viewModel.updateClassroom(classInput.text.toString().trim())
             viewModel.updateDisplayMode(ringModeRadio.isChecked)
@@ -46,6 +48,8 @@ class SettingsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
+                    // 이미 반영된 텍스트를 다시 setText 하지 않도록 비교해
+                    // 커서 위치가 불필요하게 흔들리는 문제를 막는다.
                     viewModel.uiState.collect { state ->
                         if (gradeInput.text.toString() != state.grade) {
                             gradeInput.setText(state.grade)
@@ -60,11 +64,13 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
                 launch {
+                    // 저장 결과 메시지는 상태와 분리된 이벤트로 처리한다.
                     viewModel.messageEvent.collect { messageRes ->
                         Toast.makeText(this@SettingsActivity, messageRes, Toast.LENGTH_SHORT).show()
                     }
                 }
                 launch {
+                    // 저장 완료 후 닫기까지 ViewModel 이벤트를 통해 일관되게 제어한다.
                     viewModel.closeEvent.collect {
                         finish()
                     }

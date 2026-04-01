@@ -18,6 +18,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScheduleActivity : AppCompatActivity() {
+    // 이 화면은 단순 조회 성격이라 별도 ViewModel 대신 Repository를 직접 주입받아 사용한다.
     @Inject lateinit var schoolRepository: SchoolRepository
     private lateinit var monthTitleText: TextView
     private lateinit var scheduleListText: TextView
@@ -28,6 +29,7 @@ class ScheduleActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_schedule)
 
+        // 월 이동과 목록 표시만 필요하므로 최소한의 뷰 참조만 잡아둔다.
         val backButton: ImageButton = findViewById(R.id.scheduleBackButton)
         val previousButton: TextView = findViewById(R.id.previousMonthButton)
         val nextButton: TextView = findViewById(R.id.nextMonthButton)
@@ -48,6 +50,7 @@ class ScheduleActivity : AppCompatActivity() {
     }
 
     private fun loadSchedule() {
+        // 먼저 현재 월 제목과 로딩 문구를 보여주고, 이후 비동기 결과로 내용을 교체한다.
         monthTitleText.text = currentMonth.format(
             DateTimeFormatter.ofPattern("yyyy년 M월", Locale.KOREAN)
         )
@@ -56,6 +59,7 @@ class ScheduleActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val monthKey = currentMonth.format(DateTimeFormatter.ofPattern("yyyyMM"))
             val result = schoolRepository.getSchedules(monthKey)
+            // 필터링과 정렬을 Activity 쪽에서 한 번 더 보장해 화면 표시 규칙을 명확히 한다.
             val schedules = result.getOrDefault(emptyList())
                 .filter { it.isVisibleSchedule() }
                 .sortedBy { it.date }

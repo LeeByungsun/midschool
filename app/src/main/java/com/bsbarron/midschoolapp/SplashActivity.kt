@@ -24,6 +24,7 @@ class SplashActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // 스플래시는 목적지만 ViewModel이 결정하고, 실제 화면 전환은 Activity가 맡는다.
                 viewModel.navigationEvent.collect { destination ->
                     val nextActivity = when (destination) {
                         SplashDestination.MAIN -> MainActivity::class.java
@@ -35,6 +36,7 @@ class SplashActivity : AppCompatActivity() {
             }
         }
 
+        // 진입 직후 다음 화면 판단을 시작해 스플래시 노출 시간을 일정하게 유지한다.
         viewModel.decideNextScreen()
     }
 }

@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class TimetableActivity : AppCompatActivity() {
     private val viewModel: TimetableViewModel by viewModels()
+    // 시간표 행은 런타임에 동적으로 추가되므로 컨테이너를 필드로 보관한다.
     private lateinit var timetableContainer: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +27,7 @@ class TimetableActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_timetable)
 
+        // 날짜 탐색 버튼과 결과 표시 영역을 분리해서 읽기 쉽게 연결한다.
         val backButton = findViewById<android.widget.ImageButton>(R.id.timetableBackButton)
         val previousDayButton = findViewById<TextView>(R.id.previousDayButton)
         val todayButton = findViewById<TextView>(R.id.todayButton)
@@ -42,6 +44,7 @@ class TimetableActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // 날짜가 바뀔 때마다 기존 행을 비우고 현재 상태의 시간표를 다시 그린다.
                 viewModel.uiState.collect { state ->
                     dateTitleText.text = state.dateTitle
                     classInfoText.text = state.classInfoText
@@ -57,6 +60,8 @@ class TimetableActivity : AppCompatActivity() {
 
     private fun createTimetableRow(item: TimetableItem): MaterialCardView {
         val context = this
+        // XML RecyclerView 없이도 교시별 카드를 즉석에서 만들 수 있도록
+        // 카드, 배지, 과목명을 코드로 조합한다.
         val card = MaterialCardView(context).apply {
             radius = resources.getDimension(R.dimen.timetable_card_radius)
             cardElevation = 0f
