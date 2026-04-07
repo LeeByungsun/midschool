@@ -58,6 +58,7 @@
     <string name="timetable_missing_student_info">설정에서 학년과 반을 먼저 입력해 주세요.</string>
     <string name="timetable_period_format">%1$s교시</string>
     <string name="timetable_no_subject">과목 정보 없음</string>
+    <string name="timetable_lesson_count_empty">등록된 수업을 확인하는 중이에요.</string>
     <string name="schedule_previous_month">이전 달</string>
     <string name="schedule_next_month">다음 달</string>
     <string name="schedule_month_placeholder">2026년 3월</string>

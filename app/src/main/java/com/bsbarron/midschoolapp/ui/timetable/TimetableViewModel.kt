@@ -63,11 +63,13 @@ class TimetableViewModel @Inject constructor(
                 } else {
                     appContext.getString(R.string.timetable_missing_student_info)
                 },
+                lessonCountText = appContext.getString(R.string.timetable_lesson_count_empty),
                 statusText = if (grade.isBlank() || classroom.isBlank()) {
                     appContext.getString(R.string.timetable_missing_student_info)
                 } else {
                     appContext.getString(R.string.timetable_loading)
                 },
+                showTodayButton = currentDate != LocalDate.now(),
                 items = emptyList()
             )
         }
@@ -91,6 +93,15 @@ class TimetableViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
+                    lessonCountText = if (items.isEmpty()) {
+                        appContext.getString(R.string.timetable_lesson_count_empty)
+                    } else {
+                        appContext.resources.getQuantityString(
+                            R.plurals.timetable_lesson_count,
+                            items.size,
+                            items.size
+                        )
+                    },
                     statusText = when {
                         result.isFailure -> appContext.getString(R.string.timetable_error)
                         items.isEmpty() -> appContext.getString(R.string.timetable_empty)

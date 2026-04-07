@@ -7,5 +7,6 @@
     <dimen name="timetable_row_padding_vertical">14dp</dimen>
     <dimen name="timetable_period_badge_width">68dp</dimen>
     <dimen name="timetable_period_badge_height">36dp</dimen>
+    <dimen name="timetable_period_badge_radius">18dp</dimen>
     <dimen name="timetable_subject_margin_start">14dp</dimen>
 </resources>

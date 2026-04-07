@@ -1,7 +1,9 @@
 package com.bsbarron.midschoolapp
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.Gravity
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -16,6 +18,7 @@ import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.databinding.ActivityTimetableBinding
 import com.bsbarron.midschoolapp.ui.timetable.TimetableViewModel
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.shape.ShapeAppearanceModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -59,7 +62,14 @@ class TimetableActivity : AppCompatActivity() {
                 viewModel.uiState.collect { state ->
                     binding.timetableDateTitleText.text = state.dateTitle
                     binding.timetableClassInfoText.text = state.classInfoText
+                    binding.timetableLessonCountText.text = state.lessonCountText
                     binding.timetableStatusText.text = state.statusText
+                    binding.timetableStatusText.visibility = if (state.statusText.isBlank()) {
+                        View.GONE
+                    } else {
+                        View.VISIBLE
+                    }
+                    binding.todayButton.visibility = if (state.showTodayButton) View.VISIBLE else View.GONE
                     timetableContainer.removeAllViews()
                     state.items.forEach { item ->
                         timetableContainer.addView(createTimetableRow(item))
@@ -101,20 +111,32 @@ class TimetableActivity : AppCompatActivity() {
         val periodBadge = TextView(context).apply {
             text = getString(R.string.timetable_period_format, item.period)
             gravity = Gravity.CENTER
-            setTextColor(getColor(R.color.white))
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextColor(getColor(R.color.brand_navy))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
-            background = getDrawable(R.drawable.ic_launcher_background)
             layoutParams = LinearLayout.LayoutParams(
                 resources.getDimensionPixelSize(R.dimen.timetable_period_badge_width),
                 resources.getDimensionPixelSize(R.dimen.timetable_period_badge_height)
             )
         }
 
+        val badgeCard = MaterialCardView(context).apply {
+            radius = resources.getDimension(R.dimen.timetable_period_badge_radius)
+            cardElevation = 0f
+            strokeWidth = resources.getDimensionPixelSize(R.dimen.timetable_card_stroke)
+            setCardBackgroundColor(getColor(R.color.white))
+            strokeColor = getColor(R.color.divider_soft)
+            shapeAppearanceModel = ShapeAppearanceModel.builder()
+                .setAllCornerSizes(resources.getDimension(R.dimen.timetable_period_badge_radius))
+                .build()
+            layoutParams = periodBadge.layoutParams
+            addView(periodBadge)
+        }
+
         val subjectText = TextView(context).apply {
             text = item.subject.ifBlank { getString(R.string.timetable_no_subject) }
             setTextColor(getColor(R.color.text_primary))
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(
                 0,
@@ -125,7 +147,7 @@ class TimetableActivity : AppCompatActivity() {
             }
         }
 
-        row.addView(periodBadge)
+        row.addView(badgeCard)
         row.addView(subjectText)
         card.addView(row)
         return card
