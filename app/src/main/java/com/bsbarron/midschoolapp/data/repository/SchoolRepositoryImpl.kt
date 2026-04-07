@@ -12,27 +12,45 @@ import javax.inject.Named
 
 class SchoolRepositoryImpl @Inject constructor(
     private val apiService: NeisApiService,
+    private val preferencesRepository: PreferencesRepository,
     @param:Named("officeCode") private val officeCode: String,
     @param:Named("schoolCode") private val schoolCode: String
 ) : SchoolRepository {
 
-    override suspend fun getMeals(date: String?): Result<List<MealInfo>> = runCatching {
-        extractRows(
-            sections = apiService.getMeals(
-                officeCode = officeCode,
-                schoolCode = schoolCode,
-                date = date
-            ).mealServiceDietInfo,
-            dataLabel = "급식"
-        )
-            .map { row ->
-                MealInfo(
-                    date = row.mealDate,
-                    mealType = row.mealTypeName.orEmpty(),
-                    menu = row.menu.orEmpty(),
-                    calorieInfo = row.calorieInfo.orEmpty()
-                )
+    override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
+        val cacheKey = date
+        val networkResult = runCatching {
+            extractRows(
+                sections = apiService.getMeals(
+                    officeCode = officeCode,
+                    schoolCode = schoolCode,
+                    date = date
+                ).mealServiceDietInfo,
+                dataLabel = "급식"
+            )
+                .map { row ->
+                    MealInfo(
+                        date = row.mealDate,
+                        mealType = row.mealTypeName.orEmpty(),
+                        menu = row.menu.orEmpty(),
+                        calorieInfo = row.calorieInfo.orEmpty()
+                    )
+                }
+        }
+
+        networkResult.getOrNull()?.let { meals ->
+            if (!cacheKey.isNullOrBlank()) {
+                preferencesRepository.saveMealCache(cacheKey, meals)
             }
+            return Result.success(meals)
+        }
+
+        val cachedMeals = cacheKey?.let(preferencesRepository::getMealCache)
+        return if (!cachedMeals.isNullOrEmpty()) {
+            Result.success(cachedMeals)
+        } else {
+            Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("급식 정보를 불러오지 못했어요."))
+        }
     }
 
     override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> = runCatching {
@@ -57,26 +75,45 @@ class SchoolRepositoryImpl @Inject constructor(
         grade: String,
         classroom: String,
         date: String?
-    ): Result<List<TimetableItem>> = runCatching {
-        extractRows(
-            sections = apiService.getTimetable(
-                officeCode = officeCode,
-                schoolCode = schoolCode,
-                grade = grade,
-                classroom = classroom,
-                date = date
-            ).misTimetable,
-            dataLabel = "시간표"
-        )
-            .map { row ->
-                TimetableItem(
-                    date = row.date,
-                    period = row.period.orEmpty(),
-                    subject = row.subject.orEmpty(),
-                    grade = row.grade.orEmpty(),
-                    classroom = row.classroom.orEmpty()
-                )
+    ): Result<List<TimetableItem>> {
+        val cacheKey = date
+        val networkResult = runCatching {
+            extractRows(
+                sections = apiService.getTimetable(
+                    officeCode = officeCode,
+                    schoolCode = schoolCode,
+                    grade = grade,
+                    classroom = classroom,
+                    date = date
+                ).misTimetable,
+                dataLabel = "시간표"
+            )
+                .map { row ->
+                    TimetableItem(
+                        date = row.date,
+                        period = row.period.orEmpty(),
+                        subject = row.subject.orEmpty(),
+                        grade = row.grade.orEmpty(),
+                        classroom = row.classroom.orEmpty()
+                    )
+                }
+        }
+
+        networkResult.getOrNull()?.let { items ->
+            if (!cacheKey.isNullOrBlank()) {
+                preferencesRepository.saveTimetableCache(grade, classroom, cacheKey, items)
             }
+            return Result.success(items)
+        }
+
+        val cachedItems = cacheKey?.let {
+            preferencesRepository.getTimetableCache(grade, classroom, it)
+        }
+        return if (!cachedItems.isNullOrEmpty()) {
+            Result.success(cachedItems)
+        } else {
+            Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("시간표 정보를 불러오지 못했어요."))
+        }
     }
 
     private fun <T> extractRows(

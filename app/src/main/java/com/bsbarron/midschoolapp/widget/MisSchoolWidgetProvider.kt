@@ -5,27 +5,23 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 import com.bsbarron.midschoolapp.R
 import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
 import com.bsbarron.midschoolapp.data.repository.SchoolRepository
-import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.inject.Inject
 
-@AndroidEntryPoint
 class MisSchoolWidgetProvider : AppWidgetProvider() {
-
-    @Inject
-    lateinit var schoolRepository: SchoolRepository
-
-    @Inject
-    lateinit var preferencesRepository: PreferencesRepository
 
     override fun onUpdate(
         context: Context,
@@ -51,17 +47,35 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        val preferencesRepository = dependencies(context).preferencesRepository()
+        appWidgetIds.forEach(preferencesRepository::clearWidgetSettings)
+    }
+
     private fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
+        val schoolRepository = dependencies(context).schoolRepository()
+        val preferencesRepository = dependencies(context).preferencesRepository()
+
         fun createBaseViews(): RemoteViews {
             return RemoteViews(context.packageName, R.layout.widget_home).apply {
                 val today = LocalDate.now()
+                val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
                 setTextViewText(
                     R.id.widgetDateText,
                     today.format(DateTimeFormatter.ofPattern("🗓️ 오늘 (M/d)", Locale.KOREAN))
+                )
+                setViewVisibility(
+                    R.id.widgetTomorrowSection,
+                    if (widgetSettings.showTomorrowTimetable) View.VISIBLE else View.GONE
+                )
+                setViewVisibility(
+                    R.id.widgetTimetableDivider,
+                    if (widgetSettings.showTomorrowTimetable) View.VISIBLE else View.GONE
                 )
                 val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
                     action = ACTION_REFRESH
@@ -72,13 +86,27 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 setOnClickPendingIntent(R.id.widgetRefreshButton, pendingIntent)
+
+                val configIntent = Intent(context, WidgetConfigActivity::class.java).apply {
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                val configPendingIntent = PendingIntent.getActivity(
+                    context,
+                    appWidgetId + CONFIG_REQUEST_CODE_OFFSET,
+                    configIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                setOnClickPendingIntent(R.id.widgetSettingsButton, configPendingIntent)
             }
         }
 
         val loadingViews = createBaseViews()
-        loadingViews.setTextViewText(R.id.widgetTimetableText, "불러오는 중...")
-        loadingViews.setTextViewText(R.id.widgetTomorrowTimetableText, "불러오는 중...")
-        loadingViews.setTextViewText(R.id.widgetMealText, "")
+        loadingViews.setTextViewText(R.id.widgetTimetableText, context.getString(R.string.widget_loading))
+        loadingViews.setTextViewText(
+            R.id.widgetTomorrowTimetableText,
+            context.getString(R.string.widget_loading)
+        )
         appWidgetManager.updateAppWidget(appWidgetId, loadingViews)
 
         val pendingResult = goAsync()
@@ -86,6 +114,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val studentInfo = preferencesRepository.getStudentInfo()
+                val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
                 val grade = studentInfo.grade
                 val classroom = studentInfo.classroom
 
@@ -99,7 +128,6 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                         R.id.widgetTomorrowTimetableText,
                         context.getString(R.string.widget_requires_student_info)
                     )
-                    setupViews.setTextViewText(R.id.widgetMealText, "")
                     appWidgetManager.updateAppWidget(appWidgetId, setupViews)
                     return@launch
                 }
@@ -111,7 +139,6 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 
                 val timetableResultToday = schoolRepository.getTimetable(grade, classroom, todayStr)
                 val timetableResultTomorrow = schoolRepository.getTimetable(grade, classroom, tomorrowStr)
-                val mealsResult = schoolRepository.getMeals(todayStr)
 
                 val timetableTextToday = formatTimetableText(
                     result = timetableResultToday,
@@ -121,15 +148,12 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     result = timetableResultTomorrow,
                     context = context
                 )
-                val mealText = formatMealText(
-                    result = mealsResult,
-                    context = context
-                )
 
                 val finalViews = createBaseViews()
                 finalViews.setTextViewText(R.id.widgetTimetableText, timetableTextToday)
-                finalViews.setTextViewText(R.id.widgetTomorrowTimetableText, timetableTextTomorrow)
-                finalViews.setTextViewText(R.id.widgetMealText, mealText)
+                if (widgetSettings.showTomorrowTimetable) {
+                    finalViews.setTextViewText(R.id.widgetTomorrowTimetableText, timetableTextTomorrow)
+                }
                 appWidgetManager.updateAppWidget(appWidgetId, finalViews)
 
             } catch (e: Exception) {
@@ -142,7 +166,6 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     R.id.widgetTomorrowTimetableText,
                     e.message ?: context.getString(R.string.widget_retry_hint)
                 )
-                errViews.setTextViewText(R.id.widgetMealText, context.getString(R.string.widget_retry_hint))
                 appWidgetManager.updateAppWidget(appWidgetId, errViews)
             } finally {
                 pendingResult.finish()
@@ -157,38 +180,48 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         result.exceptionOrNull()?.message?.let { return it }
         val items = result.getOrNull().orEmpty()
             .sortedBy { it.period.toIntOrNull() ?: Int.MAX_VALUE }
-            .mapNotNull { item -> item.subject.takeIf { subject -> subject.isNotBlank() } }
+            .mapNotNull { item ->
+                item.subject.takeIf { subject -> subject.isNotBlank() }?.let { subject ->
+                    val period = item.period.takeIf { it.isNotBlank() } ?: "?"
+                    "${period}교시 ${subject.truncatedWidgetSubject()}"
+                }
+            }
 
         if (items.isEmpty()) {
             return context.getString(R.string.widget_no_classes)
         }
 
-        return items.take(WIDGET_TIMETABLE_MAX_SUBJECTS).joinToString(" • ").let { subjectText ->
-            if (items.size > WIDGET_TIMETABLE_MAX_SUBJECTS) {
-                "$subjectText ${context.getString(R.string.widget_more_suffix)}"
-            } else {
-                subjectText
-            }
-        }
+        return items.joinToString("\n")
     }
 
-    private fun formatMealText(
-        result: Result<List<com.bsbarron.midschoolapp.data.model.MealInfo>>,
-        context: Context
-    ): String {
-        result.exceptionOrNull()?.message?.let { return it }
-        val firstMeal = result.getOrNull()?.firstOrNull()
-            ?: return context.getString(R.string.widget_no_meal)
-
-        return firstMeal.menu
-            .replace(Regex("<br\\s*/?>"), " ")
-            .replace(Regex("[ \t]+"), " ")
-            .trim()
-            .ifBlank { context.getString(R.string.widget_no_meal) }
+    private fun String.truncatedWidgetSubject(): String {
+        return if (length > 6) take(5) else this
     }
 
     companion object {
         const val ACTION_REFRESH = "com.bsbarron.midschoolapp.widget.ACTION_REFRESH"
-        private const val WIDGET_TIMETABLE_MAX_SUBJECTS = 4
+        private const val CONFIG_REQUEST_CODE_OFFSET = 10_000
+
+        fun requestWidgetUpdate(context: Context, appWidgetId: Int) {
+            val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+            }
+            context.sendBroadcast(intent)
+        }
+
+        private fun dependencies(context: Context): WidgetProviderEntryPoint {
+            return EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                WidgetProviderEntryPoint::class.java
+            )
+        }
     }
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface WidgetProviderEntryPoint {
+    fun schoolRepository(): SchoolRepository
+    fun preferencesRepository(): PreferencesRepository
 }

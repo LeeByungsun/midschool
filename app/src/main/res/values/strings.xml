@@ -70,8 +70,13 @@
     <string name="timer_notification_channel_description">집중 타이머 완료 시 알림과 진동을 보냅니다.</string>
     <string name="widget_requires_student_info">학년/반 설정 필요</string>
     <string name="widget_no_classes">수업 없음</string>
-    <string name="widget_no_meal">오늘은 등록된 급식이 없어요.</string>
     <string name="widget_load_error">정보를 불러오지 못했어요.</string>
     <string name="widget_retry_hint">새로고침을 눌러 다시 시도하세요.</string>
-    <string name="widget_more_suffix">외</string>
+    <string name="widget_loading">불러오는 중...</string>
+    <string name="widget_open_settings">위젯 설정 열기</string>
+    <string name="widget_refresh">위젯 새로고침</string>
+    <string name="widget_config_title">위젯 설정</string>
+    <string name="widget_config_description">홈 화면 위젯에서 오늘과 내일 시간표를 어떻게 보여줄지 선택할 수 있어요.</string>
+    <string name="widget_config_show_tomorrow">내일 시간표 표시</string>
+    <string name="widget_config_save">위젯 추가하기</string>
 </resources>

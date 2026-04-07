@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,18 +25,26 @@
             tools:text="🗓️ 오늘 (MM/DD)" />
 
         <ImageView
+            android:id="@+id/widgetSettingsButton"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="@string/widget_open_settings"
+            android:src="@android:drawable/ic_menu_manage" />
+
+        <ImageView
             android:id="@+id/widgetRefreshButton"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_refresh"
-            android:contentDescription="새로고침" />
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@string/widget_refresh"
+            android:src="@drawable/ic_refresh" />
     </LinearLayout>
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"
         android:background="#D6DFEA" />
 
     <LinearLayout
@@ -46,6 +54,7 @@
         android:baselineAligned="false">
         
         <LinearLayout
+            android:id="@+id/widgetTodaySection"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -61,20 +70,24 @@
                 android:id="@+id/widgetTimetableText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="8"
                 android:textColor="@color/text_primary"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:layout_marginTop="2dp"
                 tools:text="1교시: 국어\n2교시: 수학" />
         </LinearLayout>
         
         <ImageView
+            android:id="@+id/widgetTimetableDivider"
             android:layout_width="1dp"
             android:layout_height="match_parent"
             android:background="#D6DFEA"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp" />
+            android:layout_marginLeft="6dp"
+            android:layout_marginRight="6dp" />
 
         <LinearLayout
+            android:id="@+id/widgetTomorrowSection"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -90,21 +103,12 @@
                 android:id="@+id/widgetTomorrowTimetableText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="8"
                 android:textColor="@color/text_primary"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:layout_marginTop="2dp"
                 tools:text="불러오는 중..." />
         </LinearLayout>
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/widgetMealText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textColor="@color/text_secondary"
-        android:textSize="13sp"
-        android:lines="2"
-        android:ellipsize="end"
-        tools:text="" />
 </LinearLayout>

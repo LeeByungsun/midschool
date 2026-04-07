@@ -19,6 +19,9 @@
             android:name=".timer.TimerAlarmReceiver"
             android:exported="false" />
         <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="false" />
+        <activity
             android:name=".ScheduleActivity"
             android:exported="false" />
         <activity
