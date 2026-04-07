@@ -91,8 +91,14 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 
                 if (grade.isBlank() || classroom.isBlank()) {
                     val setupViews = createBaseViews()
-                    setupViews.setTextViewText(R.id.widgetTimetableText, "학년/반 설정 필요")
-                    setupViews.setTextViewText(R.id.widgetTomorrowTimetableText, "학년/반 설정 필요")
+                    setupViews.setTextViewText(
+                        R.id.widgetTimetableText,
+                        context.getString(R.string.widget_requires_student_info)
+                    )
+                    setupViews.setTextViewText(
+                        R.id.widgetTomorrowTimetableText,
+                        context.getString(R.string.widget_requires_student_info)
+                    )
                     setupViews.setTextViewText(R.id.widgetMealText, "")
                     appWidgetManager.updateAppWidget(appWidgetId, setupViews)
                     return@launch
@@ -107,17 +113,18 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                 val timetableResultTomorrow = schoolRepository.getTimetable(grade, classroom, tomorrowStr)
                 val mealsResult = schoolRepository.getMeals(todayStr)
 
-                val timetableTextToday = timetableResultToday.getOrNull()?.takeIf { it.isNotEmpty() }?.let { items ->
-                    items.joinToString(" • ") { it.subject }
-                } ?: "수업 없음"
-                
-                val timetableTextTomorrow = timetableResultTomorrow.getOrNull()?.takeIf { it.isNotEmpty() }?.let { items ->
-                    items.joinToString(" • ") { it.subject }
-                } ?: "수업 없음"
-
-                val firstMeal = mealsResult.getOrNull()?.firstOrNull()
-                val mealText = firstMeal?.menu?.replace(Regex("<br\\s*/?>"), " ")?.replace(Regex("[ \t]+"), " ")
-                    ?: "오늘은 등록된 급식이 없어요."
+                val timetableTextToday = formatTimetableText(
+                    result = timetableResultToday,
+                    context = context
+                )
+                val timetableTextTomorrow = formatTimetableText(
+                    result = timetableResultTomorrow,
+                    context = context
+                )
+                val mealText = formatMealText(
+                    result = mealsResult,
+                    context = context
+                )
 
                 val finalViews = createBaseViews()
                 finalViews.setTextViewText(R.id.widgetTimetableText, timetableTextToday)
@@ -127,9 +134,15 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 
             } catch (e: Exception) {
                 val errViews = createBaseViews()
-                errViews.setTextViewText(R.id.widgetTimetableText, "에러명: ${e.javaClass.simpleName}")
-                errViews.setTextViewText(R.id.widgetTomorrowTimetableText, e.message ?: "원인 알 수 없음")
-                errViews.setTextViewText(R.id.widgetMealText, "새로고침을 눌러 다시 시도하세요")
+                errViews.setTextViewText(
+                    R.id.widgetTimetableText,
+                    context.getString(R.string.widget_load_error)
+                )
+                errViews.setTextViewText(
+                    R.id.widgetTomorrowTimetableText,
+                    e.message ?: context.getString(R.string.widget_retry_hint)
+                )
+                errViews.setTextViewText(R.id.widgetMealText, context.getString(R.string.widget_retry_hint))
                 appWidgetManager.updateAppWidget(appWidgetId, errViews)
             } finally {
                 pendingResult.finish()
@@ -137,7 +150,45 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    private fun formatTimetableText(
+        result: Result<List<com.bsbarron.midschoolapp.data.model.TimetableItem>>,
+        context: Context
+    ): String {
+        result.exceptionOrNull()?.message?.let { return it }
+        val items = result.getOrNull().orEmpty()
+            .sortedBy { it.period.toIntOrNull() ?: Int.MAX_VALUE }
+            .mapNotNull { item -> item.subject.takeIf { subject -> subject.isNotBlank() } }
+
+        if (items.isEmpty()) {
+            return context.getString(R.string.widget_no_classes)
+        }
+
+        return items.take(WIDGET_TIMETABLE_MAX_SUBJECTS).joinToString(" • ").let { subjectText ->
+            if (items.size > WIDGET_TIMETABLE_MAX_SUBJECTS) {
+                "$subjectText ${context.getString(R.string.widget_more_suffix)}"
+            } else {
+                subjectText
+            }
+        }
+    }
+
+    private fun formatMealText(
+        result: Result<List<com.bsbarron.midschoolapp.data.model.MealInfo>>,
+        context: Context
+    ): String {
+        result.exceptionOrNull()?.message?.let { return it }
+        val firstMeal = result.getOrNull()?.firstOrNull()
+            ?: return context.getString(R.string.widget_no_meal)
+
+        return firstMeal.menu
+            .replace(Regex("<br\\s*/?>"), " ")
+            .replace(Regex("[ \t]+"), " ")
+            .trim()
+            .ifBlank { context.getString(R.string.widget_no_meal) }
+    }
+
     companion object {
         const val ACTION_REFRESH = "com.bsbarron.midschoolapp.widget.ACTION_REFRESH"
+        private const val WIDGET_TIMETABLE_MAX_SUBJECTS = 4
     }
 }

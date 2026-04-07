@@ -68,4 +68,10 @@
     <string name="timer_notification_body">설정한 시간이 모두 지나서 알려드려요.</string>
     <string name="timer_notification_channel_name">집중 타이머 알림</string>
     <string name="timer_notification_channel_description">집중 타이머 완료 시 알림과 진동을 보냅니다.</string>
+    <string name="widget_requires_student_info">학년/반 설정 필요</string>
+    <string name="widget_no_classes">수업 없음</string>
+    <string name="widget_no_meal">오늘은 등록된 급식이 없어요.</string>
+    <string name="widget_load_error">정보를 불러오지 못했어요.</string>
+    <string name="widget_retry_hint">새로고침을 눌러 다시 시도하세요.</string>
+    <string name="widget_more_suffix">외</string>
 </resources>

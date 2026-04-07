@@ -13,9 +13,23 @@ data class NeisResponse<T>(
 
 data class NeisSection<T>(
     @SerializedName("head")
-    val head: List<Map<String, Any>>? = null,
+    val head: List<NeisHeadDto>? = null,
     @SerializedName("row")
     val row: List<T>? = null
+)
+
+data class NeisHeadDto(
+    @SerializedName("RESULT")
+    val result: NeisResultDto? = null,
+    @SerializedName("list_total_count")
+    val totalCount: Int? = null
+)
+
+data class NeisResultDto(
+    @SerializedName("CODE")
+    val code: String? = null,
+    @SerializedName("MESSAGE")
+    val message: String? = null
 )
 
 data class MealRowDto(
