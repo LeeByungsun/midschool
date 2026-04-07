@@ -3,26 +3,44 @@ package com.bsbarron.midschoolapp.widget
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.Switch
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.bsbarron.midschoolapp.R
-import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
-import com.bsbarron.midschoolapp.data.repository.WidgetSettings
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.bsbarron.midschoolapp.databinding.ActivityWidgetConfigBinding
+import com.bsbarron.midschoolapp.ui.widget.WidgetConfigViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class WidgetConfigActivity : AppCompatActivity() {
-
-    @Inject
-    lateinit var preferencesRepository: PreferencesRepository
+    private val viewModel: WidgetConfigViewModel by viewModels()
+    private lateinit var binding: ActivityWidgetConfigBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setResult(RESULT_CANCELED)
-        setContentView(R.layout.activity_widget_config)
+        binding = ActivityWidgetConfigBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.lifecycleOwner = this
+
+        val rootView = binding.root
+        val initialTopPadding = rootView.paddingTop
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                view.paddingLeft,
+                initialTopPadding + systemBars.top,
+                view.paddingRight,
+                view.paddingBottom
+            )
+            insets
+        }
 
         val appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
@@ -34,29 +52,38 @@ class WidgetConfigActivity : AppCompatActivity() {
             return
         }
 
-        val backButton = findViewById<ImageButton>(R.id.widgetConfigBackButton)
-        val tomorrowSwitch = findViewById<Switch>(R.id.widgetTomorrowSwitch)
-        val saveButton = findViewById<Button>(R.id.widgetConfigSaveButton)
+        viewModel.loadSettings(appWidgetId)
 
-        val settings = preferencesRepository.getWidgetSettings(appWidgetId)
-        tomorrowSwitch.isChecked = settings.showTomorrowTimetable
-
-        backButton.setOnClickListener { finish() }
-        saveButton.setOnClickListener {
-            preferencesRepository.saveWidgetSettings(
-                appWidgetId = appWidgetId,
-                settings = WidgetSettings(
-                    showTomorrowTimetable = tomorrowSwitch.isChecked
-                )
-            )
-
-            MisSchoolWidgetProvider.requestWidgetUpdate(this, appWidgetId)
-
-            val resultValue = Intent().apply {
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+        binding.widgetConfigBackButton.setOnClickListener { finish() }
+        binding.widgetTomorrowSwitch.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.updateShowTomorrow(isChecked)
+        }
+        binding.widgetConfigSaveButton.setOnClickListener {
+            lifecycleScope.launch {
+                viewModel.saveSettings(appWidgetId)
             }
-            setResult(RESULT_OK, resultValue)
-            finish()
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.uiState.collect { state ->
+                        if (binding.widgetTomorrowSwitch.isChecked != state.showTomorrowTimetable) {
+                            binding.widgetTomorrowSwitch.isChecked = state.showTomorrowTimetable
+                        }
+                    }
+                }
+                launch {
+                    viewModel.saveEvent.collect {
+                        MisSchoolWidgetProvider.requestWidgetUpdate(this@WidgetConfigActivity, appWidgetId)
+                        val resultValue = Intent().apply {
+                            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                        }
+                        setResult(RESULT_OK, resultValue)
+                        finish()
+                    }
+                }
+            }
         }
     }
 }

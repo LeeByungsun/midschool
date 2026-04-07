@@ -7,10 +7,13 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bsbarron.midschoolapp.data.model.TimetableItem
+import com.bsbarron.midschoolapp.databinding.ActivityTimetableBinding
 import com.bsbarron.midschoolapp.ui.timetable.TimetableViewModel
 import com.google.android.material.card.MaterialCardView
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,36 +22,44 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class TimetableActivity : AppCompatActivity() {
     private val viewModel: TimetableViewModel by viewModels()
+    private lateinit var binding: ActivityTimetableBinding
     // 시간표 행은 런타임에 동적으로 추가되므로 컨테이너를 필드로 보관한다.
     private lateinit var timetableContainer: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_timetable)
+        binding = ActivityTimetableBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.lifecycleOwner = this
 
-        // 날짜 탐색 버튼과 결과 표시 영역을 분리해서 읽기 쉽게 연결한다.
-        val backButton = findViewById<android.widget.ImageButton>(R.id.timetableBackButton)
-        val previousDayButton = findViewById<TextView>(R.id.previousDayButton)
-        val todayButton = findViewById<TextView>(R.id.todayButton)
-        val nextDayButton = findViewById<TextView>(R.id.nextDayButton)
-        val dateTitleText = findViewById<TextView>(R.id.timetableDateTitleText)
-        val classInfoText = findViewById<TextView>(R.id.timetableClassInfoText)
-        val statusText = findViewById<TextView>(R.id.timetableStatusText)
-        timetableContainer = findViewById(R.id.timetableContainer)
+        val rootView = binding.root
+        val initialTopPadding = rootView.paddingTop
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                view.paddingLeft,
+                initialTopPadding + systemBars.top,
+                view.paddingRight,
+                view.paddingBottom
+            )
+            insets
+        }
 
-        backButton.setOnClickListener { finish() }
-        previousDayButton.setOnClickListener { viewModel.showPreviousDay() }
-        todayButton.setOnClickListener { viewModel.showToday() }
-        nextDayButton.setOnClickListener { viewModel.showNextDay() }
+        timetableContainer = binding.timetableContainer
+
+        binding.timetableBackButton.setOnClickListener { finish() }
+        binding.previousDayButton.setOnClickListener { viewModel.showPreviousDay() }
+        binding.todayButton.setOnClickListener { viewModel.showToday() }
+        binding.nextDayButton.setOnClickListener { viewModel.showNextDay() }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // 날짜가 바뀔 때마다 기존 행을 비우고 현재 상태의 시간표를 다시 그린다.
                 viewModel.uiState.collect { state ->
-                    dateTitleText.text = state.dateTitle
-                    classInfoText.text = state.classInfoText
-                    statusText.text = state.statusText
+                    binding.timetableDateTitleText.text = state.dateTitle
+                    binding.timetableClassInfoText.text = state.classInfoText
+                    binding.timetableStatusText.text = state.statusText
                     timetableContainer.removeAllViews()
                     state.items.forEach { item ->
                         timetableContainer.addView(createTimetableRow(item))

@@ -5,9 +5,12 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bsbarron.midschoolapp.databinding.ActivitySettingsBinding
 import com.bsbarron.midschoolapp.ui.settings.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -15,31 +18,37 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
     private val viewModel: SettingsViewModel by viewModels()
+    private lateinit var binding: ActivitySettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_settings)
+        binding = ActivitySettingsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.lifecycleOwner = this
 
-        // 설정 화면은 입력값이 많아서 항목별 위젯을 분명하게 나눠 잡아둔다.
-        val backButton = findViewById<android.widget.ImageButton>(R.id.backButton)
-        val gradeInput = findViewById<android.widget.EditText>(R.id.settingsGradeInput)
-        val classInput = findViewById<android.widget.EditText>(R.id.settingsClassInput)
-        val countModeRadio = findViewById<android.widget.RadioButton>(R.id.timerDisplayCountRadio)
-        val ringModeRadio = findViewById<android.widget.RadioButton>(R.id.timerDisplayRingRadio)
-        val timerNotificationSwitch = findViewById<android.widget.Switch>(R.id.timerNotificationSwitch)
-        val timerVibrationSwitch = findViewById<android.widget.Switch>(R.id.timerVibrationSwitch)
-        val saveButton = findViewById<android.widget.Button>(R.id.saveSettingsButton)
+        val rootView = binding.root
+        val initialTopPadding = rootView.paddingTop
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                view.paddingLeft,
+                initialTopPadding + systemBars.top,
+                view.paddingRight,
+                view.paddingBottom
+            )
+            insets
+        }
 
-        backButton.setOnClickListener { finish() }
+        binding.backButton.setOnClickListener { finish() }
 
-        saveButton.setOnClickListener {
+        binding.saveSettingsButton.setOnClickListener {
             // 저장 직전의 화면 값만 ViewModel에 전달해 단일 저장 경로를 유지한다.
-            viewModel.updateGrade(gradeInput.text.toString().trim())
-            viewModel.updateClassroom(classInput.text.toString().trim())
-            viewModel.updateDisplayMode(ringModeRadio.isChecked)
-            viewModel.updateNotificationEnabled(timerNotificationSwitch.isChecked)
-            viewModel.updateVibrationEnabled(timerVibrationSwitch.isChecked)
+            viewModel.updateGrade(binding.settingsGradeInput.text.toString().trim())
+            viewModel.updateClassroom(binding.settingsClassInput.text.toString().trim())
+            viewModel.updateDisplayMode(binding.timerDisplayRingRadio.isChecked)
+            viewModel.updateNotificationEnabled(binding.timerNotificationSwitch.isChecked)
+            viewModel.updateVibrationEnabled(binding.timerVibrationSwitch.isChecked)
             lifecycleScope.launch {
                 viewModel.saveSettings()
             }
@@ -51,16 +60,16 @@ class SettingsActivity : AppCompatActivity() {
                     // 이미 반영된 텍스트를 다시 setText 하지 않도록 비교해
                     // 커서 위치가 불필요하게 흔들리는 문제를 막는다.
                     viewModel.uiState.collect { state ->
-                        if (gradeInput.text.toString() != state.grade) {
-                            gradeInput.setText(state.grade)
+                        if (binding.settingsGradeInput.text.toString() != state.grade) {
+                            binding.settingsGradeInput.setText(state.grade)
                         }
-                        if (classInput.text.toString() != state.classroom) {
-                            classInput.setText(state.classroom)
+                        if (binding.settingsClassInput.text.toString() != state.classroom) {
+                            binding.settingsClassInput.setText(state.classroom)
                         }
-                        countModeRadio.isChecked = !state.isRingMode
-                        ringModeRadio.isChecked = state.isRingMode
-                        timerNotificationSwitch.isChecked = state.notificationEnabled
-                        timerVibrationSwitch.isChecked = state.vibrationEnabled
+                        binding.timerDisplayCountRadio.isChecked = !state.isRingMode
+                        binding.timerDisplayRingRadio.isChecked = state.isRingMode
+                        binding.timerNotificationSwitch.isChecked = state.notificationEnabled
+                        binding.timerVibrationSwitch.isChecked = state.vibrationEnabled
                     }
                 }
                 launch {

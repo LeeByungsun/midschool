@@ -45,6 +45,7 @@
 ## 3. 시스템 아키텍처 및 기술 스택
 - **언어 및 환경**: Kotlin, Android SDK (minSdk 26, targetSdk 36)
 - **디자인 패턴 / 아키텍처**: MVVM (Model-View-ViewModel) 패턴을 충실히 따르며 데이터와 UI 계층을 분리
+- **UI 바인딩**: 주요 화면은 DataBinding과 ViewModel 조합으로 정리해 Activity는 이벤트 연결과 화면 전환 책임 위주로 유지합니다.
 - **저장소 계층**: 학교 데이터는 `SchoolRepository`, 로컬 설정/캐시는 `PreferencesRepository`를 통해 접근합니다.
 - **비동기 처리**: `runCatching`, Kotlin Coroutines (`lifecycleScope`), Flow (`StateFlow` 등)
 - **네트워크 / 데이터 연동**: 
