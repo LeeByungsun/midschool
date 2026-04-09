@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -62,7 +62,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="오늘"
+                android:text="@string/widget_today_label"
                 android:textSize="12sp"
                 android:textColor="@color/brand_blue"
                 android:textStyle="bold" />
@@ -73,7 +73,7 @@
                 android:ellipsize="end"
                 android:maxLines="8"
                 android:textColor="@color/text_primary"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:layout_marginTop="2dp"
                 tools:text="1교시: 국어\n2교시: 수학" />
         </LinearLayout>
@@ -95,7 +95,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="내일"
+                android:text="@string/widget_tomorrow_label"
                 android:textSize="12sp"
                 android:textColor="@color/brand_blue"
                 android:textStyle="bold" />
@@ -106,7 +106,7 @@
                 android:ellipsize="end"
                 android:maxLines="8"
                 android:textColor="@color/text_primary"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:layout_marginTop="2dp"
                 tools:text="불러오는 중..." />
         </LinearLayout>

@@ -20,7 +20,7 @@
             android:exported="false" />
         <activity
             android:name=".widget.WidgetConfigActivity"
-            android:exported="false" />
+            android:exported="true" />
         <activity
             android:name=".ScheduleActivity"
             android:exported="false" />
