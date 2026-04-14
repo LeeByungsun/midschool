@@ -8,7 +8,10 @@ captures/
 .cxx/
 
 .idea/
-.codex/
-/.github/skills/
+.codex/*
+!.codex/Agent.md
+/.github/skills/**
+!/.github/skills/**/
+!/.github/skills/**/SKILL.md
 local.properties
 .omx/
