@@ -35,14 +35,23 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == ACTION_REFRESH) {
-            val appWidgetId = intent.getIntExtra(
-                AppWidgetManager.EXTRA_APPWIDGET_ID,
-                AppWidgetManager.INVALID_APPWIDGET_ID
-            )
-            if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                val appWidgetManager = AppWidgetManager.getInstance(context)
-                updateAppWidget(context, appWidgetManager, appWidgetId)
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        when (intent.action) {
+            ACTION_REFRESH -> {
+                val appWidgetId = intent.getIntExtra(
+                    AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    AppWidgetManager.INVALID_APPWIDGET_ID
+                )
+                if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            }
+
+            Intent.ACTION_DATE_CHANGED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_BOOT_COMPLETED -> {
+                updateAllWidgets(context, appWidgetManager)
             }
         }
     }
@@ -208,6 +217,16 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
             }
             context.sendBroadcast(intent)
+        }
+
+        fun updateAllWidgets(context: Context, appWidgetManager: AppWidgetManager) {
+            val componentName = android.content.ComponentName(context, MisSchoolWidgetProvider::class.java)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+            if (appWidgetIds.isNotEmpty()) {
+                appWidgetIds.forEach { appWidgetId ->
+                    MisSchoolWidgetProvider().updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            }
         }
 
         private fun dependencies(context: Context): WidgetProviderEntryPoint {
