@@ -1,139 +1,36 @@
 ---
 name: android-coroutines
-description: Authoritative rules and patterns for production-quality Kotlin Coroutines onto Android. Covers structured concurrency, lifecycle integration, and reactive streams.
+description: MisSchoolApp의 코루틴 규칙. ViewModel, Repository, Widget, Timer 코드에서 lifecycle-safe 하게 비동기 처리를 할 때 사용한다.
 ---
 
-# Android Coroutines Expert Skill
+# MisSchoolApp Coroutines
 
-This skill provides authoritative rules and patterns for writing production-quality Kotlin Coroutines code on Android. It enforces structured concurrency, lifecycle safety, and modern best practices (2025 standards).
+## 현재 프로젝트에서 중요한 포인트
+- ViewModel은 `viewModelScope`
+- Activity는 `lifecycleScope + repeatOnLifecycle`
+- Repository는 main-safe 하게 유지
+- 위젯/브로드캐스트 쪽 비동기 작업은 수명과 예외 처리를 더 조심한다
 
-## Responsibilities
+## 규칙
+### 1. ViewModel
+- 코루틴 시작은 `viewModelScope`
+- 상태는 `StateFlow`, 이벤트는 `SharedFlow`
 
-*   **Asynchronous Logic**: Implementing suspend functions, Dispatcher management, and parallel execution.
-*   **Reactive Streams**: Implementing `Flow`, `StateFlow`, `SharedFlow`, and `callbackFlow`.
-*   **Lifecycle Integration**: Managing scopes (`viewModelScope`, `lifecycleScope`) and safe collection (`repeatOnLifecycle`).
-*   **Error Handling**: Implementing `CoroutineExceptionHandler`, `SupervisorJob`, and proper `try-catch` hierarchies.
-*   **Cancellability**: Ensuring long-running operations are cooperative using `ensureActive()`.
-*   **Testing**: Setting up `TestDispatcher` and `runTest`.
+### 2. Activity
+- `launchWhenStarted` 대신 `repeatOnLifecycle` 사용
+- UI에서 Flow를 직접 오래 붙잡지 않는다
 
-## Applicability
+### 3. Repository
+- 긴 작업이나 네트워크/파싱은 main-safe 하게 유지한다
+- `CancellationException`을 일반 실패로 삼키지 않는다
 
-Activate this skill when the user asks to:
-*   "Fetch data from an API/Database."
-*   "Perform background processing."
-*   "Fix a memory leak" related to threads/tasks.
-*   "Convert a listener/callback to Coroutines."
-*   "Implement a ViewModel."
-*   "Handle UI state updates."
+### 4. 위젯
+- `AppWidgetProvider`는 수명이 짧으므로 `goAsync()`와 `finally { finish() }`를 유지한다
+- 위젯 갱신은 실패해도 런처를 깨지 않게 방어적으로 처리한다
 
-## Critical Rules & Constraints
+### 5. 타이머
+- 타이머 상태 복원과 알림 스케줄은 앱 프로세스 재진입을 고려한다
 
-### 1. Dispatcher Injection (Testability)
-*   **NEVER** hardcode Dispatchers (e.g., `Dispatchers.IO`, `Dispatchers.Default`) inside classes.
-*   **ALWAYS** inject a `CoroutineDispatcher` via the constructor.
-*   **DEFAULT** to `Dispatchers.IO` in the constructor argument for convenience, but allow it to be overridden.
-
-```kotlin
-// CORRECT
-class UserRepository(
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) { ... }
-
-// INCORRECT
-class UserRepository {
-    fun getData() = withContext(Dispatchers.IO) { ... }
-}
-```
-
-### 2. Main-Safety
-*   All suspend functions defined in the Data or Domain layer must be **main-safe**.
-*   **One-shot calls** should be exposed as `suspend` functions.
-*   **Data changes** should be exposed as `Flow`.
-*   The caller (ViewModel) should be able to call them from `Dispatchers.Main` without blocking the UI.
-*   Use `withContext(dispatcher)` inside the repository implementation to move execution to the background.
-
-### 3. Lifecycle-Aware Collection
-*   **NEVER** collect a flow directly in `lifecycleScope.launch` or `launchWhenStarted` (deprecated/unsafe).
-*   **ALWAYS** use `repeatOnLifecycle(Lifecycle.State.STARTED)` for collecting flows in Activities or Fragments.
-
-```kotlin
-// CORRECT
-viewLifecycleOwner.lifecycleScope.launch {
-    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-        viewModel.uiState.collect { ... }
-    }
-}
-```
-
-### 4. ViewModel Scope Usage
-*   Use `viewModelScope` for initiating coroutines in ViewModels.
-*   Do not expose suspend functions from the ViewModel to the View. The ViewModel should expose `StateFlow` or `SharedFlow` that the View observes.
-
-### 5. Mutable State Encapsulation
-*   **NEVER** expose `MutableStateFlow` or `MutableSharedFlow` publicly.
-*   Expose them as read-only `StateFlow` or `Flow` using `.asStateFlow()` or upcasting.
-
-### 6. GlobalScope Prohibition
-*   **NEVER** use `GlobalScope`. It breaks structured concurrency and leads to leaks.
-*   If a task must survive the current scope, use an injected `applicationScope` (a custom scope tied to the Application lifecycle).
-
-### 7. Exception Handling
-*   **NEVER** catch `CancellationException` in a generic `catch (e: Exception)` block without rethrowing it.
-*   Use `runCatching` only if you explicitly rethrow `CancellationException`.
-*   Use `CoroutineExceptionHandler` only for top-level coroutines (inside `launch`). It has no effect inside `async` or child coroutines.
-
-### 8. Cancellability
-*   Coroutines feature **cooperative cancellation**. They don't stop immediately unless they check for cancellation.
-*   **ALWAYS** call `ensureActive()` or `yield()` in tight loops (e.g., processing a large list, reading files) to check for cancellation.
-*   Standard functions like `delay()` and `withContext()` are already cancellable.
-
-### 9. Callback Conversion
-*   Use `callbackFlow` to convert callback-based APIs to Flow.
-*   **ALWAYS** use `awaitClose` at the end of the `callbackFlow` block to unregister listeners.
-
-## Code Patterns
-
-### Repository Pattern with Flow
-
-```kotlin
-class NewsRepository(
-    private val remoteDataSource: NewsRemoteDataSource,
-    private val externalScope: CoroutineScope, // For app-wide events
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) {
-    val newsUpdates: Flow<List<News>> = flow {
-        val news = remoteDataSource.fetchLatestNews()
-        emit(news)
-    }.flowOn(ioDispatcher) // Upstream executes on IO
-}
-```
-
-### Parallel Execution
-
-```kotlin
-suspend fun loadDashboardData() = coroutineScope {
-    val userDeferred = async { userRepo.getUser() }
-    val feedDeferred = async { feedRepo.getFeed() }
-    
-    // Wait for both
-    DashboardData(
-        user = userDeferred.await(),
-        feed = feedDeferred.await()
-    )
-}
-```
-
-### Testing with runTest
-
-```kotlin
-@Test
-fun testViewModel() = runTest {
-    val testDispatcher = StandardTestDispatcher(testScheduler)
-    val viewModel = MyViewModel(testDispatcher)
-    
-    viewModel.loadData()
-    advanceUntilIdle() // Process coroutines
-    
-    assertEquals(expectedState, viewModel.uiState.value)
-}
-```
+## 개선 우선순위
+- 새 코드에서는 dispatcher 주입을 우선 고려한다
+- 기존 코드의 `Dispatchers.IO` 하드코딩은 점진적으로 줄인다

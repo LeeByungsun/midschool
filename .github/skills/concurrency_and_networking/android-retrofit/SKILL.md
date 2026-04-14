@@ -1,142 +1,39 @@
 ---
 name: android-retrofit
-description: Expert guidance on setting up and using Retrofit for type-safe HTTP networking in Android. Covers service definitions, coroutines, OkHttp configuration, and Hilt integration.
+description: MisSchoolApp의 NEIS API 연동 규칙. Retrofit, Hilt, Repository 예외 처리 방식을 맞출 때 사용한다.
 ---
 
-# Android Networking with Retrofit
+# MisSchoolApp Retrofit / NEIS
 
-## Instructions
+## 현재 기준
+- API 서버: `https://open.neis.go.kr/`
+- 사용 API:
+  - `mealServiceDietInfo`
+  - `SchoolSchedule`
+  - `misTimetable`
+- 네트워크 계층은 `di/NetworkModule.kt`와 `data/remote/`를 기준으로 유지한다
 
-When implementing network layers using **Retrofit**, follow these modern Android best practices (2025).
+## 작업 원칙
+### 1. 쿼리 파라미터는 하드코딩 문자열 결합 대신 Retrofit annotation으로 처리한다
+- `KEY`
+- `ATPT_OFCDC_SC_CODE`
+- `SD_SCHUL_CODE`
+- 날짜 / 학년 / 반
 
-### 1. URL Manipulation
-Retrofit allows dynamic URL updates through replacement blocks and query parameters.
+### 2. Repository에서 예외를 정리한다
+- HTTP 실패
+- 네트워크 실패
+- NEIS `RESULT.CODE` 실패
+- 데이터 없음
 
-*   **Dynamic Paths**: Use `{name}` in the relative URL and `@Path("name")` in parameters.
-*   **Query Parameters**: Use `@Query("key")` for individual parameters.
-*   **Complex Queries**: Use `@QueryMap Map<String, String>` for dynamic sets of parameters.
+UI는 최대한 정리된 결과만 받게 유지한다.
 
-```kotlin
-interface SearchService {
-    @GET("group/{id}/users")
-    suspend fun groupList(
-        @Path("id") groupId: Int,
-        @Query("sort") sort: String?,
-        @QueryMap options: Map<String, String> = emptyMap()
-    ): List<User>
-}
-```
+### 3. NEIS 응답 특성 반영
+- `HTTP 200`이어도 본문 `RESULT.CODE`가 실패일 수 있다
+- 줄바꿈 HTML, 알레르기 번호, 빈 리스트 같은 응답 특성을 Repository나 ViewModel에서 정리한다
 
-### 2. Request Body & Form Data
-You can send objects as JSON bodies or use form-encoded/multipart formats.
+### 4. 캐시와 함께 생각한다
+- 급식/시간표는 성공 응답을 캐시에 저장하고 실패 시 마지막 성공값을 사용할 수 있게 유지한다
 
-*   **@Body**: Serializes an object using the configured converter (JSON).
-*   **@FormUrlEncoded**: Sends data as `application/x-www-form-urlencoded`. Use `@Field`.
-*   **@Multipart**: Sends data as `multipart/form-data`. Use `@Part`.
-
-```kotlin
-interface UserService {
-    @POST("users/new")
-    suspend fun createUser(@Body user: User): User
-
-    @FormUrlEncoded
-    @POST("user/edit")
-    suspend fun updateUser(
-        @Field("first_name") first: String,
-        @Field("last_name") last: String
-    ): User
-
-    @Multipart
-    @PUT("user/photo")
-    suspend fun uploadPhoto(
-        @Part("description") description: RequestBody,
-        @Part photo: MultipartBody.Part
-    ): User
-}
-```
-
-### 3. Header Manipulation
-Headers can be set statically for a method or dynamically via parameters.
-
-*   **Static Headers**: Use `@Headers`.
-*   **Dynamic Headers**: Use `@Header`.
-*   **Header Maps**: Use `@HeaderMap`.
-*   **Global Headers**: Use an OkHttp **Interceptor**.
-
-```kotlin
-interface WidgetService {
-    @Headers("Cache-Control: max-age=640000")
-    @GET("widget/list")
-    suspend fun widgetList(): List<Widget>
-
-    @GET("user")
-    suspend fun getUser(@Header("Authorization") token: String): User
-}
-```
-
-### 4. Kotlin Support & Response Handling
-When using `suspend` functions, you have two choices for return types:
-
-1.  **Direct Body (`User`)**: Returns the deserialized body. Throws `HttpException` for non-2xx responses.
-2.  **`Response<User>`**: Provides access to the status code, headers, and error body. Does NOT throw on non-2xx results.
-
-```kotlin
-@GET("users")
-suspend fun getUsers(): List<User> // Throws on error
-
-@GET("users")
-suspend fun getUsersResponse(): Response<List<User>> // Manual check
-```
-
-### 5. Hilt & Serialization Configuration
-Provide your Retrofit instances as singletons in a Hilt module.
-
-```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object NetworkModule {
-
-    @Provides
-    @Singleton
-    fun provideJson(): Json = Json {
-        ignoreUnknownKeys = true
-        coerceInputValues = true
-    }
-
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .build()
-
-    @Provides
-    @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit = Retrofit.Builder()
-        .baseUrl("https://api.github.com/")
-        .client(okHttpClient)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .build()
-}
-```
-
-### 6. Error Handling in Repositories
-Always handle network exceptions in the Repository layer to keep the UI state clean.
-
-```kotlin
-class GitHubRepository @Inject constructor(private val service: GitHubService) {
-    suspend fun getRepos(username: String): Result<List<Repo>> = runCatching {
-        // Direct body call throws HttpException on 4xx/5xx
-        service.listRepos(username)
-    }.onFailure { exception ->
-        // Handle specific exceptions like UnknownHostException or SocketTimeoutException
-    }
-}
-```
-
-### 7. Checklist
-- [ ] Use `suspend` functions for all network calls.
-- [ ] Prefer `Response<T>` if you need to handle specific status codes (e.g., 401 Unauthorized).
-- [ ] Use `@Path` and `@Query` instead of manual string concatenation for URLs.
-- [ ] Configure `OkHttpClient` with logging (for debug) and sensible timeouts.
-- [ ] Map API DTOs to Domain models to decouple layers.
+### 5. 디버그 로그
+- 네트워크 디버깅은 유지하되, 민감한 키 노출에는 주의한다

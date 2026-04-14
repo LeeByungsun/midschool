@@ -1,49 +1,28 @@
 ---
 name: compose-ui
-description: Best practices for building UI with Jetpack Compose, focusing on state hoisting, detailed performance optimizations, and theming. Use this when writing or refactoring Composable functions.
+description: MisSchoolApp에서 Compose UI를 실제로 도입할 때 참고하는 보류형 가이드.
 ---
 
-# Jetpack Compose Best Practices
+# Compose UI for Future Migration
 
-## Instructions
+현재 MisSchoolApp의 주 UI는 **XML + DataBinding**입니다.
 
-Follow these guidelines to create performant, reusable, and testable Composables.
+## 기본 원칙
+- Compose는 현재 기본 UI 기술이 아니다
+- 명시적인 전환 요청이 없는 한 새 화면도 XML 기준으로 구현한다
 
-### 1. State Hoisting (Unidirectional Data Flow)
-Make Composables **stateless** whenever possible by moving state to the caller.
+## Compose를 도입하는 경우
+- 독립적인 새 화면
+- 재사용성이 높은 작은 컴포넌트
+- 실험적 UI 개선이 필요한 경우
 
-*   **Pattern**: Function signature should usually look like:
-    ```kotlin
-    @Composable
-    fun MyComponent(
-        value: String,              // State flows down
-        onValueChange: (String) -> Unit, // Events flow up
-        modifier: Modifier = Modifier // Standard modifier parameter
-    )
-    ```
-*   **Benefit**: Decouples the UI from simple state storage, making it easier to preview and test.
-*   **ViewModel Integration**: The screen-level Composable retrieves state from the ViewModel (`viewModel.uiState.collectAsStateWithLifecycle()`) and passes it down.
+## 도입 시 유지할 것
+- 상태는 ViewModel에서 관리
+- `UiState` 중심 데이터 흐름 유지
+- Repository/Hilt 구조 재사용
+- 문자열과 접근성 리소스는 기존 규칙 유지
 
-### 2. Modifiers
-*   **Default Parameter**: Always provide a `modifier: Modifier = Modifier` as the first optional parameter.
-*   **Application**: Apply this `modifier` to the *root* layout element of your Composable.
-*   **Ordering matters**: `padding().clickable()` is different from `clickable().padding()`. Generally apply layout-affecting modifiers (like padding) *after* click listeners if you want the padding to be clickable.
-
-### 3. Performance Optimization
-*   **`remember`**: Use `remember { ... }` to cache expensive calculations across recompositions.
-*   **`derivedStateOf`**: Use `derivedStateOf { ... }` when a state changes frequently (like scroll position) but the UI only needs to react to a threshold or summary (e.g., show "Jump to Top" button). This prevents unnecessary recompositions.
-    ```kotlin
-    val showButton by remember {
-        derivedStateOf { listState.firstVisibleItemIndex > 0 }
-    }
-    ```
-*   **Lambda Stability**: Prefer method references (e.g., `viewModel::onEvent`) or remembered lambdas to prevent unstable types from triggering recomposition of children.
-
-### 4. Theming and Resources
-*   Use `MaterialTheme.colorScheme` and `MaterialTheme.typography` instead of hardcoded colors or text styles.
-*   Organize simple UI components into specific files (e.g., `DesignSystem.kt` or `Components.kt`) if they are shared across features.
-
-### 5. Previews
-*   Create a private preview function for every public Composable.
-*   Use `@Preview(showBackground = true)` and include Light/Dark mode previews if applicable.
-*   Pass dummy data (static) to the stateless Composable for the preview.
+## 피해야 할 것
+- 이유 없이 화면 절반만 Compose로 섞어 복잡도만 늘리는 것
+- 기존 XML 화면을 급하게 중간 상태로 섞는 것
+- 프로젝트 전체 네비게이션까지 한 번에 바꾸는 것
