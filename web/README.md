@@ -22,6 +22,19 @@ npm run dev
 
 브라우저에서 `http://localhost:3000` 을 열면 됩니다.
 
+## 환경변수
+
+실제 NEIS 연동을 위해서는 서버 쪽 환경변수가 필요합니다.
+
+- `NEIS_API_KEY` (필수)
+- `NEIS_BASE_URL` (선택, 기본값: `https://open.neis.go.kr/`)
+- `NEIS_OFFICE_CODE` (선택, 기본값: `J10`)
+- `NEIS_SCHOOL_CODE` (선택, 기본값: `7679399`)
+
+`NEIS_API_KEY` 는 클라이언트 코드가 아니라 `app/api/**/route.ts` 경계에서만 사용합니다.
+
+시작할 때는 `web/.env.example` 를 복사해 `.env.local` 로 두고 값을 채우면 됩니다.
+
 ## 품질 체크
 
 ```bash

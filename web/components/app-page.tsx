@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 
 import { MobileNav } from "@/components/mobile-nav";
+import { StudentSummaryBadge } from "@/components/student-summary-badge";
 import { navigationItems } from "@/lib/site-data";
 
 type AppPageProps = {
@@ -29,10 +30,7 @@ export function AppPage({
               {description}
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-            <p className="font-medium">2학년 3반</p>
-            <p className="mt-1 text-xs text-slate-400">브라우저 저장소 연동 예정</p>
-          </div>
+          <StudentSummaryBadge />
         </div>
       </header>
 

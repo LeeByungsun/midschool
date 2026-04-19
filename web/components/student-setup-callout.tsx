@@ -1,0 +1,36 @@
+"use client";
+
+import Link from "next/link";
+
+import {
+  formatStudentPreferences,
+} from "@/lib/storage/preferences";
+import { useStudentPreferences } from "@/hooks/use-student-preferences";
+
+export function StudentSetupCallout() {
+  const studentInfo = useStudentPreferences();
+
+  if (studentInfo) {
+    return (
+      <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800">
+        현재 저장된 조회 기준은 <strong>{formatStudentPreferences(studentInfo)}</strong>
+        입니다. 다음 단계에서 이 값을 기준으로 실제 NEIS 데이터를 연결합니다.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+      <p className="font-semibold">아직 학년/반 설정이 필요해요.</p>
+      <p className="mt-1 leading-6">
+        설정 화면에서 학년과 반을 저장하면 대시보드와 시간표 조회에 바로 반영됩니다.
+      </p>
+      <Link
+        href="/settings"
+        className="mt-3 inline-flex rounded-full bg-amber-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-800"
+      >
+        설정하러 가기
+      </Link>
+    </div>
+  );
+}
