@@ -101,3 +101,13 @@ export function SetupRequiredState({
     />
   );
 }
+
+export function InfoState({
+  title,
+  message,
+}: {
+  title?: string;
+  message: string;
+}) {
+  return <StateNotice title={title} message={message} tone="neutral" />;
+}

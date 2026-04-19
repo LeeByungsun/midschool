@@ -7,7 +7,7 @@
 ```text
 misSchoolApp/
 ├── android/              # Android Gradle 프로젝트
-├── web/                  # Web 구현 시작 위치
+├── web/                  # Next.js 기반 Web 클라이언트
 ├── docs/                 # 기획/구조/설정 문서
 ├── .codex/               # Codex/OMX 스킬, 프롬프트, 에이전트 자산
 ├── .github/              # GitHub 관련 자산
@@ -63,9 +63,33 @@ android/
   - Android: `android/AGENTS.md`
   - Web: `web/AGENTS.md`
 
+## `web/` 내부 주요 구조
+
+```text
+web/
+├── app/
+│   ├── page.tsx               # 홈 대시보드
+│   ├── setup/page.tsx         # 초기 설정
+│   ├── settings/page.tsx      # 설정
+│   ├── timetable/page.tsx     # 시간표
+│   ├── schedule/page.tsx      # 학사 일정
+│   ├── meals/page.tsx         # 급식 상세
+│   ├── timer/page.tsx         # 타이머
+│   └── api/                   # NEIS BFF route handlers
+├── components/                # 화면/카드/상태 UI 컴포넌트
+├── hooks/                     # 브라우저 상태 구독 훅
+├── lib/
+│   ├── neis/                  # NEIS 타입/매퍼/클라이언트
+│   ├── storage/               # preferences/cache/browser storage
+│   └── *.ts                   # 날짜/사이트 데이터/도메인 유틸
+├── package.json
+└── AGENTS.md
+```
+
 ## 작업 규칙
 
 - 안드로이드 빌드/테스트 명령은 기본적으로 `android/` 안에서 실행
+- 웹 빌드/테스트 명령은 기본적으로 `web/` 안에서 실행
 - 문서와 자동화 자산은 가능하면 루트 기준 경로 유지
 - 실행용 스킬은 `.codex/skills/` 아래에 유지
 
@@ -75,4 +99,9 @@ android/
 cd android
 ./gradlew testDebugUnitTest lintDebug
 ./gradlew assembleDebug
+
+cd ../web
+npm run lint
+npm run typecheck
+npm run build
 ```

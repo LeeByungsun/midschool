@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   EmptyState,
   ErrorState,
+  InfoState,
   LoadingState,
   SetupRequiredState,
 } from "@/components/data-state";
@@ -12,19 +13,27 @@ import { DashboardCard } from "@/components/dashboard-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { formatDateKey, formatKoreanDateLabel } from "@/lib/date";
 import type { MealInfo } from "@/lib/neis/types";
-import { fetchMeals } from "@/lib/school-api";
+import {
+  type CacheStatus,
+  fetchMeals,
+  formatCacheStatusMessage,
+} from "@/lib/school-api";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 
 type MealState = {
   requestToken: string;
   items: MealInfo[];
   error: string | null;
+  cacheStatus: CacheStatus;
+  cachedAt: number | null;
 };
 
 const initialState: MealState = {
   requestToken: "",
   items: [],
   error: null,
+  cacheStatus: "network",
+  cachedAt: null,
 };
 
 const allergyCodeMap: Record<string, string> = {
@@ -190,15 +199,17 @@ export function MealBrowser() {
       schoolCode: studentInfo.schoolCode,
       date: dateKey,
     })
-      .then((items) => {
+      .then((result) => {
         if (isCancelled) {
           return;
         }
 
         setState({
           requestToken,
-          items,
+          items: result.items,
           error: null,
+          cacheStatus: result.cacheStatus,
+          cachedAt: result.cachedAt,
         });
       })
       .catch((error: unknown) => {
@@ -213,6 +224,8 @@ export function MealBrowser() {
             error instanceof Error
               ? error.message
               : "급식 정보를 불러오지 못했어요.",
+          cacheStatus: "network",
+          cachedAt: null,
         });
       });
 
@@ -238,6 +251,11 @@ export function MealBrowser() {
   const retryFetch = () => {
     setReloadCount((prev) => prev + 1);
   };
+  const cacheNotice = formatCacheStatusMessage(
+    state.cacheStatus,
+    state.cachedAt,
+    "급식",
+  );
 
   const selectedMeals = state.items.filter((meal) => meal.date === dateKey);
   const visibleMeals = selectedMeals.length > 0 ? selectedMeals : state.items;
@@ -289,6 +307,7 @@ export function MealBrowser() {
         />
       ) : (
         <div className="grid gap-4">
+          {cacheNotice ? <InfoState message={cacheNotice} /> : null}
           {visibleMeals.map((meal) => (
             <MealDetailCard
               key={`${meal.date}-${meal.mealType}-${meal.calorieInfo}`}

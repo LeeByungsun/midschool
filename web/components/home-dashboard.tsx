@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   EmptyState,
   ErrorState,
+  InfoState,
   LoadingState,
   SetupRequiredState,
 } from "@/components/data-state";
@@ -15,7 +16,13 @@ import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel, formatMonthKey } from "@/lib/date";
 import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
 import { isVisibleSchedule } from "@/lib/schedule";
-import { fetchMeals, fetchSchedules, fetchTimetable } from "@/lib/school-api";
+import {
+  type CacheStatus,
+  fetchMeals,
+  fetchSchedules,
+  fetchTimetable,
+  formatCacheStatusMessage,
+} from "@/lib/school-api";
 import { timerPresets } from "@/lib/site-data";
 
 type DashboardState = {
@@ -24,6 +31,12 @@ type DashboardState = {
   meals: MealInfo[];
   schedules: SchoolEvent[];
   error: string | null;
+  timetableCacheStatus: CacheStatus;
+  timetableCachedAt: number | null;
+  mealCacheStatus: CacheStatus;
+  mealCachedAt: number | null;
+  scheduleCacheStatus: CacheStatus;
+  scheduleCachedAt: number | null;
 };
 
 const initialState: DashboardState = {
@@ -32,6 +45,12 @@ const initialState: DashboardState = {
   meals: [],
   schedules: [],
   error: null,
+  timetableCacheStatus: "network",
+  timetableCachedAt: null,
+  mealCacheStatus: "network",
+  mealCachedAt: null,
+  scheduleCacheStatus: "network",
+  scheduleCachedAt: null,
 };
 
 export function HomeDashboard() {
@@ -83,10 +102,16 @@ export function HomeDashboard() {
 
         setState({
           requestToken,
-          timetable,
-          meals,
-          schedules,
+          timetable: timetable.items,
+          meals: meals.items,
+          schedules: schedules.items,
           error: null,
+          timetableCacheStatus: timetable.cacheStatus,
+          timetableCachedAt: timetable.cachedAt,
+          mealCacheStatus: meals.cacheStatus,
+          mealCachedAt: meals.cachedAt,
+          scheduleCacheStatus: schedules.cacheStatus,
+          scheduleCachedAt: schedules.cachedAt,
         });
       })
       .catch((error: unknown) => {
@@ -103,6 +128,12 @@ export function HomeDashboard() {
             error instanceof Error
               ? error.message
               : "대시보드 데이터를 불러오지 못했어요.",
+          timetableCacheStatus: "network",
+          timetableCachedAt: null,
+          mealCacheStatus: "network",
+          mealCachedAt: null,
+          scheduleCacheStatus: "network",
+          scheduleCachedAt: null,
         });
       });
 
@@ -126,6 +157,21 @@ export function HomeDashboard() {
     setReloadCount((prev) => prev + 1);
   };
   const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
+  const timetableCacheNotice = formatCacheStatusMessage(
+    state.timetableCacheStatus,
+    state.timetableCachedAt,
+    "시간표",
+  );
+  const mealCacheNotice = formatCacheStatusMessage(
+    state.mealCacheStatus,
+    state.mealCachedAt,
+    "급식",
+  );
+  const scheduleCacheNotice = formatCacheStatusMessage(
+    state.scheduleCacheStatus,
+    state.scheduleCachedAt,
+    "학사 일정",
+  );
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.35fr_0.95fr]">
@@ -156,26 +202,29 @@ export function HomeDashboard() {
               message="오늘 등록된 시간표가 아직 없어요."
             />
           ) : (
-            <ul className="space-y-3">
-              {state.timetable.map((item) => (
-                <li
-                  key={`${item.date}-${item.period}-${item.subject}`}
-                  className="flex items-start justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {item.period || "?"}교시 · {item.subject || "과목 정보 없음"}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {item.grade}학년 {item.classroom}반
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-500 shadow-sm">
-                    수업
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="grid gap-4">
+              {timetableCacheNotice ? <InfoState message={timetableCacheNotice} /> : null}
+              <ul className="space-y-3">
+                {state.timetable.map((item) => (
+                  <li
+                    key={`${item.date}-${item.period}-${item.subject}`}
+                    className="flex items-start justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.period || "?"}교시 · {item.subject || "과목 정보 없음"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {item.grade}학년 {item.classroom}반
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-500 shadow-sm">
+                      수업
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </DashboardCard>
 
@@ -208,27 +257,30 @@ export function HomeDashboard() {
               message="현재 날짜 기준으로 표시할 급식이 아직 없어요."
             />
           ) : (
-            <div className="rounded-3xl bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4">
-              <p className="text-sm font-semibold text-slate-900">
-                {todayMeal.mealType || "식사"}
-              </p>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-                {todayMeal.menu
-                  .split(/<br\s*\/?>/i)
-                  .map((menu) => menu.replace(/\([^)]*\)/g, "").trim())
-                  .filter(Boolean)
-                  .map((menu) => (
-                    <li
-                      key={menu}
-                      className="rounded-2xl border border-amber-100 bg-white px-3 py-2 text-sm text-slate-700"
-                    >
-                      {menu}
-                    </li>
-                  ))}
-              </ul>
-              <p className="mt-3 text-sm text-slate-500">
-                {todayMeal.calorieInfo || "칼로리 정보는 아직 제공되지 않았어요."}
-              </p>
+            <div className="grid gap-4">
+              {mealCacheNotice ? <InfoState message={mealCacheNotice} /> : null}
+              <div className="rounded-3xl bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">
+                  {todayMeal.mealType || "식사"}
+                </p>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {todayMeal.menu
+                    .split(/<br\s*\/?>/i)
+                    .map((menu) => menu.replace(/\([^)]*\)/g, "").trim())
+                    .filter(Boolean)
+                    .map((menu) => (
+                      <li
+                        key={menu}
+                        className="rounded-2xl border border-amber-100 bg-white px-3 py-2 text-sm text-slate-700"
+                      >
+                        {menu}
+                      </li>
+                    ))}
+                </ul>
+                <p className="mt-3 text-sm text-slate-500">
+                  {todayMeal.calorieInfo || "칼로리 정보는 아직 제공되지 않았어요."}
+                </p>
+              </div>
             </div>
           )}
         </DashboardCard>
@@ -253,24 +305,27 @@ export function HomeDashboard() {
               message="이번 기간에는 보여줄 학사 일정이 없어요."
             />
           ) : (
-            <ul className="space-y-3">
-              {upcomingSchedules.map((event) => (
-                <li
-                  key={`${event.date}-${event.title}`}
-                  className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                    {formatKoreanDateLabel(event.date)}
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {event.title || "행사명 없음"}
-                  </p>
-                  {event.description ? (
-                    <p className="mt-1 text-sm text-slate-500">{event.description}</p>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+            <div className="grid gap-4">
+              {scheduleCacheNotice ? <InfoState message={scheduleCacheNotice} /> : null}
+              <ul className="space-y-3">
+                {upcomingSchedules.map((event) => (
+                  <li
+                    key={`${event.date}-${event.title}`}
+                    className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                      {formatKoreanDateLabel(event.date)}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">
+                      {event.title || "행사명 없음"}
+                    </p>
+                    {event.description ? (
+                      <p className="mt-1 text-sm text-slate-500">{event.description}</p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </DashboardCard>
 

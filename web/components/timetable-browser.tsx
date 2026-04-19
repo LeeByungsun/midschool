@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   EmptyState,
   ErrorState,
+  InfoState,
   LoadingState,
   SetupRequiredState,
 } from "@/components/data-state";
@@ -13,18 +14,26 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel } from "@/lib/date";
 import type { TimetableItem } from "@/lib/neis/types";
-import { fetchTimetable } from "@/lib/school-api";
+import {
+  type CacheStatus,
+  fetchTimetable,
+  formatCacheStatusMessage,
+} from "@/lib/school-api";
 
 type TimetableState = {
   requestToken: string;
   items: TimetableItem[];
   error: string | null;
+  cacheStatus: CacheStatus;
+  cachedAt: number | null;
 };
 
 const initialState: TimetableState = {
   requestToken: "",
   items: [],
   error: null,
+  cacheStatus: "network",
+  cachedAt: null,
 };
 
 export function TimetableBrowser() {
@@ -59,15 +68,17 @@ export function TimetableBrowser() {
       classroom: studentInfo.classroom,
       date: dateKey,
     })
-      .then((items) => {
+      .then((result) => {
         if (isCancelled) {
           return;
         }
 
         setState({
           requestToken,
-          items,
+          items: result.items,
           error: null,
+          cacheStatus: result.cacheStatus,
+          cachedAt: result.cachedAt,
         });
       })
       .catch((error: unknown) => {
@@ -82,6 +93,8 @@ export function TimetableBrowser() {
             error instanceof Error
               ? error.message
               : "시간표 정보를 불러오지 못했어요.",
+          cacheStatus: "network",
+          cachedAt: null,
         });
       });
 
@@ -102,6 +115,11 @@ export function TimetableBrowser() {
     setReloadCount((prev) => prev + 1);
   };
   const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
+  const cacheNotice = formatCacheStatusMessage(
+    state.cacheStatus,
+    state.cachedAt,
+    "시간표",
+  );
 
   return (
     <DashboardCard
@@ -140,21 +158,24 @@ export function TimetableBrowser() {
           message="이 날짜에는 표시할 시간표가 없어요."
         />
       ) : (
-        <ul className="space-y-3">
-          {state.items.map((item) => (
-            <li
-              key={`${item.date}-${item.period}-${item.subject}`}
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p className="text-sm font-semibold text-slate-900">
-                {item.period || "?"}교시 · {item.subject || "과목 정보 없음"}
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                {item.grade}학년 {item.classroom}반
-              </p>
-            </li>
-          ))}
-        </ul>
+        <div className="grid gap-4">
+          {cacheNotice ? <InfoState message={cacheNotice} /> : null}
+          <ul className="space-y-3">
+            {state.items.map((item) => (
+              <li
+                key={`${item.date}-${item.period}-${item.subject}`}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+              >
+                <p className="text-sm font-semibold text-slate-900">
+                  {item.period || "?"}교시 · {item.subject || "과목 정보 없음"}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {item.grade}학년 {item.classroom}반
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </DashboardCard>
   );

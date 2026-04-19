@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   EmptyState,
   ErrorState,
+  InfoState,
   LoadingState,
   SetupRequiredState,
 } from "@/components/data-state";
@@ -14,18 +15,26 @@ import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatKoreanDateLabel, formatKoreanMonthLabel, formatMonthKey } from "@/lib/date";
 import type { SchoolEvent } from "@/lib/neis/types";
 import { isVisibleSchedule } from "@/lib/schedule";
-import { fetchSchedules } from "@/lib/school-api";
+import {
+  type CacheStatus,
+  fetchSchedules,
+  formatCacheStatusMessage,
+} from "@/lib/school-api";
 
 type ScheduleState = {
   requestToken: string;
   items: SchoolEvent[];
   error: string | null;
+  cacheStatus: CacheStatus;
+  cachedAt: number | null;
 };
 
 const initialState: ScheduleState = {
   requestToken: "",
   items: [],
   error: null,
+  cacheStatus: "network",
+  cachedAt: null,
 };
 
 export function ScheduleBrowser() {
@@ -59,15 +68,17 @@ export function ScheduleBrowser() {
       schoolCode: studentInfo.schoolCode,
       date: monthKey,
     })
-      .then((items) => {
+      .then((result) => {
         if (isCancelled) {
           return;
         }
 
         setState({
           requestToken,
-          items,
+          items: result.items,
           error: null,
+          cacheStatus: result.cacheStatus,
+          cachedAt: result.cachedAt,
         });
       })
       .catch((error: unknown) => {
@@ -82,6 +93,8 @@ export function ScheduleBrowser() {
             error instanceof Error
               ? error.message
               : "학사 일정을 불러오지 못했어요.",
+          cacheStatus: "network",
+          cachedAt: null,
         });
       });
 
@@ -107,6 +120,11 @@ export function ScheduleBrowser() {
   };
   const isLoading =
     hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
+  const cacheNotice = formatCacheStatusMessage(
+    state.cacheStatus,
+    state.cachedAt,
+    "학사 일정",
+  );
 
   return (
     <DashboardCard
@@ -145,24 +163,27 @@ export function ScheduleBrowser() {
           message="이번 달에는 표시할 학사 일정이 없어요."
         />
       ) : (
-        <ul className="space-y-3">
-          {visibleItems.map((event) => (
-            <li
-              key={`${event.date}-${event.title}`}
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                {formatKoreanDateLabel(event.date)}
-              </p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">
-                {event.title || "행사명 없음"}
-              </p>
-              {event.description ? (
-                <p className="mt-1 text-sm text-slate-500">{event.description}</p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <div className="grid gap-4">
+          {cacheNotice ? <InfoState message={cacheNotice} /> : null}
+          <ul className="space-y-3">
+            {visibleItems.map((event) => (
+              <li
+                key={`${event.date}-${event.title}`}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                  {formatKoreanDateLabel(event.date)}
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">
+                  {event.title || "행사명 없음"}
+                </p>
+                {event.description ? (
+                  <p className="mt-1 text-sm text-slate-500">{event.description}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </DashboardCard>
   );
