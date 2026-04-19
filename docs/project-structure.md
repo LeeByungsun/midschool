@@ -1,13 +1,13 @@
 # 프로젝트 구조
 
-이 저장소는 **루트 작업공간**과 **안드로이드 앱 프로젝트**를 분리한 구조를 사용합니다.
+이 저장소는 **학교도우미** 서비스를 위한 루트 작업공간이며, Android 앱과 Web 클라이언트를 분리한 구조를 사용합니다.
 
 ## 최상위 구조
 
 ```text
 misSchoolApp/
 ├── android/              # Android Gradle 프로젝트
-├── web/                  # Next.js 기반 Web 클라이언트
+├── web/                  # 학교도우미 Next.js Web 클라이언트
 ├── docs/                 # 기획/구조/설정 문서
 ├── .codex/               # Codex/OMX 스킬, 프롬프트, 에이전트 자산
 ├── .github/              # GitHub 관련 자산
@@ -77,10 +77,16 @@ web/
 │   ├── timer/page.tsx         # 타이머
 │   └── api/                   # NEIS BFF route handlers
 ├── components/                # 화면/카드/상태 UI 컴포넌트
+│   ├── home-dashboard.tsx     # 홈 실데이터 대시보드
+│   ├── meal-browser.tsx       # 날짜별 급식 상세 조회
+│   └── data-state.tsx         # 공통 로딩/오류/빈 상태/설정 필요 UI
 ├── hooks/                     # 브라우저 상태 구독 훅
 ├── lib/
 │   ├── neis/                  # NEIS 타입/매퍼/클라이언트
 │   ├── storage/               # preferences/cache/browser storage
+│   │   ├── preferences.ts     # 학생 설정 저장
+│   │   ├── cache.ts           # 급식/시간표/일정 캐시 및 복구 전략
+│   │   └── browser-storage.ts # 브라우저 저장소 래퍼
 │   └── *.ts                   # 날짜/사이트 데이터/도메인 유틸
 ├── package.json
 └── AGENTS.md
@@ -92,6 +98,7 @@ web/
 - 웹 빌드/테스트 명령은 기본적으로 `web/` 안에서 실행
 - 문서와 자동화 자산은 가능하면 루트 기준 경로 유지
 - 실행용 스킬은 `.codex/skills/` 아래에 유지
+- 사용자/서비스 표기는 문서에서 `학교도우미`를 우선 사용하고, 저장소명 `MisSchoolApp`은 저장소 식별 문맥에서만 사용
 
 ## 자주 쓰는 명령
 

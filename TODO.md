@@ -1,6 +1,6 @@
 # TODO
 
-`MisSchoolApp` 웹 구현 기준의 현재 작업 목록입니다.  
+`학교도우미` 웹 구현 기준의 현재 작업 목록입니다.  
 기준 문서:
 
 - `docs/project_specification.md`

@@ -1,12 +1,13 @@
-# Web workspace
+# 학교도우미 Web workspace
 
-이 폴더는 `MisSchoolApp`의 웹 클라이언트입니다.
+이 폴더는 `MisSchoolApp` 저장소 안의 **학교도우미 웹 클라이언트**입니다.
 
 현재 기준
 - 프레임워크: **Next.js App Router**
 - 언어: **TypeScript**
 - 스타일: **Tailwind CSS v4**
 - 기본 방향: 모바일 퍼스트 대시보드
+- 데이터 경계: **Next.js BFF (`app/api/**/route.ts`)**
 
 우선 참고 문서
 - `docs/project_specification.md`
@@ -48,10 +49,42 @@ npm run build
 
 - `/` : 대시보드
 - `/setup` : 초기 설정
+- `/meals` : 날짜별 급식 상세 조회
 - `/timetable` : 실제 시간표 조회
 - `/schedule` : 실제 월간 일정 조회
-- `/timer` : 타이머 스켈레톤
+- `/timer` : 타이머 기본 UI
 - `/settings` : 저장된 학교/학년/반 수정
+
+## 현재 반영된 주요 기능
+
+- 학교 검색
+  - 초등학교 / 중학교 검색 지원
+  - Enter 키로 검색 가능
+  - 교육청 코드 / 학교 코드 / 학교 종류 저장
+- 시간표
+  - 날짜 이동형 일간 조회
+  - 학교 종류에 따라 초등학교/중학교 시간표 엔드포인트 분기
+- 급식
+  - 오늘 급식 요약
+  - 날짜 이동형 상세 조회
+  - 알레르기 / 칼로리 / 영양 / 원산지 정보 표시
+- 일정
+  - 월간 일정 조회
+- 공통 상태 UX
+  - 로딩 / 오류 / 빈 상태 / 설정 필요 / 재시도 패턴 공통화
+- 캐시 / 복구 전략
+  - 급식 12시간
+  - 시간표 24시간
+  - 일정 12시간
+  - 최신 요청 실패 시 마지막 성공 데이터 fallback
+
+## 주요 폴더
+
+- `app/` : 페이지와 BFF route handlers
+- `components/` : 화면 단위/재사용 UI 컴포넌트
+- `hooks/` : 브라우저 상태 구독 훅
+- `lib/neis/` : NEIS 타입/매퍼/클라이언트
+- `lib/storage/` : preferences/cache/browser storage 래퍼
 
 ## 구현 원칙
 
