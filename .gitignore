@@ -19,4 +19,5 @@ local.properties
 .codex/skills/.system/**
 !.codex/prompts/
 !.codex/prompts/**
+/AGENTS.md
 TODO.md
