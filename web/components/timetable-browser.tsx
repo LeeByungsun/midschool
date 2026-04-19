@@ -119,12 +119,12 @@ export function TimetableBrowser() {
         </p>
       ) : !studentInfo ? (
         <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
-          <p className="font-semibold">시간표를 보려면 학년/반 설정이 필요해요.</p>
+          <p className="font-semibold">시간표를 보려면 학교 이름과 학년/반 설정이 필요해요.</p>
           <Link
-            href="/settings"
+            href="/setup"
             className="mt-3 inline-flex rounded-full bg-amber-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-800"
           >
-            설정하러 가기
+            초기 설정 하러 가기
           </Link>
         </div>
       ) : isLoading ? (

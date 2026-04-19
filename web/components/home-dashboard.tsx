@@ -127,7 +127,7 @@ export function HomeDashboard() {
             </p>
           ) : !studentInfo ? (
             <p className="text-sm leading-7 text-slate-500">
-              먼저 설정에서 학년과 반을 저장해 주세요.
+              먼저 초기 설정에서 학교 이름과 학년/반을 저장해 주세요.
             </p>
           ) : isLoading ? (
             <p className="text-sm leading-7 text-slate-500">시간표를 불러오는 중...</p>
@@ -206,7 +206,7 @@ export function HomeDashboard() {
             <p className="text-sm leading-7 text-slate-500">일정을 불러올 준비 중...</p>
           ) : !studentInfo ? (
             <p className="text-sm leading-7 text-slate-500">
-              설정을 저장하면 일정/시간표와 함께 학교 생활 정보를 계속 확인할 수 있어요.
+              초기 설정을 저장하면 일정/시간표와 함께 학교 생활 정보를 계속 확인할 수 있어요.
             </p>
           ) : isLoading ? (
             <p className="text-sm leading-7 text-slate-500">일정을 불러오는 중...</p>

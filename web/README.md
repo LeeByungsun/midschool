@@ -47,6 +47,7 @@ npm run build
 ## 현재 포함된 기본 골격
 
 - `/` : 대시보드
+- `/setup` : 초기 설정
 - `/timetable` : 시간표 스켈레톤
 - `/schedule` : 일정 스켈레톤
 - `/timer` : 타이머 스켈레톤

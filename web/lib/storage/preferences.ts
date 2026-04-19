@@ -1,6 +1,7 @@
 import { browserStorage } from "@/lib/storage/browser-storage";
 
 export type StudentPreferences = {
+  schoolName: string;
   grade: string;
   classroom: string;
 };
@@ -16,7 +17,9 @@ let cachedParsedPreferences: StudentPreferences | null = null;
 export const isStudentPreferencesComplete = (
   value: StudentPreferences | null,
 ): value is StudentPreferences =>
-  Boolean(value?.grade?.trim() && value?.classroom?.trim());
+  Boolean(
+    value?.schoolName?.trim() && value?.grade?.trim() && value?.classroom?.trim(),
+  );
 
 export function readStudentPreferences(): StudentPreferences | null {
   const raw = browserStorage.getItem(STUDENT_PREFERENCES_KEY);
@@ -33,16 +36,17 @@ export function readStudentPreferences(): StudentPreferences | null {
 
   try {
     const parsed = JSON.parse(raw) as Partial<StudentPreferences>;
+    const schoolName = normalizeValue(parsed.schoolName ?? "");
     const grade = normalizeValue(parsed.grade ?? "");
     const classroom = normalizeValue(parsed.classroom ?? "");
 
-    if (!grade || !classroom) {
+    if (!schoolName || !grade || !classroom) {
       cachedRawPreferences = raw;
       cachedParsedPreferences = null;
       return null;
     }
 
-    const normalized = { grade, classroom };
+    const normalized = { schoolName, grade, classroom };
     cachedRawPreferences = raw;
     cachedParsedPreferences = normalized;
 
@@ -56,6 +60,7 @@ export function readStudentPreferences(): StudentPreferences | null {
 
 export function saveStudentPreferences(value: StudentPreferences) {
   const normalized = {
+    schoolName: normalizeValue(value.schoolName),
     grade: normalizeValue(value.grade),
     classroom: normalizeValue(value.classroom),
   };
@@ -88,11 +93,11 @@ export function clearStudentPreferences() {
 
 export function formatStudentPreferences(
   value: StudentPreferences | null,
-  fallback = "학년/반 설정 필요",
+  fallback = "학교 / 학년 / 반 설정 필요",
 ) {
   if (!isStudentPreferencesComplete(value)) {
     return fallback;
   }
 
-  return `${value.grade}학년 ${value.classroom}반`;
+  return `${value.schoolName} · ${value.grade}학년 ${value.classroom}반`;
 }

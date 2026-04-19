@@ -13,7 +13,7 @@ export function StudentSummaryBadge() {
   const isConfigured = hydrated && Boolean(studentInfo);
   const title = hydrated
     ? formatStudentPreferences(studentInfo)
-    : "학년/반 확인 중...";
+    : "학교 / 학년 / 반 확인 중...";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
@@ -23,7 +23,7 @@ export function StudentSummaryBadge() {
           ? "브라우저 저장값을 불러오는 중입니다."
           : isConfigured
           ? "저장된 학년/반 기준으로 시간표를 조회합니다."
-          : "설정에서 학년/반을 저장하면 실제 조회에 사용됩니다."}
+          : "초기 설정에서 학교 이름과 학년/반을 저장하면 실제 조회에 사용됩니다."}
       </p>
     </div>
   );

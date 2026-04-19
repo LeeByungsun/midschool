@@ -5,7 +5,7 @@ export default function SettingsPage() {
   return (
     <AppPage
       title="설정"
-      description="학년/반과 개인 선호값을 웹 저장소에 연결하는 설정 화면의 자리입니다."
+      description="학교 이름과 학년/반을 수정하는 설정 화면입니다."
       activePath="/settings"
     >
       <SettingsForm />

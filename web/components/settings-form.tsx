@@ -29,12 +29,13 @@ export function SettingsForm() {
     const formData = new FormData(event.currentTarget);
 
     const nextValue = {
+      schoolName: String(formData.get("schoolName") ?? "").trim(),
       grade: String(formData.get("grade") ?? "").trim(),
       classroom: String(formData.get("classroom") ?? "").trim(),
     };
 
     if (!isStudentPreferencesComplete(nextValue)) {
-      setError("학년과 반을 모두 입력해 주세요.");
+      setError("학교 이름, 학년, 반을 모두 입력해 주세요.");
       setMessage("");
       return;
     }
@@ -48,12 +49,12 @@ export function SettingsForm() {
     }
 
     setError("");
-    setMessage("학년/반을 저장했어요.");
+    setMessage("학교 이름과 학년/반을 저장했어요.");
   };
 
   const handleReset = () => {
     clearStudentPreferences();
-    setMessage("저장된 학년/반을 지웠어요.");
+    setMessage("저장된 학교/학년/반을 지웠어요.");
     setError("");
   };
 
@@ -61,11 +62,9 @@ export function SettingsForm() {
     <div className="grid gap-4">
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 className="text-base font-semibold text-slate-900">현재 저장 상태</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          {currentSummary}
-        </p>
+        <p className="mt-2 text-sm text-slate-600">{currentSummary}</p>
         <p className="mt-1 text-sm text-slate-500">
-          저장된 값은 이후 대시보드, 시간표, 일정 조회의 기본값으로 사용됩니다.
+          저장된 학교 이름과 학년/반은 이후 대시보드, 시간표, 일정 조회의 기준으로 사용됩니다.
         </p>
       </section>
 
@@ -74,8 +73,19 @@ export function SettingsForm() {
         onSubmit={handleSubmit}
         className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
       >
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4">
           <label className="grid gap-2 text-sm text-slate-700">
+            <span className="font-medium">학교 이름</span>
+            <input
+              name="schoolName"
+              defaultValue={savedPreferences?.schoolName ?? ""}
+              placeholder="예: 미사중학교"
+              className="rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+            />
+          </label>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm text-slate-700">
             <span className="font-medium">학년</span>
             <input
               name="grade"
@@ -86,7 +96,7 @@ export function SettingsForm() {
             />
           </label>
 
-          <label className="grid gap-2 text-sm text-slate-700">
+            <label className="grid gap-2 text-sm text-slate-700">
             <span className="font-medium">반</span>
             <input
               name="classroom"
@@ -96,10 +106,11 @@ export function SettingsForm() {
               className="rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
           </label>
+          </div>
         </div>
 
         <p className="mt-4 text-sm text-slate-500">
-          아직 저장하지 않았다면 홈 화면과 상세 조회에서 “설정 필요” 상태로 보입니다.
+          아직 저장하지 않았다면 홈 화면과 상세 조회에서 “초기 설정 필요” 상태로 보입니다.
         </p>
 
         {error ? (
