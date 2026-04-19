@@ -7,6 +7,7 @@
 ```text
 misSchoolApp/
 ├── android/              # Android Gradle 프로젝트
+├── web/                  # Web 구현 시작 위치
 ├── docs/                 # 기획/구조/설정 문서
 ├── .codex/               # Codex/OMX 스킬, 프롬프트, 에이전트 자산
 ├── .github/              # GitHub 관련 자산

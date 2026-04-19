@@ -31,6 +31,7 @@ cd android
 ```text
 misSchoolApp/
 ├── android/              # Android Gradle 프로젝트 루트
+├── web/                  # Web 프로젝트 시작 폴더
 ├── .codex/               # Codex/OMX 에이전트 스킬 및 프롬프트
 ├── docs/                 # 프로젝트 문서
 ├── .github/              # GitHub 관련 자산
@@ -38,6 +39,7 @@ misSchoolApp/
 ```
 
 안드로이드 앱 내부 구조는 `docs/project-structure.md` 에 정리되어 있습니다.
+멀티플랫폼 기획 기준은 `docs/project_specification.md` 에 정리되어 있습니다.
 
 ## 스킬 파일 권장 위치
 
