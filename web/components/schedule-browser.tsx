@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { DashboardCard } from "@/components/dashboard-card";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { formatKoreanDateLabel, formatKoreanMonthLabel, formatMonthKey } from "@/lib/date";
 import type { SchoolEvent } from "@/lib/neis/types";
 import { isVisibleSchedule } from "@/lib/schedule";
@@ -21,6 +22,7 @@ const initialState: ScheduleState = {
 };
 
 export function ScheduleBrowser() {
+  const hydrated = useHydrated();
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -35,6 +37,12 @@ export function ScheduleBrowser() {
 
   useEffect(() => {
     let isCancelled = false;
+
+    if (!hydrated) {
+      return () => {
+        isCancelled = true;
+      };
+    }
 
     fetchSchedules({ date: monthKey })
       .then((items) => {
@@ -66,9 +74,9 @@ export function ScheduleBrowser() {
     return () => {
       isCancelled = true;
     };
-  }, [monthKey]);
+  }, [hydrated, monthKey]);
 
-  const isLoading = state.requestKey !== monthKey;
+  const isLoading = hydrated && state.requestKey !== monthKey;
 
   const visibleItems = useMemo(
     () =>
@@ -105,7 +113,9 @@ export function ScheduleBrowser() {
         </div>
       }
     >
-      {isLoading ? (
+      {!hydrated ? (
+        <p className="text-sm leading-7 text-slate-500">월 정보를 맞추는 중...</p>
+      ) : isLoading ? (
         <p className="text-sm leading-7 text-slate-500">학사 일정을 불러오는 중...</p>
       ) : state.error ? (
         <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">

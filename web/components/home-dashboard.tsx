@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { DashboardCard } from "@/components/dashboard-card";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel, formatMonthKey } from "@/lib/date";
 import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
@@ -28,6 +29,7 @@ const initialState: DashboardState = {
 };
 
 export function HomeDashboard() {
+  const hydrated = useHydrated();
   const studentInfo = useStudentPreferences();
   const [state, setState] = useState<DashboardState>(initialState);
 
@@ -42,7 +44,7 @@ export function HomeDashboard() {
   useEffect(() => {
     let isCancelled = false;
 
-    if (!studentInfo) {
+    if (!hydrated || !studentInfo) {
       return;
     }
 
@@ -88,9 +90,9 @@ export function HomeDashboard() {
     return () => {
       isCancelled = true;
     };
-  }, [monthKey, requestKey, studentInfo, todayKey]);
+  }, [hydrated, monthKey, requestKey, studentInfo, todayKey]);
 
-  const isLoading = Boolean(studentInfo) && state.requestKey !== requestKey;
+  const isLoading = hydrated && Boolean(studentInfo) && state.requestKey !== requestKey;
 
   const upcomingSchedules = useMemo(
     () =>
@@ -119,7 +121,11 @@ export function HomeDashboard() {
             </Link>
           }
         >
-          {!studentInfo ? (
+          {!hydrated ? (
+            <p className="text-sm leading-7 text-slate-500">
+              브라우저 설정과 오늘 날짜를 맞추는 중...
+            </p>
+          ) : !studentInfo ? (
             <p className="text-sm leading-7 text-slate-500">
               먼저 설정에서 학년과 반을 저장해 주세요.
             </p>
@@ -154,7 +160,9 @@ export function HomeDashboard() {
         </DashboardCard>
 
         <DashboardCard title="오늘 급식" subtitle={`${todayLabel} 점심 메뉴 요약`}>
-          {!studentInfo ? (
+          {!hydrated ? (
+            <p className="text-sm leading-7 text-slate-500">급식을 불러올 준비 중...</p>
+          ) : !studentInfo ? (
             <p className="text-sm leading-7 text-slate-500">
               학년/반 설정과 무관하게 급식은 확인할 수 있지만, 우선 공통 데이터 연결 흐름에
               맞춰 함께 준비 중입니다.
@@ -194,7 +202,9 @@ export function HomeDashboard() {
 
       <div className="grid gap-4">
         <DashboardCard title="다가오는 일정" subtitle="가까운 일정만 먼저 요약">
-          {!studentInfo ? (
+          {!hydrated ? (
+            <p className="text-sm leading-7 text-slate-500">일정을 불러올 준비 중...</p>
+          ) : !studentInfo ? (
             <p className="text-sm leading-7 text-slate-500">
               설정을 저장하면 일정/시간표와 함께 학교 생활 정보를 계속 확인할 수 있어요.
             </p>

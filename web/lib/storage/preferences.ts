@@ -10,6 +10,8 @@ export const STUDENT_PREFERENCES_UPDATED_EVENT =
   "midschool:web:student-preferences-updated";
 
 const normalizeValue = (value: string) => value.trim();
+let cachedRawPreferences: string | null = null;
+let cachedParsedPreferences: StudentPreferences | null = null;
 
 export const isStudentPreferencesComplete = (
   value: StudentPreferences | null,
@@ -19,7 +21,13 @@ export const isStudentPreferencesComplete = (
 export function readStudentPreferences(): StudentPreferences | null {
   const raw = browserStorage.getItem(STUDENT_PREFERENCES_KEY);
 
+  if (raw === cachedRawPreferences) {
+    return cachedParsedPreferences;
+  }
+
   if (!raw) {
+    cachedRawPreferences = null;
+    cachedParsedPreferences = null;
     return null;
   }
 
@@ -29,11 +37,19 @@ export function readStudentPreferences(): StudentPreferences | null {
     const classroom = normalizeValue(parsed.classroom ?? "");
 
     if (!grade || !classroom) {
+      cachedRawPreferences = raw;
+      cachedParsedPreferences = null;
       return null;
     }
 
-    return { grade, classroom };
+    const normalized = { grade, classroom };
+    cachedRawPreferences = raw;
+    cachedParsedPreferences = normalized;
+
+    return normalized;
   } catch {
+    cachedRawPreferences = raw;
+    cachedParsedPreferences = null;
     return null;
   }
 }

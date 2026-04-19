@@ -5,10 +5,20 @@ import Link from "next/link";
 import {
   formatStudentPreferences,
 } from "@/lib/storage/preferences";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 
 export function StudentSetupCallout() {
+  const hydrated = useHydrated();
   const studentInfo = useStudentPreferences();
+
+  if (!hydrated) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+        브라우저 저장값을 확인하는 중입니다...
+      </div>
+    );
+  }
 
   if (studentInfo) {
     return (

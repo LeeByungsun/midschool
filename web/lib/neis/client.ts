@@ -57,7 +57,7 @@ export async function fetchNeisJson<T>(
   const response = await fetch(url.toString(), {
     method: "GET",
     headers: {
-      Accept: "application/json",
+      Accept: "*/*",
     },
     cache: "no-store",
   });

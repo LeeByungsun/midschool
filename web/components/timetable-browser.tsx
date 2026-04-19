@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { DashboardCard } from "@/components/dashboard-card";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel } from "@/lib/date";
 import type { TimetableItem } from "@/lib/neis/types";
@@ -22,6 +23,7 @@ const initialState: TimetableState = {
 };
 
 export function TimetableBrowser() {
+  const hydrated = useHydrated();
   const studentInfo = useStudentPreferences();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [state, setState] = useState<TimetableState>(initialState);
@@ -38,7 +40,7 @@ export function TimetableBrowser() {
   useEffect(() => {
     let isCancelled = false;
 
-    if (!studentInfo) {
+    if (!hydrated || !studentInfo) {
       return;
     }
 
@@ -76,9 +78,9 @@ export function TimetableBrowser() {
     return () => {
       isCancelled = true;
     };
-  }, [dateKey, requestKey, studentInfo]);
+  }, [dateKey, hydrated, requestKey, studentInfo]);
 
-  const isLoading = Boolean(studentInfo) && state.requestKey !== requestKey;
+  const isLoading = hydrated && Boolean(studentInfo) && state.requestKey !== requestKey;
 
   const moveDate = (offset: number) => {
     setSelectedDate((prev) => {
@@ -111,7 +113,11 @@ export function TimetableBrowser() {
         </div>
       }
     >
-      {!studentInfo ? (
+      {!hydrated ? (
+        <p className="text-sm leading-7 text-slate-500">
+          브라우저 상태와 날짜를 동기화하는 중...
+        </p>
+      ) : !studentInfo ? (
         <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
           <p className="font-semibold">시간표를 보려면 학년/반 설정이 필요해요.</p>
           <Link
