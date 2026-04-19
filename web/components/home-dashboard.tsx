@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SetupRequiredState,
+} from "@/components/data-state";
 import { DashboardCard } from "@/components/dashboard-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
@@ -13,7 +19,7 @@ import { fetchMeals, fetchSchedules, fetchTimetable } from "@/lib/school-api";
 import { timerPresets } from "@/lib/site-data";
 
 type DashboardState = {
-  requestKey: string;
+  requestToken: string;
   timetable: TimetableItem[];
   meals: MealInfo[];
   schedules: SchoolEvent[];
@@ -21,7 +27,7 @@ type DashboardState = {
 };
 
 const initialState: DashboardState = {
-  requestKey: "",
+  requestToken: "",
   timetable: [],
   meals: [],
   schedules: [],
@@ -32,6 +38,7 @@ export function HomeDashboard() {
   const hydrated = useHydrated();
   const studentInfo = useStudentPreferences();
   const [state, setState] = useState<DashboardState>(initialState);
+  const [reloadCount, setReloadCount] = useState(0);
 
   const today = useMemo(() => new Date(), []);
   const todayKey = useMemo(() => formatDateKey(today), [today]);
@@ -40,6 +47,7 @@ export function HomeDashboard() {
   const requestKey = studentInfo
     ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}`
     : "";
+  const requestToken = `${requestKey}:${reloadCount}`;
 
   useEffect(() => {
     let isCancelled = false;
@@ -74,7 +82,7 @@ export function HomeDashboard() {
         }
 
         setState({
-          requestKey,
+          requestToken,
           timetable,
           meals,
           schedules,
@@ -87,7 +95,7 @@ export function HomeDashboard() {
         }
 
         setState({
-          requestKey,
+          requestToken,
           timetable: [],
           meals: [],
           schedules: [],
@@ -101,9 +109,7 @@ export function HomeDashboard() {
     return () => {
       isCancelled = true;
     };
-  }, [hydrated, monthKey, requestKey, studentInfo, todayKey]);
-
-  const isLoading = hydrated && Boolean(studentInfo) && state.requestKey !== requestKey;
+  }, [hydrated, monthKey, reloadCount, requestToken, studentInfo, todayKey]);
 
   const upcomingSchedules = useMemo(
     () =>
@@ -116,6 +122,10 @@ export function HomeDashboard() {
   );
 
   const todayMeal = state.meals[0];
+  const retryFetch = () => {
+    setReloadCount((prev) => prev + 1);
+  };
+  const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.35fr_0.95fr]">
@@ -133,19 +143,18 @@ export function HomeDashboard() {
           }
         >
           {!hydrated ? (
-            <p className="text-sm leading-7 text-slate-500">
-              브라우저 설정과 오늘 날짜를 맞추는 중...
-            </p>
+            <LoadingState message="브라우저 설정과 오늘 날짜를 맞추는 중..." />
           ) : !studentInfo ? (
-            <p className="text-sm leading-7 text-slate-500">
-              먼저 초기 설정에서 학교 이름과 학년/반을 저장해 주세요.
-            </p>
+            <SetupRequiredState message="먼저 초기 설정에서 학교 이름과 학년/반을 저장해 주세요." />
           ) : isLoading ? (
-            <p className="text-sm leading-7 text-slate-500">시간표를 불러오는 중...</p>
+            <LoadingState message="시간표를 불러오는 중..." />
           ) : state.error ? (
-            <p className="text-sm leading-7 text-rose-600">{state.error}</p>
+            <ErrorState message={state.error} onRetry={retryFetch} />
           ) : state.timetable.length === 0 ? (
-            <p className="text-sm leading-7 text-slate-500">오늘 등록된 수업이 없어요.</p>
+            <EmptyState
+              title="오늘 수업이 없어요."
+              message="오늘 등록된 시간표가 아직 없어요."
+            />
           ) : (
             <ul className="space-y-3">
               {state.timetable.map((item) => (
@@ -172,18 +181,21 @@ export function HomeDashboard() {
 
         <DashboardCard title="오늘 급식" subtitle={`${todayLabel} 점심 메뉴 요약`}>
           {!hydrated ? (
-            <p className="text-sm leading-7 text-slate-500">급식을 불러올 준비 중...</p>
+            <LoadingState message="급식을 불러올 준비 중..." />
           ) : !studentInfo ? (
-            <p className="text-sm leading-7 text-slate-500">
-              학년/반 설정과 무관하게 급식은 확인할 수 있지만, 우선 공통 데이터 연결 흐름에
-              맞춰 함께 준비 중입니다.
-            </p>
+            <SetupRequiredState
+              title="초기 설정을 먼저 해 주세요."
+              message="급식도 학교 기준으로 불러오므로, 학교 이름과 학년/반을 먼저 저장해 주세요."
+            />
           ) : isLoading ? (
-            <p className="text-sm leading-7 text-slate-500">급식을 불러오는 중...</p>
+            <LoadingState message="급식을 불러오는 중..." />
           ) : state.error ? (
-            <p className="text-sm leading-7 text-rose-600">{state.error}</p>
+            <ErrorState message={state.error} onRetry={retryFetch} />
           ) : !todayMeal ? (
-            <p className="text-sm leading-7 text-slate-500">오늘 급식 정보가 없어요.</p>
+            <EmptyState
+              title="오늘 급식 정보가 없어요."
+              message="현재 날짜 기준으로 표시할 급식이 아직 없어요."
+            />
           ) : (
             <div className="rounded-3xl bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4">
               <p className="text-sm font-semibold text-slate-900">
@@ -214,19 +226,21 @@ export function HomeDashboard() {
       <div className="grid gap-4">
         <DashboardCard title="다가오는 일정" subtitle="가까운 일정만 먼저 요약">
           {!hydrated ? (
-            <p className="text-sm leading-7 text-slate-500">일정을 불러올 준비 중...</p>
+            <LoadingState message="일정을 불러올 준비 중..." />
           ) : !studentInfo ? (
-            <p className="text-sm leading-7 text-slate-500">
-              초기 설정을 저장하면 일정/시간표와 함께 학교 생활 정보를 계속 확인할 수 있어요.
-            </p>
+            <SetupRequiredState
+              title="초기 설정을 저장해 주세요."
+              message="설정을 저장하면 일정과 시간표를 같은 기준으로 계속 확인할 수 있어요."
+            />
           ) : isLoading ? (
-            <p className="text-sm leading-7 text-slate-500">일정을 불러오는 중...</p>
+            <LoadingState message="일정을 불러오는 중..." />
           ) : state.error ? (
-            <p className="text-sm leading-7 text-rose-600">{state.error}</p>
+            <ErrorState message={state.error} onRetry={retryFetch} />
           ) : upcomingSchedules.length === 0 ? (
-            <p className="text-sm leading-7 text-slate-500">
-              이번 기간에 보여줄 일정이 없어요.
-            </p>
+            <EmptyState
+              title="다가오는 일정이 없어요."
+              message="이번 기간에는 보여줄 학사 일정이 없어요."
+            />
           ) : (
             <ul className="space-y-3">
               {upcomingSchedules.map((event) => (

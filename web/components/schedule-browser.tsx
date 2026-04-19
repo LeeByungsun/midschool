@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SetupRequiredState,
+} from "@/components/data-state";
 import { DashboardCard } from "@/components/dashboard-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
@@ -11,13 +17,13 @@ import { isVisibleSchedule } from "@/lib/schedule";
 import { fetchSchedules } from "@/lib/school-api";
 
 type ScheduleState = {
-  requestKey: string;
+  requestToken: string;
   items: SchoolEvent[];
   error: string | null;
 };
 
 const initialState: ScheduleState = {
-  requestKey: "",
+  requestToken: "",
   items: [],
   error: null,
 };
@@ -30,12 +36,14 @@ export function ScheduleBrowser() {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [state, setState] = useState<ScheduleState>(initialState);
+  const [reloadCount, setReloadCount] = useState(0);
 
   const monthKey = useMemo(() => formatMonthKey(selectedMonth), [selectedMonth]);
   const monthLabel = useMemo(
     () => formatKoreanMonthLabel(selectedMonth),
     [selectedMonth],
   );
+  const requestToken = `${monthKey}:${reloadCount}`;
 
   useEffect(() => {
     let isCancelled = false;
@@ -57,7 +65,7 @@ export function ScheduleBrowser() {
         }
 
         setState({
-          requestKey: monthKey,
+          requestToken,
           items,
           error: null,
         });
@@ -68,7 +76,7 @@ export function ScheduleBrowser() {
         }
 
         setState({
-          requestKey: monthKey,
+          requestToken,
           items: [],
           error:
             error instanceof Error
@@ -80,10 +88,7 @@ export function ScheduleBrowser() {
     return () => {
       isCancelled = true;
     };
-  }, [hydrated, monthKey, studentInfo]);
-
-  const isLoading =
-    hydrated && Boolean(studentInfo) && state.requestKey !== monthKey;
+  }, [hydrated, monthKey, reloadCount, requestToken, studentInfo]);
 
   const visibleItems = useMemo(
     () =>
@@ -96,6 +101,12 @@ export function ScheduleBrowser() {
   const moveMonth = (offset: number) => {
     setSelectedMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
   };
+
+  const retryFetch = () => {
+    setReloadCount((prev) => prev + 1);
+  };
+  const isLoading =
+    hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
 
   return (
     <DashboardCard
@@ -121,21 +132,18 @@ export function ScheduleBrowser() {
       }
     >
       {!hydrated ? (
-        <p className="text-sm leading-7 text-slate-500">월 정보를 맞추는 중...</p>
+        <LoadingState message="월 정보를 맞추는 중..." />
       ) : !studentInfo ? (
-        <p className="text-sm leading-7 text-slate-500">
-          학교 이름과 학년/반을 먼저 저장해 주세요.
-        </p>
+        <SetupRequiredState message="학사 일정을 보려면 학교 이름과 학년/반을 먼저 저장해 주세요." />
       ) : isLoading ? (
-        <p className="text-sm leading-7 text-slate-500">학사 일정을 불러오는 중...</p>
+        <LoadingState message="학사 일정을 불러오는 중..." />
       ) : state.error ? (
-        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {state.error}
-        </p>
+        <ErrorState message={state.error} onRetry={retryFetch} />
       ) : visibleItems.length === 0 ? (
-        <p className="text-sm leading-7 text-slate-500">
-          이번 달에는 보여줄 일정이 없어요.
-        </p>
+        <EmptyState
+          title="보여줄 일정이 없어요."
+          message="이번 달에는 표시할 학사 일정이 없어요."
+        />
       ) : (
         <ul className="space-y-3">
           {visibleItems.map((event) => (

@@ -1,8 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SetupRequiredState,
+} from "@/components/data-state";
 import { DashboardCard } from "@/components/dashboard-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
@@ -11,13 +16,13 @@ import type { TimetableItem } from "@/lib/neis/types";
 import { fetchTimetable } from "@/lib/school-api";
 
 type TimetableState = {
-  requestKey: string;
+  requestToken: string;
   items: TimetableItem[];
   error: string | null;
 };
 
 const initialState: TimetableState = {
-  requestKey: "",
+  requestToken: "",
   items: [],
   error: null,
 };
@@ -27,6 +32,7 @@ export function TimetableBrowser() {
   const studentInfo = useStudentPreferences();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [state, setState] = useState<TimetableState>(initialState);
+  const [reloadCount, setReloadCount] = useState(0);
 
   const dateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate]);
   const dateLabel = useMemo(
@@ -36,6 +42,7 @@ export function TimetableBrowser() {
   const requestKey = studentInfo
     ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${dateKey}`
     : "";
+  const requestToken = `${requestKey}:${reloadCount}`;
 
   useEffect(() => {
     let isCancelled = false;
@@ -58,7 +65,7 @@ export function TimetableBrowser() {
         }
 
         setState({
-          requestKey,
+          requestToken,
           items,
           error: null,
         });
@@ -69,7 +76,7 @@ export function TimetableBrowser() {
         }
 
         setState({
-          requestKey,
+          requestToken,
           items: [],
           error:
             error instanceof Error
@@ -81,9 +88,7 @@ export function TimetableBrowser() {
     return () => {
       isCancelled = true;
     };
-  }, [dateKey, hydrated, requestKey, studentInfo]);
-
-  const isLoading = hydrated && Boolean(studentInfo) && state.requestKey !== requestKey;
+  }, [dateKey, hydrated, reloadCount, requestToken, studentInfo]);
 
   const moveDate = (offset: number) => {
     setSelectedDate((prev) => {
@@ -92,6 +97,11 @@ export function TimetableBrowser() {
       return next;
     });
   };
+
+  const retryFetch = () => {
+    setReloadCount((prev) => prev + 1);
+  };
+  const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
 
   return (
     <DashboardCard
@@ -117,27 +127,18 @@ export function TimetableBrowser() {
       }
     >
       {!hydrated ? (
-        <p className="text-sm leading-7 text-slate-500">
-          브라우저 상태와 날짜를 동기화하는 중...
-        </p>
+        <LoadingState message="브라우저 상태와 날짜를 동기화하는 중..." />
       ) : !studentInfo ? (
-        <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
-          <p className="font-semibold">시간표를 보려면 학교 이름과 학년/반 설정이 필요해요.</p>
-          <Link
-            href="/setup"
-            className="mt-3 inline-flex rounded-full bg-amber-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-800"
-          >
-            초기 설정 하러 가기
-          </Link>
-        </div>
+        <SetupRequiredState message="시간표를 보려면 학교 이름과 학년/반 설정을 먼저 저장해 주세요." />
       ) : isLoading ? (
-        <p className="text-sm leading-7 text-slate-500">시간표를 불러오는 중...</p>
+        <LoadingState message="시간표를 불러오는 중..." />
       ) : state.error ? (
-        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {state.error}
-        </p>
+        <ErrorState message={state.error} onRetry={retryFetch} />
       ) : state.items.length === 0 ? (
-        <p className="text-sm leading-7 text-slate-500">이 날짜에는 수업 정보가 없어요.</p>
+        <EmptyState
+          title="수업 정보가 없어요."
+          message="이 날짜에는 표시할 시간표가 없어요."
+        />
       ) : (
         <ul className="space-y-3">
           {state.items.map((item) => (
