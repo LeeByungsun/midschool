@@ -41,6 +41,7 @@ misSchoolApp/
 안드로이드 앱 내부 구조는 `docs/project-structure.md` 에 정리되어 있습니다.
 멀티플랫폼 기획 기준은 `docs/project_specification.md` 에 정리되어 있습니다.
 웹 자동화/스킬 정리는 `docs/skills/web-automation-map.md` 에 정리되어 있습니다.
+skill 이름 규칙은 `docs/skills/skill-naming-conventions.md` 에 정리되어 있습니다.
 
 ## 스킬 파일 권장 위치
 
@@ -48,6 +49,6 @@ misSchoolApp/
 
 - 실행 스킬: `.codex/skills/<skill-name>/SKILL.md`
 - 설명 문서: `docs/skills/<skill-name>.md`
-- GitHub 전용 자산: `.github/skills/`
+- GitHub 워크플로우/메타 자산: `.github/`
 
 이렇게 두면 안드로이드 앱 코드(`/android`)와 자동화/문서 자산이 섞이지 않아 유지보수가 쉬워집니다.

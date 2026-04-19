@@ -8,6 +8,7 @@
 - **자동화 자산**은 `.codex/` 아래에 둡니다.
 - **웹 코드 전용 작업 규칙**은 `web/AGENTS.md` 에 둡니다.
 - **사람이 읽는 설명 문서**는 `docs/skills/` 아래에 둡니다.
+- skill 이름 규칙은 `docs/skills/skill-naming-conventions.md` 를 따릅니다.
 
 즉:
 

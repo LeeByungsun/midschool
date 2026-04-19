@@ -54,6 +54,15 @@ android/
 - 이후 iOS, backend, web 같은 다른 플랫폼 폴더를 추가하기 쉬움
 - Codex/OMX 자산과 안드로이드 앱 소스를 역할별로 분리 가능
 
+## 자동화 자산 위치
+
+- 실행 스킬: `.codex/skills/`
+- 역할 프롬프트: `.codex/prompts/`
+- 에이전트 메타데이터: `.codex/agents/`
+- 코드 전용 규칙:
+  - Android: `android/AGENTS.md`
+  - Web: `web/AGENTS.md`
+
 ## 작업 규칙
 
 - 안드로이드 빌드/테스트 명령은 기본적으로 `android/` 안에서 실행
