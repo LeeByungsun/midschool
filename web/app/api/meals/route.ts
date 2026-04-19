@@ -5,6 +5,10 @@ import { mapMeals } from "@/lib/neis/mapper";
 import type { MealRowDto, NeisResponse } from "@/lib/neis/types";
 
 export async function GET(request: NextRequest) {
+  const officeCode =
+    request.nextUrl.searchParams.get("officeCode")?.trim() ?? undefined;
+  const schoolCode =
+    request.nextUrl.searchParams.get("schoolCode")?.trim() ?? undefined;
   const date = request.nextUrl.searchParams.get("date")?.trim() ?? undefined;
 
   try {
@@ -12,6 +16,10 @@ export async function GET(request: NextRequest) {
       "hub/mealServiceDietInfo",
       {
         MLSV_YMD: date,
+      },
+      {
+        officeCode,
+        schoolCode,
       },
     );
 

@@ -17,6 +17,7 @@ export type NeisResponse<T> = {
   mealServiceDietInfo?: NeisSection<T>[];
   SchoolSchedule?: NeisSection<T>[];
   misTimetable?: NeisSection<T>[];
+  schoolInfo?: NeisSection<T>[];
 };
 
 export type MealRowDto = {
@@ -40,6 +41,20 @@ export type TimetableRowDto = {
   CLASS_NM?: string;
 };
 
+export type SchoolInfoRowDto = {
+  ATPT_OFCDC_SC_CODE: string;
+  ATPT_OFCDC_SC_NM?: string;
+  SD_SCHUL_CODE: string;
+  SCHUL_NM?: string;
+  SCHUL_KND_SC_NM?: string;
+  LCTN_SC_NM?: string;
+  JU_ORG_NM?: string;
+  FOND_SC_NM?: string;
+  ORG_RDNMA?: string;
+  ORG_TELNO?: string;
+  HMPG_ADRES?: string;
+};
+
 export type MealInfo = {
   date: string;
   mealType: string;
@@ -59,4 +74,18 @@ export type TimetableItem = {
   subject: string;
   grade: string;
   classroom: string;
+};
+
+export type SchoolInfo = {
+  officeCode: string;
+  officeName: string;
+  schoolCode: string;
+  schoolName: string;
+  schoolKind: string;
+  location: string;
+  jurisdiction: string;
+  foundation: string;
+  roadAddress: string;
+  telephone: string;
+  homepage: string;
 };

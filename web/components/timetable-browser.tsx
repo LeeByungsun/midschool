@@ -45,6 +45,8 @@ export function TimetableBrowser() {
     }
 
     fetchTimetable({
+      officeCode: studentInfo.officeCode,
+      schoolCode: studentInfo.schoolCode,
       grade: studentInfo.grade,
       classroom: studentInfo.classroom,
       date: dateKey,

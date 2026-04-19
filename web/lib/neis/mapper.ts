@@ -5,6 +5,8 @@ import type {
   NeisResultDto,
   NeisSection,
   ScheduleRowDto,
+  SchoolInfo,
+  SchoolInfoRowDto,
   SchoolEvent,
   TimetableItem,
   TimetableRowDto,
@@ -70,5 +72,23 @@ export function mapTimetable(
     subject: row.ITRT_CNTNT ?? "",
     grade: row.GRADE ?? "",
     classroom: row.CLASS_NM ?? "",
+  }));
+}
+
+export function mapSchoolInfo(
+  response: NeisResponse<SchoolInfoRowDto>,
+): SchoolInfo[] {
+  return extractRows(response.schoolInfo, "학교 검색").map((row) => ({
+    officeCode: row.ATPT_OFCDC_SC_CODE,
+    officeName: row.ATPT_OFCDC_SC_NM ?? "",
+    schoolCode: row.SD_SCHUL_CODE,
+    schoolName: row.SCHUL_NM ?? "",
+    schoolKind: row.SCHUL_KND_SC_NM ?? "",
+    location: row.LCTN_SC_NM ?? "",
+    jurisdiction: row.JU_ORG_NM ?? "",
+    foundation: row.FOND_SC_NM ?? "",
+    roadAddress: row.ORG_RDNMA ?? "",
+    telephone: row.ORG_TELNO ?? "",
+    homepage: row.HMPG_ADRES ?? "",
   }));
 }

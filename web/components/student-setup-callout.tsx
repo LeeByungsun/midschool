@@ -33,7 +33,7 @@ export function StudentSetupCallout() {
     <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
       <p className="font-semibold">아직 초기 설정이 필요해요.</p>
       <p className="mt-1 leading-6">
-        초기 설정에서 학교 이름과 학년/반을 저장하면 대시보드와 시간표 조회에 바로 반영됩니다.
+        초기 설정에서 학교를 검색해 선택한 뒤 학년/반을 저장하면 대시보드와 시간표 조회에 바로 반영됩니다.
       </p>
       <Link
         href="/setup"

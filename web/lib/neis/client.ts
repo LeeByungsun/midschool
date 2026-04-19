@@ -23,9 +23,16 @@ export function getNeisConfig() {
   };
 }
 
+type FetchNeisOptions = {
+  includeSchoolContext?: boolean;
+  officeCode?: string;
+  schoolCode?: string;
+};
+
 export async function fetchNeisJson<T>(
   endpoint: string,
   params: Record<string, string | undefined>,
+  options: FetchNeisOptions = {},
 ) {
   const config = getNeisConfig();
 
@@ -41,9 +48,12 @@ export async function fetchNeisJson<T>(
     Type: "json",
     pIndex: "1",
     pSize: "100",
-    ATPT_OFCDC_SC_CODE: config.officeCode,
-    SD_SCHUL_CODE: config.schoolCode,
   });
+
+  if (options.includeSchoolContext !== false) {
+    searchParams.set("ATPT_OFCDC_SC_CODE", options.officeCode ?? config.officeCode);
+    searchParams.set("SD_SCHUL_CODE", options.schoolCode ?? config.schoolCode);
+  }
 
   for (const [key, value] of Object.entries(params)) {
     if (value) {

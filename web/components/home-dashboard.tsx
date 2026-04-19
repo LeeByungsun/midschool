@@ -50,12 +50,22 @@ export function HomeDashboard() {
 
     Promise.all([
       fetchTimetable({
+        officeCode: studentInfo.officeCode,
+        schoolCode: studentInfo.schoolCode,
         grade: studentInfo.grade,
         classroom: studentInfo.classroom,
         date: todayKey,
       }),
-      fetchMeals({ date: todayKey }),
-      fetchSchedules({ date: monthKey }),
+      fetchMeals({
+        officeCode: studentInfo.officeCode,
+        schoolCode: studentInfo.schoolCode,
+        date: todayKey,
+      }),
+      fetchSchedules({
+        officeCode: studentInfo.officeCode,
+        schoolCode: studentInfo.schoolCode,
+        date: monthKey,
+      }),
     ])
       .then(([timetable, meals, schedules]) => {
         if (isCancelled) {

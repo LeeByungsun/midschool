@@ -2,6 +2,8 @@ import { browserStorage } from "@/lib/storage/browser-storage";
 
 export type StudentPreferences = {
   schoolName: string;
+  officeCode: string;
+  schoolCode: string;
   grade: string;
   classroom: string;
 };
@@ -18,7 +20,11 @@ export const isStudentPreferencesComplete = (
   value: StudentPreferences | null,
 ): value is StudentPreferences =>
   Boolean(
-    value?.schoolName?.trim() && value?.grade?.trim() && value?.classroom?.trim(),
+    value?.schoolName?.trim() &&
+      value?.officeCode?.trim() &&
+      value?.schoolCode?.trim() &&
+      value?.grade?.trim() &&
+      value?.classroom?.trim(),
   );
 
 export function readStudentPreferences(): StudentPreferences | null {
@@ -37,16 +43,18 @@ export function readStudentPreferences(): StudentPreferences | null {
   try {
     const parsed = JSON.parse(raw) as Partial<StudentPreferences>;
     const schoolName = normalizeValue(parsed.schoolName ?? "");
+    const officeCode = normalizeValue(parsed.officeCode ?? "");
+    const schoolCode = normalizeValue(parsed.schoolCode ?? "");
     const grade = normalizeValue(parsed.grade ?? "");
     const classroom = normalizeValue(parsed.classroom ?? "");
 
-    if (!schoolName || !grade || !classroom) {
+    if (!schoolName || !officeCode || !schoolCode || !grade || !classroom) {
       cachedRawPreferences = raw;
       cachedParsedPreferences = null;
       return null;
     }
 
-    const normalized = { schoolName, grade, classroom };
+    const normalized = { schoolName, officeCode, schoolCode, grade, classroom };
     cachedRawPreferences = raw;
     cachedParsedPreferences = normalized;
 
@@ -61,6 +69,8 @@ export function readStudentPreferences(): StudentPreferences | null {
 export function saveStudentPreferences(value: StudentPreferences) {
   const normalized = {
     schoolName: normalizeValue(value.schoolName),
+    officeCode: normalizeValue(value.officeCode),
+    schoolCode: normalizeValue(value.schoolCode),
     grade: normalizeValue(value.grade),
     classroom: normalizeValue(value.classroom),
   };

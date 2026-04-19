@@ -5,6 +5,10 @@ import { mapTimetable } from "@/lib/neis/mapper";
 import type { NeisResponse, TimetableRowDto } from "@/lib/neis/types";
 
 export async function GET(request: NextRequest) {
+  const officeCode =
+    request.nextUrl.searchParams.get("officeCode")?.trim() ?? undefined;
+  const schoolCode =
+    request.nextUrl.searchParams.get("schoolCode")?.trim() ?? undefined;
   const grade = request.nextUrl.searchParams.get("grade")?.trim() ?? "";
   const classroom =
     request.nextUrl.searchParams.get("classroom")?.trim() ?? "";
@@ -24,6 +28,10 @@ export async function GET(request: NextRequest) {
         GRADE: grade,
         CLASS_NM: classroom,
         ALL_TI_YMD: date,
+      },
+      {
+        officeCode,
+        schoolCode,
       },
     );
 

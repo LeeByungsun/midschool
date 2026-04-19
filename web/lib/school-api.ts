@@ -1,4 +1,9 @@
-import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
+import type {
+  MealInfo,
+  SchoolEvent,
+  SchoolInfo,
+  TimetableItem,
+} from "@/lib/neis/types";
 
 type ApiListResponse<T> = {
   items: T[];
@@ -21,11 +26,15 @@ async function fetchList<T>(path: string) {
 }
 
 export function fetchTimetable(params: {
+  officeCode: string;
+  schoolCode: string;
   grade: string;
   classroom: string;
   date: string;
 }) {
   const search = new URLSearchParams({
+    officeCode: params.officeCode,
+    schoolCode: params.schoolCode,
     grade: params.grade,
     classroom: params.classroom,
     date: params.date,
@@ -34,18 +43,38 @@ export function fetchTimetable(params: {
   return fetchList<TimetableItem>(`/api/timetable?${search.toString()}`);
 }
 
-export function fetchMeals(params: { date: string }) {
+export function fetchMeals(params: {
+  officeCode: string;
+  schoolCode: string;
+  date: string;
+}) {
   const search = new URLSearchParams({
+    officeCode: params.officeCode,
+    schoolCode: params.schoolCode,
     date: params.date,
   });
 
   return fetchList<MealInfo>(`/api/meals?${search.toString()}`);
 }
 
-export function fetchSchedules(params: { date: string }) {
+export function fetchSchedules(params: {
+  officeCode: string;
+  schoolCode: string;
+  date: string;
+}) {
   const search = new URLSearchParams({
+    officeCode: params.officeCode,
+    schoolCode: params.schoolCode,
     date: params.date,
   });
 
   return fetchList<SchoolEvent>(`/api/schedule?${search.toString()}`);
+}
+
+export function fetchSchools(params: { query: string }) {
+  const search = new URLSearchParams({
+    query: params.query,
+  });
+
+  return fetchList<SchoolInfo>(`/api/schools?${search.toString()}`);
 }

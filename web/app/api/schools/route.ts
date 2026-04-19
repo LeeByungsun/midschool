@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";
+import { mapSchoolInfo } from "@/lib/neis/mapper";
+import type { NeisResponse, SchoolInfoRowDto } from "@/lib/neis/types";
+
+export async function GET(request: NextRequest) {
+  const query = request.nextUrl.searchParams.get("query")?.trim() ?? "";
+
+  if (query.length < 2) {
+    return NextResponse.json(
+      { message: "학교 이름은 두 글자 이상 입력해 주세요." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const response = await fetchNeisJson<NeisResponse<SchoolInfoRowDto>>(
+      "hub/schoolInfo",
+      {
+        SCHUL_NM: query,
+        SCHUL_KND_SC_NM: "중학교",
+      },
+      {
+        includeSchoolContext: false,
+      },
+    );
+
+    return NextResponse.json({
+      items: mapSchoolInfo(response),
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+function handleApiError(error: unknown) {
+  if (error instanceof NeisClientError) {
+    return NextResponse.json({ message: error.message }, { status: error.status });
+  }
+
+  return NextResponse.json(
+    { message: "학교 검색 정보를 불러오지 못했어요." },
+    { status: 500 },
+  );
+}

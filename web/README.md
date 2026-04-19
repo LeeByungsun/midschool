@@ -48,10 +48,10 @@ npm run build
 
 - `/` : 대시보드
 - `/setup` : 초기 설정
-- `/timetable` : 시간표 스켈레톤
-- `/schedule` : 일정 스켈레톤
+- `/timetable` : 실제 시간표 조회
+- `/schedule` : 실제 월간 일정 조회
 - `/timer` : 타이머 스켈레톤
-- `/settings` : 설정 스켈레톤
+- `/settings` : 저장된 학교/학년/반 수정
 
 ## 구현 원칙
 
