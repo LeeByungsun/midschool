@@ -28,6 +28,8 @@ export type MealRowDto = {
   MMEAL_SC_NM?: string;
   DDISH_NM?: string;
   CAL_INFO?: string;
+  NTR_INFO?: string;
+  ORPLC_INFO?: string;
 };
 
 export type ScheduleRowDto = {
@@ -63,6 +65,8 @@ export type MealInfo = {
   mealType: string;
   menu: string;
   calorieInfo: string;
+  nutritionInfo: string;
+  originInfo: string;
 };
 
 export type SchoolEvent = {

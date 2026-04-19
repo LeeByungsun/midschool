@@ -50,6 +50,8 @@ export function mapMeals(response: NeisResponse<MealRowDto>): MealInfo[] {
     mealType: row.MMEAL_SC_NM ?? "",
     menu: row.DDISH_NM ?? "",
     calorieInfo: row.CAL_INFO ?? "",
+    nutritionInfo: row.NTR_INFO ?? "",
+    originInfo: row.ORPLC_INFO ?? "",
   }));
 }
 

@@ -179,7 +179,18 @@ export function HomeDashboard() {
           )}
         </DashboardCard>
 
-        <DashboardCard title="오늘 급식" subtitle={`${todayLabel} 점심 메뉴 요약`}>
+        <DashboardCard
+          title="오늘 급식"
+          subtitle={`${todayLabel} 점심 메뉴 요약`}
+          action={
+            <Link
+              href="/meals"
+              className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              날짜별 보기
+            </Link>
+          }
+        >
           {!hydrated ? (
             <LoadingState message="급식을 불러올 준비 중..." />
           ) : !studentInfo ? (
