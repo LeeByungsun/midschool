@@ -22,7 +22,7 @@
             android:textColor="@color/brand_navy"
             android:textSize="14sp"
             android:textStyle="bold"
-            tools:text="🗓️ 오늘 (MM/DD)" />
+            tools:text="🗓️ 4월 19일 (토)" />
 
         <ImageView
             android:id="@+id/widgetSettingsButton"

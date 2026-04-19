@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 class MisSchoolWidgetProvider : AppWidgetProvider() {
 
@@ -76,7 +75,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                 val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
                 setTextViewText(
                     R.id.widgetDateText,
-                    today.format(DateTimeFormatter.ofPattern("🗓️ 오늘 (M/d)", Locale.KOREAN))
+                    WidgetDateFormatter.formatHeaderDate(today)
                 )
                 setViewVisibility(
                     R.id.widgetTomorrowSection,
