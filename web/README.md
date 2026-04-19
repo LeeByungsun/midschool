@@ -5,6 +5,8 @@
 현재는 아직 구체적인 프레임워크를 넣기 전 단계이며, 우선 기준 문서는 아래를 따릅니다.
 
 - `docs/project_specification.md`
+- `web/AGENTS.md`
+- `docs/skills/web-automation-map.md`
 
 권장 원칙
 - 공통 도메인 요구사항은 `docs/project_specification.md`의 **공통 요구사항** 섹션을 기준으로 구현

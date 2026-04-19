@@ -40,6 +40,7 @@ misSchoolApp/
 
 안드로이드 앱 내부 구조는 `docs/project-structure.md` 에 정리되어 있습니다.
 멀티플랫폼 기획 기준은 `docs/project_specification.md` 에 정리되어 있습니다.
+웹 자동화/스킬 정리는 `docs/skills/web-automation-map.md` 에 정리되어 있습니다.
 
 ## 스킬 파일 권장 위치
 
