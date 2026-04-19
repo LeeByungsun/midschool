@@ -1,45 +1,65 @@
 # MisSchoolApp
 
-`MisSchoolApp`은 **학교도우미** 멀티플랫폼 프로젝트 저장소입니다.
+`MisSchoolApp`은 **학교도우미** 서비스를 위한 멀티플랫폼 프로젝트 저장소입니다.
 
-현재 저장소는 **루트는 문서/자동화 자산**, **안드로이드 앱 본체는 `/android`**, **웹 클라이언트는 `/web`** 아래에 두는 구조로 정리되어 있습니다.
+저장소명은 `MisSchoolApp`을 유지하지만, 사용자/서비스 표기는 **학교도우미**를 기준으로 사용합니다.
+
+## 프로젝트 개요
+
+학교도우미는 학생들이 자주 확인하는 정보를 한곳에서 쉽게 볼 수 있도록 돕는 서비스입니다.
+
+핵심 기능:
+- 학교 검색 및 기본 설정 저장
+- 시간표 조회
+- 급식 조회
+- 학사 일정 조회
+- 학습용 타이머
+
+현재 저장소는 아래처럼 역할을 나눠 운영합니다.
+
+- `android/` : Android 앱 프로젝트
+- `web/` : Next.js 기반 Web 클라이언트
+- `docs/` : 스펙/구조/설정 문서
+- `.codex/` : 자동화/에이전트 자산
 
 ## 현재 구현 상태 요약
 
-- **Android**
-  - 기존 기준 플랫폼
-  - Activity + XML + Hilt + MVVM 구조 유지
-- **Web**
-  - Next.js App Router 기반 단일 웹앱
-  - 학교 검색(초등학교/중학교)
-  - 시간표 / 급식 / 학사 일정 실데이터 조회
-  - 급식 상세 페이지(`/meals`)
-  - 공통 상태 UX(로딩/오류/빈 상태/재시도)
-  - 브라우저 캐시/복구 전략
+### Android
+- 기존 기준 플랫폼
+- Kotlin + XML + DataBinding + Hilt + MVVM 구조
+- 앱 위젯/타이머/NEIS 연동 기반 유지
 
-## 빠른 시작
+### Web
+- Next.js App Router 기반 단일 웹앱
+- 학교 검색(초등학교/중학교) 지원
+- 시간표 / 급식 / 학사 일정 실데이터 조회
+- 급식 상세 페이지(`/meals`)
+- 공통 상태 UX(로딩/오류/빈 상태/재시도)
+- 브라우저 캐시/복구 전략 적용
 
-### 1) Android Studio로 열기
-- Android Studio에서 이 저장소 루트가 아니라 **`android/` 폴더**를 여세요.
-- 즉, `misSchoolApp/android` 를 프로젝트로 열면 됩니다.
+## 저장소 구조
 
-자세한 안내는 아래 문서를 참고하세요.
-- [프로젝트 구조 문서](docs/project-structure.md)
-- [Android Studio 사용 안내](docs/android-studio-setup.md)
-
-### 2) 커맨드라인 빌드
-```bash
-cd android
-./gradlew testDebugUnitTest lintDebug
+```text
+misSchoolApp/
+├── android/              # Android 앱 프로젝트
+├── web/                  # 학교도우미 Web 클라이언트
+├── docs/                 # 프로젝트 문서
+├── .codex/               # Codex/OMX 스킬 및 프롬프트
+├── .github/              # GitHub 관련 자산
+└── AGENTS.md             # 에이전트 작업 규칙
 ```
 
-또는 저장소 루트에서:
+더 자세한 구조는 `docs/project-structure.md`를 참고하세요.
 
-```bash
-./android/gradlew testDebugUnitTest lintDebug
-```
+## 시작 가이드
 
-### 3) 웹 실행
+### Android
+Android 개발/빌드/실행 안내는 아래 문서를 참고하세요.
+
+- `android/README.md`
+- `docs/android-studio-setup.md`
+
+### Web
 ```bash
 cd web
 npm install
@@ -55,24 +75,14 @@ npm run typecheck
 npm run build
 ```
 
-## 저장소 구조
+## 문서 안내
 
-```text
-misSchoolApp/
-├── android/              # Android Gradle 프로젝트 루트
-├── web/                  # 학교도우미 Web 클라이언트
-├── .codex/               # Codex/OMX 에이전트 스킬 및 프롬프트
-├── docs/                 # 프로젝트 문서
-├── .github/              # GitHub 관련 자산
-└── AGENTS.md             # 에이전트 작업 규칙
-```
-
-문서 안내:
-- 안드로이드/웹 폴더 구조: `docs/project-structure.md`
 - 멀티플랫폼 기능/정책 스펙: `docs/project_specification.md`
+- 폴더 구조 문서: `docs/project-structure.md`
 - Android Studio 열기 안내: `docs/android-studio-setup.md`
 - 웹 자동화/스킬 정리: `docs/skills/web-automation-map.md`
 - skill 이름 규칙: `docs/skills/skill-naming-conventions.md`
+- 웹 전용 안내: `web/README.md`
 
 ## 웹에서 현재 제공하는 주요 화면
 
@@ -91,12 +101,10 @@ misSchoolApp/
 - 급식 / 시간표 / 일정 조회는 브라우저 캐시를 사용
 - 최신 요청 실패 시 마지막 성공 데이터를 fallback으로 재사용
 
-## 스킬 파일 권장 위치
-
-실행용 스킬 파일은 앱 코드와 분리해서 관리하는 것을 권장합니다.
+## 자동화 자산 위치
 
 - 실행 스킬: `.codex/skills/<skill-name>/SKILL.md`
 - 설명 문서: `docs/skills/<skill-name>.md`
 - GitHub 워크플로우/메타 자산: `.github/`
 
-이렇게 두면 안드로이드 앱 코드(`/android`)와 자동화/문서 자산이 섞이지 않아 유지보수가 쉬워집니다.
+이렇게 두면 플랫폼 코드와 자동화/문서 자산이 섞이지 않아 유지보수가 쉬워집니다.
