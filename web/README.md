@@ -35,9 +35,6 @@ npm run dev
 
 시작할 때는 `web/.env.example` 를 복사해 `.env.local` 로 두고 값을 채우면 됩니다.
 
-로컬 개발에서는 `web/.env.local` 이 없어도 `android/local.properties` 의
-`NEIS_API_KEY` 를 서버 쪽 fallback으로 읽을 수 있습니다.
-
 ## 품질 체크
 
 ```bash

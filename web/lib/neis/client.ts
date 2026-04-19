@@ -1,13 +1,8 @@
 import "server-only";
 
-import fs from "node:fs";
-import path from "node:path";
-
 const DEFAULT_NEIS_BASE_URL = "https://open.neis.go.kr/";
 const DEFAULT_OFFICE_CODE = "J10";
 const DEFAULT_SCHOOL_CODE = "7679399";
-
-let cachedAndroidLocalProperties: Record<string, string> | null = null;
 
 export class NeisClientError extends Error {
   status: number;
@@ -19,46 +14,10 @@ export class NeisClientError extends Error {
   }
 }
 
-function readAndroidLocalProperties() {
-  if (cachedAndroidLocalProperties) {
-    return cachedAndroidLocalProperties;
-  }
-
-  const localPropertiesPath = path.resolve(
-    process.cwd(),
-    "../android/local.properties",
-  );
-
-  if (!fs.existsSync(localPropertiesPath)) {
-    cachedAndroidLocalProperties = {};
-    return cachedAndroidLocalProperties;
-  }
-
-  const fileContents = fs.readFileSync(localPropertiesPath, "utf8");
-  const parsed = Object.fromEntries(
-    fileContents
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#") && line.includes("="))
-      .map((line) => {
-        const [key, ...valueParts] = line.split("=");
-        return [key.trim(), valueParts.join("=").trim()];
-      }),
-  );
-
-  cachedAndroidLocalProperties = parsed;
-  return cachedAndroidLocalProperties;
-}
-
 export function getNeisConfig() {
-  const androidLocalProperties = readAndroidLocalProperties();
-
   return {
     baseUrl: process.env.NEIS_BASE_URL ?? DEFAULT_NEIS_BASE_URL,
-    apiKey:
-      process.env.NEIS_API_KEY ??
-      androidLocalProperties.NEIS_API_KEY ??
-      "",
+    apiKey: process.env.NEIS_API_KEY ?? "",
     officeCode: process.env.NEIS_OFFICE_CODE ?? DEFAULT_OFFICE_CODE,
     schoolCode: process.env.NEIS_SCHOOL_CODE ?? DEFAULT_SCHOOL_CODE,
   };
@@ -72,7 +31,7 @@ export async function fetchNeisJson<T>(
 
   if (!config.apiKey) {
     throw new NeisClientError(
-      "NEIS_API_KEY가 설정되지 않았어요. web/.env.local 또는 android/local.properties를 먼저 준비해 주세요.",
+      "NEIS_API_KEY가 설정되지 않았어요. web/.env.local을 먼저 준비해 주세요.",
       500,
     );
   }
