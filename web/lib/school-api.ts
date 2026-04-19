@@ -28,6 +28,7 @@ async function fetchList<T>(path: string) {
 export function fetchTimetable(params: {
   officeCode: string;
   schoolCode: string;
+  schoolKind?: string;
   grade: string;
   classroom: string;
   date: string;
@@ -35,6 +36,7 @@ export function fetchTimetable(params: {
   const search = new URLSearchParams({
     officeCode: params.officeCode,
     schoolCode: params.schoolCode,
+    schoolKind: params.schoolKind ?? "",
     grade: params.grade,
     classroom: params.classroom,
     date: params.date,

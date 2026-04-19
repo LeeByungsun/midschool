@@ -4,6 +4,7 @@ export type StudentPreferences = {
   schoolName: string;
   officeCode: string;
   schoolCode: string;
+  schoolKind?: string;
   grade: string;
   classroom: string;
 };
@@ -45,6 +46,7 @@ export function readStudentPreferences(): StudentPreferences | null {
     const schoolName = normalizeValue(parsed.schoolName ?? "");
     const officeCode = normalizeValue(parsed.officeCode ?? "");
     const schoolCode = normalizeValue(parsed.schoolCode ?? "");
+    const schoolKind = normalizeValue(parsed.schoolKind ?? "");
     const grade = normalizeValue(parsed.grade ?? "");
     const classroom = normalizeValue(parsed.classroom ?? "");
 
@@ -54,7 +56,14 @@ export function readStudentPreferences(): StudentPreferences | null {
       return null;
     }
 
-    const normalized = { schoolName, officeCode, schoolCode, grade, classroom };
+    const normalized = {
+      schoolName,
+      officeCode,
+      schoolCode,
+      schoolKind,
+      grade,
+      classroom,
+    };
     cachedRawPreferences = raw;
     cachedParsedPreferences = normalized;
 
@@ -71,6 +80,7 @@ export function saveStudentPreferences(value: StudentPreferences) {
     schoolName: normalizeValue(value.schoolName),
     officeCode: normalizeValue(value.officeCode),
     schoolCode: normalizeValue(value.schoolCode),
+    schoolKind: normalizeValue(value.schoolKind ?? ""),
     grade: normalizeValue(value.grade),
     classroom: normalizeValue(value.classroom),
   };

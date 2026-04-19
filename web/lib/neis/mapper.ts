@@ -66,7 +66,13 @@ export function mapSchedules(
 export function mapTimetable(
   response: NeisResponse<TimetableRowDto>,
 ): TimetableItem[] {
-  return extractRows(response.misTimetable, "시간표").map((row) => ({
+  const timetableSections =
+    response.elsTimetable ??
+    response.misTimetable ??
+    response.hisTimetable ??
+    response.spsTimetable;
+
+  return extractRows(timetableSections, "시간표").map((row) => ({
     date: row.ALL_TI_YMD,
     period: row.PERIO ?? "",
     subject: row.ITRT_CNTNT ?? "",

@@ -4,11 +4,26 @@ import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";
 import { mapTimetable } from "@/lib/neis/mapper";
 import type { NeisResponse, TimetableRowDto } from "@/lib/neis/types";
 
+function resolveTimetableEndpoint(schoolKind?: string) {
+  switch (schoolKind) {
+    case "초등학교":
+      return "hub/elsTimetable";
+    case "고등학교":
+      return "hub/hisTimetable";
+    case "특수학교":
+      return "hub/spsTimetable";
+    default:
+      return "hub/misTimetable";
+  }
+}
+
 export async function GET(request: NextRequest) {
   const officeCode =
     request.nextUrl.searchParams.get("officeCode")?.trim() ?? undefined;
   const schoolCode =
     request.nextUrl.searchParams.get("schoolCode")?.trim() ?? undefined;
+  const schoolKind =
+    request.nextUrl.searchParams.get("schoolKind")?.trim() ?? undefined;
   const grade = request.nextUrl.searchParams.get("grade")?.trim() ?? "";
   const classroom =
     request.nextUrl.searchParams.get("classroom")?.trim() ?? "";
@@ -22,8 +37,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const endpoint = resolveTimetableEndpoint(schoolKind);
     const response = await fetchNeisJson<NeisResponse<TimetableRowDto>>(
-      "hub/misTimetable",
+      endpoint,
       {
         GRADE: grade,
         CLASS_NM: classroom,

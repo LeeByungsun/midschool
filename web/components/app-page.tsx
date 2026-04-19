@@ -23,7 +23,7 @@ export function AppPage({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
-              중학교도우미 Web
+              학교도우미
             </p>
             <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">{title}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">

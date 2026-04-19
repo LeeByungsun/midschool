@@ -16,7 +16,10 @@ export type NeisSection<T> = {
 export type NeisResponse<T> = {
   mealServiceDietInfo?: NeisSection<T>[];
   SchoolSchedule?: NeisSection<T>[];
+  elsTimetable?: NeisSection<T>[];
   misTimetable?: NeisSection<T>[];
+  hisTimetable?: NeisSection<T>[];
+  spsTimetable?: NeisSection<T>[];
   schoolInfo?: NeisSection<T>[];
 };
 

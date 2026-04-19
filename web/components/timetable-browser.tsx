@@ -34,7 +34,7 @@ export function TimetableBrowser() {
     [selectedDate],
   );
   const requestKey = studentInfo
-    ? `${studentInfo.grade}-${studentInfo.classroom}-${dateKey}`
+    ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${dateKey}`
     : "";
 
   useEffect(() => {
@@ -47,6 +47,7 @@ export function TimetableBrowser() {
     fetchTimetable({
       officeCode: studentInfo.officeCode,
       schoolCode: studentInfo.schoolCode,
+      schoolKind: studentInfo.schoolKind,
       grade: studentInfo.grade,
       classroom: studentInfo.classroom,
       date: dateKey,

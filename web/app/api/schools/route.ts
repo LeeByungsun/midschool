@@ -4,6 +4,8 @@ import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";
 import { mapSchoolInfo } from "@/lib/neis/mapper";
 import type { NeisResponse, SchoolInfoRowDto } from "@/lib/neis/types";
 
+const SEARCHABLE_SCHOOL_KINDS = new Set(["초등학교", "중학교"]);
+
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("query")?.trim() ?? "";
 
@@ -19,7 +21,6 @@ export async function GET(request: NextRequest) {
       "hub/schoolInfo",
       {
         SCHUL_NM: query,
-        SCHUL_KND_SC_NM: "중학교",
       },
       {
         includeSchoolContext: false,
@@ -27,7 +28,9 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({
-      items: mapSchoolInfo(response),
+      items: mapSchoolInfo(response).filter((school) =>
+        SEARCHABLE_SCHOOL_KINDS.has(school.schoolKind),
+      ),
     });
   } catch (error) {
     return handleApiError(error);

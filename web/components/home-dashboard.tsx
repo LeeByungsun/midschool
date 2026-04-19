@@ -38,7 +38,7 @@ export function HomeDashboard() {
   const monthKey = useMemo(() => formatMonthKey(today), [today]);
   const todayLabel = useMemo(() => formatKoreanDateLabel(today), [today]);
   const requestKey = studentInfo
-    ? `${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}`
+    ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}`
     : "";
 
   useEffect(() => {
@@ -52,6 +52,7 @@ export function HomeDashboard() {
       fetchTimetable({
         officeCode: studentInfo.officeCode,
         schoolCode: studentInfo.schoolCode,
+        schoolKind: studentInfo.schoolKind,
         grade: studentInfo.grade,
         classroom: studentInfo.classroom,
         date: todayKey,

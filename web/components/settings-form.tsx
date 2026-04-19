@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, KeyboardEvent, useMemo, useState } from "react";
 
 import type { SchoolInfo } from "@/lib/neis/types";
 import { fetchSchools } from "@/lib/school-api";
@@ -34,7 +34,7 @@ function SettingsFormBody({
           officeName: "",
           schoolCode: initialPreferences.schoolCode,
           schoolName: initialPreferences.schoolName,
-          schoolKind: "중학교",
+          schoolKind: initialPreferences.schoolKind ?? "중학교",
           location: "",
           jurisdiction: "",
           foundation: "",
@@ -71,7 +71,9 @@ function SettingsFormBody({
 
       if (items.length === 0) {
         setSelectedSchool(null);
-        setSearchMessage("검색된 중학교가 없어요. 학교 이름을 다시 확인해 주세요.");
+        setSearchMessage(
+          "검색된 초등학교/중학교가 없어요. 학교 이름을 다시 확인해 주세요.",
+        );
       } else if (items.length === 1) {
         setSelectedSchool(items[0]);
         setSchoolQuery(items[0].schoolName);
@@ -98,6 +100,17 @@ function SettingsFormBody({
     onError("");
   };
 
+  const handleSchoolQueryKeyDown = async (
+    event: KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+    await handleSearch();
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -105,6 +118,7 @@ function SettingsFormBody({
       schoolName: selectedSchool?.schoolName ?? schoolQuery.trim(),
       officeCode: selectedSchool?.officeCode ?? "",
       schoolCode: selectedSchool?.schoolCode ?? "",
+      schoolKind: selectedSchool?.schoolKind ?? "",
       grade: grade.trim(),
       classroom: classroom.trim(),
     };
@@ -163,7 +177,8 @@ function SettingsFormBody({
                 setSchoolQuery(event.target.value);
                 setSelectedSchool(null);
               }}
-              placeholder="예: 미사중학교"
+              onKeyDown={handleSchoolQueryKeyDown}
+              placeholder="예: 미사초등학교 / 미사중학교"
               className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
             <button
@@ -175,7 +190,7 @@ function SettingsFormBody({
             </button>
           </div>
           <p className="text-sm text-slate-500">
-            현재는 중학교 검색 결과만 표시합니다.
+            현재는 초등학교와 중학교 검색 결과를 표시합니다.
           </p>
         </div>
 
