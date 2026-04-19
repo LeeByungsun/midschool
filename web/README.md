@@ -1,27 +1,44 @@
-# 학교도우미 Web workspace
+# 학교도우미 Web
 
 이 폴더는 `MisSchoolApp` 저장소 안의 **학교도우미 웹 클라이언트**입니다.
 
-현재 기준
+Web 클라이언트는 학교 생활 정보를 브라우저에서 빠르게 확인할 수 있도록 만든 Next.js 앱입니다.
+
+## 현재 구현 상태
+
+- Next.js App Router 기반 단일 웹앱
+- 학교 검색(초등학교 / 중학교)
+- 시간표 / 급식 / 학사 일정 실데이터 조회
+- 급식 상세 페이지(`/meals`)
+- 공통 상태 UX(로딩/오류/빈 상태/재시도)
+- 브라우저 캐시/복구 전략
+
+## 기술 기준
+
 - 프레임워크: **Next.js App Router**
 - 언어: **TypeScript**
 - 스타일: **Tailwind CSS v4**
 - 기본 방향: 모바일 퍼스트 대시보드
 - 데이터 경계: **Next.js BFF (`app/api/**/route.ts`)**
 
-우선 참고 문서
-- `docs/project_specification.md`
-- `web/AGENTS.md`
-- `docs/skills/web-automation-map.md`
-
 ## 시작하기
 
 ```bash
 cd web
+npm install
 npm run dev
 ```
 
 브라우저에서 `http://localhost:3000` 을 열면 됩니다.
+
+## 품질 체크
+
+```bash
+cd web
+npm run lint
+npm run typecheck
+npm run build
+```
 
 ## 환경변수
 
@@ -36,47 +53,39 @@ npm run dev
 
 시작할 때는 `web/.env.example` 를 복사해 `.env.local` 로 두고 값을 채우면 됩니다.
 
-## 품질 체크
+## 현재 제공하는 주요 화면
 
-```bash
-cd web
-npm run lint
-npm run typecheck
-npm run build
-```
-
-## 현재 포함된 기본 골격
-
-- `/` : 대시보드
+- `/` : 홈 대시보드
 - `/setup` : 초기 설정
+- `/settings` : 학교/학년/반 설정 변경
+- `/timetable` : 날짜별 시간표 조회
+- `/schedule` : 월간 학사 일정 조회
 - `/meals` : 날짜별 급식 상세 조회
-- `/timetable` : 실제 시간표 조회
-- `/schedule` : 실제 월간 일정 조회
 - `/timer` : 타이머 기본 UI
-- `/settings` : 저장된 학교/학년/반 수정
 
 ## 현재 반영된 주요 기능
 
-- 학교 검색
-  - 초등학교 / 중학교 검색 지원
-  - Enter 키로 검색 가능
-  - 교육청 코드 / 학교 코드 / 학교 종류 저장
-- 시간표
-  - 날짜 이동형 일간 조회
-  - 학교 종류에 따라 초등학교/중학교 시간표 엔드포인트 분기
-- 급식
-  - 오늘 급식 요약
-  - 날짜 이동형 상세 조회
-  - 알레르기 / 칼로리 / 영양 / 원산지 정보 표시
-- 일정
-  - 월간 일정 조회
-- 공통 상태 UX
-  - 로딩 / 오류 / 빈 상태 / 설정 필요 / 재시도 패턴 공통화
-- 캐시 / 복구 전략
-  - 급식 12시간
-  - 시간표 24시간
-  - 일정 12시간
-  - 최신 요청 실패 시 마지막 성공 데이터 fallback
+### 학교 검색 / 설정
+- 초등학교 / 중학교 검색 지원
+- Enter 키로 검색 가능
+- 교육청 코드 / 학교 코드 / 학교 종류 저장
+
+### 시간표
+- 날짜 이동형 일간 조회
+- 학교 종류에 따라 초등학교/중학교 시간표 엔드포인트 분기
+
+### 급식
+- 오늘 급식 요약
+- 날짜 이동형 상세 조회
+- 알레르기 / 칼로리 / 영양 / 원산지 정보 표시
+
+### 일정
+- 월간 일정 조회
+
+### 공통 UX / 데이터 복구
+- 로딩 / 오류 / 빈 상태 / 설정 필요 / 재시도 패턴 공통화
+- 급식 12시간 / 시간표 24시간 / 일정 12시간 캐시
+- 최신 요청 실패 시 마지막 성공 데이터 fallback
 
 ## 주요 폴더
 
@@ -86,8 +95,10 @@ npm run build
 - `lib/neis/` : NEIS 타입/매퍼/클라이언트
 - `lib/storage/` : preferences/cache/browser storage 래퍼
 
-## 구현 원칙
+## 관련 문서
 
-- 공통 도메인 요구사항은 `docs/project_specification.md`의 **공통 요구사항**을 기준으로 구현
-- 웹 전용 UX/기술 선택은 같은 문서의 **Web 전용 명세**를 기준으로 구체화
-- Android 구현 세부사항은 그대로 복붙하지 않고 웹 플랫폼에 맞게 번역
+- 프로젝트 전체 개요: `../README.md`
+- 전체 스펙 문서: `../docs/project_specification.md`
+- 프로젝트 구조 문서: `../docs/project-structure.md`
+- 웹 작업 규칙: `AGENTS.md`
+- 웹 자동화/스킬 정리: `../docs/skills/web-automation-map.md`
