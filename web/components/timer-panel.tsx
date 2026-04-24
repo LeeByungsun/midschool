@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { DashboardCard } from "@/components/dashboard-card";
 import { timerPresets } from "@/lib/site-data";
 import {
   clearTimerSnapshot,
+  readTimerSettings,
   readTimerSnapshot,
+  readTodayTimerStats,
+  recordTimerCompletion,
+  saveTimerSettings,
   saveTimerSnapshot,
+  type TimerDailyStats,
+  type TimerSettings,
 } from "@/lib/storage/timer";
 import {
   createTimerSnapshot,
@@ -30,6 +36,11 @@ const defaultTimerSnapshot = createTimerSnapshot(
   Date.now(),
 );
 
+const timeLabelFormatter = new Intl.DateTimeFormat("ko-KR", {
+  hour: "numeric",
+  minute: "2-digit",
+});
+
 const statusLabelMap = {
   idle: "준비됨",
   running: "집중 중",
@@ -37,10 +48,32 @@ const statusLabelMap = {
   completed: "완료",
 } as const;
 
+function formatTimerMinutes(durationMs: number) {
+  return `${Math.round(durationMs / (60 * 1000))}분`;
+}
+
+function formatClockTime(timestamp: number | null) {
+  if (!timestamp) {
+    return "계산 전";
+  }
+
+  return timeLabelFormatter.format(new Date(timestamp));
+}
+
 export function TimerPanel() {
   const [snapshot, setSnapshot] = useState<TimerSnapshot>(
     () => readTimerSnapshot() ?? defaultTimerSnapshot,
   );
+  const [settings, setSettings] = useState<TimerSettings>(() => readTimerSettings());
+  const [todayStats, setTodayStats] = useState<TimerDailyStats>(() => readTodayTimerStats());
+  const [notificationPermission, setNotificationPermission] = useState<
+    NotificationPermission | "unsupported"
+  >(() =>
+    typeof window !== "undefined" && "Notification" in window
+      ? Notification.permission
+      : "unsupported",
+  );
+  const previousStatusRef = useRef(snapshot.status);
 
   useEffect(() => {
     saveTimerSnapshot(syncTimerSnapshot(snapshot));
@@ -60,10 +93,45 @@ export function TimerPanel() {
     };
   }, [snapshot.status]);
 
+  useEffect(() => {
+    const previousStatus = previousStatusRef.current;
+
+    if (previousStatus !== "completed" && snapshot.status === "completed") {
+      const nextStats = recordTimerCompletion(snapshot);
+      setTodayStats(nextStats);
+
+      if (
+        settings.notificationsEnabled &&
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        new Notification("학교도우미 타이머", {
+          body: `${snapshot.label} 세션이 끝났어요. 바로 다음 흐름을 이어 가세요.`,
+          tag: "study-timer-complete",
+        });
+      }
+    }
+
+    previousStatusRef.current = snapshot.status;
+  }, [settings.notificationsEnabled, snapshot]);
+
   const timerView = useMemo(() => getTimerView(snapshot), [snapshot]);
 
   const activePreset =
     timerPresets.find((preset) => preset.label === snapshot.label) ?? defaultPreset;
+
+  const expectedEndTime =
+    snapshot.status === "running" && snapshot.targetTime ? snapshot.targetTime : null;
+
+  const notificationSummary =
+    notificationPermission === "unsupported"
+      ? "이 브라우저는 알림 API를 지원하지 않아요."
+      : notificationPermission === "granted" && settings.notificationsEnabled
+        ? "완료되면 브라우저 알림을 보냅니다."
+        : notificationPermission === "denied"
+          ? "브라우저에서 알림 권한이 차단되어 있어요."
+          : "현재는 화면 안의 완료 상태만 보여 주고 있어요.";
 
   const selectPreset = (label: string, minutes: number) => {
     setSnapshot(selectTimerPreset(label, minutes));
@@ -94,6 +162,35 @@ export function TimerPanel() {
         Date.now(),
       ),
     );
+  };
+
+  const handleNotificationsToggle = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      return;
+    }
+
+    if (settings.notificationsEnabled) {
+      const nextSettings = { notificationsEnabled: false };
+      saveTimerSettings(nextSettings);
+      setSettings(nextSettings);
+      setNotificationPermission(Notification.permission);
+      return;
+    }
+
+    const permission =
+      Notification.permission === "default"
+        ? await Notification.requestPermission()
+        : Notification.permission;
+
+    setNotificationPermission(permission);
+
+    const nextSettings = {
+      notificationsEnabled: permission === "granted",
+    };
+
+    saveTimerSettings(nextSettings);
+    setSettings(nextSettings);
   };
 
   return (
@@ -242,39 +339,114 @@ export function TimerPanel() {
         </div>
       </DashboardCard>
 
-      <DashboardCard title="상태 안내" subtitle="이번 1차 구현에서 포함한 기능입니다.">
-        <div className="space-y-4 text-sm leading-7 text-slate-600">
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="font-semibold text-slate-900">현재 상태 복원</p>
-            <p className="mt-1">
-              실행 중이던 세션은 목표 종료 시각을 저장해서 새로고침 후에도 이어집니다.
-            </p>
-          </div>
+      <div className="grid gap-4">
+        <DashboardCard title="세션 요약" subtitle="현재 타이머 흐름과 종료 시각을 바로 확인합니다.">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                총 세션 시간
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {formatTimerMinutes(timerView.durationMs)}
+              </p>
+            </div>
 
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="font-semibold text-slate-900">완료 UX</p>
-            <p className="mt-1">
-              완료되면 상태가 즉시 완료로 전환되고 다시 시작 버튼이 표시됩니다.
-            </p>
-          </div>
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                현재 상태
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {statusLabelMap[timerView.status]}
+              </p>
+            </div>
 
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="font-semibold text-slate-900">남은 시간</p>
-            <p className="mt-1">
-              1초 단위 카운트다운과 진행률 바로 현재 집중 흐름을 바로 확인할 수 있습니다.
-            </p>
-          </div>
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                경과 시간
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {formatTimerMinutes(timerView.elapsedMs)}
+              </p>
+            </div>
 
-          <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-4">
-            <p className="font-semibold text-slate-900">다음 단계 후보</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-600">
-              <li>브라우저 Notification API 연동</li>
-              <li>홈 대시보드 요약 카드 연동</li>
-              <li>PWA 설치 후 빠른 재진입 흐름 보강</li>
-            </ul>
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                종료 예정 시각
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {formatClockTime(expectedEndTime)}
+              </p>
+            </div>
           </div>
-        </div>
-      </DashboardCard>
+        </DashboardCard>
+
+        <DashboardCard title="완료 알림" subtitle="브라우저 알림을 켜 두면 다른 탭에 있어도 완료를 알려 줍니다.">
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="font-semibold text-slate-900">
+                {settings.notificationsEnabled ? "알림 켜짐" : "알림 꺼짐"}
+              </p>
+              <p className="mt-1 text-sm leading-7 text-slate-600">
+                {notificationSummary}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                void handleNotificationsToggle();
+              }}
+              className="rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              {settings.notificationsEnabled ? "브라우저 알림 끄기" : "브라우저 알림 켜기"}
+            </button>
+          </div>
+        </DashboardCard>
+
+        <DashboardCard title="오늘 기록" subtitle="오늘 완료한 세션 흐름을 홈 화면과 함께 공유합니다.">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                완료 세션
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {todayStats.completedSessions}회
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                총 누적 시간
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {todayStats.totalMinutes}분
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                집중 시간
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {todayStats.focusMinutes}분
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                마지막 완료
+              </p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">
+                {todayStats.lastCompletedLabel
+                  ? `${todayStats.lastCompletedLabel} · ${formatClockTime(
+                      todayStats.lastCompletedAt,
+                    )}`
+                  : "아직 완료한 세션이 없어요."}
+              </p>
+            </div>
+          </div>
+        </DashboardCard>
+      </div>
     </div>
   );
 }

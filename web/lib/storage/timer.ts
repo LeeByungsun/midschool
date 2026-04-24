@@ -1,3 +1,4 @@
+import { formatDateKey } from "@/lib/date";
 import { browserStorage } from "@/lib/storage/browser-storage";
 import {
   createTimerSnapshot,
@@ -6,10 +7,62 @@ import {
 } from "@/lib/timer";
 
 const TIMER_STORAGE_KEY = "midschool:web:study-timer";
+const TIMER_SETTINGS_STORAGE_KEY = "midschool:web:study-timer-settings";
+const TIMER_DAILY_STATS_STORAGE_KEY = "midschool:web:study-timer-daily-stats";
+
 export const STUDY_TIMER_UPDATED_EVENT = "midschool:web:study-timer-updated";
+
+export type TimerSettings = {
+  notificationsEnabled: boolean;
+};
+
+export type TimerDailyStats = {
+  dateKey: string;
+  completedSessions: number;
+  totalMinutes: number;
+  focusMinutes: number;
+  breakMinutes: number;
+  lastCompletedAt: number | null;
+  lastCompletedLabel: string | null;
+};
 
 let cachedRawSnapshot: string | null = null;
 let cachedParsedSnapshot: TimerSnapshot | null = null;
+let cachedRawSettings: string | null = null;
+let cachedParsedSettings: TimerSettings = { notificationsEnabled: false };
+let cachedRawDailyStats: string | null = null;
+let cachedParsedDailyStats: TimerDailyStats | null = null;
+let cachedStudyTimerState:
+  | {
+      snapshot: TimerSnapshot | null;
+      settings: TimerSettings;
+      todayStats: TimerDailyStats;
+    }
+  | null = null;
+
+function dispatchTimerUpdate(detail?: unknown) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent(STUDY_TIMER_UPDATED_EVENT, {
+      detail,
+    }),
+  );
+}
+
+function createEmptyDailyStats(now = Date.now()): TimerDailyStats {
+  return {
+    dateKey: formatDateKey(new Date(now)),
+    completedSessions: 0,
+    totalMinutes: 0,
+    focusMinutes: 0,
+    breakMinutes: 0,
+    lastCompletedAt: null,
+    lastCompletedLabel: null,
+  };
+}
 
 function normalizeTimerSnapshot(value: unknown): TimerSnapshot | null {
   if (!value || typeof value !== "object") {
@@ -55,6 +108,51 @@ function normalizeTimerSnapshot(value: unknown): TimerSnapshot | null {
   });
 }
 
+function normalizeTimerSettings(value: unknown): TimerSettings {
+  if (!value || typeof value !== "object") {
+    return { notificationsEnabled: false };
+  }
+
+  const candidate = value as Partial<TimerSettings>;
+
+  return {
+    notificationsEnabled: Boolean(candidate.notificationsEnabled),
+  };
+}
+
+function normalizeTimerDailyStats(value: unknown, now = Date.now()): TimerDailyStats {
+  if (!value || typeof value !== "object") {
+    return createEmptyDailyStats(now);
+  }
+
+  const candidate = value as Partial<TimerDailyStats>;
+  const todayKey = formatDateKey(new Date(now));
+
+  if (candidate.dateKey !== todayKey) {
+    return createEmptyDailyStats(now);
+  }
+
+  return {
+    dateKey: todayKey,
+    completedSessions: Math.max(0, Math.round(candidate.completedSessions ?? 0)),
+    totalMinutes: Math.max(0, Math.round(candidate.totalMinutes ?? 0)),
+    focusMinutes: Math.max(0, Math.round(candidate.focusMinutes ?? 0)),
+    breakMinutes: Math.max(0, Math.round(candidate.breakMinutes ?? 0)),
+    lastCompletedAt:
+      typeof candidate.lastCompletedAt === "number"
+        ? Math.round(candidate.lastCompletedAt)
+        : null,
+    lastCompletedLabel:
+      typeof candidate.lastCompletedLabel === "string"
+        ? candidate.lastCompletedLabel
+        : null,
+  };
+}
+
+function isBreakPreset(label: string) {
+  return label.trim() === "휴식";
+}
+
 export function readTimerSnapshot() {
   const raw = browserStorage.getItem(TIMER_STORAGE_KEY);
 
@@ -87,12 +185,8 @@ export function saveTimerSnapshot(snapshot: TimerSnapshot) {
     JSON.stringify(normalized),
   );
 
-  if (wasSaved && typeof window !== "undefined") {
-    window.dispatchEvent(
-      new CustomEvent(STUDY_TIMER_UPDATED_EVENT, {
-        detail: normalized,
-      }),
-    );
+  if (wasSaved) {
+    dispatchTimerUpdate(normalized);
   }
 
   return wasSaved;
@@ -101,9 +195,137 @@ export function saveTimerSnapshot(snapshot: TimerSnapshot) {
 export function clearTimerSnapshot() {
   const wasRemoved = browserStorage.removeItem(TIMER_STORAGE_KEY);
 
-  if (wasRemoved && typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(STUDY_TIMER_UPDATED_EVENT));
+  if (wasRemoved) {
+    dispatchTimerUpdate();
   }
 
   return wasRemoved;
+}
+
+export function readTimerSettings() {
+  const raw = browserStorage.getItem(TIMER_SETTINGS_STORAGE_KEY);
+
+  if (raw === cachedRawSettings) {
+    return cachedParsedSettings;
+  }
+
+  if (!raw) {
+    cachedRawSettings = null;
+    cachedParsedSettings = { notificationsEnabled: false };
+    return cachedParsedSettings;
+  }
+
+  try {
+    const parsed = normalizeTimerSettings(JSON.parse(raw));
+    cachedRawSettings = raw;
+    cachedParsedSettings = parsed;
+    return parsed;
+  } catch {
+    cachedRawSettings = raw;
+    cachedParsedSettings = { notificationsEnabled: false };
+    return cachedParsedSettings;
+  }
+}
+
+export function saveTimerSettings(settings: TimerSettings) {
+  const normalized = normalizeTimerSettings(settings);
+  const wasSaved = browserStorage.setItem(
+    TIMER_SETTINGS_STORAGE_KEY,
+    JSON.stringify(normalized),
+  );
+
+  if (wasSaved) {
+    dispatchTimerUpdate(normalized);
+  }
+
+  return wasSaved;
+}
+
+export function readTodayTimerStats(now = Date.now()) {
+  const raw = browserStorage.getItem(TIMER_DAILY_STATS_STORAGE_KEY);
+  const todayKey = formatDateKey(new Date(now));
+
+  if (
+    raw === cachedRawDailyStats &&
+    cachedParsedDailyStats &&
+    cachedParsedDailyStats.dateKey === todayKey
+  ) {
+    return cachedParsedDailyStats;
+  }
+
+  if (!raw) {
+    const emptyStats = createEmptyDailyStats(now);
+    cachedRawDailyStats = null;
+    cachedParsedDailyStats = emptyStats;
+    return emptyStats;
+  }
+
+  try {
+    const parsed = normalizeTimerDailyStats(JSON.parse(raw), now);
+    cachedRawDailyStats = raw;
+    cachedParsedDailyStats = parsed;
+    return parsed;
+  } catch {
+    const emptyStats = createEmptyDailyStats(now);
+    cachedRawDailyStats = raw;
+    cachedParsedDailyStats = emptyStats;
+    return emptyStats;
+  }
+}
+
+export function saveTodayTimerStats(stats: TimerDailyStats) {
+  const normalized = normalizeTimerDailyStats(stats);
+  const wasSaved = browserStorage.setItem(
+    TIMER_DAILY_STATS_STORAGE_KEY,
+    JSON.stringify(normalized),
+  );
+
+  if (wasSaved) {
+    dispatchTimerUpdate(normalized);
+  }
+
+  return wasSaved;
+}
+
+export function recordTimerCompletion(snapshot: TimerSnapshot, now = Date.now()) {
+  const currentStats = readTodayTimerStats(now);
+  const durationMinutes = Math.round(snapshot.durationMs / (60 * 1000));
+  const isBreak = isBreakPreset(snapshot.label);
+
+  const nextStats: TimerDailyStats = {
+    dateKey: currentStats.dateKey,
+    completedSessions: currentStats.completedSessions + 1,
+    totalMinutes: currentStats.totalMinutes + durationMinutes,
+    focusMinutes: currentStats.focusMinutes + (isBreak ? 0 : durationMinutes),
+    breakMinutes: currentStats.breakMinutes + (isBreak ? durationMinutes : 0),
+    lastCompletedAt: now,
+    lastCompletedLabel: snapshot.label,
+  };
+
+  saveTodayTimerStats(nextStats);
+
+  return nextStats;
+}
+
+export function readStudyTimerState(now = Date.now()) {
+  const snapshot = readTimerSnapshot();
+  const settings = readTimerSettings();
+  const todayStats = readTodayTimerStats(now);
+
+  if (
+    cachedStudyTimerState &&
+    cachedStudyTimerState.snapshot === snapshot &&
+    cachedStudyTimerState.settings === settings &&
+    cachedStudyTimerState.todayStats === todayStats
+  ) {
+    return cachedStudyTimerState;
+  }
+
+  cachedStudyTimerState = {
+    snapshot,
+    settings,
+    todayStats,
+  };
+
+  return cachedStudyTimerState;
 }

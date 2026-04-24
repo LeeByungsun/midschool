@@ -12,6 +12,7 @@ import {
 } from "@/components/data-state";
 import { DashboardCard } from "@/components/dashboard-card";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { useStudyTimer } from "@/hooks/use-study-timer";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel, formatMonthKey } from "@/lib/date";
 import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
@@ -24,6 +25,7 @@ import {
   formatCacheStatusMessage,
 } from "@/lib/school-api";
 import { timerPresets } from "@/lib/site-data";
+import { formatTimerClock, getTimerView, type TimerView } from "@/lib/timer";
 
 type DashboardState = {
   requestToken: string;
@@ -56,8 +58,10 @@ const initialState: DashboardState = {
 export function HomeDashboard() {
   const hydrated = useHydrated();
   const studentInfo = useStudentPreferences();
+  const studyTimer = useStudyTimer();
   const [state, setState] = useState<DashboardState>(initialState);
   const [reloadCount, setReloadCount] = useState(0);
+  const [timerNow, setTimerNow] = useState(() => Date.now());
 
   const today = useMemo(() => new Date(), []);
   const todayKey = useMemo(() => formatDateKey(today), [today]);
@@ -172,6 +176,25 @@ export function HomeDashboard() {
     state.scheduleCachedAt,
     "학사 일정",
   );
+  const timerView: TimerView | null = useMemo(
+    () =>
+      studyTimer.snapshot ? getTimerView(studyTimer.snapshot, timerNow) : null,
+    [studyTimer.snapshot, timerNow],
+  );
+
+  useEffect(() => {
+    if (timerView?.status !== "running") {
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      setTimerNow(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [timerView?.status]);
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.35fr_0.95fr]">
@@ -331,25 +354,27 @@ export function HomeDashboard() {
 
         <DashboardCard
           title="집중 타이머"
-          subtitle="웹에서는 설치 없이 바로 사용하는 흐름을 우선합니다."
+          subtitle="타이머 탭의 현재 상태와 오늘 기록을 홈에서도 바로 이어 봅니다."
         >
           <div className="rounded-[2rem] bg-slate-950 p-5 text-white">
-            <p className="text-sm text-slate-300">추천 프리셋</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {timerPresets.map((preset) => (
-                <span
-                  key={preset.label}
-                  className={`rounded-full px-3 py-1.5 text-sm font-semibold ${preset.tone}`}
-                >
-                  {preset.label} {preset.minutes}분
-                </span>
-              ))}
-            </div>
-            <div className="mt-6 flex items-end justify-between gap-4">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-4xl font-semibold tracking-tight">25:00</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  추후 localStorage 기반 복원과 알림을 연결합니다.
+                <p className="text-sm text-slate-300">현재 상태</p>
+                <p className="mt-2 text-4xl font-semibold tracking-tight">
+                  {timerView ? formatTimerClock(timerView.remainingMs) : "25:00"}
+                </p>
+                <p className="mt-2 text-sm text-slate-300">
+                  {timerView
+                    ? `${timerView.label} · ${
+                        timerView.status === "running"
+                          ? "집중 중"
+                          : timerView.status === "paused"
+                            ? "잠시 멈춤"
+                            : timerView.status === "completed"
+                              ? "완료"
+                              : "준비됨"
+                      }`
+                    : "아직 시작하지 않은 기본 집중 세션"}
                 </p>
               </div>
               <Link
@@ -359,6 +384,52 @@ export function HomeDashboard() {
                 타이머 열기
               </Link>
             </div>
+
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-sky-400 transition-[width] duration-700"
+                style={{ width: `${Math.max((timerView?.progress ?? 0) * 100, 4)}%` }}
+              />
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-white/10 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
+                  오늘 완료 세션
+                </p>
+                <p className="mt-2 text-lg font-semibold text-white">
+                  {studyTimer.todayStats.completedSessions}회
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/10 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
+                  오늘 집중 시간
+                </p>
+                <p className="mt-2 text-lg font-semibold text-white">
+                  {studyTimer.todayStats.focusMinutes}분
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 text-sm text-slate-400">
+              {studyTimer.settings.notificationsEnabled
+                ? "브라우저 알림이 켜져 있어 완료 시 다른 탭에서도 확인할 수 있어요."
+                : "타이머 탭에서 브라우저 알림을 켜면 완료 시 더 쉽게 알아챌 수 있어요."}
+            </p>
+
+            {!timerView ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {timerPresets.map((preset) => (
+                  <span
+                    key={preset.label}
+                    className={`rounded-full px-3 py-1.5 text-sm font-semibold ${preset.tone}`}
+                  >
+                    {preset.label} {preset.minutes}분
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </DashboardCard>
       </div>
