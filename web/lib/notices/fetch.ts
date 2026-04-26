@@ -237,7 +237,7 @@ function parseGoehsNoticeList(boardUrl: string, html: string, limit: number) {
   const mi = boardUrlObject.searchParams.get("mi") ?? "";
   const bbsId = boardUrlObject.searchParams.get("bbsId") ?? "";
   const detailPath = boardUrlObject.pathname.replace("selectNttList.do", "selectNttInfo.do");
-  const rows = Array.from(html.matchAll(/<tr>([\s\S]*?)<\/tr>/gi));
+  const rows = Array.from(html.matchAll(/<tr[\s\S]*?>([\s\S]*?)<\/tr>/gi));
   const items: NoticeSummary[] = [];
 
   for (const row of rows) {
@@ -284,7 +284,7 @@ function parseGoehsNoticeList(boardUrl: string, html: string, limit: number) {
 }
 
 function parseBusanNoticeList(boardUrl: string, html: string, limit: number) {
-  const rows = Array.from(html.matchAll(/<tr>([\s\S]*?)<\/tr>/gi));
+  const rows = Array.from(html.matchAll(/<tr[\s\S]*?>([\s\S]*?)<\/tr>/gi));
   const items: NoticeSummary[] = [];
 
   for (const row of rows) {
@@ -491,6 +491,7 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
   if (
     provider === "goehs-board" ||
     provider === "gne-board" ||
+    provider === "gyo6-board" ||
     provider === "busan-school"
   ) {
     const boardUrl = isDirectNoticeBoardUrl(homepageUrl)
@@ -510,6 +511,8 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
         ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
         : provider === "gne-board"
           ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
+          : provider === "gyo6-board"
+            ? parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit)
           : parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "gwe-board") {
     const boardUrl = isDirectNoticeBoardUrl(homepageUrl)

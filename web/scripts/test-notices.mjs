@@ -57,6 +57,20 @@ test('gne schools use the gne provider for homepage and direct board urls', () =
   assert.equal(boardProvider, 'gne-board');
 });
 
+test('gyo6 schools use the gyo6 provider for homepage and direct board urls', () => {
+  const homepageProvider = detectNoticeProvider(
+    'https://school.gyo6.net/booksamms/',
+    '<a href="/booksamms/na/ntt/selectNttList.do?mi=106667&bbsId=31684"><span>가정통신문</span></a>',
+  );
+  const boardProvider = detectNoticeProvider(
+    'https://school.gyo6.net/booksamms/na/ntt/selectNttList.do?mi=106667&bbsId=31684',
+    '<title>북삼중학교 > 학교생활 > 가정통신문목록</title>',
+  );
+
+  assert.equal(homepageProvider, 'gyo6-board');
+  assert.equal(boardProvider, 'gyo6-board');
+});
+
 test('notice homepage candidates keep a stale saved homepage first and then fall back to the resolved school homepage', () => {
   const candidates = buildNoticeHomepageCandidates({
     requestedHomepage: 'https://bansong-m.goehs.kr/',
