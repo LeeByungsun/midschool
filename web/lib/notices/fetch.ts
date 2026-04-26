@@ -137,7 +137,7 @@ function parseGoehsNoticeList(boardUrl: string, html: string, limit: number) {
 
 function parseSenBoardMeta(homepageUrl: string, html: string) {
   const pattern =
-    /<input[^>]+id=['"]bbsId_(\d+)['"][^>]+value=['"]([^'"]+)['"][^>]*>[\s\S]*?<div class=['"]index_board_box['"][\s\S]*?<h3>\s*(가정통신문(?:\(학교\))?)\s*<\/h3>[\s\S]*?<ul class=['"]main_small_list['"]>([\s\S]*?)<\/ul>/gi;
+    /<div class=['"]index_board_box['"][\s\S]*?<h3>\s*(가정통신문(?:\(학교\))?)\s*<\/h3>[\s\S]*?<ul class=['"]main_small_list['"]>([\s\S]*?)<\/ul>/gi;
 
   const match = pattern.exec(html);
 
@@ -145,13 +145,18 @@ function parseSenBoardMeta(homepageUrl: string, html: string) {
     return null;
   }
 
-  const widgetId = match[1];
-  const bbsId = match[2];
-  const listHtml = match[4];
-  const menuNoMatch = listHtml.match(
-    new RegExp(`fnBoardPage_${widgetId}\\('\\s*${bbsId}\\s*',\\s*'[^']*',\\s*'([^']+)'\\)`),
+  const listHtml = match[2];
+  const firstCallMatch = listHtml.match(
+    /fnBoardPage_(\d+)\('\s*([^']+)\s*',\s*'([^']+)',\s*'([^']+)'\)/i,
   );
-  const menuNo = menuNoMatch?.[1]?.trim() ?? "";
+
+  if (!firstCallMatch) {
+    return null;
+  }
+
+  const widgetId = firstCallMatch[1].trim();
+  const bbsId = firstCallMatch[2].trim();
+  const menuNo = firstCallMatch[4].trim();
   const boardUrl = menuNo ? toAbsoluteUrl(homepageUrl, `/${menuNo}/subMenu.do`) : homepageUrl;
 
   return { widgetId, bbsId, boardUrl, listHtml };
