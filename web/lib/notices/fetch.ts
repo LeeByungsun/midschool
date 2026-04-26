@@ -2,7 +2,7 @@ import "server-only";
 
 import type { NoticeSummary } from "@/lib/notices/types";
 
-type NoticeProvider = "sen-preview" | "goehs-board";
+type NoticeProvider = "sen-preview" | "goehs-board" | "gwe-board";
 
 type NoticeCacheEntry = {
   savedAt: number;
@@ -84,6 +84,25 @@ function parseGoehsNoticeBoardUrl(homepageUrl: string, html: string) {
   return "";
 }
 
+function parseGweNoticeBoardUrl(homepageUrl: string, html: string) {
+  const matches = Array.from(
+    html.matchAll(
+      /<a[^>]+href=['"]([^'"]*boardCnts\/list\.do\?[^'"]*boardID=[^'"]+)['"][^>]*>([\s\S]*?)<\/a>/gi,
+    ),
+  );
+
+  for (const match of matches) {
+    const href = match[1];
+    const titleText = stripTags(match[2]);
+
+    if (titleText === "가정통신문") {
+      return toAbsoluteUrl(homepageUrl, href);
+    }
+  }
+
+  return "";
+}
+
 function parseGoehsNoticeList(boardUrl: string, html: string, limit: number) {
   const boardUrlObject = new URL(boardUrl);
   const mi = boardUrlObject.searchParams.get("mi") ?? "";
@@ -123,6 +142,71 @@ function parseGoehsNoticeList(boardUrl: string, html: string, limit: number) {
       title,
       date: dateMatch?.[1]?.trim() ?? "",
       author: normalizeWhitespace(authorMatch?.[1] ?? ""),
+      url: detailUrl.toString(),
+      sourceUrl: boardUrl,
+    });
+
+    if (items.length >= limit) {
+      break;
+    }
+  }
+
+  return items;
+}
+
+function parseGweNoticeList(boardUrl: string, html: string, limit: number) {
+  const boardUrlObject = new URL(boardUrl);
+  const boardId = boardUrlObject.searchParams.get("boardID") ?? "";
+  const menuId = boardUrlObject.searchParams.get("m") ?? "";
+  const siteId = boardUrlObject.searchParams.get("s") ?? "";
+  const rows = Array.from(html.matchAll(/<tr[\s\S]*?>([\s\S]*?)<\/tr>/gi));
+  const items: NoticeSummary[] = [];
+
+  for (const row of rows) {
+    const rowHtml = row[1];
+    const titleMatch = rowHtml.match(
+      /goView\('([^']+)','([^']+)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)'\)[\s\S]*?>([\s\S]*?)<\/a>/i,
+    );
+
+    if (!titleMatch) {
+      continue;
+    }
+
+    const noticeId = titleMatch[2].trim();
+    const lev = titleMatch[3].trim() || "0";
+    const statusYn = titleMatch[5].trim() || "W";
+    const page = titleMatch[6].trim() || "1";
+    const title = stripTags(titleMatch[9]);
+    const cells = Array.from(rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)).map((cell) =>
+      stripTags(cell[1]),
+    );
+    const author = cells[2] ?? "";
+    const date = cells[4] ?? "";
+
+    if (!noticeId || !title) {
+      continue;
+    }
+
+    const detailUrl = new URL("/boardCnts/view.do", boardUrlObject.origin);
+    detailUrl.searchParams.set("boardID", boardId);
+    detailUrl.searchParams.set("boardSeq", noticeId);
+    detailUrl.searchParams.set("lev", lev);
+    detailUrl.searchParams.set("searchType", "S");
+    detailUrl.searchParams.set("searchType2", "");
+    detailUrl.searchParams.set("statusYN", statusYn);
+    detailUrl.searchParams.set("page", page);
+    detailUrl.searchParams.set("s", siteId);
+    detailUrl.searchParams.set("m", menuId);
+    detailUrl.searchParams.set("rsvtListYN", "N");
+    detailUrl.searchParams.set("opType", "N");
+    detailUrl.searchParams.set("sdate", "");
+    detailUrl.searchParams.set("edate", "");
+
+    items.push({
+      id: noticeId,
+      title,
+      date,
+      author,
       url: detailUrl.toString(),
       sourceUrl: boardUrl,
     });
@@ -205,6 +289,10 @@ function parseSenNoticePreview(homepageUrl: string, html: string, limit: number)
 function detectProvider(homepageUrl: string, homepageHtml: string): NoticeProvider | null {
   const hostname = new URL(homepageUrl).hostname;
 
+  if (hostname.endsWith("gwe.ms.kr") || homepageHtml.includes("boardCnts/list.do?boardID=")) {
+    return "gwe-board";
+  }
+
   if (hostname.endsWith("goehs.kr") || homepageHtml.includes("/na/ntt/selectNttList.do")) {
     return "goehs-board";
   }
@@ -251,6 +339,15 @@ export async function fetchSchoolHomepageNotices(params: {
 
     const boardHtml = await fetchHtml(boardUrl);
     items = parseGoehsNoticeList(boardUrl, boardHtml, limit);
+  } else if (provider === "gwe-board") {
+    const boardUrl = parseGweNoticeBoardUrl(homepageUrl, homepageHtml);
+
+    if (!boardUrl) {
+      throw new Error("가정통신문 게시판 링크를 찾지 못했어요.");
+    }
+
+    const boardHtml = await fetchHtml(boardUrl);
+    items = parseGweNoticeList(boardUrl, boardHtml, limit);
   } else if (provider === "sen-preview") {
     items = parseSenNoticePreview(homepageUrl, homepageHtml, limit);
   }
