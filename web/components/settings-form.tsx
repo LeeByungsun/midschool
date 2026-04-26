@@ -3,7 +3,7 @@
 import { FormEvent, KeyboardEvent, useMemo, useState } from "react";
 
 import type { SchoolInfo } from "@/lib/neis/types";
-import { fetchSchools } from "@/lib/school-api";
+import { fetchSchoolByCode, fetchSchools } from "@/lib/school-api";
 import {
   clearStudentPreferences,
   formatStudentPreferences,
@@ -45,7 +45,7 @@ function SettingsFormBody({
           foundation: "",
           roadAddress: "",
           telephone: "",
-          homepage: "",
+          homepage: initialPreferences.homepage ?? "",
         }
       : null,
   );
@@ -116,14 +116,30 @@ function SettingsFormBody({
     await handleSearch();
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    let homepage = selectedSchool?.homepage?.trim() ?? "";
+
+    if (!homepage && selectedSchool?.officeCode && selectedSchool?.schoolCode) {
+      try {
+        const schoolDetail = await fetchSchoolByCode({
+          officeCode: selectedSchool.officeCode,
+          schoolCode: selectedSchool.schoolCode,
+        });
+
+        homepage = schoolDetail?.homepage?.trim() ?? "";
+      } catch {
+        homepage = "";
+      }
+    }
 
     const nextValue: StudentPreferences = {
       schoolName: selectedSchool?.schoolName ?? schoolQuery.trim(),
       officeCode: selectedSchool?.officeCode ?? "",
       schoolCode: selectedSchool?.schoolCode ?? "",
       schoolKind: selectedSchool?.schoolKind ?? "",
+      homepage,
       grade: grade.trim(),
       classroom: classroom.trim(),
     };

@@ -208,3 +208,17 @@ export function fetchSchools(params: { query: string }) {
     (result) => result.items,
   );
 }
+
+export async function fetchSchoolByCode(params: {
+  officeCode: string;
+  schoolCode: string;
+}) {
+  const search = new URLSearchParams({
+    officeCode: params.officeCode,
+    schoolCode: params.schoolCode,
+  });
+
+  const result = await fetchList<SchoolInfo>(`/api/schools?${search.toString()}`);
+
+  return result.items[0] ?? null;
+}
