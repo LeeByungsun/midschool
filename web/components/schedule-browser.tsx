@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   EmptyState,
   ErrorState,
-  InfoState,
   LoadingState,
   SetupRequiredState,
 } from "@/components/data-state";
@@ -18,7 +17,6 @@ import { isVisibleSchedule } from "@/lib/schedule";
 import {
   type CacheStatus,
   fetchSchedules,
-  formatCacheStatusMessage,
 } from "@/lib/school-api";
 
 type ScheduleState = {
@@ -120,12 +118,6 @@ export function ScheduleBrowser() {
   };
   const isLoading =
     hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
-  const cacheNotice = formatCacheStatusMessage(
-    state.cacheStatus,
-    state.cachedAt,
-    "학사 일정",
-  );
-
   return (
     <DashboardCard
       title="월간 학사 일정"
@@ -166,7 +158,6 @@ export function ScheduleBrowser() {
         />
       ) : (
         <div className="grid gap-4">
-          {cacheNotice ? <InfoState message={cacheNotice} /> : null}
           <ul className="space-y-3">
             {visibleItems.map((event) => (
               <li
