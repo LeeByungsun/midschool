@@ -24,8 +24,18 @@ import {
   fetchTimetable,
   formatCacheStatusMessage,
 } from "@/lib/school-api";
+import { saveTimerSnapshot } from "@/lib/storage/timer";
 import { timerPresets } from "@/lib/site-data";
-import { formatTimerClock, getTimerView, type TimerView } from "@/lib/timer";
+import {
+  createTimerSnapshot,
+  formatTimerClock,
+  getTimerView,
+  pauseTimer,
+  resetTimer,
+  resumeTimer,
+  startTimer,
+  type TimerView,
+} from "@/lib/timer";
 
 type DashboardState = {
   requestToken: string;
@@ -54,6 +64,13 @@ const initialState: DashboardState = {
   scheduleCacheStatus: "network",
   scheduleCachedAt: null,
 };
+
+const defaultTimerPreset = timerPresets[0];
+const defaultHomeTimerSnapshot = createTimerSnapshot(
+  defaultTimerPreset.label,
+  defaultTimerPreset.minutes * 60 * 1000,
+  Date.now(),
+);
 
 export function HomeDashboard() {
   const hydrated = useHydrated();
@@ -181,6 +198,7 @@ export function HomeDashboard() {
       studyTimer.snapshot ? getTimerView(studyTimer.snapshot, timerNow) : null,
     [studyTimer.snapshot, timerNow],
   );
+  const currentTimerSnapshot = studyTimer.snapshot ?? defaultHomeTimerSnapshot;
 
   useEffect(() => {
     if (timerView?.status !== "running") {
@@ -195,6 +213,22 @@ export function HomeDashboard() {
       window.clearInterval(timerId);
     };
   }, [timerView?.status]);
+
+  const handleTimerStart = () => {
+    saveTimerSnapshot(startTimer(currentTimerSnapshot));
+  };
+
+  const handleTimerPause = () => {
+    saveTimerSnapshot(pauseTimer(currentTimerSnapshot));
+  };
+
+  const handleTimerResume = () => {
+    saveTimerSnapshot(resumeTimer(currentTimerSnapshot));
+  };
+
+  const handleTimerReset = () => {
+    saveTimerSnapshot(resetTimer(currentTimerSnapshot));
+  };
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.35fr_0.95fr]">
@@ -390,6 +424,56 @@ export function HomeDashboard() {
                 className="h-full rounded-full bg-sky-400 transition-[width] duration-700"
                 style={{ width: `${Math.max((timerView?.progress ?? 0) * 100, 4)}%` }}
               />
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              {!timerView || timerView.status === "idle" ? (
+                <button
+                  type="button"
+                  onClick={handleTimerStart}
+                  className="rounded-full bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-300"
+                >
+                  시작
+                </button>
+              ) : null}
+
+              {timerView?.status === "running" ? (
+                <button
+                  type="button"
+                  onClick={handleTimerPause}
+                  className="rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-200"
+                >
+                  일시정지
+                </button>
+              ) : null}
+
+              {timerView?.status === "paused" ? (
+                <button
+                  type="button"
+                  onClick={handleTimerResume}
+                  className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-200"
+                >
+                  재시작
+                </button>
+              ) : null}
+
+              {timerView?.status === "completed" ? (
+                <button
+                  type="button"
+                  onClick={handleTimerStart}
+                  className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-200"
+                >
+                  다시 시작
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={handleTimerReset}
+                className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+              >
+                종료 / 리셋
+              </button>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
