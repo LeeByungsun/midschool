@@ -39,6 +39,9 @@ function normalizeHomepageUrl(value: string) {
 
   const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   const url = new URL(withProtocol);
+  if (url.protocol === "http:" && (url.hostname.endsWith("sen.ms.kr") || url.hostname.endsWith("gwe.ms.kr"))) {
+    url.protocol = "https:";
+  }
   url.hash = "";
 
   return url.toString();
@@ -367,10 +370,14 @@ export async function fetchSchoolHomepageNotices(params: {
     items = parseSenNoticePreview(homepageUrl, homepageHtml, limit);
   }
 
-  noticeCache.set(homepageUrl, {
-    savedAt: Date.now(),
-    items,
-  });
+  if (items.length > 0) {
+    noticeCache.set(homepageUrl, {
+      savedAt: Date.now(),
+      items,
+    });
+  } else {
+    noticeCache.delete(homepageUrl);
+  }
 
   return items;
 }

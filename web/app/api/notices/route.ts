@@ -10,11 +10,13 @@ export async function GET(request: NextRequest) {
   const officeCode = request.nextUrl.searchParams.get("officeCode")?.trim() ?? "";
   const schoolCode = request.nextUrl.searchParams.get("schoolCode")?.trim() ?? "";
   const limit = Number(request.nextUrl.searchParams.get("limit") ?? "5");
+  let resolvedHomepageUrl = "";
 
   try {
-    const homepageUrl = homepage || (await resolveHomepageBySchoolCode({ officeCode, schoolCode }));
+    resolvedHomepageUrl =
+      homepage || (await resolveHomepageBySchoolCode({ officeCode, schoolCode }));
 
-    if (!homepageUrl) {
+    if (!resolvedHomepageUrl) {
       return NextResponse.json(
         { message: "학교 홈페이지 주소를 찾지 못했어요.", items: [] },
         { status: 404 },
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     const items = await fetchSchoolHomepageNotices({
-      homepageUrl,
+      homepageUrl: resolvedHomepageUrl,
       limit: Number.isFinite(limit) ? Math.max(1, Math.min(limit, 10)) : 5,
     });
 
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
       {
         message:
           error instanceof Error
-            ? error.message
+            ? `${error.message}${resolvedHomepageUrl ? ` (homepage: ${resolvedHomepageUrl})` : ""}`
             : "가정통신문 목록을 불러오지 못했어요.",
       },
       { status: 500 },
