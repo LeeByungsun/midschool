@@ -44,7 +44,15 @@ function normalizeHomepageUrl(value: string) {
   return url.toString();
 }
 
-async function fetchHtml(url: string) {
+function extractClientRedirect(html: string) {
+  const match = html.match(
+    /document\.location\.href\s*=\s*["']([^"']+)["']|location\.href\s*=\s*["']([^"']+)["']/i,
+  );
+
+  return match?.[1] ?? match?.[2] ?? "";
+}
+
+async function fetchHtml(url: string, depth = 0): Promise<string> {
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -58,7 +66,14 @@ async function fetchHtml(url: string) {
     throw new Error(`학교 홈페이지 응답이 실패했어요. (${response.status})`);
   }
 
-  return response.text();
+  const html = await response.text();
+  const redirectPath = extractClientRedirect(html);
+
+  if (redirectPath && depth < 3) {
+    return fetchHtml(toAbsoluteUrl(url, redirectPath), depth + 1);
+  }
+
+  return html;
 }
 
 function toAbsoluteUrl(baseUrl: string, path: string) {
