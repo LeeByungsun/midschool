@@ -1,9 +1,10 @@
 import type {
   MealInfo,
-  SchoolEvent,
   SchoolInfo,
+  SchoolEvent,
   TimetableItem,
 } from "@/lib/neis/types";
+import type { NoticeSummary } from "@/lib/notices/types";
 import { readCache, writeCache } from "@/lib/storage/cache";
 
 type ApiListResponse<T> = {
@@ -139,6 +140,14 @@ function buildScheduleCacheKey(params: {
   return `schedule:${params.officeCode}:${params.schoolCode}:${params.date}`;
 }
 
+function buildNoticeCacheKey(params: {
+  officeCode: string;
+  schoolCode: string;
+  homepage?: string;
+}) {
+  return `notices:${params.officeCode}:${params.schoolCode}:${params.homepage ?? ""}`;
+}
+
 export function fetchTimetable(params: {
   officeCode: string;
   schoolCode: string;
@@ -221,4 +230,24 @@ export async function fetchSchoolByCode(params: {
   const result = await fetchList<SchoolInfo>(`/api/schools?${search.toString()}`);
 
   return result.items[0] ?? null;
+}
+
+export function fetchNotices(params: {
+  officeCode: string;
+  schoolCode: string;
+  homepage?: string;
+  limit?: number;
+}) {
+  const search = new URLSearchParams({
+    officeCode: params.officeCode,
+    schoolCode: params.schoolCode,
+    homepage: params.homepage ?? "",
+    limit: String(params.limit ?? 5),
+  });
+
+  return fetchList<NoticeSummary>(`/api/notices?${search.toString()}`, {
+    key: buildNoticeCacheKey(params),
+    ttlMs: 30 * 60 * 1000,
+    fallbackTtlMs: 12 * 60 * 60 * 1000,
+  });
 }

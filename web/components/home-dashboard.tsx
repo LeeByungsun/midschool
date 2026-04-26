@@ -15,11 +15,13 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudyTimer } from "@/hooks/use-study-timer";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel, formatMonthKey } from "@/lib/date";
+import type { NoticeSummary } from "@/lib/notices/types";
 import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
 import { isVisibleSchedule } from "@/lib/schedule";
 import {
   type CacheStatus,
   fetchMeals,
+  fetchNotices,
   fetchSchedules,
   fetchTimetable,
   formatCacheStatusMessage,
@@ -51,6 +53,12 @@ type DashboardState = {
   scheduleCachedAt: number | null;
 };
 
+type NoticeState = {
+  requestToken: string;
+  items: NoticeSummary[];
+  error: string | null;
+};
+
 const initialState: DashboardState = {
   requestToken: "",
   timetable: [],
@@ -65,6 +73,12 @@ const initialState: DashboardState = {
   scheduleCachedAt: null,
 };
 
+const initialNoticeState: NoticeState = {
+  requestToken: "",
+  items: [],
+  error: null,
+};
+
 const defaultTimerPreset = timerPresets[0];
 const defaultHomeTimerSnapshot = createTimerSnapshot(
   defaultTimerPreset.label,
@@ -77,7 +91,9 @@ export function HomeDashboard() {
   const studentInfo = useStudentPreferences();
   const studyTimer = useStudyTimer();
   const [state, setState] = useState<DashboardState>(initialState);
+  const [noticeState, setNoticeState] = useState<NoticeState>(initialNoticeState);
   const [reloadCount, setReloadCount] = useState(0);
+  const [noticeReloadCount, setNoticeReloadCount] = useState(0);
   const [timerNow, setTimerNow] = useState(() => Date.now());
 
   const today = useMemo(() => new Date(), []);
@@ -88,6 +104,10 @@ export function HomeDashboard() {
     ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}`
     : "";
   const requestToken = `${requestKey}:${reloadCount}`;
+  const noticeRequestKey = studentInfo
+    ? `${studentInfo.officeCode}-${studentInfo.schoolCode}-${studentInfo.homepage ?? ""}`
+    : "";
+  const noticeRequestToken = `${noticeRequestKey}:${noticeReloadCount}`;
 
   useEffect(() => {
     let isCancelled = false;
@@ -163,6 +183,50 @@ export function HomeDashboard() {
     };
   }, [hydrated, monthKey, reloadCount, requestToken, studentInfo, todayKey]);
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!hydrated || !studentInfo) {
+      return;
+    }
+
+    fetchNotices({
+      officeCode: studentInfo.officeCode,
+      schoolCode: studentInfo.schoolCode,
+      homepage: studentInfo.homepage,
+      limit: 5,
+    })
+      .then((result) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setNoticeState({
+          requestToken: noticeRequestToken,
+          items: result.items,
+          error: null,
+        });
+      })
+      .catch((error: unknown) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setNoticeState({
+          requestToken: noticeRequestToken,
+          items: [],
+          error:
+            error instanceof Error
+              ? error.message
+              : "가정통신문 목록을 불러오지 못했어요.",
+        });
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [hydrated, noticeReloadCount, noticeRequestToken, studentInfo]);
+
   const upcomingSchedules = useMemo(
     () =>
       state.schedules
@@ -177,7 +241,12 @@ export function HomeDashboard() {
   const retryFetch = () => {
     setReloadCount((prev) => prev + 1);
   };
+  const retryNoticeFetch = () => {
+    setNoticeReloadCount((prev) => prev + 1);
+  };
   const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
+  const isNoticeLoading =
+    hydrated && Boolean(studentInfo) && noticeState.requestToken !== noticeRequestToken;
   const timetableCacheNotice = formatCacheStatusMessage(
     state.timetableCacheStatus,
     state.timetableCachedAt,
@@ -187,11 +256,6 @@ export function HomeDashboard() {
     state.mealCacheStatus,
     state.mealCachedAt,
     "급식",
-  );
-  const scheduleCacheNotice = formatCacheStatusMessage(
-    state.scheduleCacheStatus,
-    state.scheduleCachedAt,
-    "학사 일정",
   );
   const timerView: TimerView | null = useMemo(
     () =>
@@ -363,7 +427,6 @@ export function HomeDashboard() {
             />
           ) : (
             <div className="grid gap-4">
-              {scheduleCacheNotice ? <InfoState message={scheduleCacheNotice} /> : null}
               <ul className="space-y-3">
                 {upcomingSchedules.map((event) => (
                   <li
@@ -383,6 +446,58 @@ export function HomeDashboard() {
                 ))}
               </ul>
             </div>
+          )}
+        </DashboardCard>
+
+        <DashboardCard
+          title="가정통신문"
+          subtitle="선택한 학교 홈페이지에서 최근 목록만 먼저 가져옵니다."
+        >
+          {!hydrated ? (
+            <LoadingState message="가정통신문 기준을 준비 중..." />
+          ) : !studentInfo ? (
+            <SetupRequiredState
+              title="초기 설정이 먼저 필요해요."
+              message="학교를 저장하면 가정통신문도 같은 기준으로 가져올 수 있어요."
+            />
+          ) : isNoticeLoading ? (
+            <LoadingState message="가정통신문 목록을 불러오는 중..." />
+          ) : noticeState.error ? (
+            <ErrorState message={noticeState.error} onRetry={retryNoticeFetch} />
+          ) : noticeState.items.length === 0 ? (
+            <EmptyState
+              title="가정통신문이 없어요."
+              message="현재 학교 홈페이지에서 확인된 최근 가정통신문이 없어요."
+            />
+          ) : (
+            <ul className="space-y-3">
+              {noticeState.items.slice(0, 4).map((notice) => (
+                <li
+                  key={`${notice.id}-${notice.date}`}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                >
+                  <a
+                    href={notice.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block"
+                  >
+                    <p className="text-sm font-semibold text-slate-900">
+                      {notice.title}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      {notice.date ? <span>{notice.date}</span> : null}
+                      {notice.author ? (
+                        <>
+                          <span aria-hidden="true">•</span>
+                          <span>{notice.author}</span>
+                        </>
+                      ) : null}
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
           )}
         </DashboardCard>
 
