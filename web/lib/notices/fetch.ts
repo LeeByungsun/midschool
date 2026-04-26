@@ -1,5 +1,8 @@
 import "server-only";
 
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
 import type { NoticeSummary } from "@/lib/notices/types";
 
 type NoticeProvider = "sen-preview" | "goehs-board" | "gwe-board";
@@ -11,6 +14,7 @@ type NoticeCacheEntry = {
 
 const NOTICE_CACHE_TTL_MS = 30 * 60 * 1000;
 const noticeCache = new Map<string, NoticeCacheEntry>();
+const execFileAsync = promisify(execFile);
 
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -56,20 +60,38 @@ function extractClientRedirect(html: string) {
 }
 
 async function fetchHtml(url: string, depth = 0): Promise<string> {
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Accept: "text/html,application/xhtml+xml",
-      "User-Agent": "Mozilla/5.0 (compatible; SchoolHelperBot/1.0)",
-    },
-    cache: "no-store",
-  });
+  let html = "";
 
-  if (!response.ok) {
-    throw new Error(`학교 홈페이지 응답이 실패했어요. (${response.status})`);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "text/html,application/xhtml+xml",
+        "User-Agent": "Mozilla/5.0 (compatible; SchoolHelperBot/1.0)",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`학교 홈페이지 응답이 실패했어요. (${response.status})`);
+    }
+
+    html = await response.text();
+  } catch (error) {
+    try {
+      const result = await execFileAsync("curl", [
+        "-L",
+        "--silent",
+        "--show-error",
+        "--user-agent",
+        "Mozilla/5.0 (compatible; SchoolHelperBot/1.0)",
+        url,
+      ]);
+      html = result.stdout;
+    } catch {
+      throw error;
+    }
   }
-
-  const html = await response.text();
   const redirectPath = extractClientRedirect(html);
 
   if (redirectPath && depth < 3) {
