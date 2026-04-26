@@ -24,7 +24,7 @@ export function StudentSetupCallout() {
     return (
       <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800">
         현재 저장된 조회 기준은 <strong>{formatStudentPreferences(studentInfo)}</strong>
-        입니다. 다음 단계에서 이 값을 기준으로 실제 NEIS 데이터를 연결합니다.
+        입니다.
       </div>
     );
   }
