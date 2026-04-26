@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { resolveRedirectTargetUrl } from '../lib/notices/url.ts';
+import { buildLegacyHomepageAliases, resolveRedirectTargetUrl } from '../lib/notices/url.ts';
 import { detectNoticeProvider } from '../lib/notices/provider.ts';
 import { buildNoticeHomepageCandidates } from '../lib/notices/candidates.ts';
 
@@ -71,6 +71,20 @@ test('gyo6 schools use the gyo6 provider for homepage and direct board urls', ()
   assert.equal(boardProvider, 'gyo6-board');
 });
 
+test('jje schools use the jje provider for homepage and direct board urls', () => {
+  const homepageProvider = detectNoticeProvider(
+    'https://school.jje.go.kr/tamna/',
+    '<a href="/tamna/na/ntt/selectNttList.do?mi=118220&bbsId=118403"><span>가정통신문</span></a>',
+  );
+  const boardProvider = detectNoticeProvider(
+    'https://school.jje.go.kr/tamna/na/ntt/selectNttList.do?mi=118220&bbsId=118403',
+    '<title>탐라중학교 > 알림마당 > 가정통신문</title>',
+  );
+
+  assert.equal(homepageProvider, 'jje-board');
+  assert.equal(boardProvider, 'jje-board');
+});
+
 test('notice homepage candidates keep a stale saved homepage first and then fall back to the resolved school homepage', () => {
   const candidates = buildNoticeHomepageCandidates({
     requestedHomepage: 'https://bansong-m.goehs.kr/',
@@ -90,4 +104,18 @@ test('notice homepage candidates dedupe identical homepages', () => {
   });
 
   assert.deepEqual(candidates, ['https://ban-song-m.goehs.kr/']);
+});
+
+test('legacy jje homepage aliases map to school.jje.go.kr root and board paths', () => {
+  assert.deepEqual(buildLegacyHomepageAliases('http://tamna.jje.ms.kr'), [
+    'https://school.jje.go.kr/tamna/',
+  ]);
+  assert.deepEqual(
+    buildLegacyHomepageAliases(
+      'http://tamna.jje.ms.kr/na/ntt/selectNttList.do?mi=118220&bbsId=118403',
+    ),
+    [
+      'https://school.jje.go.kr/tamna/na/ntt/selectNttList.do?mi=118220&bbsId=118403',
+    ],
+  );
 });

@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { detectNoticeProvider } from "@/lib/notices/provider";
 import type { NoticeSummary } from "@/lib/notices/types";
 import {
+  buildLegacyHomepageAliases,
   hasExplicitProtocol,
   resolveRedirectTargetUrl,
   toAbsoluteUrl,
@@ -68,16 +69,17 @@ function buildHomepageCandidates(value: string) {
     return [];
   }
 
-  if (hasExplicitProtocol(trimmed)) {
-    return [normalizeHomepageUrl(trimmed)];
-  }
-
-  return Array.from(
-    new Set([
-      normalizeHomepageUrl(`https://${trimmed}`),
-      normalizeHomepageUrl(`http://${trimmed}`),
-    ]),
+  const baseCandidates = hasExplicitProtocol(trimmed)
+    ? [normalizeHomepageUrl(trimmed)]
+    : [
+        normalizeHomepageUrl(`https://${trimmed}`),
+        normalizeHomepageUrl(`http://${trimmed}`),
+      ];
+  const legacyAliases = baseCandidates.flatMap(buildLegacyHomepageAliases).map(
+    normalizeHomepageUrl,
   );
+
+  return Array.from(new Set([...baseCandidates, ...legacyAliases]));
 }
 
 function extractClientRedirect(html: string) {
@@ -492,6 +494,7 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
     provider === "goehs-board" ||
     provider === "gne-board" ||
     provider === "gyo6-board" ||
+    provider === "jje-board" ||
     provider === "busan-school"
   ) {
     const boardUrl = isDirectNoticeBoardUrl(homepageUrl)
@@ -508,10 +511,12 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
       boardUrl === homepageUrl ? homepageDocument : await fetchHtml(boardUrl);
     items =
       provider === "busan-school"
-        ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
+          ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
         : provider === "gne-board"
           ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
           : provider === "gyo6-board"
+            ? parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit)
+            : provider === "jje-board"
             ? parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit)
           : parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "gwe-board") {
