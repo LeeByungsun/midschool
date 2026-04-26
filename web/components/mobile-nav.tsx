@@ -22,6 +22,7 @@ export function MobileNav({ items }: MobileNavProps) {
           <li key={item.href}>
             <Link
               href={item.href}
+              aria-current={item.active ? "page" : undefined}
               className={`flex flex-col items-center justify-center rounded-2xl px-2 py-2 text-xs font-medium transition ${
                 item.active
                   ? "bg-sky-50 text-sky-700"

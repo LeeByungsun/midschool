@@ -135,6 +135,7 @@ export function ScheduleBrowser() {
           <button
             type="button"
             onClick={() => moveMonth(-1)}
+            aria-label="학사 일정 기준 월을 한 달 이전으로 이동"
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             이전 달
@@ -142,6 +143,7 @@ export function ScheduleBrowser() {
           <button
             type="button"
             onClick={() => moveMonth(1)}
+            aria-label="학사 일정 기준 월을 한 달 다음으로 이동"
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             다음 달

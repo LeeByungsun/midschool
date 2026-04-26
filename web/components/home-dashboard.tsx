@@ -423,6 +423,16 @@ export function HomeDashboard() {
               <div
                 className="h-full rounded-full bg-sky-400 transition-[width] duration-700"
                 style={{ width: `${Math.max((timerView?.progress ?? 0) * 100, 4)}%` }}
+                role="progressbar"
+                aria-label={`${timerView?.label ?? "기본 집중"} 타이머 진행률`}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round((timerView?.progress ?? 0) * 100)}
+                aria-valuetext={
+                  timerView
+                    ? `${formatTimerClock(timerView.remainingMs)} 남음`
+                    : "아직 시작하지 않음"
+                }
               />
             </div>
 
@@ -431,6 +441,7 @@ export function HomeDashboard() {
                 <button
                   type="button"
                   onClick={handleTimerStart}
+                  aria-label={`${currentTimerSnapshot.label} 타이머 시작`}
                   className="rounded-full bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-300"
                 >
                   시작
@@ -441,6 +452,7 @@ export function HomeDashboard() {
                 <button
                   type="button"
                   onClick={handleTimerPause}
+                  aria-label={`${currentTimerSnapshot.label} 타이머 일시정지`}
                   className="rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-200"
                 >
                   일시정지
@@ -451,6 +463,7 @@ export function HomeDashboard() {
                 <button
                   type="button"
                   onClick={handleTimerResume}
+                  aria-label={`${currentTimerSnapshot.label} 타이머 재시작`}
                   className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-200"
                 >
                   재시작
@@ -461,6 +474,7 @@ export function HomeDashboard() {
                 <button
                   type="button"
                   onClick={handleTimerStart}
+                  aria-label={`${currentTimerSnapshot.label} 타이머 다시 시작`}
                   className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-200"
                 >
                   다시 시작
@@ -470,6 +484,7 @@ export function HomeDashboard() {
               <button
                 type="button"
                 onClick={handleTimerReset}
+                aria-label={`${currentTimerSnapshot.label} 타이머 종료 후 리셋`}
                 className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
               >
                 종료 / 리셋

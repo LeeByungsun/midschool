@@ -8,6 +8,8 @@ type StateNoticeProps = {
   message: string;
   tone?: StateTone;
   action?: ReactNode;
+  role?: "status" | "alert";
+  live?: "polite" | "assertive";
 };
 
 const toneClasses: Record<StateTone, string> = {
@@ -21,9 +23,15 @@ function StateNotice({
   message,
   tone = "neutral",
   action,
+  role,
+  live,
 }: StateNoticeProps) {
   return (
-    <div className={`rounded-3xl border px-4 py-4 ${toneClasses[tone]}`}>
+    <div
+      className={`rounded-3xl border px-4 py-4 ${toneClasses[tone]}`}
+      role={role}
+      aria-live={live}
+    >
       {title ? <p className="font-semibold">{title}</p> : null}
       <p className={`text-sm leading-7 ${title ? "mt-1" : ""}`}>{message}</p>
       {action ? <div className="mt-3">{action}</div> : null}
@@ -32,7 +40,7 @@ function StateNotice({
 }
 
 export function LoadingState({ message }: { message: string }) {
-  return <StateNotice message={message} />;
+  return <StateNotice message={message} role="status" live="polite" />;
 }
 
 export function EmptyState({
@@ -42,7 +50,7 @@ export function EmptyState({
   title?: string;
   message: string;
 }) {
-  return <StateNotice title={title} message={message} />;
+  return <StateNotice title={title} message={message} role="status" live="polite" />;
 }
 
 export function ErrorState({
@@ -59,6 +67,8 @@ export function ErrorState({
       title="불러오는 중 문제가 발생했어요."
       message={message}
       tone="danger"
+      role="alert"
+      live="assertive"
       action={
         onRetry ? (
           <button
@@ -90,6 +100,8 @@ export function SetupRequiredState({
       title={title}
       message={message}
       tone="warning"
+      role="status"
+      live="polite"
       action={
         <Link
           href={href}
@@ -109,5 +121,13 @@ export function InfoState({
   title?: string;
   message: string;
 }) {
-  return <StateNotice title={title} message={message} tone="neutral" />;
+  return (
+    <StateNotice
+      title={title}
+      message={message}
+      tone="neutral"
+      role="status"
+      live="polite"
+    />
+  );
 }

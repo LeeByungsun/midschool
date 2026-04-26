@@ -130,6 +130,7 @@ export function TimetableBrowser() {
           <button
             type="button"
             onClick={() => moveDate(-1)}
+            aria-label="시간표 날짜를 하루 이전으로 이동"
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             이전 날
@@ -137,6 +138,7 @@ export function TimetableBrowser() {
           <button
             type="button"
             onClick={() => moveDate(1)}
+            aria-label="시간표 날짜를 하루 다음으로 이동"
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             다음 날

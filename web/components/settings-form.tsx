@@ -26,6 +26,11 @@ function SettingsFormBody({
   onError,
   onCleared,
 }: SettingsFormBodyProps) {
+  const schoolNameHintId = "school-name-hint";
+  const schoolSearchMessageId = "school-search-message";
+  const schoolResultsLabelId = "school-results-label";
+  const gradeHintId = "grade-hint";
+  const classroomHintId = "classroom-hint";
   const [schoolQuery, setSchoolQuery] = useState(initialPreferences?.schoolName ?? "");
   const [selectedSchool, setSelectedSchool] = useState<SchoolInfo | null>(
     initialPreferences
@@ -179,6 +184,12 @@ function SettingsFormBody({
               }}
               onKeyDown={handleSchoolQueryKeyDown}
               placeholder="예: 미사초등학교 / 미사중학교"
+              aria-describedby={[
+                schoolNameHintId,
+                searchMessage ? schoolSearchMessageId : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
             <button
@@ -189,21 +200,28 @@ function SettingsFormBody({
               {isSearching ? "검색 중..." : "학교 검색"}
             </button>
           </div>
-          <p className="text-sm text-slate-500">
+          <p id={schoolNameHintId} className="text-sm text-slate-500">
             현재는 초등학교와 중학교 검색 결과를 표시합니다.
           </p>
         </div>
 
         {searchMessage ? (
-          <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <p
+            id={schoolSearchMessageId}
+            className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600"
+            role="status"
+            aria-live="polite"
+          >
             {searchMessage}
           </p>
         ) : null}
 
         {searchResults.length > 0 ? (
           <div className="grid gap-3">
-            <p className="text-sm font-medium text-slate-700">검색 결과</p>
-            <ul className="grid gap-3">
+            <p id={schoolResultsLabelId} className="text-sm font-medium text-slate-700">
+              검색 결과
+            </p>
+            <ul className="grid gap-3" aria-labelledby={schoolResultsLabelId}>
               {searchResults.map((school) => {
                 const isSelected =
                   selectedSchool?.officeCode === school.officeCode &&
@@ -214,6 +232,12 @@ function SettingsFormBody({
                     <button
                       type="button"
                       onClick={() => handleSchoolSelect(school)}
+                      aria-pressed={isSelected}
+                      aria-label={
+                        isSelected
+                          ? `${school.schoolName} 선택됨`
+                          : `${school.schoolName} 선택`
+                      }
                       className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                         isSelected
                           ? "border-sky-300 bg-sky-50"
@@ -242,25 +266,35 @@ function SettingsFormBody({
           <label className="grid gap-2 text-sm text-slate-700">
             <span className="font-medium">학년</span>
             <input
+              id="grade"
               name="grade"
               inputMode="numeric"
               value={grade}
               onChange={(event) => setGrade(event.target.value)}
               placeholder="예: 2"
+              aria-describedby={gradeHintId}
               className="rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
+            <span id={gradeHintId} className="text-xs text-slate-500">
+              숫자만 입력해 주세요. 예: 1, 2, 3
+            </span>
           </label>
 
           <label className="grid gap-2 text-sm text-slate-700">
             <span className="font-medium">반</span>
             <input
+              id="classroom"
               name="classroom"
               inputMode="numeric"
               value={classroom}
               onChange={(event) => setClassroom(event.target.value)}
               placeholder="예: 3"
+              aria-describedby={classroomHintId}
               className="rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
+            <span id={classroomHintId} className="text-xs text-slate-500">
+              숫자만 입력해 주세요. 예: 1, 2, 3
+            </span>
           </label>
         </div>
 
@@ -312,12 +346,20 @@ export function SettingsForm() {
       </section>
 
       {error ? (
-        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <p
+          className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700"
+          role="alert"
+          aria-live="assertive"
+        >
           {error}
         </p>
       ) : null}
       {message ? (
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p
+          className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+          role="status"
+          aria-live="polite"
+        >
           {message}
         </p>
       ) : null}
