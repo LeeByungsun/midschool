@@ -1,6 +1,7 @@
 export type NoticeProvider =
   | "sen-preview"
   | "goehs-board"
+  | "gne-board"
   | "gwe-board"
   | "busan-school";
 
@@ -13,6 +14,10 @@ export function detectNoticeProvider(homepageUrl: string, homepageHtml: string):
 
   if (hostname.endsWith("gwe.ms.kr") || homepageHtml.includes("boardCnts/list.do?boardID=")) {
     return "gwe-board";
+  }
+
+  if (hostname.endsWith("gne.go.kr")) {
+    return "gne-board";
   }
 
   if (hostname.endsWith("goehs.kr") || homepageHtml.includes("/na/ntt/selectNttList.do")) {

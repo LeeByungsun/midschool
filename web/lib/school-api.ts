@@ -67,6 +67,7 @@ type CacheOptions = {
   key: string;
   ttlMs: number;
   fallbackTtlMs?: number;
+  cacheEmptyItems?: boolean;
 };
 
 async function fetchList<T>(path: string, cacheOptions?: CacheOptions) {
@@ -100,7 +101,7 @@ async function fetchList<T>(path: string, cacheOptions?: CacheOptions) {
     throw new Error(json.message ?? "데이터를 불러오지 못했어요.");
   }
 
-  if (cacheOptions) {
+  if (cacheOptions && (json.items.length > 0 || cacheOptions.cacheEmptyItems !== false)) {
     writeCache(cacheOptions.key, json.items, {
       ttlMs: cacheOptions.ttlMs,
       fallbackTtlMs: cacheOptions.fallbackTtlMs,
@@ -139,14 +140,6 @@ function buildScheduleCacheKey(params: {
   date: string;
 }) {
   return `schedule:${params.officeCode}:${params.schoolCode}:${params.date}`;
-}
-
-function buildNoticeCacheKey(params: {
-  officeCode: string;
-  schoolCode: string;
-  homepage?: string;
-}) {
-  return `notices:v3:${params.officeCode}:${params.schoolCode}:${params.homepage ?? ""}`;
 }
 
 export function fetchTimetable(params: {
@@ -246,9 +239,5 @@ export function fetchNotices(params: {
     limit: String(params.limit ?? 5),
   });
 
-  return fetchList<NoticeSummary>(`/api/notices?${search.toString()}`, {
-    key: buildNoticeCacheKey(params),
-    ttlMs: 30 * 60 * 1000,
-    fallbackTtlMs: 12 * 60 * 60 * 1000,
-  });
+  return fetchList<NoticeSummary>(`/api/notices?${search.toString()}`);
 }

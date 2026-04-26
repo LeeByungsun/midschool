@@ -43,6 +43,20 @@ test('busan schools still use the busan provider', () => {
   assert.equal(provider, 'busan-school');
 });
 
+test('gne schools use the gne provider for homepage and direct board urls', () => {
+  const homepageProvider = detectNoticeProvider(
+    'https://bsg-m.gne.go.kr/',
+    '<a href="/bsg-m/na/ntt/selectNttList.do?mi=88638&bbsId=76109"><span>가정통신문</span></a>',
+  );
+  const boardProvider = detectNoticeProvider(
+    'https://bsg-m.gne.go.kr/bsg-m/na/ntt/selectNttList.do?mi=88638&bbsId=76109',
+    '<title>가정통신문 | 반송여자중학교</title>',
+  );
+
+  assert.equal(homepageProvider, 'gne-board');
+  assert.equal(boardProvider, 'gne-board');
+});
+
 test('notice homepage candidates keep a stale saved homepage first and then fall back to the resolved school homepage', () => {
   const candidates = buildNoticeHomepageCandidates({
     requestedHomepage: 'https://bansong-m.goehs.kr/',
@@ -63,4 +77,3 @@ test('notice homepage candidates dedupe identical homepages', () => {
 
   assert.deepEqual(candidates, ['https://ban-song-m.goehs.kr/']);
 });
-

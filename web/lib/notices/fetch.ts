@@ -488,7 +488,11 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
 
   let items: NoticeSummary[] = [];
 
-  if (provider === "goehs-board" || provider === "busan-school") {
+  if (
+    provider === "goehs-board" ||
+    provider === "gne-board" ||
+    provider === "busan-school"
+  ) {
     const boardUrl = isDirectNoticeBoardUrl(homepageUrl)
       ? homepageUrl
       : provider === "busan-school"
@@ -504,7 +508,9 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
     items =
       provider === "busan-school"
         ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
-        : parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit);
+        : provider === "gne-board"
+          ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
+          : parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "gwe-board") {
     const boardUrl = isDirectNoticeBoardUrl(homepageUrl)
       ? homepageUrl
