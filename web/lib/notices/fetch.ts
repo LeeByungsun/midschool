@@ -3,9 +3,13 @@ import "server-only";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
+import { detectNoticeProvider } from "@/lib/notices/provider";
 import type { NoticeSummary } from "@/lib/notices/types";
-
-type NoticeProvider = "sen-preview" | "goehs-board" | "gwe-board";
+import {
+  hasExplicitProtocol,
+  resolveRedirectTargetUrl,
+  toAbsoluteUrl,
+} from "@/lib/notices/url";
 
 type NoticeCacheEntry = {
   savedAt: number;
@@ -13,8 +17,14 @@ type NoticeCacheEntry = {
 };
 
 const NOTICE_CACHE_TTL_MS = 30 * 60 * 1000;
+const NOTICE_FETCH_TIMEOUT_MS = 5_000;
 const noticeCache = new Map<string, NoticeCacheEntry>();
 const execFileAsync = promisify(execFile);
+
+type HtmlDocument = {
+  html: string;
+  url: string;
+};
 
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -51,18 +61,49 @@ function normalizeHomepageUrl(value: string) {
   return url.toString();
 }
 
-function extractClientRedirect(html: string) {
-  const match = html.match(
-    /document\.location\.href\s*=\s*["']([^"']+)["']|location\.href\s*=\s*["']([^"']+)["']/i,
-  );
+function buildHomepageCandidates(value: string) {
+  const trimmed = value.trim();
 
-  return match?.[1] ?? match?.[2] ?? "";
+  if (!trimmed) {
+    return [];
+  }
+
+  if (hasExplicitProtocol(trimmed)) {
+    return [normalizeHomepageUrl(trimmed)];
+  }
+
+  return Array.from(
+    new Set([
+      normalizeHomepageUrl(`https://${trimmed}`),
+      normalizeHomepageUrl(`http://${trimmed}`),
+    ]),
+  );
 }
 
-async function fetchHtml(url: string, depth = 0): Promise<string> {
+function extractClientRedirect(html: string) {
+  const normalizedHtml = html.replace(/\s+/g, " ");
+  const match = normalizedHtml.match(
+    /<script>\s*(?:document\.)?location\.href\s*=\s*["']([^"']+)["']\s*;?\s*<\/script>/i,
+  );
+
+  if (match?.[1]) {
+    return match[1];
+  }
+
+  if (normalizedHtml.includes("홈페이지 접속중입니다.")) {
+    return "";
+  }
+
+  return "";
+}
+
+async function fetchHtml(url: string, depth = 0): Promise<HtmlDocument> {
   let html = "";
+  let responseUrl = url;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), NOTICE_FETCH_TIMEOUT_MS);
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -70,7 +111,10 @@ async function fetchHtml(url: string, depth = 0): Promise<string> {
         "User-Agent": "Mozilla/5.0 (compatible; SchoolHelperBot/1.0)",
       },
       cache: "no-store",
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
+    responseUrl = response.url || url;
 
     if (!response.ok) {
       throw new Error(`학교 홈페이지 응답이 실패했어요. (${response.status})`);
@@ -83,26 +127,36 @@ async function fetchHtml(url: string, depth = 0): Promise<string> {
         "-L",
         "--silent",
         "--show-error",
+        "--max-time",
+        String(Math.ceil(NOTICE_FETCH_TIMEOUT_MS / 1000)),
         "--user-agent",
         "Mozilla/5.0 (compatible; SchoolHelperBot/1.0)",
         url,
       ]);
       html = result.stdout;
     } catch {
-      throw error;
+      throw error instanceof Error
+        ? new Error(`학교 홈페이지 응답 대기 시간이 초과되었어요: ${url}`)
+        : error;
     }
   }
   const redirectPath = extractClientRedirect(html);
 
   if (redirectPath && depth < 3) {
-    return fetchHtml(toAbsoluteUrl(url, redirectPath), depth + 1);
+    return fetchHtml(
+      resolveRedirectTargetUrl({
+        requestedUrl: url,
+        responseUrl,
+        redirectPath,
+      }),
+      depth + 1,
+    );
   }
 
-  return html;
-}
-
-function toAbsoluteUrl(baseUrl: string, path: string) {
-  return new URL(path, baseUrl).toString();
+  return {
+    html,
+    url: responseUrl,
+  };
 }
 
 function parseGoehsNoticeBoardUrl(homepageUrl: string, html: string) {
@@ -122,6 +176,41 @@ function parseGoehsNoticeBoardUrl(homepageUrl: string, html: string) {
   }
 
   return "";
+}
+
+function parseBusanNoticeBoardUrl(homepageUrl: string, html: string) {
+  const homepageOrigin = new URL(homepageUrl).origin;
+  const matches = Array.from(
+    html.matchAll(
+      /<a[^>]+href=['"]([^'"]*selectNttList\.do\?[^'"]*bbsId=[^'"]+)['"][^>]*>([\s\S]*?)<\/a>/gi,
+    ),
+  );
+
+  const candidates: Array<{ href: string; titleText: string; score: number }> = [];
+
+  for (const match of matches) {
+    const href = match[1];
+    const titleText = stripTags(match[2]);
+
+    if (!(titleText.includes("가정통신문") || titleText.includes("가정통신"))) {
+      continue;
+    }
+
+    const absoluteUrl = toAbsoluteUrl(homepageUrl, href);
+    const isRelative = !/^https?:\/\//i.test(href);
+    const isSameOrigin = new URL(absoluteUrl).origin === homepageOrigin;
+    const score = (isRelative ? 4 : 0) + (isSameOrigin ? 2 : 0) + (titleText.includes("더보기") ? 1 : 0);
+
+    candidates.push({
+      href: absoluteUrl,
+      titleText,
+      score,
+    });
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+
+  return candidates[0]?.href ?? "";
 }
 
 function parseGweNoticeBoardUrl(homepageUrl: string, html: string) {
@@ -183,6 +272,53 @@ function parseGoehsNoticeList(boardUrl: string, html: string, limit: number) {
       date: dateMatch?.[1]?.trim() ?? "",
       author: normalizeWhitespace(authorMatch?.[1] ?? ""),
       url: detailUrl.toString(),
+      sourceUrl: boardUrl,
+    });
+
+    if (items.length >= limit) {
+      break;
+    }
+  }
+
+  return items;
+}
+
+function parseBusanNoticeList(boardUrl: string, html: string, limit: number) {
+  const rows = Array.from(html.matchAll(/<tr>([\s\S]*?)<\/tr>/gi));
+  const items: NoticeSummary[] = [];
+
+  for (const row of rows) {
+    const rowHtml = row[1];
+    const titleMatch = rowHtml.match(
+      /<a[^>]+href=['"]([^'"]*selectNttInfo\.do\?[^'"]*nttSn=[^'"]+)['"][^>]*>([\s\S]*?)<\/a>/i,
+    );
+
+    if (!titleMatch) {
+      continue;
+    }
+
+    const href = titleMatch[1];
+    const title = stripTags(titleMatch[2]);
+    const cells = Array.from(rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)).map(
+      (cell) => stripTags(cell[1]),
+    );
+    const detailUrl = toAbsoluteUrl(boardUrl, href);
+    const detailUrlObject = new URL(detailUrl);
+    const noticeId = detailUrlObject.searchParams.get("nttSn")?.trim() ?? "";
+    const author = cells[2] ?? "";
+    const date =
+      cells.find((cell) => /^[0-9]{4}\.[0-9]{2}\.[0-9]{2}$/.test(cell)) ?? "";
+
+    if (!title || !noticeId) {
+      continue;
+    }
+
+    items.push({
+      id: noticeId,
+      title,
+      date,
+      author,
+      url: detailUrl,
       sourceUrl: boardUrl,
     });
 
@@ -326,43 +462,25 @@ function parseSenNoticePreview(homepageUrl: string, html: string, limit: number)
   return items;
 }
 
-function detectProvider(homepageUrl: string, homepageHtml: string): NoticeProvider | null {
-  const hostname = new URL(homepageUrl).hostname;
+function isDirectNoticeBoardUrl(url: string) {
+  const { pathname, searchParams } = new URL(url);
 
-  if (hostname.endsWith("gwe.ms.kr") || homepageHtml.includes("boardCnts/list.do?boardID=")) {
-    return "gwe-board";
-  }
-
-  if (hostname.endsWith("goehs.kr") || homepageHtml.includes("/na/ntt/selectNttList.do")) {
-    return "goehs-board";
-  }
-
-  if (hostname.endsWith("sen.ms.kr") || homepageHtml.includes("fnBoardPage_")) {
-    return "sen-preview";
-  }
-
-  return null;
+  return (
+    pathname.includes("selectNttList.do") &&
+    (searchParams.has("bbsId") || searchParams.has("boardID"))
+  );
 }
 
-export async function fetchSchoolHomepageNotices(params: {
-  homepageUrl: string;
-  limit?: number;
-}) {
-  const homepageUrl = normalizeHomepageUrl(params.homepageUrl);
-  const limit = params.limit ?? 5;
-
-  if (!homepageUrl) {
-    throw new Error("학교 홈페이지 주소가 아직 저장되지 않았어요.");
-  }
-
+async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
   const cached = noticeCache.get(homepageUrl);
 
   if (cached && Date.now() - cached.savedAt < NOTICE_CACHE_TTL_MS) {
     return cached.items.slice(0, limit);
   }
 
-  const homepageHtml = await fetchHtml(homepageUrl);
-  const provider = detectProvider(homepageUrl, homepageHtml);
+  const homepageDocument = await fetchHtml(homepageUrl);
+  const homepageHtml = homepageDocument.html;
+  const provider = detectNoticeProvider(homepageDocument.url, homepageHtml);
 
   if (!provider) {
     throw new Error("학교 홈페이지에서 가정통신문 구조를 찾지 못했어요.");
@@ -370,26 +488,37 @@ export async function fetchSchoolHomepageNotices(params: {
 
   let items: NoticeSummary[] = [];
 
-  if (provider === "goehs-board") {
-    const boardUrl = parseGoehsNoticeBoardUrl(homepageUrl, homepageHtml);
+  if (provider === "goehs-board" || provider === "busan-school") {
+    const boardUrl = isDirectNoticeBoardUrl(homepageUrl)
+      ? homepageUrl
+      : provider === "busan-school"
+        ? parseBusanNoticeBoardUrl(homepageDocument.url, homepageHtml)
+        : parseGoehsNoticeBoardUrl(homepageDocument.url, homepageHtml);
 
     if (!boardUrl) {
       throw new Error("가정통신문 게시판 링크를 찾지 못했어요.");
     }
 
-    const boardHtml = await fetchHtml(boardUrl);
-    items = parseGoehsNoticeList(boardUrl, boardHtml, limit);
+    const boardDocument =
+      boardUrl === homepageUrl ? homepageDocument : await fetchHtml(boardUrl);
+    items =
+      provider === "busan-school"
+        ? parseBusanNoticeList(boardDocument.url, boardDocument.html, limit)
+        : parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "gwe-board") {
-    const boardUrl = parseGweNoticeBoardUrl(homepageUrl, homepageHtml);
+    const boardUrl = isDirectNoticeBoardUrl(homepageUrl)
+      ? homepageUrl
+      : parseGweNoticeBoardUrl(homepageDocument.url, homepageHtml);
 
     if (!boardUrl) {
       throw new Error("가정통신문 게시판 링크를 찾지 못했어요.");
     }
 
-    const boardHtml = await fetchHtml(boardUrl);
-    items = parseGweNoticeList(boardUrl, boardHtml, limit);
+    const boardDocument =
+      boardUrl === homepageUrl ? homepageDocument : await fetchHtml(boardUrl);
+    items = parseGweNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "sen-preview") {
-    items = parseSenNoticePreview(homepageUrl, homepageHtml, limit);
+    items = parseSenNoticePreview(homepageDocument.url, homepageHtml, limit);
   }
 
   if (items.length > 0) {
@@ -402,4 +531,28 @@ export async function fetchSchoolHomepageNotices(params: {
   }
 
   return items;
+}
+
+export async function fetchSchoolHomepageNotices(params: {
+  homepageUrl: string;
+  limit?: number;
+}) {
+  const limit = params.limit ?? 5;
+  const homepageCandidates = buildHomepageCandidates(params.homepageUrl);
+
+  if (homepageCandidates.length === 0) {
+    throw new Error("학교 홈페이지 주소가 아직 저장되지 않았어요.");
+  }
+
+  let lastError: unknown;
+
+  for (const homepageUrl of homepageCandidates) {
+    try {
+      return await fetchNoticeItemsForHomepage(homepageUrl, limit);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError;
 }

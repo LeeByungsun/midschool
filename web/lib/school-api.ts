@@ -86,8 +86,9 @@ async function fetchList<T>(path: string, cacheOptions?: CacheOptions) {
   });
 
   const json = (await response.json()) as ApiListResponse<T>;
+  const hasSoftFailure = Boolean(json.message?.trim()) && json.items.length === 0;
 
-  if (!response.ok) {
+  if (!response.ok || hasSoftFailure) {
     if (cached) {
       return {
         items: cached.items,
@@ -145,7 +146,7 @@ function buildNoticeCacheKey(params: {
   schoolCode: string;
   homepage?: string;
 }) {
-  return `notices:${params.officeCode}:${params.schoolCode}:${params.homepage ?? ""}`;
+  return `notices:v3:${params.officeCode}:${params.schoolCode}:${params.homepage ?? ""}`;
 }
 
 export function fetchTimetable(params: {
