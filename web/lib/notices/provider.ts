@@ -14,7 +14,7 @@ export function detectNoticeProvider(homepageUrl: string, homepageHtml: string):
     return "busan-school";
   }
 
-  if (hostname.endsWith("gwe.ms.kr") || homepageHtml.includes("boardCnts/list.do?boardID=")) {
+  if (hostname.endsWith("gwe.ms.kr") || hostname.endsWith("icems.kr") || homepageHtml.includes("boardCnts/list.do?boardID=")) {
     return "gwe-board";
   }
 
@@ -29,6 +29,7 @@ export function detectNoticeProvider(homepageUrl: string, homepageHtml: string):
   if (hostname.endsWith("school.jje.go.kr")) {
     return "jje-board";
   }
+
 
   if (hostname.endsWith("goehs.kr") || homepageHtml.includes("/na/ntt/selectNttList.do")) {
     return "goehs-board";

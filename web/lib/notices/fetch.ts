@@ -342,19 +342,26 @@ function parseGweNoticeList(boardUrl: string, html: string, limit: number) {
 
   for (const row of rows) {
     const rowHtml = row[1];
-    const titleMatch = rowHtml.match(
-      /goView\('([^']+)','([^']+)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)'\)[\s\S]*?>([\s\S]*?)<\/a>/i,
-    );
+    const onclickAttrMatch = rowHtml.match(/onclick=(["'])([\s\S]*?)\1/i);
+    const titleMatch = rowHtml.match(/<a[^>]*>[\s\S]*?<\/a>/i);
 
-    if (!titleMatch) {
+    if (!onclickAttrMatch || !titleMatch) {
       continue;
     }
 
-    const noticeId = titleMatch[2].trim();
-    const lev = titleMatch[3].trim() || "0";
-    const statusYn = titleMatch[5].trim() || "W";
-    const page = titleMatch[6].trim() || "1";
-    const title = stripTags(titleMatch[9]);
+    const goViewArgsMatch = onclickAttrMatch[2].match(/goView\((.*)\)/i);
+
+    if (!goViewArgsMatch) {
+      continue;
+    }
+
+    const args = Array.from(goViewArgsMatch[1].matchAll(/'([^']*)'/g)).map((match) =>
+      match[1].trim(),
+    );
+    const [, viewBoardId = boardId, noticeId = "", lev = "0", , statusYnRaw = "W", pageRaw = "1"] = args;
+    const statusYn = statusYnRaw || "W";
+    const page = pageRaw || "1";
+    const title = stripTags(titleMatch[0]);
     const cells = Array.from(rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)).map((cell) =>
       stripTags(cell[1]),
     );
@@ -366,9 +373,9 @@ function parseGweNoticeList(boardUrl: string, html: string, limit: number) {
     }
 
     const detailUrl = new URL("/boardCnts/view.do", boardUrlObject.origin);
-    detailUrl.searchParams.set("boardID", boardId);
+    detailUrl.searchParams.set("boardID", viewBoardId || boardId);
     detailUrl.searchParams.set("boardSeq", noticeId);
-    detailUrl.searchParams.set("lev", lev);
+    detailUrl.searchParams.set("lev", lev || "0");
     detailUrl.searchParams.set("searchType", "S");
     detailUrl.searchParams.set("searchType2", "");
     detailUrl.searchParams.set("statusYN", statusYn);
@@ -517,8 +524,8 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
           : provider === "gyo6-board"
             ? parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit)
             : provider === "jje-board"
-            ? parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit)
-          : parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit);
+              ? parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit)
+              : parseGoehsNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "gwe-board") {
     const boardUrl = isDirectNoticeBoardUrl(homepageUrl)
       ? homepageUrl

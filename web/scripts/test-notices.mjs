@@ -85,6 +85,21 @@ test('jje schools use the jje provider for homepage and direct board urls', () =
   assert.equal(boardProvider, 'jje-board');
 });
 
+test('icems schools use the gwe-style board provider for homepage and direct board urls', () => {
+  const homepageProvider = detectNoticeProvider(
+    'https://incheonms.icems.kr/main.do',
+    '<a href="/boardCnts/list.do?boardID=40507&m=0302&s=incheonms"><span>가정통신문</span></a>',
+  );
+  const boardProvider = detectNoticeProvider(
+    'https://incheonms.icems.kr/boardCnts/list.do?boardID=40507&m=0302&s=incheonms',
+    '<title>가정통신문 ＜ 알림마당</title>',
+  );
+
+  assert.equal(homepageProvider, 'gwe-board');
+  assert.equal(boardProvider, 'gwe-board');
+});
+
+
 test('notice homepage candidates keep a stale saved homepage first and then fall back to the resolved school homepage', () => {
   const candidates = buildNoticeHomepageCandidates({
     requestedHomepage: 'https://bansong-m.goehs.kr/',
