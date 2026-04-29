@@ -181,7 +181,7 @@ function parseGoehsNoticeBoardUrl(homepageUrl: string, html: string) {
     const href = match[1];
     const titleText = stripTags(match[2]);
 
-    if (titleText === "가정통신문") {
+    if (titleText.includes("가정통신문")) {
       return toAbsoluteUrl(homepageUrl, href);
     }
   }
@@ -235,7 +235,7 @@ function parseGweNoticeBoardUrl(homepageUrl: string, html: string) {
     const href = match[1];
     const titleText = stripTags(match[2]);
 
-    if (titleText === "가정통신문") {
+    if (titleText.includes("가정통신문")) {
       return toAbsoluteUrl(homepageUrl, href);
     }
   }
