@@ -5,6 +5,7 @@ export type NoticeProvider =
   | "gyo6-board"
   | "jje-board"
   | "gwe-board"
+  | "gen-xhomenews"
   | "busan-school";
 
 export function detectNoticeProvider(homepageUrl: string, homepageHtml: string): NoticeProvider | null {
@@ -28,6 +29,10 @@ export function detectNoticeProvider(homepageUrl: string, homepageHtml: string):
 
   if (hostname.endsWith("school.jje.go.kr")) {
     return "jje-board";
+  }
+
+  if (hostname.endsWith("gen.ms.kr") || homepageHtml.includes("xhomenews/board.php?tbnum=")) {
+    return "gen-xhomenews";
   }
 
 

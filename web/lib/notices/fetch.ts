@@ -99,6 +99,15 @@ function extractClientRedirect(html: string) {
   return "";
 }
 
+function extractMetaRefreshRedirect(html: string) {
+  const normalizedHtml = html.replace(/\s+/g, " ");
+  const match = normalizedHtml.match(
+    /<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"';>]+)["']/i,
+  );
+
+  return match?.[1]?.trim() ?? "";
+}
+
 async function fetchHtml(url: string, depth = 0): Promise<HtmlDocument> {
   let html = "";
   let responseUrl = url;
@@ -142,7 +151,7 @@ async function fetchHtml(url: string, depth = 0): Promise<HtmlDocument> {
         : error;
     }
   }
-  const redirectPath = extractClientRedirect(html);
+  const redirectPath = extractClientRedirect(html) || extractMetaRefreshRedirect(html);
 
   if (redirectPath && depth < 3) {
     return fetchHtml(
@@ -404,6 +413,55 @@ function parseGweNoticeList(boardUrl: string, html: string, limit: number) {
   return items;
 }
 
+function parseGenNoticeBoardUrl(homepageUrl: string, html: string) {
+  const matches = Array.from(
+    html.matchAll(/<a[^>]+href=["']([^"']*xhomenews\/board\.php\?tbnum=[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi),
+  );
+
+  for (const match of matches) {
+    const href = match[1];
+    const titleText = stripTags(match[2]);
+
+    if (titleText === "가정통신문") {
+      return toAbsoluteUrl(homepageUrl, href);
+    }
+  }
+
+  return "";
+}
+
+function parseGenNoticeList(boardUrl: string, html: string, limit: number) {
+  const items: NoticeSummary[] = [];
+
+  for (const match of html.matchAll(/<li>[\s\S]*?<p class="left new_subject"><a href="([^"]+)">([\s\S]*?)<\/a><\/p>[\s\S]*?<p class="new_date">([^<]*)<\/p>[\s\S]*?<p class="new_writer">[\s\S]*?>([^<]*)<\/a><\/p>[\s\S]*?<\/li>/gi)) {
+    const href = match[1];
+    const title = stripTags(match[2]);
+    const date = stripTags(match[3]);
+    const author = stripTags(match[4]);
+    const detailUrl = toAbsoluteUrl(boardUrl, decodeHtml(href));
+    const noticeId = new URL(detailUrl).searchParams.get("number")?.trim() ?? "";
+
+    if (!noticeId || !title) {
+      continue;
+    }
+
+    items.push({
+      id: noticeId,
+      title,
+      date,
+      author,
+      url: detailUrl,
+      sourceUrl: boardUrl,
+    });
+
+    if (items.length >= limit) {
+      break;
+    }
+  }
+
+  return items;
+}
+
 function parseSenBoardMeta(homepageUrl: string, html: string) {
   const pattern =
     /<div class=['"]index_board_box['"][\s\S]*?<h3>\s*(가정통신문(?:\(학교\))?)\s*<\/h3>[\s\S]*?<ul class=['"]main_small_list['"]>([\s\S]*?)<\/ul>/gi;
@@ -540,6 +598,18 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
     items = parseGweNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "sen-preview") {
     items = parseSenNoticePreview(homepageDocument.url, homepageHtml, limit);
+  } else if (provider === "gen-xhomenews") {
+    const boardUrl = homepageUrl.includes('/xhomenews/board.php')
+      ? homepageUrl
+      : parseGenNoticeBoardUrl(homepageDocument.url, homepageHtml);
+
+    if (!boardUrl) {
+      throw new Error("가정통신문 게시판 링크를 찾지 못했어요.");
+    }
+
+    const boardDocument =
+      boardUrl === homepageUrl ? homepageDocument : await fetchHtml(boardUrl);
+    items = parseGenNoticeList(boardDocument.url, boardDocument.html, limit);
   }
 
   if (items.length > 0) {
