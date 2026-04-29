@@ -85,6 +85,20 @@ test('jje schools use the jje provider for homepage and direct board urls', () =
   assert.equal(boardProvider, 'jje-board');
 });
 
+test('use schools use the use provider for homepage and direct board urls', () => {
+  const homepageProvider = detectNoticeProvider(
+    'https://school.use.go.kr/ulsanms-m/M01/',
+    '<a href="/ulsanms-m/M01050302/list"><span>가정통신문</span></a>',
+  );
+  const boardProvider = detectNoticeProvider(
+    'https://school.use.go.kr/ulsanms-m/M01050302/list',
+    '<title>가정통신문<학부모마당<커뮤니티<울산중학교</title>',
+  );
+
+  assert.equal(homepageProvider, 'use-board');
+  assert.equal(boardProvider, 'use-board');
+});
+
 test('gen schools use the xhomenews provider for homepage and direct board urls', () => {
   const homepageProvider = detectNoticeProvider(
     'http://gshin.gen.ms.kr/main/main.php',

@@ -480,6 +480,58 @@ function parseGenNoticeList(boardUrl: string, html: string, limit: number) {
   return items;
 }
 
+function parseUseNoticeBoardUrl(homepageUrl: string, html: string) {
+  const matches = Array.from(
+    html.matchAll(/<a[^>]+href=["']([^"']+\/list[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi),
+  );
+
+  for (const match of matches) {
+    const href = match[1];
+    const titleText = stripTags(match[2]);
+
+    if (titleText === "가정통신문") {
+      return toAbsoluteUrl(homepageUrl, href);
+    }
+  }
+
+  return "";
+}
+
+function parseUseNoticeList(boardUrl: string, html: string, limit: number) {
+  const items: NoticeSummary[] = [];
+
+  for (const match of html.matchAll(/<td class="tch-(?:ann2|num)">[\s\S]*?<\/td>\s*<td class="tch-tit">[\s\S]*?<a href="([^"]+)">([\s\S]*?)<\/a>[\s\S]*?<\/td>[\s\S]*?<td class="tch-nme">([^<]*)<\/td>[\s\S]*?<td class="tch-dte">([^<]*)<\/td>/gi)) {
+    const href = match[1];
+    const title = stripTags(match[2]);
+    const author = stripTags(match[3]);
+    const date = stripTags(match[4]);
+    const detailUrl = toAbsoluteUrl(boardUrl, decodeHtml(href));
+    const id =
+      detailUrl.match(/\/view\/(\d+)/)?.[1]?.trim() ??
+      new URL(detailUrl).pathname.split("/").filter(Boolean).pop()?.trim() ??
+      "";
+
+    if (!id || !title) {
+      continue;
+    }
+
+    items.push({
+      id,
+      title,
+      date,
+      author,
+      url: detailUrl,
+      sourceUrl: boardUrl,
+    });
+
+    if (items.length >= limit) {
+      break;
+    }
+  }
+
+  return items;
+}
+
 function parseSenBoardMeta(homepageUrl: string, html: string) {
   const pattern =
     /<div class=['"]index_board_box['"][\s\S]*?<h3>\s*(가정통신문(?:\(학교\))?)\s*<\/h3>[\s\S]*?<ul class=['"]main_small_list['"]>([\s\S]*?)<\/ul>/gi;
@@ -616,6 +668,18 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
     items = parseGweNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "sen-preview") {
     items = parseSenNoticePreview(homepageDocument.url, homepageHtml, limit);
+  } else if (provider === "use-board") {
+    const boardUrl = homepageUrl.endsWith("/list") || homepageUrl.includes("/list?")
+      ? homepageUrl
+      : parseUseNoticeBoardUrl(homepageDocument.url, homepageHtml);
+
+    if (!boardUrl) {
+      throw new Error("가정통신문 게시판 링크를 찾지 못했어요.");
+    }
+
+    const boardDocument =
+      boardUrl === homepageUrl ? homepageDocument : await fetchHtml(boardUrl);
+    items = parseUseNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "gen-xhomenews") {
     const boardUrl = homepageUrl.includes('/xhomenews/board.php')
       ? homepageUrl
