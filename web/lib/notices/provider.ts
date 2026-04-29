@@ -7,6 +7,7 @@ export type NoticeProvider =
   | "gwe-board"
   | "use-board"
   | "cbe-board"
+  | "jbe-board"
   | "gen-xhomenews"
   | "busan-school";
 
@@ -39,6 +40,10 @@ export function detectNoticeProvider(homepageUrl: string, homepageHtml: string):
 
   if (hostname.endsWith("school.cbe.go.kr")) {
     return "cbe-board";
+  }
+
+  if (hostname.endsWith("school.jbedu.kr")) {
+    return "jbe-board";
   }
 
   if (hostname.endsWith("gen.ms.kr") || homepageHtml.includes("xhomenews/board.php?tbnum=")) {

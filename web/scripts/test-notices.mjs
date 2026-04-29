@@ -113,6 +113,20 @@ test('cbe schools use the cbe provider for homepage and direct board urls', () =
   assert.equal(boardProvider, 'cbe-board');
 });
 
+test('jbe schools use the jbe provider for homepage and direct board urls', () => {
+  const homepageProvider = detectNoticeProvider(
+    'https://school.jbedu.kr/muju/index.do',
+    '<a href="/muju/MABAIAD/index.do"><span>가정통신문</span></a>',
+  );
+  const boardProvider = detectNoticeProvider(
+    'https://school.jbedu.kr/muju/MABAIAD/index.do',
+    '<title>가정통신문<학부모방<무주중학교</title>',
+  );
+
+  assert.equal(homepageProvider, 'jbe-board');
+  assert.equal(boardProvider, 'jbe-board');
+});
+
 test('gen schools use the xhomenews provider for homepage and direct board urls', () => {
   const homepageProvider = detectNoticeProvider(
     'http://gshin.gen.ms.kr/main/main.php',
