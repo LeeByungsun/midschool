@@ -433,29 +433,40 @@ function parseGenNoticeBoardUrl(homepageUrl: string, html: string) {
 function parseGenNoticeList(boardUrl: string, html: string, limit: number) {
   const items: NoticeSummary[] = [];
 
-  for (const match of html.matchAll(/<li>[\s\S]*?<p class="left new_subject"><a href="([^"]+)">([\s\S]*?)<\/a><\/p>[\s\S]*?<p class="new_date">([^<]*)<\/p>[\s\S]*?<p class="new_writer">[\s\S]*?>([^<]*)<\/a><\/p>[\s\S]*?<\/li>/gi)) {
-    const href = match[1];
-    const title = stripTags(match[2]);
-    const date = stripTags(match[3]);
-    const author = stripTags(match[4]);
-    const detailUrl = toAbsoluteUrl(boardUrl, decodeHtml(href));
-    const noticeId = new URL(detailUrl).searchParams.get("number")?.trim() ?? "";
+  const rowPatterns = [
+    /<li>[\s\S]*?<p class="left new_subject"><a href="([^"]+)">([\s\S]*?)<\/a><\/p>[\s\S]*?<p class="new_date">([^<]*)<\/p>[\s\S]*?<p class="new_writer">[\s\S]*?>([^<]*)<\/a><\/p>[\s\S]*?<\/li>/gi,
+    /<ul class="news_index">[\s\S]*?<li class="m6"><a href="([^"]+)">([\s\S]*?)<\/a><\/li>[\s\S]*?<li class="m8">([^<]*)<\/li>[\s\S]*?<li class="m9">[\s\S]*?>([^<]*)<\/a><\/li>[\s\S]*?<\/ul>/gi,
+  ];
 
-    if (!noticeId || !title) {
-      continue;
+  for (const pattern of rowPatterns) {
+    for (const match of html.matchAll(pattern)) {
+      const href = match[1];
+      const title = stripTags(match[2]);
+      const date = stripTags(match[3]);
+      const author = stripTags(match[4]);
+      const detailUrl = toAbsoluteUrl(boardUrl, decodeHtml(href));
+      const noticeId = new URL(detailUrl).searchParams.get("number")?.trim() ?? "";
+
+      if (!noticeId || !title) {
+        continue;
+      }
+
+      items.push({
+        id: noticeId,
+        title,
+        date,
+        author,
+        url: detailUrl,
+        sourceUrl: boardUrl,
+      });
+
+      if (items.length >= limit) {
+        return items;
+      }
     }
 
-    items.push({
-      id: noticeId,
-      title,
-      date,
-      author,
-      url: detailUrl,
-      sourceUrl: boardUrl,
-    });
-
-    if (items.length >= limit) {
-      break;
+    if (items.length > 0) {
+      return items;
     }
   }
 
