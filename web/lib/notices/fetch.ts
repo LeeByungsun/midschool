@@ -482,7 +482,7 @@ function parseGenNoticeList(boardUrl: string, html: string, limit: number) {
 
 function parseUseNoticeBoardUrl(homepageUrl: string, html: string) {
   const matches = Array.from(
-    html.matchAll(/<a[^>]+href=["']([^"']+\/list[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi),
+    html.matchAll(/<a[^>]+href=["']([^"']+(?:\/list|\/M\d+\/?)[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi),
   );
 
   for (const match of matches) {
@@ -668,7 +668,7 @@ async function fetchNoticeItemsForHomepage(homepageUrl: string, limit: number) {
     items = parseGweNoticeList(boardDocument.url, boardDocument.html, limit);
   } else if (provider === "sen-preview") {
     items = parseSenNoticePreview(homepageDocument.url, homepageHtml, limit);
-  } else if (provider === "use-board") {
+  } else if (provider === "use-board" || provider === "cbe-board") {
     const boardUrl = homepageUrl.endsWith("/list") || homepageUrl.includes("/list?")
       ? homepageUrl
       : parseUseNoticeBoardUrl(homepageDocument.url, homepageHtml);
