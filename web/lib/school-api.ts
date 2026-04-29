@@ -1,9 +1,10 @@
 import type {
   MealInfo,
-  SchoolEvent,
   SchoolInfo,
+  SchoolEvent,
   TimetableItem,
 } from "@/lib/neis/types";
+import type { NoticeSummary } from "@/lib/notices/types";
 import { readCache, writeCache } from "@/lib/storage/cache";
 
 type ApiListResponse<T> = {
@@ -66,6 +67,7 @@ type CacheOptions = {
   key: string;
   ttlMs: number;
   fallbackTtlMs?: number;
+  cacheEmptyItems?: boolean;
 };
 
 async function fetchList<T>(path: string, cacheOptions?: CacheOptions) {
@@ -85,8 +87,9 @@ async function fetchList<T>(path: string, cacheOptions?: CacheOptions) {
   });
 
   const json = (await response.json()) as ApiListResponse<T>;
+  const hasSoftFailure = Boolean(json.message?.trim()) && json.items.length === 0;
 
-  if (!response.ok) {
+  if (!response.ok || hasSoftFailure) {
     if (cached) {
       return {
         items: cached.items,
@@ -98,7 +101,7 @@ async function fetchList<T>(path: string, cacheOptions?: CacheOptions) {
     throw new Error(json.message ?? "데이터를 불러오지 못했어요.");
   }
 
-  if (cacheOptions) {
+  if (cacheOptions && (json.items.length > 0 || cacheOptions.cacheEmptyItems !== false)) {
     writeCache(cacheOptions.key, json.items, {
       ttlMs: cacheOptions.ttlMs,
       fallbackTtlMs: cacheOptions.fallbackTtlMs,
@@ -207,4 +210,34 @@ export function fetchSchools(params: { query: string }) {
   return fetchList<SchoolInfo>(`/api/schools?${search.toString()}`).then(
     (result) => result.items,
   );
+}
+
+export async function fetchSchoolByCode(params: {
+  officeCode: string;
+  schoolCode: string;
+}) {
+  const search = new URLSearchParams({
+    officeCode: params.officeCode,
+    schoolCode: params.schoolCode,
+  });
+
+  const result = await fetchList<SchoolInfo>(`/api/schools?${search.toString()}`);
+
+  return result.items[0] ?? null;
+}
+
+export function fetchNotices(params: {
+  officeCode: string;
+  schoolCode: string;
+  homepage?: string;
+  limit?: number;
+}) {
+  const search = new URLSearchParams({
+    officeCode: params.officeCode,
+    schoolCode: params.schoolCode,
+    homepage: params.homepage ?? "",
+    limit: String(params.limit ?? 5),
+  });
+
+  return fetchList<NoticeSummary>(`/api/notices?${search.toString()}`);
 }
