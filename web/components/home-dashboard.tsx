@@ -79,6 +79,37 @@ const initialNoticeState: NoticeState = {
   error: null,
 };
 
+function getNextMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 1);
+}
+
+function mergeSchedules(...scheduleLists: SchoolEvent[][]) {
+  const merged = new Map<string, SchoolEvent>();
+
+  for (const items of scheduleLists) {
+    for (const event of items) {
+      merged.set(
+        `${event.date}:${event.title}:${event.description}`,
+        event,
+      );
+    }
+  }
+
+  return Array.from(merged.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function mergeCacheStatus(statuses: CacheStatus[]) {
+  if (statuses.some((status) => status === "stale-fallback")) {
+    return "stale-fallback" satisfies CacheStatus;
+  }
+
+  if (statuses.every((status) => status === "cache")) {
+    return "cache" satisfies CacheStatus;
+  }
+
+  return "network" satisfies CacheStatus;
+}
+
 const defaultTimerPreset = timerPresets[0];
 const defaultHomeTimerSnapshot = createTimerSnapshot(
   defaultTimerPreset.label,
@@ -99,9 +130,13 @@ export function HomeDashboard() {
   const today = useMemo(() => new Date(), []);
   const todayKey = useMemo(() => formatDateKey(today), [today]);
   const monthKey = useMemo(() => formatMonthKey(today), [today]);
+  const nextMonthKey = useMemo(
+    () => formatMonthKey(getNextMonth(today)),
+    [today],
+  );
   const todayLabel = useMemo(() => formatKoreanDateLabel(today), [today]);
   const requestKey = studentInfo
-    ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}`
+    ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}-${nextMonthKey}`
     : "";
   const requestToken = `${requestKey}:${reloadCount}`;
   const noticeRequestKey = studentInfo
@@ -135,8 +170,13 @@ export function HomeDashboard() {
         schoolCode: studentInfo.schoolCode,
         date: monthKey,
       }),
+      fetchSchedules({
+        officeCode: studentInfo.officeCode,
+        schoolCode: studentInfo.schoolCode,
+        date: nextMonthKey,
+      }),
     ])
-      .then(([timetable, meals, schedules]) => {
+      .then(([timetable, meals, currentMonthSchedules, nextMonthSchedules]) => {
         if (isCancelled) {
           return;
         }
@@ -145,14 +185,22 @@ export function HomeDashboard() {
           requestToken,
           timetable: timetable.items,
           meals: meals.items,
-          schedules: schedules.items,
+          schedules: mergeSchedules(
+            currentMonthSchedules.items,
+            nextMonthSchedules.items,
+          ),
           error: null,
           timetableCacheStatus: timetable.cacheStatus,
           timetableCachedAt: timetable.cachedAt,
           mealCacheStatus: meals.cacheStatus,
           mealCachedAt: meals.cachedAt,
-          scheduleCacheStatus: schedules.cacheStatus,
-          scheduleCachedAt: schedules.cachedAt,
+          scheduleCacheStatus: mergeCacheStatus([
+            currentMonthSchedules.cacheStatus,
+            nextMonthSchedules.cacheStatus,
+          ]),
+          scheduleCachedAt: [currentMonthSchedules.cachedAt, nextMonthSchedules.cachedAt]
+            .filter((value): value is number => value !== null)
+            .sort((a, b) => b - a)[0] ?? null,
         });
       })
       .catch((error: unknown) => {
@@ -181,7 +229,7 @@ export function HomeDashboard() {
     return () => {
       isCancelled = true;
     };
-  }, [hydrated, monthKey, reloadCount, requestToken, studentInfo, todayKey]);
+  }, [hydrated, monthKey, nextMonthKey, reloadCount, requestToken, studentInfo, todayKey]);
 
   useEffect(() => {
     let isCancelled = false;
