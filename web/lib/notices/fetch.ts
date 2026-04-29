@@ -85,7 +85,7 @@ function buildHomepageCandidates(value: string) {
 function extractClientRedirect(html: string) {
   const normalizedHtml = html.replace(/\s+/g, " ");
   const match = normalizedHtml.match(
-    /<script>\s*(?:document\.)?location\.href\s*=\s*["']([^"']+)["']\s*;?\s*<\/script>/i,
+    /<script[^>]*>\s*(?:document\.)?location\.href\s*=\s*["']([^"']+)["']\s*;?\s*<\/script>/i,
   );
 
   if (match?.[1]) {
@@ -367,7 +367,14 @@ function parseGweNoticeList(boardUrl: string, html: string, limit: number) {
     const args = Array.from(goViewArgsMatch[1].matchAll(/'([^']*)'/g)).map((match) =>
       match[1].trim(),
     );
-    const [, viewBoardId = boardId, noticeId = "", lev = "0", , statusYnRaw = "W", pageRaw = "1"] = args;
+    const usesBoardSeqSecond =
+      args.length >= 6 &&
+      (args[2] === "0" || args[2].toLowerCase() === "null");
+    const viewBoardId = usesBoardSeqSecond ? args[0] || boardId : args[1] || boardId;
+    const noticeId = usesBoardSeqSecond ? args[1] || "" : args[2] || "";
+    const lev = usesBoardSeqSecond ? args[2] || "0" : args[3] || "0";
+    const statusYnRaw = usesBoardSeqSecond ? args[4] || "W" : args[5] || "W";
+    const pageRaw = usesBoardSeqSecond ? args[5] || "1" : args[6] || "1";
     const statusYn = statusYnRaw || "W";
     const page = pageRaw || "1";
     const title = stripTags(titleMatch[0]);
