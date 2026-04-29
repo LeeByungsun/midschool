@@ -66,12 +66,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (isRecoverableNoticeError(error)) {
+      const recoverableMessage = buildRecoverableNoticeMessage({
+        error,
+        homepageUrl: resolvedHomepageUrl,
+      });
+
       return NextResponse.json(
         {
-          message:
-            error instanceof Error
-              ? `${error.message}${resolvedHomepageUrl ? ` (homepage: ${resolvedHomepageUrl})` : ""}`
-              : "가정통신문 목록을 불러오지 못했어요.",
+          message: recoverableMessage,
           items: [],
         },
         { status: 200 },
@@ -87,6 +89,33 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 },
     );
+  }
+}
+
+function buildRecoverableNoticeMessage(params: {
+  error: unknown;
+  homepageUrl: string;
+}) {
+  if (isDgeSchoolHomepage(params.homepageUrl)) {
+    return "대구교육청 학교 홈페이지는 가정통신문 조회를 아직 지원하지 않습니다.";
+  }
+
+  if (params.error instanceof Error) {
+    return `${params.error.message}${params.homepageUrl ? ` (homepage: ${params.homepageUrl})` : ""}`;
+  }
+
+  return "가정통신문 목록을 불러오지 못했어요.";
+}
+
+function isDgeSchoolHomepage(homepageUrl: string) {
+  if (!homepageUrl) {
+    return false;
+  }
+
+  try {
+    return new URL(homepageUrl).hostname.endsWith("dge.ms.kr");
+  } catch {
+    return false;
   }
 }
 
