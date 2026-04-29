@@ -79,6 +79,9 @@ const initialNoticeState: NoticeState = {
   error: null,
 };
 
+const DGE_NOTICE_UNSUPPORTED_MESSAGE =
+  "대구교육청 학교 홈페이지는 가정통신문 조회를 아직 지원하지 않습니다.";
+
 function getNextMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 1);
 }
@@ -295,6 +298,8 @@ export function HomeDashboard() {
   const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
   const isNoticeLoading =
     hydrated && Boolean(studentInfo) && noticeState.requestToken !== noticeRequestToken;
+  const canRetryNoticeFetch =
+    noticeState.error !== DGE_NOTICE_UNSUPPORTED_MESSAGE;
   const timetableCacheNotice = formatCacheStatusMessage(
     state.timetableCacheStatus,
     state.timetableCachedAt,
@@ -511,7 +516,10 @@ export function HomeDashboard() {
           ) : isNoticeLoading ? (
             <LoadingState message="가정통신문 목록을 불러오는 중..." />
           ) : noticeState.error ? (
-            <ErrorState message={noticeState.error} onRetry={retryNoticeFetch} />
+            <ErrorState
+              message={noticeState.error}
+              onRetry={canRetryNoticeFetch ? retryNoticeFetch : undefined}
+            />
           ) : noticeState.items.length === 0 ? (
             <EmptyState
               title="가정통신문이 없어요."
