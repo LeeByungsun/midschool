@@ -8,6 +8,12 @@ const SEARCHABLE_SCHOOL_KINDS = new Set(["초등학교", "중학교"]);
 
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("query")?.trim() ?? "";
+  const officeCode = request.nextUrl.searchParams.get("officeCode")?.trim() ?? "";
+  const schoolCode = request.nextUrl.searchParams.get("schoolCode")?.trim() ?? "";
+
+  if (officeCode && schoolCode) {
+    return getSchoolByCode({ officeCode, schoolCode });
+  }
 
   if (query.length < 2) {
     return NextResponse.json(
@@ -24,6 +30,30 @@ export async function GET(request: NextRequest) {
       },
       {
         includeSchoolContext: false,
+      },
+    );
+
+    return NextResponse.json({
+      items: mapSchoolInfo(response).filter((school) =>
+        SEARCHABLE_SCHOOL_KINDS.has(school.schoolKind),
+      ),
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+async function getSchoolByCode(params: {
+  officeCode: string;
+  schoolCode: string;
+}) {
+  try {
+    const response = await fetchNeisJson<NeisResponse<SchoolInfoRowDto>>(
+      "hub/schoolInfo",
+      {},
+      {
+        officeCode: params.officeCode,
+        schoolCode: params.schoolCode,
       },
     );
 
