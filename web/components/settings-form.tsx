@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import type { SchoolInfo } from "@/lib/neis/types";
 import { fetchSchools } from "@/lib/school-api";
@@ -18,6 +19,7 @@ type SettingsFormBodyProps = {
   onSaved: (message: string) => void;
   onError: (message: string) => void;
   onCleared: (message: string) => void;
+  redirectToOnSave?: string;
 };
 
 function SettingsFormBody({
@@ -25,7 +27,9 @@ function SettingsFormBody({
   onSaved,
   onError,
   onCleared,
+  redirectToOnSave,
 }: SettingsFormBodyProps) {
+  const router = useRouter();
   const schoolNameHintId = "school-name-hint";
   const schoolSearchMessageId = "school-search-message";
   const schoolResultsLabelId = "school-results-label";
@@ -150,6 +154,10 @@ function SettingsFormBody({
 
     onError("");
     onSaved("학교, 학년, 반을 저장했어요.");
+
+    if (redirectToOnSave) {
+      router.push(redirectToOnSave);
+    }
   };
 
   const handleReset = () => {
@@ -322,7 +330,11 @@ function SettingsFormBody({
   );
 }
 
-export function SettingsForm() {
+type SettingsFormProps = {
+  redirectToOnSave?: string;
+};
+
+export function SettingsForm({ redirectToOnSave }: SettingsFormProps) {
   const savedPreferences = useStudentPreferences();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -370,6 +382,7 @@ export function SettingsForm() {
         onSaved={setMessage}
         onError={setError}
         onCleared={setMessage}
+        redirectToOnSave={redirectToOnSave}
       />
     </div>
   );

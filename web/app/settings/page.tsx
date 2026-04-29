@@ -8,7 +8,7 @@ export default function SettingsPage() {
       description="학교 이름과 학년/반을 수정하는 설정 화면입니다."
       activePath="/settings"
     >
-      <SettingsForm />
+      <SettingsForm redirectToOnSave="/" />
     </AppPage>
   );
 }
