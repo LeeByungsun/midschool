@@ -1,3 +1,5 @@
+/** NEIS Open API 호출과 공통 오류 처리를 담당하는 서버 전용 클라이언트입니다. */
+
 import "server-only";
 
 const DEFAULT_NEIS_BASE_URL = "https://open.neis.go.kr/";

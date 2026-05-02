@@ -1,5 +1,7 @@
 "use client";
 
+/** 학생 설정 저장소를 구독해 화면 상태와 동기화하는 훅입니다. */
+
 import { useSyncExternalStore } from "react";
 
 import {

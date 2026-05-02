@@ -1,5 +1,7 @@
 "use client";
 
+/** 월간 학사 일정 조회와 필터링 상태를 담당하는 클라이언트 컴포넌트입니다. */
+
 import { useEffect, useMemo, useState } from "react";
 
 import {

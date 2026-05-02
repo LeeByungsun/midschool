@@ -1,5 +1,7 @@
 "use client";
 
+/** 공부 타이머 진행 상태와 제어 버튼을 담당하는 클라이언트 컴포넌트입니다. */
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { DashboardCard } from "@/components/dashboard-card";

@@ -1,5 +1,7 @@
 "use client";
 
+/** 학생 기본 정보와 학교 선택값을 저장하는 설정 폼 컴포넌트입니다. */
+
 import { FormEvent, KeyboardEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 

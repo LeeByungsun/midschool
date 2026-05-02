@@ -1,3 +1,5 @@
+/** 웹 화면에서 재사용하는 날짜 포맷과 날짜 계산 유틸을 제공합니다. */
+
 const DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   month: "long",
   day: "numeric",

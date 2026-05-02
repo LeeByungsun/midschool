@@ -1,5 +1,7 @@
 "use client";
 
+/** 학생 설정이 없을 때 초기 설정 화면으로 유도하는 안내 컴포넌트입니다. */
+
 import Link from "next/link";
 
 import {

@@ -1,3 +1,5 @@
+/** 급식 조회 화면을 페이지 단위로 조합합니다. */
+
 import { AppPage } from "@/components/app-page";
 import { MealBrowser } from "@/components/meal-browser";
 

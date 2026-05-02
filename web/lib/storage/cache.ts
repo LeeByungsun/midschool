@@ -1,3 +1,5 @@
+/** 웹 로컬 캐시의 저장 형식과 만료 검사 유틸을 제공합니다. */
+
 import { browserStorage } from "@/lib/storage/browser-storage";
 
 type CacheEnvelope<T> = {

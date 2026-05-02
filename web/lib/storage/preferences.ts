@@ -1,3 +1,5 @@
+/** 학생 기본 설정을 브라우저 저장소에 읽고 쓰는 모듈입니다. */
+
 import { browserStorage } from "@/lib/storage/browser-storage";
 
 export type StudentPreferences = {

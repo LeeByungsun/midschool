@@ -1,5 +1,7 @@
 "use client";
 
+/** 타이머 저장소를 구독해 타이머 스냅샷을 화면과 동기화하는 훅입니다. */
+
 import { useSyncExternalStore } from "react";
 
 import {

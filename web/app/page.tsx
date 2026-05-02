@@ -1,3 +1,5 @@
+/** 홈 대시보드와 초기 설정 안내를 함께 보여주는 메인 페이지입니다. */
+
 import { AppPage } from "@/components/app-page";
 import { HomeDashboard } from "@/components/home-dashboard";
 import { StudentSetupCallout } from "@/components/student-setup-callout";

@@ -1,3 +1,5 @@
+/** 가정통신문 조회 요청을 받아 학교별 공지 목록을 반환하는 서버 라우트입니다. */
+
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";

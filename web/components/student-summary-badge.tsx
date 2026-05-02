@@ -1,5 +1,7 @@
 "use client";
 
+/** 현재 저장된 학생 정보를 짧게 요약해 보여주는 배지 컴포넌트입니다. */
+
 import {
   formatStudentPreferences,
 } from "@/lib/storage/preferences";

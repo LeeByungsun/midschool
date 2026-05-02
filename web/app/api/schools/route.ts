@@ -1,3 +1,5 @@
+/** 학교 검색 요청을 받아 학교 선택에 필요한 후보 목록을 반환하는 서버 라우트입니다. */
+
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";

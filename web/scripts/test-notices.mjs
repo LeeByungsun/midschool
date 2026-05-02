@@ -1,3 +1,5 @@
+/** 가정통신문 수집 흐름과 결과 매핑을 검증하는 경량 스크립트 테스트입니다. */
+
 import assert from 'node:assert/strict';
 import test from 'node:test';
 

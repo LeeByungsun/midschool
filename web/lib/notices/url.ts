@@ -1,3 +1,5 @@
+/** 상대 경로를 절대 URL로 정규화하는 공통 유틸입니다. */
+
 export function toAbsoluteUrl(baseUrl: string, path: string) {
   return new URL(path, baseUrl).toString();
 }

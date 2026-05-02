@@ -1,3 +1,5 @@
+/** 브라우저 저장소 사용 가능 여부를 감싼 안전한 접근 래퍼입니다. */
+
 const canUseBrowserStorage = () =>
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 

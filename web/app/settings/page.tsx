@@ -1,3 +1,5 @@
+/** 학생 기본 설정을 수정하는 화면을 페이지 단위로 조합합니다. */
+
 import { AppPage } from "@/components/app-page";
 import { SettingsForm } from "@/components/settings-form";
 

@@ -1,5 +1,7 @@
 "use client";
 
+/** 날짜별 급식 조회와 상태 전환을 담당하는 클라이언트 컴포넌트입니다. */
+
 import { useEffect, useMemo, useState } from "react";
 
 import {

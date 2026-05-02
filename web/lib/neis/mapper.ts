@@ -1,3 +1,5 @@
+/** NEIS 응답 DTO를 웹 UI에서 쓰는 도메인 타입으로 변환합니다. */
+
 import type {
   MealInfo,
   MealRowDto,

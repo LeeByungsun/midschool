@@ -1,3 +1,5 @@
+/** 학사 일정 조회 화면을 페이지 단위로 조합합니다. */
+
 import { AppPage } from "@/components/app-page";
 import { ScheduleBrowser } from "@/components/schedule-browser";
 

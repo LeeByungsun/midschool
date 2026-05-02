@@ -1,3 +1,5 @@
+/** 페이지 공통 여백과 하단 내비게이션을 감싸는 레이아웃 컴포넌트입니다. */
+
 import { ReactNode } from "react";
 
 import { MobileNav } from "@/components/mobile-nav";

@@ -1,3 +1,5 @@
+/** 학교 홈페이지에서 가정통신문 목록을 수집하는 서버 전용 실행 경계를 제공합니다. */
+
 import "server-only";
 
 import { execFile } from "node:child_process";

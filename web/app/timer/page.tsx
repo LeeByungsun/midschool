@@ -1,3 +1,5 @@
+/** 공부 타이머 화면을 페이지 단위로 조합합니다. */
+
 import { AppPage } from "@/components/app-page";
 import { TimerPanel } from "@/components/timer-panel";
 

@@ -1,3 +1,5 @@
+/** 모든 페이지에 공통으로 적용되는 메타데이터와 루트 레이아웃을 구성합니다. */
+
 import type { Metadata } from "next";
 import "./globals.css";
 

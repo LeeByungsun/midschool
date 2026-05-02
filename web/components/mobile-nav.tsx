@@ -1,3 +1,5 @@
+/** 모바일 중심 하단 탐색 메뉴를 렌더링합니다. */
+
 import Link from "next/link";
 
 type NavItem = {

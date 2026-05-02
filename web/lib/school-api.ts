@@ -1,3 +1,5 @@
+/** 웹 화면이 쓰기 쉬운 형태로 학교 관련 API 호출 함수를 묶어 둡니다. */
+
 import type {
   MealInfo,
   SchoolInfo,

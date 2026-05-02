@@ -1,3 +1,5 @@
+/** 타이머 스냅샷을 날짜 기준으로 저장하고 복원하는 모듈입니다. */
+
 import { formatDateKey } from "@/lib/date";
 import { browserStorage } from "@/lib/storage/browser-storage";
 import {

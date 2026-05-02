@@ -1,3 +1,5 @@
+/** 로딩, 오류, 빈 데이터 상태를 일관된 문구와 액션으로 보여줍니다. */
+
 import Link from "next/link";
 import { ReactNode } from "react";
 

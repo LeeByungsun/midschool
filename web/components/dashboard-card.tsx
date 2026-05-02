@@ -1,3 +1,5 @@
+/** 대시보드 섹션을 카드 형태로 감싸는 재사용 UI 컴포넌트입니다. */
+
 import { ReactNode } from "react";
 
 type DashboardCardProps = {

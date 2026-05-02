@@ -1,3 +1,5 @@
+/** 내비게이션과 기본 화면 문구에 쓰는 정적 사이트 데이터를 모아 둡니다. */
+
 export const navigationItems = [
   { href: "/", label: "홈", icon: "🏠" },
   { href: "/timetable", label: "시간표", icon: "📚" },

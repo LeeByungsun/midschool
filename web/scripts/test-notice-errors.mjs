@@ -1,3 +1,5 @@
+/** 가정통신문 오류 처리 규칙을 검증하는 경량 스크립트 테스트입니다. */
+
 import assert from 'node:assert/strict';
 import test from 'node:test';
 

@@ -1,5 +1,7 @@
 "use client";
 
+/** 홈 화면에서 시간표, 급식, 일정 요약 카드를 조합해 보여줍니다. */
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 

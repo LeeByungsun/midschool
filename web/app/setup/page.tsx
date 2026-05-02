@@ -1,3 +1,5 @@
+/** 첫 진입 시 학생 정보를 저장하도록 돕는 설정 시작 화면입니다. */
+
 import { AppPage } from "@/components/app-page";
 import { SettingsForm } from "@/components/settings-form";
 

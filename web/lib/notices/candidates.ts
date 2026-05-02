@@ -1,3 +1,5 @@
+/** 학교 홈페이지 후보 URL을 조합해 가정통신문 탐색 대상을 정리합니다. */
+
 export function buildNoticeHomepageCandidates(params: {
   requestedHomepage?: string;
   resolvedHomepage?: string;

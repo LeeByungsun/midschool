@@ -1,3 +1,5 @@
+/** NEIS 응답과 웹 도메인 모델에서 사용하는 타입 정의를 모아 둡니다. */
+
 export type NeisResultDto = {
   CODE?: string;
   MESSAGE?: string;

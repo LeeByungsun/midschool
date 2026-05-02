@@ -1,3 +1,5 @@
+/** 시간표 조회 화면을 페이지 단위로 조합합니다. */
+
 import { AppPage } from "@/components/app-page";
 import { TimetableBrowser } from "@/components/timetable-browser";
 

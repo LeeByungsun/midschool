@@ -1,3 +1,5 @@
+/** 타이머 상태 계산과 스냅샷 변환에 쓰는 순수 유틸을 제공합니다. */
+
 export type TimerStatus = "idle" | "running" | "paused" | "completed";
 
 export type TimerSnapshot = {

@@ -1,3 +1,5 @@
+/** 학사 일정 조회 요청을 받아 월간 일정 데이터를 반환하는 서버 라우트입니다. */
+
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";
