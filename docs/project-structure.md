@@ -75,19 +75,27 @@ web/
 │   ├── schedule/page.tsx      # 학사 일정
 │   ├── meals/page.tsx         # 급식 상세
 │   ├── timer/page.tsx         # 타이머
-│   └── api/                   # NEIS BFF route handlers
+│   └── api/                   # NEIS/가정통신문 BFF route handlers
 ├── components/                # 화면/카드/상태 UI 컴포넌트
-│   ├── home-dashboard.tsx     # 홈 실데이터 대시보드
+│   ├── home-dashboard.tsx     # 홈 실데이터 대시보드 + 가정통신문 + 타이머 요약
 │   ├── meal-browser.tsx       # 날짜별 급식 상세 조회
+│   ├── timer-panel.tsx        # 타이머 상세 제어 / 알림 / 오늘 기록
 │   └── data-state.tsx         # 공통 로딩/오류/빈 상태/설정 필요 UI
 ├── hooks/                     # 브라우저 상태 구독 훅
 ├── lib/
 │   ├── neis/                  # NEIS 타입/매퍼/클라이언트
+│   ├── notices/               # 가정통신문 수집/파싱/provider 판별
 │   ├── storage/               # preferences/cache/browser storage
 │   │   ├── preferences.ts     # 학생 설정 저장
 │   │   ├── cache.ts           # 급식/시간표/일정 캐시 및 복구 전략
+│   │   ├── timer.ts           # 타이머 스냅샷/기록/알림 설정 저장
 │   │   └── browser-storage.ts # 브라우저 저장소 래퍼
-│   └── *.ts                   # 날짜/사이트 데이터/도메인 유틸
+│   └── *.ts                   # 날짜/사이트 데이터/도메인 유틸/API 호출 래퍼
+├── scripts/                   # node:test 기반 경량 회귀 스크립트
+│   ├── test-notices.mjs       # 가정통신문 provider/URL 처리 검증
+│   ├── test-notice-errors.mjs # 가정통신문 복구 오류 규칙 검증
+│   └── test-timer.mjs         # 타이머 도메인/저장 규칙 검증
+├── README.md                  # 웹 워크스페이스 안내
 ├── package.json
 └── AGENTS.md
 ```
@@ -110,5 +118,6 @@ cd android
 cd ../web
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
