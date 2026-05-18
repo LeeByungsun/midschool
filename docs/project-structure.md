@@ -81,6 +81,7 @@ web/
 │   └── api/                   # NEIS/가정통신문 BFF route handlers
 ├── components/                # 화면/카드/상태 UI 컴포넌트
 │   ├── home-dashboard.tsx     # 홈 실데이터 대시보드 + 가정통신문 + 타이머 요약
+│   ├── home-study-timer-card.tsx # 홈 대시보드용 타이머 요약/즉시 제어 카드
 │   ├── meal-browser.tsx       # 날짜별 급식 상세 조회
 │   ├── timer-panel.tsx        # 타이머 상세 제어 / 알림 / 오늘 기록
 │   └── data-state.tsx         # 공통 로딩/오류/빈 상태/설정 필요 UI
