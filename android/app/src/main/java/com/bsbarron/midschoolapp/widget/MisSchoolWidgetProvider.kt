@@ -8,6 +8,7 @@ import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
 import com.bsbarron.midschoolapp.R
+import com.bsbarron.midschoolapp.SplashActivity
 import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
 import com.bsbarron.midschoolapp.data.repository.SchoolRepository
 import dagger.hilt.EntryPoint
@@ -85,6 +86,22 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     R.id.widgetTimetableDivider,
                     if (widgetSettings.showTomorrowTimetable) View.VISIBLE else View.GONE
                 )
+                val openAppIntent = context.packageManager
+                    .getLaunchIntentForPackage(context.packageName)
+                    ?.apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
+                    ?: Intent(context, SplashActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
+                val openAppPendingIntent = PendingIntent.getActivity(
+                    context,
+                    appWidgetId + OPEN_APP_REQUEST_CODE_OFFSET,
+                    openAppIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                setOnClickPendingIntent(R.id.widgetContainer, openAppPendingIntent)
+
                 val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
                     action = ACTION_REFRESH
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -209,6 +226,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
     companion object {
         const val ACTION_REFRESH = "com.bsbarron.midschoolapp.widget.ACTION_REFRESH"
         private const val CONFIG_REQUEST_CODE_OFFSET = 10_000
+        private const val OPEN_APP_REQUEST_CODE_OFFSET = 20_000
 
         fun requestWidgetUpdate(context: Context, appWidgetId: Int) {
             val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
