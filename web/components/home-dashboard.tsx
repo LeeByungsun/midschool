@@ -13,7 +13,7 @@ import {
   SetupRequiredState,
 } from "@/components/data-state";
 import { DashboardCard } from "@/components/dashboard-card";
-import { HomeStudyTimerCard } from "@/components/home-study-timer-card";
+import { HomeTimerCard } from "@/components/home-timer-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel, formatMonthKey } from "@/lib/date";
@@ -460,7 +460,7 @@ export function HomeDashboard() {
           )}
         </DashboardCard>
 
-        <HomeStudyTimerCard />
+        <HomeTimerCard />
       </div>
     </div>
   );

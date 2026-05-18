@@ -95,6 +95,7 @@ npm run build
 - 새로고침 후 진행 상태 복원
 - 오늘 완료 기록 집계
 - 브라우저 Notification API 기반 완료 알림
+- 홈 요약 카드(`components/home-timer-card.tsx`)와 상세 패널(`components/timer-panel.tsx`)이 같은 저장 상태/구독 훅을 공유
 
 ### 공통 UX / 데이터 복구
 - 로딩 / 오류 / 빈 상태 / 설정 필요 / 재시도 패턴 공통화
@@ -109,6 +110,7 @@ npm run build
 - `lib/neis/` : NEIS 타입/매퍼/클라이언트
 - `lib/notices/` : 가정통신문 수집/파싱 로직
 - `lib/storage/` : preferences/cache/browser storage 래퍼
+- `lib/timer.ts` + `hooks/use-study-timer.ts` : 홈/타이머 화면이 공유하는 타이머 계산/구독 계층
 
 ## 관련 문서
 

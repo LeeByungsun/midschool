@@ -80,12 +80,13 @@ web/
 │   ├── timer/page.tsx         # 타이머
 │   └── api/                   # NEIS/가정통신문 BFF route handlers
 ├── components/                # 화면/카드/상태 UI 컴포넌트
-│   ├── home-dashboard.tsx     # 홈 실데이터 대시보드 + 가정통신문 + 타이머 요약
-│   ├── home-study-timer-card.tsx # 홈 대시보드용 타이머 요약/즉시 제어 카드
+│   ├── home-dashboard.tsx     # 홈 실데이터 대시보드 + 가정통신문 카드 조합
+│   ├── home-timer-card.tsx    # 홈 타이머 요약/빠른 제어 카드
 │   ├── meal-browser.tsx       # 날짜별 급식 상세 조회
 │   ├── timer-panel.tsx        # 타이머 상세 제어 / 알림 / 오늘 기록
 │   └── data-state.tsx         # 공통 로딩/오류/빈 상태/설정 필요 UI
 ├── hooks/                     # 브라우저 상태 구독 훅
+│   └── use-study-timer.ts     # 홈/타이머 페이지가 공유하는 타이머 상태 구독
 ├── lib/
 │   ├── neis/                  # NEIS 타입/매퍼/클라이언트
 │   ├── notices/               # 가정통신문 수집/파싱/provider 판별
@@ -94,6 +95,7 @@ web/
 │   │   ├── cache.ts           # 급식/시간표/일정 캐시 및 복구 전략
 │   │   ├── timer.ts           # 타이머 스냅샷/기록/알림 설정 저장
 │   │   └── browser-storage.ts # 브라우저 저장소 래퍼
+│   ├── timer.ts               # 타이머 상태 계산/복원용 순수 유틸
 │   └── *.ts                   # 날짜/사이트 데이터/도메인 유틸/API 호출 래퍼
 ├── public/                    # 정적 리소스
 ├── scripts/                   # node:test 기반 경량 회귀 스크립트
