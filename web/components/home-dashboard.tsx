@@ -28,6 +28,7 @@ import {
   fetchTimetable,
   formatCacheStatusMessage,
 } from "@/lib/school-api";
+import { resolveDashboardData } from "@/lib/dashboard-load";
 import { saveTimerSnapshot } from "@/lib/storage/timer";
 import { timerPresets } from "@/lib/site-data";
 import {
@@ -46,7 +47,9 @@ type DashboardState = {
   timetable: TimetableItem[];
   meals: MealInfo[];
   schedules: SchoolEvent[];
-  error: string | null;
+  timetableError: string | null;
+  mealError: string | null;
+  scheduleError: string | null;
   timetableCacheStatus: CacheStatus;
   timetableCachedAt: number | null;
   mealCacheStatus: CacheStatus;
@@ -66,7 +69,9 @@ const initialState: DashboardState = {
   timetable: [],
   meals: [],
   schedules: [],
-  error: null,
+  timetableError: null,
+  mealError: null,
+  scheduleError: null,
   timetableCacheStatus: "network",
   timetableCachedAt: null,
   mealCacheStatus: "network",
@@ -86,33 +91,6 @@ const DGE_NOTICE_UNSUPPORTED_MESSAGE =
 
 function getNextMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 1);
-}
-
-function mergeSchedules(...scheduleLists: SchoolEvent[][]) {
-  const merged = new Map<string, SchoolEvent>();
-
-  for (const items of scheduleLists) {
-    for (const event of items) {
-      merged.set(
-        `${event.date}:${event.title}:${event.description}`,
-        event,
-      );
-    }
-  }
-
-  return Array.from(merged.values()).sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function mergeCacheStatus(statuses: CacheStatus[]) {
-  if (statuses.some((status) => status === "stale-fallback")) {
-    return "stale-fallback" satisfies CacheStatus;
-  }
-
-  if (statuses.every((status) => status === "cache")) {
-    return "cache" satisfies CacheStatus;
-  }
-
-  return "network" satisfies CacheStatus;
 }
 
 const defaultTimerPreset = timerPresets[0];
@@ -156,7 +134,7 @@ export function HomeDashboard() {
       return;
     }
 
-    Promise.all([
+    Promise.allSettled([
       fetchTimetable({
         officeCode: studentInfo.officeCode,
         schoolCode: studentInfo.schoolCode,
@@ -181,53 +159,32 @@ export function HomeDashboard() {
         date: nextMonthKey,
       }),
     ])
-      .then(([timetable, meals, currentMonthSchedules, nextMonthSchedules]) => {
+      .then(([timetableResult, mealResult, currentMonthScheduleResult, nextMonthScheduleResult]) => {
         if (isCancelled) {
           return;
         }
 
-        setState({
-          requestToken,
-          timetable: timetable.items,
-          meals: meals.items,
-          schedules: mergeSchedules(
-            currentMonthSchedules.items,
-            nextMonthSchedules.items,
-          ),
-          error: null,
-          timetableCacheStatus: timetable.cacheStatus,
-          timetableCachedAt: timetable.cachedAt,
-          mealCacheStatus: meals.cacheStatus,
-          mealCachedAt: meals.cachedAt,
-          scheduleCacheStatus: mergeCacheStatus([
-            currentMonthSchedules.cacheStatus,
-            nextMonthSchedules.cacheStatus,
-          ]),
-          scheduleCachedAt: [currentMonthSchedules.cachedAt, nextMonthSchedules.cachedAt]
-            .filter((value): value is number => value !== null)
-            .sort((a, b) => b - a)[0] ?? null,
+        const resolvedData = resolveDashboardData({
+          timetableResult,
+          mealResult,
+          currentMonthScheduleResult,
+          nextMonthScheduleResult,
         });
-      })
-      .catch((error: unknown) => {
-        if (isCancelled) {
-          return;
-        }
 
         setState({
           requestToken,
-          timetable: [],
-          meals: [],
-          schedules: [],
-          error:
-            error instanceof Error
-              ? error.message
-              : "대시보드 데이터를 불러오지 못했어요.",
-          timetableCacheStatus: "network",
-          timetableCachedAt: null,
-          mealCacheStatus: "network",
-          mealCachedAt: null,
-          scheduleCacheStatus: "network",
-          scheduleCachedAt: null,
+          timetable: resolvedData.timetable.items,
+          meals: resolvedData.meals.items,
+          schedules: resolvedData.schedules.items,
+          timetableError: resolvedData.timetable.error,
+          mealError: resolvedData.meals.error,
+          scheduleError: resolvedData.schedules.error,
+          timetableCacheStatus: resolvedData.timetable.cacheStatus,
+          timetableCachedAt: resolvedData.timetable.cachedAt,
+          mealCacheStatus: resolvedData.meals.cacheStatus,
+          mealCachedAt: resolvedData.meals.cachedAt,
+          scheduleCacheStatus: resolvedData.schedules.cacheStatus,
+          scheduleCachedAt: resolvedData.schedules.cachedAt,
         });
       });
 
@@ -370,8 +327,8 @@ export function HomeDashboard() {
             <SetupRequiredState message="먼저 초기 설정에서 학교 이름과 학년/반을 저장해 주세요." />
           ) : isLoading ? (
             <LoadingState message="시간표를 불러오는 중..." />
-          ) : state.error ? (
-            <ErrorState message={state.error} onRetry={retryFetch} />
+          ) : state.timetableError ? (
+            <ErrorState message={state.timetableError} onRetry={retryFetch} />
           ) : state.timetable.length === 0 ? (
             <EmptyState
               title="오늘 수업이 없어요."
@@ -425,8 +382,8 @@ export function HomeDashboard() {
             />
           ) : isLoading ? (
             <LoadingState message="급식을 불러오는 중..." />
-          ) : state.error ? (
-            <ErrorState message={state.error} onRetry={retryFetch} />
+          ) : state.mealError ? (
+            <ErrorState message={state.mealError} onRetry={retryFetch} />
           ) : !todayMeal ? (
             <EmptyState
               title="오늘 급식 정보가 없어요."
@@ -473,15 +430,9 @@ export function HomeDashboard() {
             />
           ) : isLoading ? (
             <LoadingState message="일정을 불러오는 중..." />
-          ) : state.error ? (
-            <ErrorState message={state.error} onRetry={retryFetch} />
-          ) : upcomingSchedules.length === 0 ? (
-            <EmptyState
-              title="다가오는 일정이 없어요."
-              message="이번 기간에는 보여줄 학사 일정이 없어요."
-            />
-          ) : (
+          ) : upcomingSchedules.length > 0 ? (
             <div className="grid gap-4">
+              {state.scheduleError ? <InfoState message={state.scheduleError} /> : null}
               <ul className="space-y-3">
                 {upcomingSchedules.map((event) => (
                   <li
@@ -501,6 +452,13 @@ export function HomeDashboard() {
                 ))}
               </ul>
             </div>
+          ) : state.scheduleError ? (
+            <ErrorState message={state.scheduleError} onRetry={retryFetch} />
+          ) : (
+            <EmptyState
+              title="다가오는 일정이 없어요."
+              message="이번 기간에는 보여줄 학사 일정이 없어요."
+            />
           )}
         </DashboardCard>
 
