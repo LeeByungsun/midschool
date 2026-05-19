@@ -4,6 +4,7 @@ data class HomeUiState(
     val schoolName: String = "",
     val dateLabel: String = "",
     val classSummary: String = "",
+    val isSchoolConfigured: Boolean = false,
     val todaySummaryText: String = "",
     val mealSummary: String = "",
     val mealMeta: String = "",

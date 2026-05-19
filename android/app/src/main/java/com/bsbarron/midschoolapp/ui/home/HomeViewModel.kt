@@ -39,8 +39,10 @@ class HomeViewModel @Inject constructor(
         val studentInfo = preferencesRepository.getStudentInfo()
         val grade = studentInfo.grade
         val classroom = studentInfo.classroom
+        val hasSchoolSelection = studentInfo.hasSchoolSelection()
         _uiState.update {
             it.copy(
+                isSchoolConfigured = hasSchoolSelection,
                 schoolName = studentInfo.schoolName.ifBlank {
                     appContext.getString(R.string.home_school_name_placeholder)
                 },
@@ -49,6 +51,8 @@ class HomeViewModel @Inject constructor(
                 ),
                 classSummary = if (grade.isNotBlank() && classroom.isNotBlank()) {
                     appContext.getString(R.string.home_student_info_format, grade, classroom)
+                } else if (!hasSchoolSelection) {
+                    appContext.getString(R.string.home_school_not_set_hint)
                 } else {
                     appContext.getString(R.string.home_semester_label)
                 },
@@ -66,6 +70,22 @@ class HomeViewModel @Inject constructor(
             val today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
             refreshHeader()
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val studentInfo = preferencesRepository.getStudentInfo()
+            if (!studentInfo.hasSchoolSelection()) {
+                _uiState.update {
+                    it.copy(
+                        isSchoolConfigured = false,
+                        todaySummaryText = appContext.getString(R.string.home_school_not_set_summary),
+                        mealSummary = appContext.getString(R.string.home_meal_missing_school),
+                        mealMeta = "",
+                        eventSummary = appContext.getString(R.string.home_schedule_missing_school),
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+                return@launch
+            }
 
             val mealsResult = schoolRepository.getMeals(today)
             val schedulesResult = schoolRepository.getSchedules(today.take(6))
@@ -114,6 +134,7 @@ class HomeViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
+                    isSchoolConfigured = true,
                     todaySummaryText = if (errorMessage != null) {
                         appContext.getString(R.string.home_today_summary_error)
                     } else {
