@@ -1,6 +1,7 @@
 package com.bsbarron.midschoolapp.data.repository
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
 import com.bsbarron.midschoolapp.data.remote.dto.MealRowDto
@@ -41,7 +42,7 @@ private fun <T> successResponse(rows: List<T>): NeisResponse<T> {
 class SchoolRepositoryImplTest {
 
     @Test
-    fun `getMeals uses selected school codes`() = runBlocking {
+    fun `getMeals uses selected school codes and cache keys`() = runBlocking {
         val apiService = FakeNeisApiService().apply {
             mealsResponse = successResponse(
                 listOf(
@@ -73,6 +74,38 @@ class SchoolRepositoryImplTest {
         assertEquals("1234567", apiService.lastMealSchoolCode)
         assertEquals("J10", preferencesRepository.savedMealCacheArgs?.officeCode)
         assertEquals("1234567", preferencesRepository.savedMealCacheArgs?.schoolCode)
+    }
+
+    @Test
+    fun `getSchedules uses selected school codes`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            schedulesResponse = successResponse(
+                listOf(
+                    ScheduleRowDto(
+                        date = "20260519",
+                        title = "체육대회",
+                        description = "운동장"
+                    )
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+
+        val result = repository.getSchedules("202605")
+
+        assertTrue(result.isSuccess)
+        assertEquals("J10", apiService.lastScheduleOfficeCode)
+        assertEquals("1234567", apiService.lastScheduleSchoolCode)
     }
 
     @Test
@@ -195,7 +228,7 @@ class SchoolRepositoryImplTest {
         val result = repository.searchSchools("미사")
 
         assertTrue(result.isSuccess)
-        assertEquals(listOf("초등학교", "중학교"), result.getOrThrow().map { it.schoolKind })
+        assertEquals(listOf("초등학교", "중학교"), result.getOrThrow().map(SchoolInfo::schoolKind))
     }
 
     @Test
@@ -210,12 +243,15 @@ class SchoolRepositoryImplTest {
 
     private class FakeNeisApiService : NeisApiService {
         var mealsResponse: NeisResponse<MealRowDto> = successResponse(emptyList())
-        var scheduleResponse: NeisResponse<ScheduleRowDto> = successResponse(emptyList())
+        var schedulesResponse: NeisResponse<ScheduleRowDto> = successResponse(emptyList())
         var elementaryTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
         var middleTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
         var schoolInfoResponse: NeisResponse<SchoolInfoRowDto> = successResponse(emptyList())
+
         var lastMealOfficeCode: String? = null
         var lastMealSchoolCode: String? = null
+        var lastScheduleOfficeCode: String? = null
+        var lastScheduleSchoolCode: String? = null
         var elementaryCalled = false
         var middleCalled = false
 
@@ -241,7 +277,11 @@ class SchoolRepositoryImplTest {
             officeCode: String,
             schoolCode: String,
             date: String?
-        ): NeisResponse<ScheduleRowDto> = scheduleResponse
+        ): NeisResponse<ScheduleRowDto> {
+            lastScheduleOfficeCode = officeCode
+            lastScheduleSchoolCode = schoolCode
+            return schedulesResponse
+        }
 
         override suspend fun getElementaryTimetable(
             apiKey: String,
