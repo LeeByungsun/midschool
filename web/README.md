@@ -43,6 +43,11 @@ npm test
 npm run build
 ```
 
+### 회귀 방지 테스트
+
+- `web/scripts/test-student-preferences-sync.mjs`  
+  홈/설정 화면이 동일한 학생 설정 저장소 계약을 공유하는지(저장/삭제 시 동기화 이벤트 및 읽기 경로)를 검증합니다.
+
 ## 환경변수
 
 실제 NEIS 연동을 위해서는 서버 쪽 환경변수가 필요합니다.

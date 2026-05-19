@@ -101,7 +101,10 @@ web/
 ├── scripts/                   # node:test 기반 경량 회귀 스크립트
 │   ├── test-notices.mjs       # 가정통신문 provider/URL 처리 검증
 │   ├── test-notice-errors.mjs # 가정통신문 복구 오류 규칙 검증
-│   └── test-timer.mjs         # 타이머 도메인/저장 규칙 검증
+│   ├── test-timer.mjs         # 타이머 도메인/저장 규칙 검증
+│   ├── test-timer-storage.mjs  # 타이머 저장소 동기화/상태 계약 검증
+│   ├── test-home-timer-card-cleanup.mjs # 홈 타이머 카드 정합성 가드
+│   └── test-student-preferences-sync.mjs # 학생 설정 저장소 동기화 회귀 방지
 ├── .env.example               # Web 로컬 환경변수 예시
 ├── .gitignore
 ├── eslint.config.mjs
