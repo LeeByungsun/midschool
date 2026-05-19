@@ -1,0 +1,259 @@
+<svg width="1700" height="1180" viewBox="0 0 1700 1180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="canvasBg" x1="0" y1="0" x2="1700" y2="1180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EFF5FF"/>
+      <stop offset="1" stop-color="#F7FAFC"/>
+    </linearGradient>
+    <linearGradient id="heroHome" x1="0" y1="46" x2="306" y2="290" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#173B66"/>
+      <stop offset="1" stop-color="#4C8BF5"/>
+    </linearGradient>
+    <linearGradient id="heroTimetable" x1="0" y1="102" x2="306" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#173B66"/>
+      <stop offset="1" stop-color="#265E9A"/>
+    </linearGradient>
+    <linearGradient id="heroSchedule" x1="0" y1="102" x2="306" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4C8BF5"/>
+      <stop offset="1" stop-color="#7CB2FF"/>
+    </linearGradient>
+    <linearGradient id="notePanel" x1="1260" y1="170" x2="1620" y2="950" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#F8FBFF" stop-opacity="0.96"/>
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4C8BF5"/>
+      <stop offset="1" stop-color="#6ED6C5"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1700" height="1180" fill="url(#canvasBg)"/>
+  <circle cx="1498" cy="128" r="120" fill="#DDEBFF" fill-opacity="0.75"/>
+  <circle cx="1545" cy="1032" r="170" fill="#E0F5E8" fill-opacity="0.68"/>
+  <circle cx="126" cy="1060" r="180" fill="#FFF2CC" fill-opacity="0.55"/>
+
+  <text x="80" y="92" fill="#0F172A" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="44" font-weight="700">
+    중학교도우미 Android UI Refresh Mockup
+  </text>
+  <text x="80" y="132" fill="#475569" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="22" font-weight="500">
+    Mockup only · 2026-05-19 · existing flows preserved (dashboard / timetable / schedule / settings)
+  </text>
+
+  <!-- Phone 1 -->
+  <rect x="80" y="170" width="330" height="780" rx="46" fill="#101828"/>
+  <rect x="92" y="182" width="306" height="756" rx="38" fill="#F4F7FB"/>
+  <rect x="193" y="194" width="104" height="24" rx="12" fill="#0B1220"/>
+  <g transform="translate(92 182)" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif">
+    <text x="22" y="28" fill="#0F172A" font-size="14" font-weight="700">9:41</text>
+    <text x="248" y="28" fill="#0F172A" font-size="13" font-weight="600">5G</text>
+    <text x="270" y="28" fill="#0F172A" font-size="13" font-weight="600">92%</text>
+
+    <rect x="0" y="46" width="306" height="244" rx="34" fill="url(#heroHome)"/>
+    <rect x="20" y="66" width="92" height="28" rx="14" fill="#FFFFFF" fill-opacity="0.16"/>
+    <text x="38" y="84" fill="#FFFFFF" font-size="13" font-weight="700">5월 19일 화</text>
+    <circle cx="262" cy="80" r="18" fill="#FFFFFF" fill-opacity="0.18"/>
+    <path d="M255 80H269M262 73V87" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+    <text x="20" y="126" fill="#FFFFFF" font-size="30" font-weight="700">중학교도우미</text>
+    <text x="20" y="152" fill="#DDEBFF" font-size="15" font-weight="600">미사중학교 · 2학년 3반</text>
+    <rect x="20" y="174" width="266" height="92" rx="24" fill="#FFFFFF" fill-opacity="0.14"/>
+    <text x="38" y="200" fill="#FFFFFF" font-size="14" font-weight="700">오늘의 학교생활</text>
+    <text x="38" y="226" fill="#E5F0FF" font-size="22" font-weight="700">6교시 수업 · 체육 준비물 있음</text>
+    <text x="38" y="252" fill="#DDEBFF" font-size="14" font-weight="500">급식, 일정, 타이머를 한 장에서 바로 확인하는 구조</text>
+
+    <rect x="20" y="308" width="78" height="34" rx="17" fill="#FFFFFF"/>
+    <rect x="108" y="308" width="78" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.88"/>
+    <rect x="196" y="308" width="90" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.88"/>
+    <text x="44" y="330" fill="#173B66" font-size="13" font-weight="800">시간표</text>
+    <text x="132" y="330" fill="#173B66" font-size="13" font-weight="800">급식</text>
+    <text x="223" y="330" fill="#173B66" font-size="13" font-weight="800">학사 일정</text>
+
+    <rect x="20" y="366" width="266" height="150" rx="28" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <text x="38" y="395" fill="#1C2430" font-size="18" font-weight="700">오늘 급식</text>
+    <rect x="38" y="408" width="96" height="28" rx="14" fill="#E0F5E8"/>
+    <text x="55" y="426" fill="#1E6B43" font-size="13" font-weight="800">점심 · 842 kcal</text>
+    <text x="38" y="455" fill="#475569" font-size="15" font-weight="500">잡곡밥 · 근대된장국 · 제육볶음</text>
+    <text x="38" y="479" fill="#475569" font-size="15" font-weight="500">계란말이 · 배추김치 · 요구르트</text>
+    <rect x="38" y="492" width="68" height="26" rx="13" fill="#DDEBFF"/>
+    <rect x="114" y="492" width="54" height="26" rx="13" fill="#FFF2CC"/>
+    <rect x="176" y="492" width="82" height="26" rx="13" fill="#E8EEF8"/>
+    <text x="55" y="509" fill="#173B66" font-size="12" font-weight="700">단백질</text>
+    <text x="130" y="509" fill="#8A6500" font-size="12" font-weight="700">따뜻한</text>
+    <text x="193" y="509" fill="#475569" font-size="12" font-weight="700">한눈 요약</text>
+
+    <rect x="20" y="532" width="266" height="98" rx="28" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <text x="38" y="560" fill="#1C2430" font-size="18" font-weight="700">다가오는 일정</text>
+    <circle cx="46" cy="585" r="4" fill="#4C8BF5"/>
+    <text x="58" y="590" fill="#475569" font-size="14" font-weight="600">5/21 체육대회 사전 공지</text>
+    <circle cx="46" cy="607" r="4" fill="#6EC09A"/>
+    <text x="58" y="612" fill="#475569" font-size="14" font-weight="600">5/24 진로 체험 신청 마감</text>
+
+    <rect x="20" y="646" width="266" height="90" rx="28" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <text x="38" y="674" fill="#1C2430" font-size="18" font-weight="700">집중력 타이머</text>
+    <circle cx="82" cy="703" r="23" stroke="#E5EEF9" stroke-width="10"/>
+    <circle cx="82" cy="703" r="23" stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="96 48" transform="rotate(-90 82 703)"/>
+    <text x="67" y="708" fill="#173B66" font-size="12" font-weight="800">25</text>
+    <rect x="122" y="687" width="64" height="30" rx="15" fill="#4C8BF5"/>
+    <rect x="194" y="687" width="64" height="30" rx="15" fill="#DDEBFF"/>
+    <text x="144" y="707" fill="#FFFFFF" font-size="13" font-weight="800">시작</text>
+    <text x="214" y="707" fill="#173B66" font-size="13" font-weight="800">리셋</text>
+  </g>
+  <text x="160" y="986" fill="#173B66" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="18" font-weight="700">Dashboard refresh</text>
+
+  <!-- Phone 2 -->
+  <rect x="470" y="170" width="330" height="780" rx="46" fill="#101828"/>
+  <rect x="482" y="182" width="306" height="756" rx="38" fill="#F4F7FB"/>
+  <rect x="583" y="194" width="104" height="24" rx="12" fill="#0B1220"/>
+  <g transform="translate(482 182)" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif">
+    <text x="22" y="28" fill="#0F172A" font-size="14" font-weight="700">9:41</text>
+    <text x="248" y="28" fill="#0F172A" font-size="13" font-weight="600">5G</text>
+    <text x="270" y="28" fill="#0F172A" font-size="13" font-weight="600">92%</text>
+
+    <circle cx="28" cy="78" r="18" fill="#E5EEF9"/>
+    <path d="M34 70L26 78L34 86" stroke="#173B66" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="58" y="84" fill="#0F172A" font-size="28" font-weight="700">시간표</text>
+
+    <rect x="0" y="104" width="306" height="122" rx="28" fill="url(#heroTimetable)"/>
+    <text x="20" y="138" fill="#DDEBFF" font-size="14" font-weight="700">오늘 · 5월 19일 화요일</text>
+    <text x="20" y="170" fill="#FFFFFF" font-size="24" font-weight="700">2학년 3반 · 총 6교시</text>
+    <text x="20" y="196" fill="#DDEBFF" font-size="14" font-weight="500">다음 수업: 3교시 과학 / 준비물 체크 가능 구조</text>
+
+    <rect x="0" y="246" width="58" height="32" rx="16" fill="#173B66"/>
+    <rect x="66" y="246" width="58" height="32" rx="16" fill="#DDEBFF"/>
+    <rect x="132" y="246" width="58" height="32" rx="16" fill="#DDEBFF"/>
+    <rect x="198" y="246" width="46" height="32" rx="16" fill="#DDEBFF"/>
+    <rect x="252" y="246" width="54" height="32" rx="16" fill="#DDEBFF"/>
+    <text x="18" y="267" fill="#FFFFFF" font-size="13" font-weight="800">오늘</text>
+    <text x="84" y="267" fill="#173B66" font-size="13" font-weight="800">수</text>
+    <text x="150" y="267" fill="#173B66" font-size="13" font-weight="800">목</text>
+    <text x="213" y="267" fill="#173B66" font-size="13" font-weight="800">금</text>
+    <text x="267" y="267" fill="#173B66" font-size="13" font-weight="800">주간</text>
+
+    <rect x="0" y="298" width="306" height="78" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <circle cx="34" cy="337" r="18" fill="#DDEBFF"/>
+    <text x="27" y="342" fill="#173B66" font-size="14" font-weight="800">1</text>
+    <text x="64" y="331" fill="#1C2430" font-size="18" font-weight="700">국어</text>
+    <text x="64" y="352" fill="#64748B" font-size="14" font-weight="500">읽기 토론 · 발표 준비</text>
+    <rect x="224" y="321" width="58" height="28" rx="14" fill="#E0F5E8"/>
+    <text x="238" y="339" fill="#1E6B43" font-size="12" font-weight="800">정상</text>
+
+    <rect x="0" y="388" width="306" height="78" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <circle cx="34" cy="427" r="18" fill="#FFF2CC"/>
+    <text x="27" y="432" fill="#8A6500" font-size="14" font-weight="800">2</text>
+    <text x="64" y="421" fill="#1C2430" font-size="18" font-weight="700">영어</text>
+    <text x="64" y="442" fill="#64748B" font-size="14" font-weight="500">단어 퀴즈 · 듣기 평가</text>
+    <rect x="214" y="411" width="68" height="28" rx="14" fill="#E8EEF8"/>
+    <text x="227" y="429" fill="#475569" font-size="12" font-weight="800">체크</text>
+
+    <rect x="0" y="478" width="306" height="78" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <circle cx="34" cy="517" r="18" fill="#DDEBFF"/>
+    <text x="27" y="522" fill="#173B66" font-size="14" font-weight="800">3</text>
+    <text x="64" y="511" fill="#1C2430" font-size="18" font-weight="700">과학</text>
+    <text x="64" y="532" fill="#64748B" font-size="14" font-weight="500">실험 보고서 제출</text>
+    <rect x="208" y="501" width="74" height="28" rx="14" fill="#FFE0E0"/>
+    <text x="221" y="519" fill="#B42318" font-size="12" font-weight="800">준비물</text>
+
+    <rect x="0" y="568" width="306" height="78" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <circle cx="34" cy="607" r="18" fill="#DDEBFF"/>
+    <text x="27" y="612" fill="#173B66" font-size="14" font-weight="800">4</text>
+    <text x="64" y="601" fill="#1C2430" font-size="18" font-weight="700">체육</text>
+    <text x="64" y="622" fill="#64748B" font-size="14" font-weight="500">실내 체육관 · 운동화 착용</text>
+
+    <rect x="0" y="658" width="306" height="70" rx="24" fill="#173B66"/>
+    <text x="22" y="687" fill="#FFFFFF" font-size="17" font-weight="700">오늘 하단 고정 액션</text>
+    <text x="22" y="710" fill="#DDEBFF" font-size="14" font-weight="500">이전 날 / 오늘 / 다음 날 이동을 더 선명하게 배치</text>
+  </g>
+  <text x="561" y="986" fill="#173B66" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="18" font-weight="700">Daily timetable</text>
+
+  <!-- Phone 3 -->
+  <rect x="860" y="170" width="330" height="780" rx="46" fill="#101828"/>
+  <rect x="872" y="182" width="306" height="756" rx="38" fill="#F4F7FB"/>
+  <rect x="973" y="194" width="104" height="24" rx="12" fill="#0B1220"/>
+  <g transform="translate(872 182)" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif">
+    <text x="22" y="28" fill="#0F172A" font-size="14" font-weight="700">9:41</text>
+    <text x="248" y="28" fill="#0F172A" font-size="13" font-weight="600">5G</text>
+    <text x="270" y="28" fill="#0F172A" font-size="13" font-weight="600">92%</text>
+
+    <circle cx="28" cy="78" r="18" fill="#E5EEF9"/>
+    <path d="M34 70L26 78L34 86" stroke="#173B66" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="58" y="84" fill="#0F172A" font-size="28" font-weight="700">학사 일정</text>
+
+    <rect x="0" y="104" width="306" height="122" rx="28" fill="url(#heroSchedule)"/>
+    <text x="20" y="140" fill="#173B66" font-size="14" font-weight="800">이번 달 핵심 일정</text>
+    <text x="20" y="174" fill="#FFFFFF" font-size="28" font-weight="700">2026년 5월</text>
+    <text x="20" y="198" fill="#EAF3FF" font-size="14" font-weight="600">시험 / 행사 / 신청 마감 정보를 날짜 카드로 정리</text>
+
+    <rect x="0" y="246" width="82" height="32" rx="16" fill="#173B66"/>
+    <rect x="90" y="246" width="82" height="32" rx="16" fill="#DDEBFF"/>
+    <rect x="180" y="246" width="82" height="32" rx="16" fill="#DDEBFF"/>
+    <text x="19" y="267" fill="#FFFFFF" font-size="13" font-weight="800">이번 달</text>
+    <text x="110" y="267" fill="#173B66" font-size="13" font-weight="800">다가옴</text>
+    <text x="197" y="267" fill="#173B66" font-size="13" font-weight="800">지난 일정</text>
+
+    <rect x="0" y="296" width="306" height="88" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <rect x="20" y="314" width="56" height="52" rx="18" fill="#173B66"/>
+    <text x="34" y="338" fill="#DDEBFF" font-size="12" font-weight="700">5월</text>
+    <text x="39" y="357" fill="#FFFFFF" font-size="18" font-weight="800">21</text>
+    <text x="96" y="332" fill="#1C2430" font-size="18" font-weight="700">체육대회 사전 안내</text>
+    <text x="96" y="355" fill="#64748B" font-size="14" font-weight="500">준비물 / 복장 / 우천 시 대체 일정 확인</text>
+
+    <rect x="0" y="396" width="306" height="88" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <rect x="20" y="414" width="56" height="52" rx="18" fill="#4C8BF5"/>
+    <text x="34" y="438" fill="#DDEBFF" font-size="12" font-weight="700">5월</text>
+    <text x="39" y="457" fill="#FFFFFF" font-size="18" font-weight="800">24</text>
+    <text x="96" y="432" fill="#1C2430" font-size="18" font-weight="700">진로 체험 신청 마감</text>
+    <text x="96" y="455" fill="#64748B" font-size="14" font-weight="500">관심 분야 선택 및 보호자 확인 제출</text>
+
+    <rect x="0" y="496" width="306" height="88" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <rect x="20" y="514" width="56" height="52" rx="18" fill="#6EC09A"/>
+    <text x="34" y="538" fill="#E8FFF4" font-size="12" font-weight="700">5월</text>
+    <text x="39" y="557" fill="#FFFFFF" font-size="18" font-weight="800">28</text>
+    <text x="96" y="532" fill="#1C2430" font-size="18" font-weight="700">중간고사 시간표 공지</text>
+    <text x="96" y="555" fill="#64748B" font-size="14" font-weight="500">교시별 시험 과목 / 시험 범위 확인</text>
+
+    <rect x="0" y="596" width="306" height="132" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <text x="20" y="624" fill="#1C2430" font-size="18" font-weight="700">설정 / 초기설정 화면 방향</text>
+    <text x="20" y="652" fill="#64748B" font-size="14" font-weight="500">• 검색, 선택, 입력 폼을 섹션 카드 단위로 분리</text>
+    <text x="20" y="676" fill="#64748B" font-size="14" font-weight="500">• 상태 메시지는 상단 인라인 배너로 통일</text>
+    <text x="20" y="700" fill="#64748B" font-size="14" font-weight="500">• 저장 버튼은 하단 고정 CTA 스타일 검토</text>
+  </g>
+  <text x="962" y="986" fill="#173B66" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="18" font-weight="700">Monthly schedule</text>
+
+  <!-- Notes panel -->
+  <rect x="1240" y="170" width="380" height="780" rx="34" fill="url(#notePanel)" stroke="#D6DFEA"/>
+  <g transform="translate(1268 206)" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif">
+    <text x="0" y="0" fill="#173B66" font-size="28" font-weight="800">Design notes</text>
+
+    <text x="0" y="54" fill="#0F172A" font-size="18" font-weight="700">Current → mockup mapping</text>
+    <text x="0" y="84" fill="#475569" font-size="15" font-weight="500">• MainActivity: hero hierarchy + richer summary cards</text>
+    <text x="0" y="108" fill="#475569" font-size="15" font-weight="500">• TimetableActivity: stronger day switch + lesson cards</text>
+    <text x="0" y="132" fill="#475569" font-size="15" font-weight="500">• ScheduleActivity: date cards + importance grouping</text>
+    <text x="0" y="156" fill="#475569" font-size="15" font-weight="500">• Settings/Setup: same rounded-card form language</text>
+
+    <text x="0" y="220" fill="#0F172A" font-size="18" font-weight="700">Visual direction</text>
+    <text x="0" y="250" fill="#475569" font-size="15" font-weight="500">• Keep current blue palette, but increase contrast and depth</text>
+    <text x="0" y="274" fill="#475569" font-size="15" font-weight="500">• Promote date / class / state into reusable chips</text>
+    <text x="0" y="298" fill="#475569" font-size="15" font-weight="500">• Separate dense data into smaller cards for readability</text>
+    <text x="0" y="322" fill="#475569" font-size="15" font-weight="500">• Let timer feel calmer, not heavier, on the dashboard</text>
+
+    <text x="0" y="386" fill="#0F172A" font-size="18" font-weight="700">No-code scope</text>
+    <text x="0" y="416" fill="#475569" font-size="15" font-weight="500">• App code/resources remain untouched</text>
+    <text x="0" y="440" fill="#475569" font-size="15" font-weight="500">• Deliverable is an editable SVG + notes only</text>
+    <text x="0" y="464" fill="#475569" font-size="15" font-weight="500">• Built from the current XML layouts and strings</text>
+
+    <text x="0" y="528" fill="#0F172A" font-size="18" font-weight="700">Tokens used</text>
+    <rect x="0" y="552" width="72" height="28" rx="14" fill="#173B66"/>
+    <rect x="82" y="552" width="72" height="28" rx="14" fill="#4C8BF5"/>
+    <rect x="164" y="552" width="72" height="28" rx="14" fill="#DDEBFF" stroke="#C5D7F2"/>
+    <rect x="246" y="552" width="72" height="28" rx="14" fill="#E0F5E8" stroke="#D0E9D9"/>
+    <text x="0" y="605" fill="#475569" font-size="14" font-weight="500">brand_navy / brand_blue / brand_blue_soft / brand_green_soft</text>
+
+    <rect x="0" y="650" width="324" height="96" rx="24" fill="#173B66"/>
+    <text x="20" y="686" fill="#FFFFFF" font-size="17" font-weight="700">Implementation hint (later)</text>
+    <text x="20" y="712" fill="#DDEBFF" font-size="14" font-weight="500">공통 카드 반경, 배지, 칩, 인라인 배너를</text>
+    <text x="20" y="734" fill="#DDEBFF" font-size="14" font-weight="500">XML 스타일/드로어블 레벨에서 먼저 정리하면</text>
+    <text x="20" y="756" fill="#DDEBFF" font-size="14" font-weight="500">실제 구현 시 화면별 수정량을 줄일 수 있습니다.</text>
+  </g>
+
+  <text x="80" y="1096" fill="#64748B" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="18" font-weight="500">
+    Based on current Android resources: activity_main.xml, activity_timetable.xml, activity_schedule.xml, activity_settings.xml, activity_setup.xml
+  </text>
+</svg>
