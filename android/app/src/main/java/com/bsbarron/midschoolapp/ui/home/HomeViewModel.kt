@@ -24,9 +24,18 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     application: Application,
     private val schoolRepository: SchoolRepository,
-    private val preferencesRepository: PreferencesRepository,
-    private val textResolver: (Int, Array<out Any?>) -> String = defaultTextResolver(application)
+    private val preferencesRepository: PreferencesRepository
 ) : AndroidViewModel(application) {
+    private var textResolver: (Int, Array<out Any?>) -> String = defaultTextResolver(application)
+
+    constructor(
+        application: Application,
+        schoolRepository: SchoolRepository,
+        preferencesRepository: PreferencesRepository,
+        textResolver: (Int, Array<out Any?>) -> String
+    ) : this(application, schoolRepository, preferencesRepository) {
+        this.textResolver = textResolver
+    }
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
