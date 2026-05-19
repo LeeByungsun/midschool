@@ -19,6 +19,7 @@
 - Kotlin + XML + DataBinding + Hilt + MVVM 구조
 - NEIS 기반 시간표 / 급식 / 학사 일정 조회
 - 타이머 및 앱 위젯 기능 유지
+- 현재 Android는 학년/반만 저장하며, 학교 검색/선택과 동적 학교 코드 저장은 아직 미구현
 - `android/README.md`와 `docs/android-studio-setup.md` 기준으로 개발
 
 ### Web
@@ -64,6 +65,7 @@ misSchoolApp/
 │   └── settings.gradle.kts
 ├── docs/
 │   ├── android-studio-setup.md
+│   ├── android-school-selection-review.md
 │   ├── project-structure.md
 │   └── project_specification.md
 └── web/
@@ -135,6 +137,7 @@ npm run build
 ## 문서 안내
 
 - 멀티플랫폼 기능 / 정책 스펙: `docs/project_specification.md`
+- Android 학교선택 검토 메모: `docs/android-school-selection-review.md`
 - 현재 저장소 구조 문서: `docs/project-structure.md`
 - Android Studio 열기 안내: `docs/android-studio-setup.md`
 - 웹 전용 안내: `web/README.md`
