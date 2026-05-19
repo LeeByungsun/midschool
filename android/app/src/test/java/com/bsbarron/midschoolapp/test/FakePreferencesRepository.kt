@@ -9,7 +9,7 @@ import com.bsbarron.midschoolapp.data.repository.TimerPreferenceState
 import com.bsbarron.midschoolapp.data.repository.WidgetSettings
 
 class FakePreferencesRepository(
-    studentInfo: StudentInfo = StudentInfo("", ""),
+    studentInfo: StudentInfo = StudentInfo(),
     timerDisplayMode: TimerDisplayMode = TimerDisplayMode.COUNT,
     notificationEnabled: Boolean = true,
     vibrationEnabled: Boolean = true,
@@ -38,18 +38,18 @@ class FakePreferencesRepository(
     val savedVibrationEnabledValues = mutableListOf<Boolean>()
 
     private val mealCache = mutableMapOf<String, List<MealInfo>>()
-    private val timetableCache = mutableMapOf<Triple<String, String, String>, List<TimetableItem>>()
+    private val timetableCache = mutableMapOf<String, List<TimetableItem>>()
     private val widgetSettings = mutableMapOf<Int, WidgetSettings>()
 
     override fun getStudentInfo(): StudentInfo = currentStudentInfo
 
     override fun hasStudentInfo(): Boolean {
-        return currentStudentInfo.grade.isNotBlank() && currentStudentInfo.classroom.isNotBlank()
+        return currentStudentInfo.isComplete()
     }
 
-    override fun saveStudentInfo(grade: String, classroom: String) {
-        currentStudentInfo = StudentInfo(grade = grade, classroom = classroom)
-        savedStudentInfoCalls += currentStudentInfo
+    override fun saveStudentInfo(studentInfo: StudentInfo) {
+        currentStudentInfo = studentInfo
+        savedStudentInfoCalls += studentInfo
     }
 
     override fun getTimerDisplayMode(): TimerDisplayMode = currentTimerDisplayMode
@@ -101,26 +101,39 @@ class FakePreferencesRepository(
         )
     }
 
-    override fun saveMealCache(date: String, meals: List<MealInfo>) {
-        mealCache[date] = meals
+    override fun saveMealCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String,
+        meals: List<MealInfo>
+    ) {
+        mealCache[cacheKey(officeCode, schoolCode, date)] = meals
     }
 
-    override fun getMealCache(date: String): List<MealInfo>? = mealCache[date]
+    override fun getMealCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String
+    ): List<MealInfo>? = mealCache[cacheKey(officeCode, schoolCode, date)]
 
     override fun saveTimetableCache(
+        officeCode: String,
+        schoolCode: String,
         grade: String,
         classroom: String,
         date: String,
         items: List<TimetableItem>
     ) {
-        timetableCache[Triple(grade, classroom, date)] = items
+        timetableCache[timetableCacheKey(officeCode, schoolCode, grade, classroom, date)] = items
     }
 
     override fun getTimetableCache(
+        officeCode: String,
+        schoolCode: String,
         grade: String,
         classroom: String,
         date: String
-    ): List<TimetableItem>? = timetableCache[Triple(grade, classroom, date)]
+    ): List<TimetableItem>? = timetableCache[timetableCacheKey(officeCode, schoolCode, grade, classroom, date)]
 
     override fun getWidgetSettings(appWidgetId: Int): WidgetSettings {
         return widgetSettings[appWidgetId] ?: WidgetSettings()
@@ -132,5 +145,19 @@ class FakePreferencesRepository(
 
     override fun clearWidgetSettings(appWidgetId: Int) {
         widgetSettings.remove(appWidgetId)
+    }
+
+    private fun cacheKey(officeCode: String, schoolCode: String, date: String): String {
+        return "$officeCode/$schoolCode/$date"
+    }
+
+    private fun timetableCacheKey(
+        officeCode: String,
+        schoolCode: String,
+        grade: String,
+        classroom: String,
+        date: String
+    ): String {
+        return "$officeCode/$schoolCode/$grade/$classroom/$date"
     }
 }
