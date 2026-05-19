@@ -1,66 +1,59 @@
 package com.bsbarron.midschoolapp.ui.home
 
 import android.app.Application
-import androidx.test.core.app.ApplicationProvider
+import android.content.Context
 import com.bsbarron.midschoolapp.R
-import com.bsbarron.midschoolapp.MisSchoolApplication
-import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.repository.StudentInfo
 import com.bsbarron.midschoolapp.test.FakePreferencesRepository
 import com.bsbarron.midschoolapp.test.FakeSchoolRepository
-import com.bsbarron.midschoolapp.ui.common.UiStringProvider
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
-import org.robolectric.annotation.Config
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
-@Config(application = MisSchoolApplication::class, sdk = [34])
 class HomeViewModelTest {
 
     private val application = TestApplication()
     private val textResolver = { id: Int, formatArgs: Array<out Any?> ->
         when (id) {
-            com.bsbarron.midschoolapp.R.string.home_school_name_placeholder -> "학교를 설정해 주세요"
-            com.bsbarron.midschoolapp.R.string.home_student_info_format ->
-                "${formatArgs[0]}학년 ${formatArgs[1]}반"
-            com.bsbarron.midschoolapp.R.string.home_school_not_set_hint -> "학교 설정이 필요해요"
-            com.bsbarron.midschoolapp.R.string.home_school_not_set_summary -> "요약"
-            com.bsbarron.midschoolapp.R.string.home_meal_missing_school -> "급식 없음"
-            com.bsbarron.midschoolapp.R.string.home_schedule_missing_school -> "일정 없음"
-            com.bsbarron.midschoolapp.R.string.home_today_summary_error -> "요약 에러"
-            com.bsbarron.midschoolapp.R.string.home_today_summary_body -> "요약"
-            com.bsbarron.midschoolapp.R.string.home_semester_label -> "학년과 반을 설정해 주세요"
-            else -> ""
+            R.string.home_school_name_placeholder -> "학교를 설정해 주세요"
+            R.string.home_student_info_format -> "${formatArgs[0]}학년 ${formatArgs[1]}반"
+            R.string.home_school_not_set_hint -> "학교 설정이 필요해요"
+            R.string.home_school_not_set_summary ->
+                "학교/학년/반이 설정되지 않아 급식·일정·시간표 조회가 잠시 중단돼 있어요. 설정에서 학교를 먼저 등록해 주세요."
+            R.string.home_meal_missing_school -> "학교 설정 후 급식 정보를 확인할 수 있어요."
+            R.string.home_schedule_missing_school -> "학교 설정 후 이번 달 학사 일정을 확인해 주세요."
+            R.string.home_today_summary_error -> "나이스 데이터를 불러오지 못해 일부 정보는 기본 화면으로 표시 중입니다."
+            R.string.home_today_summary_body -> "오늘 급식과 학사 일정을 먼저 확인하고, 시간표는 별도 화면에서 자세히 볼 수 있어요."
+            R.string.home_semester_label -> "학년과 반을 설정해 주세요"
+            else -> error("Unexpected string id: $id")
         }
     }
 
     @Test
     fun refreshHeader_whenSchoolIsMissing_showsSetupFallback() {
-        val repository = FakePreferencesRepository()
-        val viewModel = HomeViewModel(application, FakeSchoolRepository(), repository, strings)
+        val viewModel = HomeViewModel.createForTest(
+            application = application,
+            schoolRepository = FakeSchoolRepository(),
+            preferencesRepository = FakePreferencesRepository(),
+            textResolver = textResolver
+        )
 
         val state = viewModel.uiState.value
 
         assertFalse(state.isSchoolConfigured)
-        assertEquals("학교명 없음", state.schoolName)
-        assertEquals("학교를 먼저 설정해 주세요.", state.classSummary)
-        assertEquals("오늘의 요약", state.todaySummaryText)
+        assertEquals("학교를 설정해 주세요", state.schoolName)
+        assertEquals("학교 설정이 필요해요", state.classSummary)
+        assertEquals(
+            "오늘 급식과 학사 일정을 먼저 확인하고, 시간표는 별도 화면에서 자세히 볼 수 있어요.",
+            state.todaySummaryText
+        )
     }
 
     @Test
-    fun refreshHeader_afterSettingsSave_readsLatestSharedStudentInfo() = runBlocking {
+    fun refreshHeader_afterStudentInfoChanges_readsLatestSharedStudentInfo() {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(
                 grade = "1",
@@ -72,21 +65,10 @@ class HomeViewModelTest {
             )
         )
         val viewModel = HomeViewModel.createForTest(
-            application,
-            FakeSchoolRepository(),
-            repository,
-            textResolver
-        )
-
-        repository.saveStudentInfo(
-            StudentInfo(
-                grade = "3",
-                classroom = "4",
-                schoolName = updatedSchool.schoolName,
-                officeCode = updatedSchool.officeCode,
-                schoolCode = updatedSchool.schoolCode,
-                schoolKind = updatedSchool.schoolKind
-            )
+            application = application,
+            schoolRepository = FakeSchoolRepository(),
+            preferencesRepository = repository,
+            textResolver = textResolver
         )
 
         repository.saveStudentInfo(
@@ -101,27 +83,32 @@ class HomeViewModelTest {
         )
 
         viewModel.refreshHeader()
-        val updated = viewModel.uiState.value
+        val state = viewModel.uiState.value
 
-        assertEquals("미사고등학교", updated.schoolName)
-        assertEquals("2학년 4반", updated.classSummary)
-        assertEquals(true, updated.isSchoolConfigured)
+        assertTrue(state.isSchoolConfigured)
+        assertEquals("미사고등학교", state.schoolName)
+        assertEquals("2학년 4반", state.classSummary)
     }
 
     @Test
     fun loadHomeData_whenSchoolIsNotConfigured_showsSetupMessagesAndSkipsRemoteFetch() = runBlocking {
-        val preferencesRepository = FakePreferencesRepository(
-            studentInfo = StudentInfo(schoolName = "미사중학교")
-        )
         val schoolRepository = FakeSchoolRepository()
-        val viewModel = HomeViewModel(application, schoolRepository, preferencesRepository, strings)
+        val viewModel = HomeViewModel.createForTest(
+            application = application,
+            schoolRepository = schoolRepository,
+            preferencesRepository = FakePreferencesRepository(studentInfo = StudentInfo(schoolName = "미사중학교")),
+            textResolver = textResolver
+        )
 
         viewModel.loadHomeData()
         awaitLoadComplete(viewModel)
 
         val state = viewModel.uiState.value
         assertFalse(state.isSchoolConfigured)
-        assertEquals("학교 설정 후 급식·일정 정보를 확인해 주세요.", state.todaySummaryText)
+        assertEquals(
+            "학교/학년/반이 설정되지 않아 급식·일정·시간표 조회가 잠시 중단돼 있어요. 설정에서 학교를 먼저 등록해 주세요.",
+            state.todaySummaryText
+        )
         assertEquals("학교 설정 후 급식 정보를 확인할 수 있어요.", state.mealSummary)
         assertEquals("", state.mealMeta)
         assertEquals("학교 설정 후 이번 달 학사 일정을 확인해 주세요.", state.eventSummary)
@@ -130,8 +117,8 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun loadHomeData_afterSettingsChanged_readsLatestStudentInfo_onResyncedLoad() = runBlocking {
-        val preferencesRepository = FakePreferencesRepository(
+    fun loadHomeData_afterSettingsChanged_readsLatestStudentInfoOnResyncedLoad() = runBlocking {
+        val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(
                 grade = "1",
                 classroom = "2",
@@ -141,32 +128,36 @@ class HomeViewModelTest {
                 schoolKind = "중학교"
             )
         )
+        val schoolRepository = FakeSchoolRepository(
+            mealsResult = Result.failure(IllegalStateException("MEAL_FAIL")),
+            schedulesResult = Result.success(emptyList())
+        )
         val viewModel = HomeViewModel.createForTest(
-            application,
-            FakeSchoolRepository(),
-            repository,
-            textResolver
+            application = application,
+            schoolRepository = schoolRepository,
+            preferencesRepository = repository,
+            textResolver = textResolver
         )
 
-        preferencesRepository.saveStudentInfo(
+        repository.saveStudentInfo(
             StudentInfo(
                 grade = "3",
                 classroom = "4",
-                schoolName = updatedSchool.schoolName,
-                officeCode = updatedSchool.officeCode,
-                schoolCode = updatedSchool.schoolCode,
-                schoolKind = updatedSchool.schoolKind
+                schoolName = "미사고등학교",
+                officeCode = "J10",
+                schoolCode = "7654321",
+                schoolKind = "고등학교"
             )
         )
 
-        homeViewModel.loadHomeData()
-        awaitLoadComplete(homeViewModel)
+        viewModel.loadHomeData()
+        awaitLoadComplete(viewModel)
 
-        val state = homeViewModel.uiState.value
+        val state = viewModel.uiState.value
         assertTrue(state.isSchoolConfigured)
-        assertEquals(updatedSchool.schoolName, state.schoolName)
+        assertEquals("미사고등학교", state.schoolName)
         assertEquals("3학년 4반", state.classSummary)
-        assertEquals("오늘의 요약을 불러오지 못했어요.", state.todaySummaryText)
+        assertEquals("나이스 데이터를 불러오지 못해 일부 정보는 기본 화면으로 표시 중입니다.", state.todaySummaryText)
         assertEquals("MEAL_FAIL", state.errorMessage)
         assertEquals("오늘은 등록된 급식이 없어요.", state.mealSummary)
         assertEquals("이번 달에 남아 있는 학사 일정이 없어요.", state.eventSummary)
@@ -175,12 +166,10 @@ class HomeViewModelTest {
     }
 
     private suspend fun awaitLoadComplete(homeViewModel: HomeViewModel) {
-        var hasStartedLoading = false
-        repeat(20) {
-            if (homeViewModel.uiState.value.isLoading) {
-                hasStartedLoading = true
-            } else if (hasStartedLoading) {
-                return
+        repeat(50) {
+            if (!homeViewModel.uiState.value.isLoading) {
+                delay(10)
+                if (!homeViewModel.uiState.value.isLoading) return
             }
             delay(10)
         }
@@ -188,28 +177,5 @@ class HomeViewModelTest {
 
     private class TestApplication : Application() {
         override fun getApplicationContext(): Context = this
-    }
-
-    private class FakeStringProvider : UiStringProvider {
-        override fun getString(resId: Int): String {
-            return when (resId) {
-                R.string.home_school_name_placeholder -> "학교명 없음"
-                R.string.home_school_not_set_hint -> "학교를 먼저 설정해 주세요."
-                R.string.home_school_not_set_summary -> "학교 설정 후 급식·일정 정보를 확인해 주세요."
-                R.string.home_meal_missing_school -> "학교 설정 후 급식 정보를 확인할 수 있어요."
-                R.string.home_schedule_missing_school -> "학교 설정 후 이번 달 학사 일정을 확인해 주세요."
-                R.string.home_today_summary_body -> "오늘의 요약"
-                R.string.home_today_summary_error -> "오늘의 요약을 불러오지 못했어요."
-                R.string.home_semester_label -> "학기"
-                else -> error("Unexpected string id: $resId")
-            }
-        }
-
-        override fun getString(resId: Int, vararg formatArgs: Any?): String {
-            return when (resId) {
-                R.string.home_student_info_format -> String.format("%s학년 %s반", *formatArgs)
-                else -> getString(resId)
-            }
-        }
     }
 }
