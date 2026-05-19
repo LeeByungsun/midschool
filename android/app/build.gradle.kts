@@ -74,7 +74,6 @@ dependencies {
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
