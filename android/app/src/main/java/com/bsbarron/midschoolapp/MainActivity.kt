@@ -46,19 +46,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        homeViewModel.refreshHeader()
+        homeViewModel.loadHomeData()
         timerViewModel.refreshDisplayMode()
     }
 
     private fun bindClicks() {
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
-        }
-        binding.openTimetableButton.setOnClickListener {
-            startActivity(Intent(this, TimetableActivity::class.java))
-        }
-        binding.openScheduleButton.setOnClickListener {
-            startActivity(Intent(this, ScheduleActivity::class.java))
         }
         binding.focusPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.FOCUS) }
         binding.breakPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.BREAK) }
@@ -75,6 +69,25 @@ class MainActivity : AppCompatActivity() {
                     binding.dateLabelText.text = state.dateLabel
                     binding.classSummaryText.text = state.classSummary
                     binding.todaySummaryText.text = state.todaySummaryText
+                    if (!state.isSchoolConfigured) {
+                        binding.openTimetableButton.setText(R.string.home_setup_button)
+                        binding.openScheduleButton.setText(R.string.home_setup_button)
+                        binding.openTimetableButton.setOnClickListener {
+                            startActivity(Intent(this@MainActivity, SetupActivity::class.java))
+                        }
+                        binding.openScheduleButton.setOnClickListener {
+                            startActivity(Intent(this@MainActivity, SetupActivity::class.java))
+                        }
+                    } else {
+                        binding.openTimetableButton.setText(R.string.home_timetable_button)
+                        binding.openScheduleButton.setText(R.string.home_schedule_button)
+                        binding.openTimetableButton.setOnClickListener {
+                            startActivity(Intent(this@MainActivity, TimetableActivity::class.java))
+                        }
+                        binding.openScheduleButton.setOnClickListener {
+                            startActivity(Intent(this@MainActivity, ScheduleActivity::class.java))
+                        }
+                    }
                     if (state.mealSummary.isNotBlank()) binding.mealMenuText.text = state.mealSummary
                     if (state.mealMeta.isNotBlank()) binding.mealMetaText.text = state.mealMeta
                     if (state.eventSummary.isNotBlank()) binding.scheduleSummaryText.text = state.eventSummary
