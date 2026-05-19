@@ -1,0 +1,172 @@
+<svg width="1720" height="1260" viewBox="0 0 1720 1260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1720" y2="1260" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EEF4FF"/>
+      <stop offset="1" stop-color="#F8FAFF"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="0" y2="260" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#244E84"/>
+      <stop offset="1" stop-color="#3A79D6"/>
+    </linearGradient>
+    <linearGradient id="heroSoft" x1="0" y1="0" x2="260" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9F2FF"/>
+      <stop offset="1" stop-color="#F8FBFF"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="2000" height="1400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#9DB3D9" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="1720" height="1260" rx="32" fill="url(#bg)"/>
+  <text x="88" y="100" fill="#173B66" font-size="40" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">학교도우미 Android UI Refresh Mockup</text>
+  <text x="88" y="142" fill="#627182" font-size="20" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">현재 Android 구조를 유지한 채, 더 현대적인 카드 중심 대시보드 톤으로 정리한 디자인 시안</text>
+
+  <g filter="url(#shadow)">
+    <rect x="88" y="200" width="452" height="930" rx="44" fill="#101826"/>
+    <rect x="104" y="216" width="420" height="898" rx="36" fill="#F4F7FB"/>
+    <rect x="252" y="234" width="124" height="26" rx="13" fill="#273449" opacity="0.85"/>
+
+    <text x="138" y="302" fill="#173B66" font-size="30" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">홈 대시보드</text>
+
+    <rect x="136" y="328" width="356" height="232" rx="30" fill="url(#hero)"/>
+    <text x="166" y="382" fill="white" font-size="26" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">대구중학교</text>
+    <text x="166" y="414" fill="#DDEBFF" font-size="15" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">5월 19일 화요일 · 오늘의 학교 생활</text>
+    <text x="166" y="440" fill="#DDEBFF" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">2학년 3반 · 출결 / 수업 / 급식 / 일정</text>
+
+    <rect x="166" y="468" width="100" height="36" rx="18" fill="#2D5FA0" stroke="#9DC2FF"/>
+    <text x="191" y="491" fill="white" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">설정</text>
+    <rect x="278" y="468" width="100" height="36" rx="18" fill="#2D5FA0" stroke="#9DC2FF"/>
+    <text x="296" y="491" fill="white" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">시간표</text>
+
+    <rect x="166" y="520" width="296" height="30" rx="15" fill="#FFFFFF" opacity="0.16"/>
+    <text x="184" y="540" fill="#EAF3FF" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">오늘 핵심: 수학 수행평가 · 급식 돈까스 · 방과후 16:00</text>
+
+    <rect x="136" y="582" width="356" height="132" rx="28" fill="white" stroke="#D6DFEA"/>
+    <text x="162" y="622" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">오늘 시간표</text>
+    <text x="162" y="651" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">1교시 국어 · 2교시 수학 · 3교시 과학 · 4교시 영어</text>
+    <rect x="162" y="670" width="112" height="28" rx="14" fill="#DDEBFF"/>
+    <text x="183" y="689" fill="#173B66" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">다음 수업 수학</text>
+    <rect x="376" y="620" width="88" height="32" rx="16" fill="#173B66"/>
+    <text x="399" y="641" fill="white" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">열기</text>
+
+    <rect x="136" y="730" width="170" height="156" rx="28" fill="white" stroke="#D6DFEA"/>
+    <text x="160" y="770" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">오늘 급식</text>
+    <rect x="160" y="788" width="74" height="28" rx="14" fill="#E0F5E8"/>
+    <text x="182" y="807" fill="#1E6B43" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">정상 제공</text>
+    <text x="160" y="842" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">돈까스</text>
+    <text x="160" y="868" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">쌀밥 · 미소국 · 샐러드</text>
+
+    <rect x="322" y="730" width="170" height="156" rx="28" fill="white" stroke="#D6DFEA"/>
+    <text x="346" y="770" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">다가오는 일정</text>
+    <rect x="346" y="788" width="50" height="24" rx="12" fill="#FFF2CC"/>
+    <text x="361" y="804" fill="#8A6500" font-size="12" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">D-1</text>
+    <text x="346" y="840" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">수학 수행평가</text>
+    <text x="346" y="866" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">5월 20일 · 2교시</text>
+
+    <rect x="136" y="902" width="356" height="178" rx="28" fill="white" stroke="#D6DFEA"/>
+    <text x="162" y="944" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">집중 타이머</text>
+    <text x="162" y="990" fill="#173B66" font-size="40" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">24:18</text>
+    <text x="162" y="1018" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">집중 모드 진행 중 · 다음 쉬는 시간까지 24분</text>
+    <rect x="162" y="1038" width="82" height="30" rx="15" fill="#DDEBFF"/>
+    <text x="184" y="1058" fill="#173B66" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">집중 25</text>
+    <rect x="254" y="1038" width="82" height="30" rx="15" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <text x="276" y="1058" fill="#627182" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">휴식 5</text>
+    <rect x="346" y="1038" width="82" height="30" rx="15" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <text x="368" y="1058" fill="#627182" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">딥 50</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="634" y="200" width="452" height="930" rx="44" fill="#101826"/>
+    <rect x="650" y="216" width="420" height="898" rx="36" fill="#F4F7FB"/>
+    <rect x="798" y="234" width="124" height="26" rx="13" fill="#273449" opacity="0.85"/>
+
+    <text x="684" y="302" fill="#173B66" font-size="30" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">시간표 상세</text>
+    <rect x="682" y="328" width="356" height="150" rx="28" fill="#DDEBFF"/>
+    <text x="710" y="372" fill="#173B66" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">5월 19일 화요일</text>
+    <text x="710" y="404" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">2학년 3반 · 오늘 6교시 · 오전 실습 없음</text>
+    <rect x="710" y="426" width="108" height="28" rx="14" fill="#FFFFFF"/>
+    <text x="731" y="445" fill="#173B66" font-size="13" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">남은 교시 4개</text>
+
+    <rect x="682" y="498" width="104" height="36" rx="18" fill="#DDEBFF"/>
+    <text x="707" y="521" fill="#173B66" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">이전 날짜</text>
+    <rect x="808" y="498" width="104" height="36" rx="18" fill="#FFF2CC"/>
+    <text x="844" y="521" fill="#8A6500" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">오늘</text>
+    <rect x="934" y="498" width="104" height="36" rx="18" fill="#DDEBFF"/>
+    <text x="959" y="521" fill="#173B66" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">다음 날짜</text>
+
+    <rect x="682" y="560" width="356" height="84" rx="24" fill="white" stroke="#D6DFEA"/>
+    <circle cx="722" cy="602" r="22" fill="#173B66"/>
+    <text x="715" y="609" fill="white" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">1</text>
+    <text x="760" y="593" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">국어</text>
+    <text x="760" y="620" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">문학 작품 읽기 · 준비물 없음</text>
+
+    <rect x="682" y="658" width="356" height="84" rx="24" fill="white" stroke="#D6DFEA"/>
+    <circle cx="722" cy="700" r="22" fill="#4C8BF5"/>
+    <text x="715" y="707" fill="white" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">2</text>
+    <text x="760" y="691" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">수학</text>
+    <text x="760" y="718" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">함수 단원 · 수행평가 안내</text>
+
+    <rect x="682" y="756" width="356" height="84" rx="24" fill="white" stroke="#D6DFEA"/>
+    <circle cx="722" cy="798" r="22" fill="#34A56F"/>
+    <text x="715" y="805" fill="white" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">3</text>
+    <text x="760" y="789" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">과학</text>
+    <text x="760" y="816" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">실험 안전 교육 · 조별 활동</text>
+
+    <rect x="682" y="854" width="356" height="84" rx="24" fill="white" stroke="#D6DFEA"/>
+    <circle cx="722" cy="896" r="22" fill="#F2B43C"/>
+    <text x="715" y="903" fill="white" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">4</text>
+    <text x="760" y="887" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">영어</text>
+    <text x="760" y="914" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">본문 듣기 · 짧은 퀴즈 포함</text>
+
+    <rect x="682" y="958" width="356" height="118" rx="24" fill="#FFFFFF" stroke="#D6DFEA"/>
+    <text x="710" y="1000" fill="#1C2430" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">학사 일정 미리보기</text>
+    <text x="710" y="1032" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">내일: 수학 수행평가 · 금요일: 동아리 발표</text>
+    <text x="710" y="1058" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">시간표 화면에서도 일정 문맥이 바로 이어지도록 하단 요약 배치</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1180" y="200" width="452" height="930" rx="44" fill="#101826"/>
+    <rect x="1196" y="216" width="420" height="898" rx="36" fill="#F4F7FB"/>
+    <rect x="1344" y="234" width="124" height="26" rx="13" fill="#273449" opacity="0.85"/>
+
+    <text x="1230" y="302" fill="#173B66" font-size="30" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">설정 / 초기 세팅</text>
+
+    <rect x="1228" y="328" width="356" height="112" rx="28" fill="url(#heroSoft)" stroke="#D6DFEA"/>
+    <text x="1256" y="370" fill="#173B66" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">학교 정보 설정</text>
+    <text x="1256" y="402" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">학교 검색 → 선택 확인 → 학년/반 입력 → 저장</text>
+
+    <text x="1240" y="480" fill="#1C2430" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">학교 검색</text>
+    <rect x="1236" y="498" width="244" height="50" rx="18" fill="white" stroke="#D6DFEA"/>
+    <text x="1260" y="529" fill="#9AA7B6" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">학교 이름 입력</text>
+    <rect x="1492" y="498" width="92" height="50" rx="18" fill="#4C8BF5"/>
+    <text x="1523" y="529" fill="white" font-size="15" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">검색</text>
+
+    <rect x="1236" y="572" width="348" height="92" rx="24" fill="white" stroke="#D6DFEA"/>
+    <text x="1260" y="608" fill="#1C2430" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">선택된 학교</text>
+    <text x="1260" y="637" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">대구중학교 · 대구교육청 · 중학교</text>
+
+    <text x="1240" y="708" fill="#1C2430" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">학년 / 반</text>
+    <rect x="1236" y="726" width="166" height="92" rx="24" fill="white" stroke="#D6DFEA"/>
+    <text x="1260" y="764" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">학년</text>
+    <text x="1260" y="800" fill="#173B66" font-size="28" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">2</text>
+    <rect x="1418" y="726" width="166" height="92" rx="24" fill="white" stroke="#D6DFEA"/>
+    <text x="1442" y="764" fill="#627182" font-size="14" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">반</text>
+    <text x="1442" y="800" fill="#173B66" font-size="28" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">3</text>
+
+    <text x="1240" y="862" fill="#1C2430" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">타이머 옵션</text>
+    <rect x="1236" y="880" width="348" height="72" rx="24" fill="white" stroke="#D6DFEA"/>
+    <text x="1260" y="922" fill="#1C2430" font-size="15" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">알림 받기</text>
+    <rect x="1504" y="900" width="56" height="28" rx="14" fill="#4C8BF5"/>
+    <circle cx="1544" cy="914" r="10" fill="white"/>
+
+    <rect x="1236" y="968" width="348" height="72" rx="24" fill="white" stroke="#D6DFEA"/>
+    <text x="1260" y="1010" fill="#1C2430" font-size="15" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">진동 사용</text>
+    <rect x="1504" y="988" width="56" height="28" rx="14" fill="#D6DFEA"/>
+    <circle cx="1520" cy="1002" r="10" fill="white"/>
+
+    <rect x="1236" y="1058" width="348" height="50" rx="18" fill="#173B66"/>
+    <text x="1363" y="1089" fill="white" font-size="16" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">저장하기</text>
+  </g>
+
+  <text x="88" y="1188" fill="#627182" font-size="18" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">메모: 코드 반영 전 공유용 시안. 기존 Android XML 구조(홈/시간표/일정/설정)를 유지하면서 계층감과 정보 위계를 개선하는 방향으로 정리.</text>
+</svg>
