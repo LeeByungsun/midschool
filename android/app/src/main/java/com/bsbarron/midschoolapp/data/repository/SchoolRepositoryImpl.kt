@@ -42,7 +42,9 @@ class SchoolRepositoryImpl @Inject constructor(
                 )
             }
             .filter { school ->
-                school.schoolKind == ELEMENTARY_SCHOOL_KIND || school.schoolKind == MIDDLE_SCHOOL_KIND
+                school.schoolKind == ELEMENTARY_SCHOOL_KIND ||
+                    school.schoolKind == MIDDLE_SCHOOL_KIND ||
+                    school.schoolKind == HIGH_SCHOOL_KIND
             }
     }
 
@@ -122,6 +124,22 @@ class SchoolRepositoryImpl @Inject constructor(
                     classroom = classroom,
                     date = date
                 ).elsTimetable
+
+                MIDDLE_SCHOOL_KIND -> apiService.getMiddleTimetable(
+                    officeCode = studentInfo.officeCode,
+                    schoolCode = studentInfo.schoolCode,
+                    grade = grade,
+                    classroom = classroom,
+                    date = date
+                ).misTimetable
+
+                HIGH_SCHOOL_KIND -> apiService.getHighTimetable(
+                    officeCode = studentInfo.officeCode,
+                    schoolCode = studentInfo.schoolCode,
+                    grade = grade,
+                    classroom = classroom,
+                    date = date
+                ).hisTimetable
 
                 else -> apiService.getMiddleTimetable(
                     officeCode = studentInfo.officeCode,
@@ -219,5 +237,6 @@ class SchoolRepositoryImpl @Inject constructor(
         private const val MIN_SCHOOL_QUERY_LENGTH = 2
         private const val ELEMENTARY_SCHOOL_KIND = "초등학교"
         private const val MIDDLE_SCHOOL_KIND = "중학교"
+        private const val HIGH_SCHOOL_KIND = "고등학교"
     }
 }

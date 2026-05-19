@@ -1,6 +1,7 @@
 package com.bsbarron.midschoolapp.data.repository
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
 import com.bsbarron.midschoolapp.data.remote.dto.MealRowDto
@@ -34,6 +35,7 @@ private fun <T> successResponse(rows: List<T>): NeisResponse<T> {
         schoolSchedule = sections,
         elsTimetable = sections,
         misTimetable = sections,
+        hisTimetable = sections,
         schoolInfo = sections
     )
 }
@@ -176,7 +178,42 @@ class SchoolRepositoryImplTest {
     }
 
     @Test
-    fun `searchSchools filters to elementary and middle schools`() = runBlocking {
+    fun `getTimetable uses high school endpoint for high school`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            highTimetableResponse = successResponse(
+                listOf(
+                    TimetableRowDto(
+                        date = "20260519",
+                        period = "1",
+                        subject = "진로활동",
+                        grade = "2",
+                        classroom = "4"
+                    )
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "2",
+                classroom = "4",
+                schoolName = "미사고등학교",
+                officeCode = "J10",
+                schoolCode = "4444444",
+                schoolKind = "고등학교"
+            )
+        )
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+
+        val result = repository.getTimetable("2", "4", "20260519")
+
+        assertTrue(result.isSuccess)
+        assertFalse(apiService.elementaryCalled)
+        assertFalse(apiService.middleCalled)
+        assertTrue(apiService.highCalled)
+    }
+
+    @Test
+    fun `searchSchools filters to elementary, middle and high schools`() = runBlocking {
         val apiService = FakeNeisApiService().apply {
             schoolInfoResponse = successResponse(
                 listOf(
@@ -227,7 +264,10 @@ class SchoolRepositoryImplTest {
         val result = repository.searchSchools("미사")
 
         assertTrue(result.isSuccess)
-        assertEquals(listOf("초등학교", "중학교"), result.getOrThrow().map(SchoolInfo::schoolKind))
+        assertEquals(
+            listOf("초등학교", "중학교", "고등학교"),
+            result.getOrThrow().map(SchoolInfo::schoolKind)
+        )
     }
 
     @Test
@@ -245,6 +285,7 @@ class SchoolRepositoryImplTest {
         var schedulesResponse: NeisResponse<ScheduleRowDto> = successResponse(emptyList())
         var elementaryTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
         var middleTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
+        var highTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
         var schoolInfoResponse: NeisResponse<SchoolInfoRowDto> = successResponse(emptyList())
 
         var lastMealOfficeCode: String? = null
@@ -253,6 +294,7 @@ class SchoolRepositoryImplTest {
         var lastScheduleSchoolCode: String? = null
         var elementaryCalled = false
         var middleCalled = false
+        var highCalled = false
 
         override suspend fun getMeals(
             apiKey: String,
@@ -276,7 +318,11 @@ class SchoolRepositoryImplTest {
             officeCode: String,
             schoolCode: String,
             date: String?
-        ): NeisResponse<ScheduleRowDto> = scheduleResponse
+        ): NeisResponse<ScheduleRowDto> {
+            lastScheduleOfficeCode = officeCode
+            lastScheduleSchoolCode = schoolCode
+            return schedulesResponse
+        }
 
         override suspend fun getElementaryTimetable(
             apiKey: String,
@@ -306,6 +352,21 @@ class SchoolRepositoryImplTest {
         ): NeisResponse<TimetableRowDto> {
             middleCalled = true
             return middleTimetableResponse
+        }
+
+        override suspend fun getHighTimetable(
+            apiKey: String,
+            type: String,
+            pageIndex: Int,
+            pageSize: Int,
+            officeCode: String,
+            schoolCode: String,
+            grade: String,
+            classroom: String,
+            date: String?
+        ): NeisResponse<TimetableRowDto> {
+            highCalled = true
+            return highTimetableResponse
         }
 
         override suspend fun getSchools(

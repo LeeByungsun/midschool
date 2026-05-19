@@ -58,6 +58,19 @@ interface NeisApiService {
         @Query("ALL_TI_YMD") date: String? = null
     ): NeisResponse<TimetableRowDto>
 
+    @GET("hub/hisTimetable")
+    suspend fun getHighTimetable(
+        @Query("KEY") apiKey: String = BuildConfig.NEIS_API_KEY,
+        @Query("Type") type: String = "json",
+        @Query("pIndex") pageIndex: Int = 1,
+        @Query("pSize") pageSize: Int = 100,
+        @Query("ATPT_OFCDC_SC_CODE") officeCode: String,
+        @Query("SD_SCHUL_CODE") schoolCode: String,
+        @Query("GRADE") grade: String,
+        @Query("CLASS_NM") classroom: String,
+        @Query("ALL_TI_YMD") date: String? = null
+    ): NeisResponse<TimetableRowDto>
+
     @GET("hub/schoolInfo")
     suspend fun getSchools(
         @Query("KEY") apiKey: String = BuildConfig.NEIS_API_KEY,

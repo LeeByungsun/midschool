@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">중학교도우미</string>
-    <string name="home_school_name">다원중학교</string>
+    <string name="home_school_name">중학교도우미</string>
     <string name="home_school_name_placeholder">학교를 설정해 주세요</string>
     <string name="home_date_label">3월 30일 월요일</string>
     <string name="home_semester_label">학년과 반을 설정해 주세요</string>
@@ -33,8 +33,8 @@
     <string name="setup_title">처음 설정</string>
     <string name="setup_description">앱에서 시간표, 급식, 일정 정보를 정확하게 보여주기 위해 학교를 검색하고 학년과 반을 입력해 주세요.</string>
     <string name="setup_school_label">학교 이름</string>
-    <string name="setup_school_hint">예: 미사초등학교 / 미사중학교</string>
-    <string name="setup_school_helper">현재는 초등학교와 중학교 검색 결과를 표시합니다.</string>
+    <string name="setup_school_hint">예: 미사초등학교 / 미사중학교 / 미사고등학교</string>
+    <string name="setup_school_helper">현재는 초등학교/중학교/고등학교 검색 결과를 표시합니다.</string>
     <string name="setup_school_search_button">학교 검색</string>
     <string name="setup_school_search_loading">검색 중...</string>
     <string name="setup_school_selected_label">선택한 학교</string>
@@ -48,7 +48,7 @@
     <string name="setup_error_empty">학년과 반을 모두 입력해 주세요.</string>
     <string name="setup_error_school_required">학교 검색 후 목록에서 학교를 선택해 주세요.</string>
     <string name="school_search_min_query">학교 이름은 두 글자 이상 입력해 주세요.</string>
-    <string name="school_search_empty">검색된 초등학교/중학교가 없어요. 학교 이름을 다시 확인해 주세요.</string>
+    <string name="school_search_empty">검색된 학교(초등학교/중학교/고등학교)가 없어요. 학교 이름을 다시 확인해 주세요.</string>
     <string name="school_search_single_result">학교를 찾았어요. 학년과 반을 입력해 저장해 주세요.</string>
     <string name="school_search_select_result">검색 결과에서 학교를 선택해 주세요.</string>
     <string name="school_search_selected">%1$s를 선택했어요.</string>

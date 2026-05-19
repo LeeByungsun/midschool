@@ -12,7 +12,9 @@ data class NeisResponse<T>(
     @SerializedName("misTimetable")
     val misTimetable: List<NeisSection<T>>? = null,
     @SerializedName("schoolInfo")
-    val schoolInfo: List<NeisSection<T>>? = null
+    val schoolInfo: List<NeisSection<T>>? = null,
+    @SerializedName("hisTimetable")
+    val hisTimetable: List<NeisSection<T>>? = null
 )
 
 data class NeisSection<T>(
