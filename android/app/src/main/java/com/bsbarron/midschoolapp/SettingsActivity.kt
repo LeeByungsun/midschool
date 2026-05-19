@@ -1,16 +1,21 @@
 package com.bsbarron.midschoolapp
 
 import android.os.Bundle
+import android.view.View
+import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.databinding.ActivitySettingsBinding
+import com.bsbarron.midschoolapp.ui.settings.SettingsUiState
 import com.bsbarron.midschoolapp.ui.settings.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -41,9 +46,13 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.backButton.setOnClickListener { finish() }
+        binding.searchSchoolButton.setOnClickListener {
+            viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
+            viewModel.searchSchools()
+        }
 
         binding.saveSettingsButton.setOnClickListener {
-            // 저장 직전의 화면 값만 ViewModel에 전달해 단일 저장 경로를 유지한다.
+            viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
             viewModel.updateGrade(binding.settingsGradeInput.text.toString().trim())
             viewModel.updateClassroom(binding.settingsClassInput.text.toString().trim())
             viewModel.updateDisplayMode(binding.timerDisplayRingRadio.isChecked)
@@ -57,34 +66,83 @@ class SettingsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    // 이미 반영된 텍스트를 다시 setText 하지 않도록 비교해
-                    // 커서 위치가 불필요하게 흔들리는 문제를 막는다.
-                    viewModel.uiState.collect { state ->
-                        if (binding.settingsGradeInput.text.toString() != state.grade) {
-                            binding.settingsGradeInput.setText(state.grade)
-                        }
-                        if (binding.settingsClassInput.text.toString() != state.classroom) {
-                            binding.settingsClassInput.setText(state.classroom)
-                        }
-                        binding.timerDisplayCountRadio.isChecked = !state.isRingMode
-                        binding.timerDisplayRingRadio.isChecked = state.isRingMode
-                        binding.timerNotificationSwitch.isChecked = state.notificationEnabled
-                        binding.timerVibrationSwitch.isChecked = state.vibrationEnabled
-                    }
+                    viewModel.uiState.collect(::renderState)
                 }
                 launch {
-                    // 저장 결과 메시지는 상태와 분리된 이벤트로 처리한다.
                     viewModel.messageEvent.collect { messageRes ->
                         Toast.makeText(this@SettingsActivity, messageRes, Toast.LENGTH_SHORT).show()
                     }
                 }
                 launch {
-                    // 저장 완료 후 닫기까지 ViewModel 이벤트를 통해 일관되게 제어한다.
                     viewModel.closeEvent.collect {
                         finish()
                     }
                 }
             }
         }
+    }
+
+    private fun renderState(state: SettingsUiState) {
+        if (binding.settingsSchoolQueryInput.text.toString() != state.schoolQuery) {
+            binding.settingsSchoolQueryInput.setText(state.schoolQuery)
+        }
+        if (binding.settingsGradeInput.text.toString() != state.grade) {
+            binding.settingsGradeInput.setText(state.grade)
+        }
+        if (binding.settingsClassInput.text.toString() != state.classroom) {
+            binding.settingsClassInput.setText(state.classroom)
+        }
+        binding.timerDisplayCountRadio.isChecked = !state.isRingMode
+        binding.timerDisplayRingRadio.isChecked = state.isRingMode
+        binding.timerNotificationSwitch.isChecked = state.notificationEnabled
+        binding.timerVibrationSwitch.isChecked = state.vibrationEnabled
+        binding.searchSchoolButton.isEnabled = !state.isSearching
+        binding.searchSchoolButton.text = getString(
+            if (state.isSearching) R.string.setup_school_search_loading else R.string.setup_school_search_button
+        )
+        binding.schoolSearchMessageText.isVisible = state.searchMessage.isNotBlank()
+        binding.schoolSearchMessageText.text = state.searchMessage
+        binding.selectedSchoolSummaryText.text = state.selectedSchool?.let(::formatSelectedSchool)
+            ?: getString(R.string.setup_school_selected_empty)
+        binding.schoolResultsLabel.isVisible = state.schoolResults.isNotEmpty()
+        binding.schoolResultsGroup.isVisible = state.schoolResults.isNotEmpty()
+        renderSchoolResults(state.schoolResults, state.selectedSchool)
+    }
+
+    private fun renderSchoolResults(
+        schools: List<SchoolInfo>,
+        selectedSchool: SchoolInfo?
+    ) {
+        binding.schoolResultsGroup.removeAllViews()
+        schools.forEach { school ->
+            val radioButton = RadioButton(this).apply {
+                id = View.generateViewId()
+                text = formatSchoolOption(school)
+                isChecked = selectedSchool?.officeCode == school.officeCode &&
+                    selectedSchool.schoolCode == school.schoolCode
+                setOnClickListener { viewModel.selectSchool(school) }
+            }
+            binding.schoolResultsGroup.addView(radioButton)
+        }
+    }
+
+    private fun formatSchoolOption(school: SchoolInfo): String {
+        val meta = listOfNotNull(
+            school.schoolKind.takeIf { it.isNotBlank() },
+            school.officeName.takeIf { it.isNotBlank() }
+        ).joinToString(" • ")
+        val address = school.roadAddress.takeIf { it.isNotBlank() }
+        return listOfNotNull(school.schoolName, meta.ifBlank { null }, address)
+            .joinToString("\n")
+    }
+
+    private fun formatSelectedSchool(school: SchoolInfo): String {
+        return listOfNotNull(
+            school.schoolName,
+            listOfNotNull(
+                school.schoolKind.takeIf { it.isNotBlank() },
+                school.officeName.takeIf { it.isNotBlank() }
+            ).joinToString(" • ").ifBlank { null }
+        ).joinToString("\n")
     }
 }

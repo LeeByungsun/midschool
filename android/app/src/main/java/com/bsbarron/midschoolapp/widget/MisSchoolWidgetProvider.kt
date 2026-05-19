@@ -143,7 +143,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                 val grade = studentInfo.grade
                 val classroom = studentInfo.classroom
 
-                if (grade.isBlank() || classroom.isBlank()) {
+                if (!studentInfo.isComplete()) {
                     val setupViews = createBaseViews()
                     setupViews.setTextViewText(
                         R.id.widgetTimetableText,

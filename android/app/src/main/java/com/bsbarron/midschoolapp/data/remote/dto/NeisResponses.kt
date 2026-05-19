@@ -7,8 +7,12 @@ data class NeisResponse<T>(
     val mealServiceDietInfo: List<NeisSection<T>>? = null,
     @SerializedName("SchoolSchedule")
     val schoolSchedule: List<NeisSection<T>>? = null,
+    @SerializedName("elsTimetable")
+    val elsTimetable: List<NeisSection<T>>? = null,
     @SerializedName("misTimetable")
-    val misTimetable: List<NeisSection<T>>? = null
+    val misTimetable: List<NeisSection<T>>? = null,
+    @SerializedName("schoolInfo")
+    val schoolInfo: List<NeisSection<T>>? = null
 )
 
 data class NeisSection<T>(
@@ -63,4 +67,29 @@ data class TimetableRowDto(
     val grade: String?,
     @SerializedName("CLASS_NM")
     val classroom: String?
+)
+
+data class SchoolInfoRowDto(
+    @SerializedName("ATPT_OFCDC_SC_CODE")
+    val officeCode: String,
+    @SerializedName("ATPT_OFCDC_SC_NM")
+    val officeName: String?,
+    @SerializedName("SD_SCHUL_CODE")
+    val schoolCode: String,
+    @SerializedName("SCHUL_NM")
+    val schoolName: String?,
+    @SerializedName("SCHUL_KND_SC_NM")
+    val schoolKind: String?,
+    @SerializedName("LCTN_SC_NM")
+    val location: String?,
+    @SerializedName("JU_ORG_NM")
+    val jurisdiction: String?,
+    @SerializedName("FOND_SC_NM")
+    val foundation: String?,
+    @SerializedName("ORG_RDNMA")
+    val roadAddress: String?,
+    @SerializedName("ORG_TELNO")
+    val telephone: String?,
+    @SerializedName("HMPG_ADRES")
+    val homepage: String?
 )

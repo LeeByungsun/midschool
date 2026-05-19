@@ -4,6 +4,7 @@ import com.bsbarron.midschoolapp.BuildConfig
 import com.bsbarron.midschoolapp.data.remote.dto.MealRowDto
 import com.bsbarron.midschoolapp.data.remote.dto.NeisResponse
 import com.bsbarron.midschoolapp.data.remote.dto.ScheduleRowDto
+import com.bsbarron.midschoolapp.data.remote.dto.SchoolInfoRowDto
 import com.bsbarron.midschoolapp.data.remote.dto.TimetableRowDto
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -31,8 +32,8 @@ interface NeisApiService {
         @Query("AA_YMD") date: String? = null
     ): NeisResponse<ScheduleRowDto>
 
-    @GET("hub/misTimetable")
-    suspend fun getTimetable(
+    @GET("hub/elsTimetable")
+    suspend fun getElementaryTimetable(
         @Query("KEY") apiKey: String = BuildConfig.NEIS_API_KEY,
         @Query("Type") type: String = "json",
         @Query("pIndex") pageIndex: Int = 1,
@@ -43,4 +44,26 @@ interface NeisApiService {
         @Query("CLASS_NM") classroom: String,
         @Query("ALL_TI_YMD") date: String? = null
     ): NeisResponse<TimetableRowDto>
+
+    @GET("hub/misTimetable")
+    suspend fun getMiddleTimetable(
+        @Query("KEY") apiKey: String = BuildConfig.NEIS_API_KEY,
+        @Query("Type") type: String = "json",
+        @Query("pIndex") pageIndex: Int = 1,
+        @Query("pSize") pageSize: Int = 100,
+        @Query("ATPT_OFCDC_SC_CODE") officeCode: String,
+        @Query("SD_SCHUL_CODE") schoolCode: String,
+        @Query("GRADE") grade: String,
+        @Query("CLASS_NM") classroom: String,
+        @Query("ALL_TI_YMD") date: String? = null
+    ): NeisResponse<TimetableRowDto>
+
+    @GET("hub/schoolInfo")
+    suspend fun getSchools(
+        @Query("KEY") apiKey: String = BuildConfig.NEIS_API_KEY,
+        @Query("Type") type: String = "json",
+        @Query("pIndex") pageIndex: Int = 1,
+        @Query("pSize") pageSize: Int = 100,
+        @Query("SCHUL_NM") query: String
+    ): NeisResponse<SchoolInfoRowDto>
 }

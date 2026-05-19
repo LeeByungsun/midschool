@@ -12,7 +12,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -60,12 +59,4 @@ object NetworkModule {
     fun provideNeisApiService(retrofit: Retrofit): NeisApiService {
         return retrofit.create(NeisApiService::class.java)
     }
-
-    @Provides
-    @Named("officeCode")
-    fun provideOfficeCode(): String = "J10"
-
-    @Provides
-    @Named("schoolCode")
-    fun provideSchoolCode(): String = "7679399"
 }

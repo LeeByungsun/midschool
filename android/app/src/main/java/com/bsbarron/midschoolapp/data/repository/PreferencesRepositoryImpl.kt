@@ -19,18 +19,15 @@ class PreferencesRepositoryImpl @Inject constructor(
     }
 
     override fun getStudentInfo(): StudentInfo {
-        return StudentInfo(
-            grade = UserPreferences.getGrade(context),
-            classroom = UserPreferences.getClassroom(context)
-        )
+        return UserPreferences.getStudentInfo(context)
     }
 
     override fun hasStudentInfo(): Boolean {
         return UserPreferences.hasStudentInfo(context)
     }
 
-    override fun saveStudentInfo(grade: String, classroom: String) {
-        UserPreferences.saveStudentInfo(context, grade, classroom)
+    override fun saveStudentInfo(studentInfo: StudentInfo) {
+        UserPreferences.saveStudentInfo(context, studentInfo)
     }
 
     override fun getTimerDisplayMode(): TimerDisplayMode {
@@ -96,48 +93,72 @@ class PreferencesRepositoryImpl @Inject constructor(
         UserPreferences.clearTimerState(context)
     }
 
-    override fun saveMealCache(date: String, meals: List<MealInfo>) {
+    override fun saveMealCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String,
+        meals: List<MealInfo>
+    ) {
         sharedPreferences.edit()
-            .putString(mealCacheKey(date), gson.toJson(meals))
-            .putLong(mealCacheTimestampKey(date), System.currentTimeMillis())
+            .putString(mealCacheKey(officeCode, schoolCode, date), gson.toJson(meals))
+            .putLong(mealCacheTimestampKey(officeCode, schoolCode, date), System.currentTimeMillis())
             .apply()
     }
 
-    override fun getMealCache(date: String): List<MealInfo>? {
-        if (!isCacheFresh(mealCacheTimestampKey(date), MEAL_CACHE_TTL_MILLIS)) {
-            clearMealCache(date)
+    override fun getMealCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String
+    ): List<MealInfo>? {
+        if (!isCacheFresh(mealCacheTimestampKey(officeCode, schoolCode, date), MEAL_CACHE_TTL_MILLIS)) {
+            clearMealCache(officeCode, schoolCode, date)
             return null
         }
-        val raw = sharedPreferences.getString(mealCacheKey(date), null) ?: return null
+        val raw = sharedPreferences.getString(mealCacheKey(officeCode, schoolCode, date), null)
+            ?: return null
         val type = object : TypeToken<List<MealInfo>>() {}.type
         return runCatching { gson.fromJson<List<MealInfo>>(raw, type) }.getOrNull()
     }
 
     override fun saveTimetableCache(
+        officeCode: String,
+        schoolCode: String,
         grade: String,
         classroom: String,
         date: String,
         items: List<TimetableItem>
     ) {
         sharedPreferences.edit()
-            .putString(timetableCacheKey(grade, classroom, date), gson.toJson(items))
+            .putString(
+                timetableCacheKey(officeCode, schoolCode, grade, classroom, date),
+                gson.toJson(items)
+            )
             .putLong(
-                timetableCacheTimestampKey(grade, classroom, date),
+                timetableCacheTimestampKey(officeCode, schoolCode, grade, classroom, date),
                 System.currentTimeMillis()
             )
             .apply()
     }
 
     override fun getTimetableCache(
+        officeCode: String,
+        schoolCode: String,
         grade: String,
         classroom: String,
         date: String
     ): List<TimetableItem>? {
-        if (!isCacheFresh(timetableCacheTimestampKey(grade, classroom, date), TIMETABLE_CACHE_TTL_MILLIS)) {
-            clearTimetableCache(grade, classroom, date)
+        if (!isCacheFresh(
+                timetableCacheTimestampKey(officeCode, schoolCode, grade, classroom, date),
+                TIMETABLE_CACHE_TTL_MILLIS
+            )
+        ) {
+            clearTimetableCache(officeCode, schoolCode, grade, classroom, date)
             return null
         }
-        val raw = sharedPreferences.getString(timetableCacheKey(grade, classroom, date), null) ?: return null
+        val raw = sharedPreferences.getString(
+            timetableCacheKey(officeCode, schoolCode, grade, classroom, date),
+            null
+        ) ?: return null
         val type = object : TypeToken<List<TimetableItem>>() {}.type
         return runCatching { gson.fromJson<List<TimetableItem>>(raw, type) }.getOrNull()
     }
@@ -162,16 +183,32 @@ class PreferencesRepositoryImpl @Inject constructor(
             .apply()
     }
 
-    private fun mealCacheKey(date: String): String = "meal_cache_$date"
-
-    private fun mealCacheTimestampKey(date: String): String = "meal_cache_ts_$date"
-
-    private fun timetableCacheKey(grade: String, classroom: String, date: String): String {
-        return "timetable_cache_${grade}_${classroom}_$date"
+    private fun mealCacheKey(officeCode: String, schoolCode: String, date: String): String {
+        return "meal_cache_${officeCode}_${schoolCode}_$date"
     }
 
-    private fun timetableCacheTimestampKey(grade: String, classroom: String, date: String): String {
-        return "timetable_cache_ts_${grade}_${classroom}_$date"
+    private fun mealCacheTimestampKey(officeCode: String, schoolCode: String, date: String): String {
+        return "meal_cache_ts_${officeCode}_${schoolCode}_$date"
+    }
+
+    private fun timetableCacheKey(
+        officeCode: String,
+        schoolCode: String,
+        grade: String,
+        classroom: String,
+        date: String
+    ): String {
+        return "timetable_cache_${officeCode}_${schoolCode}_${grade}_${classroom}_$date"
+    }
+
+    private fun timetableCacheTimestampKey(
+        officeCode: String,
+        schoolCode: String,
+        grade: String,
+        classroom: String,
+        date: String
+    ): String {
+        return "timetable_cache_ts_${officeCode}_${schoolCode}_${grade}_${classroom}_$date"
     }
 
     private fun widgetTomorrowKey(appWidgetId: Int): String = "widget_${appWidgetId}_show_tomorrow"
@@ -188,17 +225,23 @@ class PreferencesRepositoryImpl @Inject constructor(
         return System.currentTimeMillis() - savedAt <= ttlMillis
     }
 
-    private fun clearMealCache(date: String) {
+    private fun clearMealCache(officeCode: String, schoolCode: String, date: String) {
         sharedPreferences.edit()
-            .remove(mealCacheKey(date))
-            .remove(mealCacheTimestampKey(date))
+            .remove(mealCacheKey(officeCode, schoolCode, date))
+            .remove(mealCacheTimestampKey(officeCode, schoolCode, date))
             .apply()
     }
 
-    private fun clearTimetableCache(grade: String, classroom: String, date: String) {
+    private fun clearTimetableCache(
+        officeCode: String,
+        schoolCode: String,
+        grade: String,
+        classroom: String,
+        date: String
+    ) {
         sharedPreferences.edit()
-            .remove(timetableCacheKey(grade, classroom, date))
-            .remove(timetableCacheTimestampKey(grade, classroom, date))
+            .remove(timetableCacheKey(officeCode, schoolCode, grade, classroom, date))
+            .remove(timetableCacheTimestampKey(officeCode, schoolCode, grade, classroom, date))
             .apply()
     }
 

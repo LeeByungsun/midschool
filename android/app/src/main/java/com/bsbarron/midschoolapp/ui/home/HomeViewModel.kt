@@ -41,6 +41,9 @@ class HomeViewModel @Inject constructor(
         val classroom = studentInfo.classroom
         _uiState.update {
             it.copy(
+                schoolName = studentInfo.schoolName.ifBlank {
+                    appContext.getString(R.string.home_school_name_placeholder)
+                },
                 dateLabel = LocalDate.now().format(
                     DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
                 ),
@@ -129,7 +132,7 @@ class HomeViewModel @Inject constructor(
     private fun formatMealMenu(rawMenu: String): String {
         return rawMenu
             .replace(Regex("<br\\s*/?>"), "\n")
-            .replace(Regex("[ \t]+"), " ")
+            .replace(Regex("[ \\t]+"), " ")
             .lines()
             .map { it.trim() }
             .filter { it.isNotEmpty() }

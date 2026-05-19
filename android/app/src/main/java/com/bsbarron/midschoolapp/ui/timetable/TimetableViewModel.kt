@@ -52,19 +52,20 @@ class TimetableViewModel @Inject constructor(
         val studentInfo = preferencesRepository.getStudentInfo()
         val grade = studentInfo.grade
         val classroom = studentInfo.classroom
+        val hasRequiredInfo = studentInfo.isComplete()
 
         _uiState.update {
             it.copy(
                 dateTitle = currentDate.format(
                     DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
                 ),
-                classInfoText = if (grade.isNotBlank() && classroom.isNotBlank()) {
+                classInfoText = if (studentInfo.hasClassroomInfo()) {
                     appContext.getString(R.string.home_student_info_format, grade, classroom)
                 } else {
                     appContext.getString(R.string.timetable_missing_student_info)
                 },
                 lessonCountText = appContext.getString(R.string.timetable_lesson_count_empty),
-                statusText = if (grade.isBlank() || classroom.isBlank()) {
+                statusText = if (!hasRequiredInfo) {
                     appContext.getString(R.string.timetable_missing_student_info)
                 } else {
                     appContext.getString(R.string.timetable_loading)
@@ -74,7 +75,7 @@ class TimetableViewModel @Inject constructor(
             )
         }
 
-        if (grade.isBlank() || classroom.isBlank()) return
+        if (!hasRequiredInfo) return
 
         viewModelScope.launch {
             val result = schoolRepository.getTimetable(
