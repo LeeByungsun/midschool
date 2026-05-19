@@ -36,6 +36,8 @@ class SetupViewModelTest {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
 
+        viewModel.updateGrade("2")
+        viewModel.updateClassroom("3")
         viewModel.saveStudentInfo()
 
         assertEquals(R.string.setup_error_school_required, messageDeferred.await())
