@@ -1,7 +1,6 @@
 package com.bsbarron.midschoolapp.data.repository
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
-import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
 import com.bsbarron.midschoolapp.data.remote.dto.MealRowDto
@@ -277,11 +276,7 @@ class SchoolRepositoryImplTest {
             officeCode: String,
             schoolCode: String,
             date: String?
-        ): NeisResponse<ScheduleRowDto> {
-            lastScheduleOfficeCode = officeCode
-            lastScheduleSchoolCode = schoolCode
-            return schedulesResponse
-        }
+        ): NeisResponse<ScheduleRowDto> = scheduleResponse
 
         override suspend fun getElementaryTimetable(
             apiKey: String,

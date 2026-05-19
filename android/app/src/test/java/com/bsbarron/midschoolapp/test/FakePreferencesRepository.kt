@@ -37,7 +37,7 @@ class FakePreferencesRepository(
     val savedNotificationEnabledValues = mutableListOf<Boolean>()
     val savedVibrationEnabledValues = mutableListOf<Boolean>()
 
-    private val mealCache = mutableMapOf<Triple<String, String, String>, List<MealInfo>>()
+    private val mealCache = mutableMapOf<MealCacheKey, List<MealInfo>>()
     private val timetableCache = mutableMapOf<TimetableCacheKey, List<TimetableItem>>()
     private val widgetSettings = mutableMapOf<Int, WidgetSettings>()
 
@@ -105,14 +105,14 @@ class FakePreferencesRepository(
         date: String,
         meals: List<MealInfo>
     ) {
-        mealCache[Triple(officeCode, schoolCode, date)] = meals
+        mealCache[MealCacheKey(officeCode, schoolCode, date)] = meals
     }
 
     override fun getMealCache(
         officeCode: String,
         schoolCode: String,
         date: String
-    ): List<MealInfo>? = mealCache[Triple(officeCode, schoolCode, date)]
+    ): List<MealInfo>? = mealCache[MealCacheKey(officeCode, schoolCode, date)]
 
     override fun saveTimetableCache(
         officeCode: String,
@@ -146,6 +146,12 @@ class FakePreferencesRepository(
     override fun clearWidgetSettings(appWidgetId: Int) {
         widgetSettings.remove(appWidgetId)
     }
+
+    private data class MealCacheKey(
+        val officeCode: String,
+        val schoolCode: String,
+        val date: String
+    )
 
     private data class TimetableCacheKey(
         val officeCode: String,

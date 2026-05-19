@@ -1,15 +1,13 @@
 package com.bsbarron.midschoolapp.ui.settings
 
+import android.app.Application
+import android.content.Context
 import com.bsbarron.midschoolapp.R
-import com.bsbarron.midschoolapp.data.model.MealInfo
-import com.bsbarron.midschoolapp.data.model.SchoolEvent
-import com.bsbarron.midschoolapp.data.model.TimetableItem
-import com.bsbarron.midschoolapp.data.repository.SchoolRepository
+import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.repository.StudentInfo
 import com.bsbarron.midschoolapp.data.repository.TimerDisplayMode
 import com.bsbarron.midschoolapp.test.FakePreferencesRepository
 import com.bsbarron.midschoolapp.test.FakeSchoolRepository
-import com.bsbarron.midschoolapp.test.TestApplication
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -23,26 +21,36 @@ import org.junit.Test
 
 class SettingsViewModelTest {
 
+    private val application = TestApplication()
+
+    private val selectedSchool = SchoolInfo(
+        officeCode = "J10",
+        schoolCode = "1234567",
+        schoolName = "미사중학교",
+        schoolKind = "중학교"
+    )
+
     @Test
     fun init_readsCurrentStudentAndTimerSettings() {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(
                 grade = "1",
                 classroom = "4",
-                schoolName = "미사중학교",
-                officeCode = "J10",
-                schoolCode = "1234567",
-                schoolKind = "중학교"
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
             ),
             timerDisplayMode = TimerDisplayMode.RING,
             notificationEnabled = false,
             vibrationEnabled = true
         )
 
-        val viewModel = SettingsViewModel(TestApplication(), repository, FakeSchoolRepository())
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
         val state = viewModel.uiState.value
 
-        assertEquals("미사중학교", state.schoolQuery)
+        assertEquals(selectedSchool.schoolName, state.schoolQuery)
+        assertEquals(selectedSchool, state.selectedSchool)
         assertEquals("1", state.grade)
         assertEquals("4", state.classroom)
         assertEquals("1234567", state.selectedSchool?.schoolCode)
@@ -52,32 +60,11 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun updateSchoolQuery_withDifferentText_clearsSelectedSchool() {
-        val repository = FakePreferencesRepository(
-            studentInfo = StudentInfo(
-                grade = "1",
-                classroom = "4",
-                schoolName = "미사중학교",
-                officeCode = "J10",
-                schoolCode = "1234567",
-                schoolKind = "중학교"
-            )
-        )
-        val viewModel = SettingsViewModel(TestApplication(), repository, FakeSchoolRepository())
-
-        viewModel.updateSchoolQuery("다른학교")
-
-        val state = viewModel.uiState.value
-        assertEquals("다른학교", state.schoolQuery)
-        assertNull(state.selectedSchool)
-    }
-
-    @Test
-    fun saveSettings_whenSchoolIsMissing_emitsValidationMessage() = runBlocking {
+    fun saveSettings_whenSchoolIsMissing_emitsSchoolRequiredMessage() = runBlocking {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(grade = "1", classroom = "2")
         )
-        val viewModel = SettingsViewModel(TestApplication(), repository, FakeSchoolRepository())
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
@@ -90,21 +77,45 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun saveSettings_whenInputsAreValid_persistsSettingsAndCloses() = runBlocking {
+    fun saveSettings_whenClassroomInfoIsMissing_emitsValidationMessage() = runBlocking {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(
-                grade = "1",
-                classroom = "2",
-                schoolName = "미사초등학교",
-                officeCode = "B10",
-                schoolCode = "7654321",
-                schoolKind = "초등학교"
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
             ),
             timerDisplayMode = TimerDisplayMode.COUNT,
             notificationEnabled = true,
             vibrationEnabled = true
         )
-        val viewModel = SettingsViewModel(TestApplication(), repository, FakeSchoolRepository())
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(1_000L) { viewModel.messageEvent.first() }
+        }
+
+        viewModel.saveSettings()
+
+        assertEquals(R.string.setup_error_empty, messageDeferred.await())
+        assertTrue(repository.savedStudentInfoCalls.isEmpty())
+    }
+
+    @Test
+    fun saveSettings_whenInputsAreValid_persistsSettingsAndCloses() = runBlocking {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "2",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            ),
+            timerDisplayMode = TimerDisplayMode.COUNT,
+            notificationEnabled = true,
+            vibrationEnabled = true
+        )
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
@@ -126,10 +137,10 @@ class SettingsViewModelTest {
                 StudentInfo(
                     grade = "3",
                     classroom = "5",
-                    schoolName = "미사초등학교",
-                    officeCode = "B10",
-                    schoolCode = "7654321",
-                    schoolKind = "초등학교"
+                    schoolName = selectedSchool.schoolName,
+                    officeCode = selectedSchool.officeCode,
+                    schoolCode = selectedSchool.schoolCode,
+                    schoolKind = selectedSchool.schoolKind
                 )
             ),
             repository.savedStudentInfoCalls
@@ -141,23 +152,5 @@ class SettingsViewModelTest {
 
     private class TestApplication : Application() {
         override fun getApplicationContext(): Context = this
-    }
-
-    private class FakeSchoolRepository : SchoolRepository {
-        override suspend fun searchSchools(query: String): Result<List<com.bsbarron.midschoolapp.data.model.SchoolInfo>> =
-            Result.failure(IllegalStateException("unused"))
-
-        override suspend fun getMeals(date: String?): Result<List<MealInfo>> =
-            Result.failure(IllegalStateException("unused"))
-
-        override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> =
-            Result.failure(IllegalStateException("unused"))
-
-        override suspend fun getTimetable(
-            grade: String,
-            classroom: String,
-            date: String?
-        ): Result<List<TimetableItem>> =
-            Result.failure(IllegalStateException("unused"))
     }
 }
