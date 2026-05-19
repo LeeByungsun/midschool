@@ -1,6 +1,7 @@
 package com.bsbarron.midschoolapp.ui.home
 
 import android.app.Application
+import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bsbarron.midschoolapp.R
@@ -23,10 +24,9 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     application: Application,
     private val schoolRepository: SchoolRepository,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val textResolver: (Int, Array<out Any?>) -> String = defaultTextResolver(application)
 ) : AndroidViewModel(application) {
-
-    private val appContext = application.applicationContext
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -34,6 +34,10 @@ class HomeViewModel @Inject constructor(
     init {
         refreshHeader()
     }
+
+    private fun resolveString(@StringRes id: Int): String = textResolver(id, emptyArray<Any?>())
+
+    private fun resolveString(@StringRes id: Int, vararg args: Any?): String = textResolver(id, args)
 
     fun refreshHeader() {
         val studentInfo = preferencesRepository.getStudentInfo()
@@ -44,22 +48,22 @@ class HomeViewModel @Inject constructor(
             it.copy(
                 isSchoolConfigured = hasSchoolSelection,
                 schoolName = studentInfo.schoolName.ifBlank {
-                    appContext.getString(R.string.home_school_name_placeholder)
+                    resolveString(R.string.home_school_name_placeholder)
                 },
                 dateLabel = LocalDate.now().format(
                     DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
                 ),
                 classSummary = if (grade.isNotBlank() && classroom.isNotBlank()) {
-                    appContext.getString(R.string.home_student_info_format, grade, classroom)
+                    resolveString(R.string.home_student_info_format, grade, classroom)
                 } else if (!hasSchoolSelection) {
-                    appContext.getString(R.string.home_school_not_set_hint)
+                    resolveString(R.string.home_school_not_set_hint)
                 } else {
-                    appContext.getString(R.string.home_semester_label)
+                    resolveString(R.string.home_semester_label)
                 },
                 todaySummaryText = if (it.errorMessage != null) {
-                    appContext.getString(R.string.home_today_summary_error)
+                    resolveString(R.string.home_today_summary_error)
                 } else {
-                    appContext.getString(R.string.home_today_summary_body)
+                    resolveString(R.string.home_today_summary_body)
                 }
             )
         }
@@ -76,10 +80,10 @@ class HomeViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isSchoolConfigured = false,
-                        todaySummaryText = appContext.getString(R.string.home_school_not_set_summary),
-                        mealSummary = appContext.getString(R.string.home_meal_missing_school),
+                        todaySummaryText = resolveString(R.string.home_school_not_set_summary),
+                        mealSummary = resolveString(R.string.home_meal_missing_school),
                         mealMeta = "",
-                        eventSummary = appContext.getString(R.string.home_schedule_missing_school),
+                        eventSummary = resolveString(R.string.home_schedule_missing_school),
                         isLoading = false,
                         errorMessage = null
                     )
@@ -121,7 +125,7 @@ class HomeViewModel @Inject constructor(
                         append(formattedDate)
                         append("  ")
                         append(title)
-                        if (!detail.isNullOrBlank()) {
+                        if (detail != null) {
                             append("\n")
                             append(detail)
                         }
@@ -136,9 +140,9 @@ class HomeViewModel @Inject constructor(
                 it.copy(
                     isSchoolConfigured = true,
                     todaySummaryText = if (errorMessage != null) {
-                        appContext.getString(R.string.home_today_summary_error)
+                        resolveString(R.string.home_today_summary_error)
                     } else {
-                        appContext.getString(R.string.home_today_summary_body)
+                        resolveString(R.string.home_today_summary_body)
                     },
                     mealSummary = mealSummary.ifBlank { "오늘은 등록된 급식이 없어요." },
                     mealMeta = mealMeta.ifBlank { "급식 없음" },
@@ -170,6 +174,19 @@ class HomeViewModel @Inject constructor(
             "$name ($allergy)"
         } else {
             name
+        }
+    }
+
+    private companion object {
+        fun defaultTextResolver(application: Application): (Int, Array<out Any?>) -> String {
+            val context = application.applicationContext
+            return { id, formatArgs ->
+                if (formatArgs.isEmpty()) {
+                    context.getString(id)
+                } else {
+                    context.getString(id, *formatArgs)
+                }
+            }
         }
     }
 }
