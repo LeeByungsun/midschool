@@ -8,6 +8,7 @@ import com.bsbarron.midschoolapp.R
 import com.bsbarron.midschoolapp.data.model.HomeUiState
 import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
 import com.bsbarron.midschoolapp.data.repository.SchoolRepository
+import com.bsbarron.midschoolapp.ui.common.UiStringProvider
 import com.bsbarron.midschoolapp.util.isVisibleSchedule
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,18 +25,10 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     application: Application,
     private val schoolRepository: SchoolRepository,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val strings: UiStringProvider
 ) : AndroidViewModel(application) {
     private var textResolver: (Int, Array<out Any?>) -> String = defaultTextResolver(application)
-
-    constructor(
-        application: Application,
-        schoolRepository: SchoolRepository,
-        preferencesRepository: PreferencesRepository,
-        textResolver: (Int, Array<out Any?>) -> String
-    ) : this(application, schoolRepository, preferencesRepository) {
-        this.textResolver = textResolver
-    }
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -57,22 +50,22 @@ class HomeViewModel @Inject constructor(
             it.copy(
                 isSchoolConfigured = hasSchoolSelection,
                 schoolName = studentInfo.schoolName.ifBlank {
-                    resolveString(R.string.home_school_name_placeholder)
+                    strings.getString(R.string.home_school_name_placeholder)
                 },
                 dateLabel = LocalDate.now().format(
                     DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
                 ),
                 classSummary = if (grade.isNotBlank() && classroom.isNotBlank()) {
-                    resolveString(R.string.home_student_info_format, grade, classroom)
+                    strings.getString(R.string.home_student_info_format, grade, classroom)
                 } else if (!hasSchoolSelection) {
-                    resolveString(R.string.home_school_not_set_hint)
+                    strings.getString(R.string.home_school_not_set_hint)
                 } else {
-                    resolveString(R.string.home_semester_label)
+                    strings.getString(R.string.home_semester_label)
                 },
                 todaySummaryText = if (it.errorMessage != null) {
-                    resolveString(R.string.home_today_summary_error)
+                    strings.getString(R.string.home_today_summary_error)
                 } else {
-                    resolveString(R.string.home_today_summary_body)
+                    strings.getString(R.string.home_today_summary_body)
                 }
             )
         }
@@ -89,10 +82,10 @@ class HomeViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isSchoolConfigured = false,
-                        todaySummaryText = resolveString(R.string.home_school_not_set_summary),
-                        mealSummary = resolveString(R.string.home_meal_missing_school),
+                        todaySummaryText = strings.getString(R.string.home_school_not_set_summary),
+                        mealSummary = strings.getString(R.string.home_meal_missing_school),
                         mealMeta = "",
-                        eventSummary = resolveString(R.string.home_schedule_missing_school),
+                        eventSummary = strings.getString(R.string.home_schedule_missing_school),
                         isLoading = false,
                         errorMessage = null
                     )
@@ -149,9 +142,9 @@ class HomeViewModel @Inject constructor(
                 it.copy(
                     isSchoolConfigured = true,
                     todaySummaryText = if (errorMessage != null) {
-                        resolveString(R.string.home_today_summary_error)
+                        strings.getString(R.string.home_today_summary_error)
                     } else {
-                        resolveString(R.string.home_today_summary_body)
+                        strings.getString(R.string.home_today_summary_body)
                     },
                     mealSummary = mealSummary.ifBlank { "오늘은 등록된 급식이 없어요." },
                     mealMeta = mealMeta.ifBlank { "급식 없음" },

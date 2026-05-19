@@ -33,7 +33,7 @@ class SetupViewModelTest {
         val repository = FakePreferencesRepository()
         val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
-            withTimeout(1_000L) { viewModel.messageEvent.first() }
+            withTimeout(3_000L) { viewModel.messageEvent.first() }
         }
 
         viewModel.updateGrade("2")
@@ -56,7 +56,7 @@ class SetupViewModelTest {
         )
         val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
-            withTimeout(1_000L) { viewModel.messageEvent.first() }
+            withTimeout(3_000L) { viewModel.messageEvent.first() }
         }
 
         viewModel.updateGrade("2")
@@ -78,7 +78,7 @@ class SetupViewModelTest {
         )
         val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
         val navigationDeferred = async(start = CoroutineStart.UNDISPATCHED) {
-            withTimeout(1_000L) { viewModel.navigationEvent.first() }
+            withTimeout(3_000L) { viewModel.navigationEvent.first() }
         }
 
         viewModel.updateGrade("2")

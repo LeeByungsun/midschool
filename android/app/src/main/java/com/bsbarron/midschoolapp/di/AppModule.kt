@@ -4,6 +4,8 @@ import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
 import com.bsbarron.midschoolapp.data.repository.PreferencesRepositoryImpl
 import com.bsbarron.midschoolapp.data.repository.SchoolRepository
 import com.bsbarron.midschoolapp.data.repository.SchoolRepositoryImpl
+import com.bsbarron.midschoolapp.ui.common.AndroidUiStringProvider
+import com.bsbarron.midschoolapp.ui.common.UiStringProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -24,4 +26,10 @@ abstract class AppModule {
     abstract fun bindPreferencesRepository(
         repositoryImpl: PreferencesRepositoryImpl
     ): PreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUiStringProvider(
+        provider: AndroidUiStringProvider
+    ): UiStringProvider
 }

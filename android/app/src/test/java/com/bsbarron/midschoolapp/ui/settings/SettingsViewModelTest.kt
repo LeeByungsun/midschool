@@ -60,6 +60,26 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun updateSchoolQuery_whenTrimmedTextMatchesSelectedSchool_keepsSelection() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "4",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+
+        viewModel.updateSchoolQuery("  ${selectedSchool.schoolName}  ")
+
+        assertEquals("  ${selectedSchool.schoolName}  ", viewModel.uiState.value.schoolQuery)
+        assertEquals(selectedSchool, viewModel.uiState.value.selectedSchool)
+    }
+
+    @Test
     fun saveSettings_whenSchoolIsMissing_emitsSchoolRequiredMessage() = runBlocking {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(grade = "1", classroom = "2")
