@@ -22,16 +22,49 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeViewModel private constructor(
     application: Application,
     private val schoolRepository: SchoolRepository,
     private val preferencesRepository: PreferencesRepository,
-    private val strings: UiStringProvider
+    private val textResolver: (Int, Array<out Any?>) -> String
 ) : AndroidViewModel(application) {
-    private var textResolver: (Int, Array<out Any?>) -> String = defaultTextResolver(application)
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    @Inject
+    constructor(
+        application: Application,
+        schoolRepository: SchoolRepository,
+        preferencesRepository: PreferencesRepository
+    ) : this(application, schoolRepository, preferencesRepository, defaultTextResolver(application))
+
+    companion object {
+        fun createForTest(
+            application: Application,
+            schoolRepository: SchoolRepository,
+            preferencesRepository: PreferencesRepository,
+            textResolver: (Int, Array<out Any?>) -> String
+        ): HomeViewModel {
+            return HomeViewModel(
+                application,
+                schoolRepository,
+                preferencesRepository,
+                textResolver
+            )
+        }
+
+        private fun defaultTextResolver(application: Application): (Int, Array<out Any?>) -> String {
+            val context = application.applicationContext
+            return { id, formatArgs ->
+                if (formatArgs.isEmpty()) {
+                    context.getString(id)
+                } else {
+                    context.getString(id, *formatArgs)
+                }
+            }
+        }
+    }
 
     init {
         refreshHeader()
@@ -179,16 +212,4 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private companion object {
-        fun defaultTextResolver(application: Application): (Int, Array<out Any?>) -> String {
-            val context = application.applicationContext
-            return { id, formatArgs ->
-                if (formatArgs.isEmpty()) {
-                    context.getString(id)
-                } else {
-                    context.getString(id, *formatArgs)
-                }
-            }
-        }
-    }
 }

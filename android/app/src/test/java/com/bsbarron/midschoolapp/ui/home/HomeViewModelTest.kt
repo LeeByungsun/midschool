@@ -30,31 +30,20 @@ import org.robolectric.RobolectricTestRunner
 class HomeViewModelTest {
 
     private val application = TestApplication()
-    private val strings = FakeStringProvider()
-    private val mainDispatcher = UnconfinedTestDispatcher()
-
-    private val initialSchool = SchoolInfo(
-        officeCode = "J10",
-        schoolCode = "1111111",
-        schoolName = "미사중학교",
-        schoolKind = "중학교"
-    )
-
-    private val updatedSchool = SchoolInfo(
-        officeCode = "J10",
-        schoolCode = "2222222",
-        schoolName = "미사고등학교",
-        schoolKind = "고등학교"
-    )
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(mainDispatcher)
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
+    private val textResolver = { id: Int, formatArgs: Array<out Any?> ->
+        when (id) {
+            com.bsbarron.midschoolapp.R.string.home_school_name_placeholder -> "학교를 설정해 주세요"
+            com.bsbarron.midschoolapp.R.string.home_student_info_format ->
+                "${formatArgs[0]}학년 ${formatArgs[1]}반"
+            com.bsbarron.midschoolapp.R.string.home_school_not_set_hint -> "학교 설정이 필요해요"
+            com.bsbarron.midschoolapp.R.string.home_school_not_set_summary -> "요약"
+            com.bsbarron.midschoolapp.R.string.home_meal_missing_school -> "급식 없음"
+            com.bsbarron.midschoolapp.R.string.home_schedule_missing_school -> "일정 없음"
+            com.bsbarron.midschoolapp.R.string.home_today_summary_error -> "요약 에러"
+            com.bsbarron.midschoolapp.R.string.home_today_summary_body -> "요약"
+            com.bsbarron.midschoolapp.R.string.home_semester_label -> "학년과 반을 설정해 주세요"
+            else -> ""
+        }
     }
 
     @Test
@@ -82,7 +71,12 @@ class HomeViewModelTest {
                 schoolKind = "중학교"
             )
         )
-        val homeViewModel = HomeViewModel(application, FakeSchoolRepository(), repository, strings)
+        val viewModel = HomeViewModel.createForTest(
+            application,
+            FakeSchoolRepository(),
+            repository,
+            textResolver
+        )
 
         repository.saveStudentInfo(
             StudentInfo(
@@ -147,11 +141,12 @@ class HomeViewModelTest {
                 schoolKind = "중학교"
             )
         )
-        val schoolRepository = FakeSchoolRepository(
-            mealsResult = Result.failure(RuntimeException("MEAL_FAIL")),
-            schedulesResult = Result.success(emptyList())
+        val viewModel = HomeViewModel.createForTest(
+            application,
+            FakeSchoolRepository(),
+            repository,
+            textResolver
         )
-        val homeViewModel = HomeViewModel(application, schoolRepository, preferencesRepository, strings)
 
         preferencesRepository.saveStudentInfo(
             StudentInfo(
