@@ -14,15 +14,25 @@ class FakeSchoolRepository(
 ) : SchoolRepository {
     var lastSearchQuery: String? = null
         private set
+    var mealsCallCount: Int = 0
+        private set
+    var schedulesCallCount: Int = 0
+        private set
 
     override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> {
         lastSearchQuery = query
         return schoolSearchResult
     }
 
-    override suspend fun getMeals(date: String?): Result<List<MealInfo>> = mealsResult
+    override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
+        mealsCallCount += 1
+        return mealsResult
+    }
 
-    override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> = schedulesResult
+    override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
+        schedulesCallCount += 1
+        return schedulesResult
+    }
 
     override suspend fun getTimetable(
         grade: String,

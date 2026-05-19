@@ -60,10 +60,9 @@ class SetupViewModelTest {
         }
 
         viewModel.updateGrade("2")
-        viewModel.updateClassroom("3")
         viewModel.saveStudentInfo()
 
-        assertEquals(R.string.setup_error_school_required, messageDeferred.await())
+        assertEquals(R.string.setup_error_empty, messageDeferred.await())
         assertTrue(repository.savedStudentInfoCalls.isEmpty())
     }
 

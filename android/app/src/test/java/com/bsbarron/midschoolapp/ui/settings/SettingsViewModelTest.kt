@@ -150,6 +150,31 @@ class SettingsViewModelTest {
         assertEquals(listOf(false), repository.savedVibrationEnabledValues)
     }
 
+    @Test
+    fun saveSettings_afterChangingSchoolQuery_requiresSchoolReselect() = runBlocking {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "4",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(1_000L) { viewModel.messageEvent.first() }
+        }
+
+        viewModel.updateSchoolQuery("다른 학교")
+        viewModel.saveSettings()
+
+        assertEquals(R.string.setup_error_school_required, messageDeferred.await())
+        assertNull(viewModel.uiState.value.selectedSchool)
+        assertTrue(repository.savedStudentInfoCalls.isEmpty())
+    }
+
     private class TestApplication : Application() {
         override fun getApplicationContext(): Context = this
     }
