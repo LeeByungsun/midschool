@@ -23,6 +23,9 @@
             android:name=".widget.WidgetConfigActivity"
             android:exported="true" />
         <activity
+            android:name=".MealActivity"
+            android:exported="false" />
+        <activity
             android:name=".ScheduleActivity"
             android:exported="false" />
         <activity

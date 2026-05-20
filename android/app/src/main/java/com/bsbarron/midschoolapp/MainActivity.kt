@@ -54,6 +54,9 @@ class MainActivity : AppCompatActivity() {
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        binding.mealCard.setOnClickListener {
+            startActivity(Intent(this, MealActivity::class.java))
+        }
         binding.focusPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.FOCUS) }
         binding.breakPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.BREAK) }
         binding.deepPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.DEEP_FOCUS) }

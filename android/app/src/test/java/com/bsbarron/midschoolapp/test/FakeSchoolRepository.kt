@@ -16,6 +16,8 @@ class FakeSchoolRepository(
         private set
     var mealsCallCount: Int = 0
         private set
+    val requestedMealDates = mutableListOf<String?>()
+    val mealResultsByDate = mutableMapOf<String?, Result<List<MealInfo>>>()
     var schedulesCallCount: Int = 0
         private set
 
@@ -26,7 +28,8 @@ class FakeSchoolRepository(
 
     override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
         mealsCallCount += 1
-        return mealsResult
+        requestedMealDates += date
+        return mealResultsByDate[date] ?: mealsResult
     }
 
     override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
