@@ -1,5 +1,6 @@
 package com.bsbarron.midschoolapp
 
+import android.view.View
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -9,7 +10,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = MisSchoolApplication::class)
+@Config(application = MisSchoolApplication::class, sdk = [34])
 class MainActivityNavigationTest {
 
     @Test

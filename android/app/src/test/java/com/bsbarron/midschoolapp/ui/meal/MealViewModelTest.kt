@@ -24,7 +24,7 @@ import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = MisSchoolApplication::class)
+@Config(application = MisSchoolApplication::class, sdk = [34])
 class MealViewModelTest {
 
     @Test
