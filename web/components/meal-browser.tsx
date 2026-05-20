@@ -1,6 +1,6 @@
 "use client";
 
-/** 날짜별 급식 조회와 상태 전환을 담당하는 클라이언트 컴포넌트입니다. */
+/** 홈 급식 카드에서 이동한 뒤 일주일치 급식을 보여주는 클라이언트 컴포넌트입니다. */
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -13,7 +13,12 @@ import {
 } from "@/components/data-state";
 import { DashboardCard } from "@/components/dashboard-card";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { formatDateKey, formatKoreanDateLabel } from "@/lib/date";
+import {
+  formatDateKey,
+  formatKoreanDateLabel,
+  formatKoreanDateRange,
+  getWeekDates,
+} from "@/lib/date";
 import type { MealInfo } from "@/lib/neis/types";
 import {
   type CacheStatus,
@@ -28,6 +33,11 @@ type MealState = {
   error: string | null;
   cacheStatus: CacheStatus;
   cachedAt: number | null;
+};
+
+type MealDetailCardProps = {
+  meal: MealInfo;
+  showDate?: boolean;
 };
 
 const initialState: MealState = {
@@ -93,7 +103,7 @@ function parseInfoLines(value: string) {
   return splitMealLines(value).map((line) => line.replace(/\*+/g, "").trim());
 }
 
-function MealDetailCard({ meal }: { meal: MealInfo }) {
+function MealDetailCard({ meal, showDate = true }: MealDetailCardProps) {
   const menuItems = parseMenuItems(meal.menu);
   const nutritionLines = parseInfoLines(meal.nutritionInfo);
   const originLines = parseInfoLines(meal.originInfo);
@@ -102,10 +112,12 @@ function MealDetailCard({ meal }: { meal: MealInfo }) {
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-            {formatKoreanDateLabel(meal.date)}
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-900">
+          {showDate ? (
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+              {formatKoreanDateLabel(meal.date)}
+            </p>
+          ) : null}
+          <h3 className={`${showDate ? "mt-2 " : ""}text-lg font-semibold text-slate-900`}>
             {meal.mealType || "급식"}
           </h3>
         </div>
@@ -179,13 +191,17 @@ export function MealBrowser() {
   const [state, setState] = useState<MealState>(initialState);
   const [reloadCount, setReloadCount] = useState(0);
 
-  const dateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate]);
-  const dateLabel = useMemo(
-    () => formatKoreanDateLabel(selectedDate),
-    [selectedDate],
+  const weekDates = useMemo(() => getWeekDates(selectedDate), [selectedDate]);
+  const weekStart = weekDates[0];
+  const weekEnd = weekDates[weekDates.length - 1];
+  const weekStartKey = useMemo(() => formatDateKey(weekStart), [weekStart]);
+  const weekEndKey = useMemo(() => formatDateKey(weekEnd), [weekEnd]);
+  const weekLabel = useMemo(
+    () => formatKoreanDateRange(weekStart, weekEnd),
+    [weekEnd, weekStart],
   );
   const requestKey = studentInfo
-    ? `${studentInfo.officeCode}-${studentInfo.schoolCode}-${dateKey}`
+    ? `${studentInfo.officeCode}-${studentInfo.schoolCode}-${weekStartKey}-${weekEndKey}`
     : "";
   const requestToken = `${requestKey}:${reloadCount}`;
 
@@ -199,7 +215,8 @@ export function MealBrowser() {
     fetchMeals({
       officeCode: studentInfo.officeCode,
       schoolCode: studentInfo.schoolCode,
-      date: dateKey,
+      date: weekStartKey,
+      endDate: weekEndKey,
     })
       .then((result) => {
         if (isCancelled) {
@@ -234,11 +251,11 @@ export function MealBrowser() {
     return () => {
       isCancelled = true;
     };
-  }, [dateKey, hydrated, requestToken, studentInfo]);
+  }, [hydrated, requestToken, studentInfo, weekEndKey, weekStartKey]);
 
   const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
 
-  const moveDate = (offset: number) => {
+  const moveWeek = (offset: number) => {
     setSelectedDate((prev) => {
       const next = new Date(prev);
       next.setDate(prev.getDate() + offset);
@@ -246,7 +263,7 @@ export function MealBrowser() {
     });
   };
 
-  const jumpToToday = () => {
+  const jumpToCurrentWeek = () => {
     setSelectedDate(new Date());
   };
 
@@ -259,40 +276,54 @@ export function MealBrowser() {
     "급식",
   );
 
-  const selectedMeals = state.items.filter((meal) => meal.date === dateKey);
-  const visibleMeals = selectedMeals.length > 0 ? selectedMeals : state.items;
-  const summaryDate =
-    visibleMeals[0]?.date ? formatKoreanDateLabel(visibleMeals[0].date) : dateLabel;
+  const weekMealGroups = useMemo(() => {
+    const sortedMeals = [...state.items].sort(
+      (left, right) =>
+        left.date.localeCompare(right.date) ||
+        left.mealType.localeCompare(right.mealType),
+    );
+
+    return weekDates.map((date) => {
+      const dateKey = formatDateKey(date);
+
+      return {
+        date,
+        dateKey,
+        meals: sortedMeals.filter((meal) => meal.date === dateKey),
+      };
+    });
+  }, [state.items, weekDates]);
+  const hasAnyMeal = weekMealGroups.some((group) => group.meals.length > 0);
 
   return (
     <DashboardCard
-      title="급식 상세"
-      subtitle={`${summaryDate} 기준`}
+      title="주간 급식 상세"
+      subtitle={`${weekLabel} 기준`}
       action={
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => moveDate(-1)}
-            aria-label="급식 날짜를 하루 이전으로 이동"
+            onClick={() => moveWeek(-7)}
+            aria-label="급식 주간 범위를 한 주 이전으로 이동"
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            이전 날
+            이전 주
           </button>
           <button
             type="button"
-            onClick={jumpToToday}
-            aria-label="급식 날짜를 오늘로 이동"
+            onClick={jumpToCurrentWeek}
+            aria-label="급식 주간 범위를 이번 주로 이동"
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            오늘
+            이번 주
           </button>
           <button
             type="button"
-            onClick={() => moveDate(1)}
-            aria-label="급식 날짜를 하루 다음으로 이동"
+            onClick={() => moveWeek(7)}
+            aria-label="급식 주간 범위를 한 주 다음으로 이동"
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            다음 날
+            다음 주
           </button>
         </div>
       }
@@ -302,31 +333,45 @@ export function MealBrowser() {
       ) : !studentInfo ? (
         <SetupRequiredState message="급식 상세를 보려면 학교 이름과 학년/반을 먼저 저장해 주세요." />
       ) : isLoading ? (
-        <LoadingState message="선택한 날짜의 급식을 불러오는 중..." />
+        <LoadingState message="선택한 주의 급식을 불러오는 중..." />
       ) : state.error ? (
         <ErrorState message={state.error} onRetry={retryFetch} />
-      ) : visibleMeals.length === 0 ? (
+      ) : !hasAnyMeal ? (
         <EmptyState
           title="급식 정보가 없어요."
-          message="선택한 날짜에는 표시할 급식 정보가 없어요."
+          message="선택한 주에는 표시할 급식 정보가 없어요."
         />
       ) : (
         <div className="grid gap-4">
           {cacheNotice ? <InfoState message={cacheNotice} /> : null}
-          {visibleMeals.map((meal) => (
-            <MealDetailCard
-              key={`${meal.date}-${meal.mealType}-${meal.calorieInfo}`}
-              meal={meal}
-            />
+          {weekMealGroups.map((group) => (
+            <section key={group.dateKey} className="grid gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {formatKoreanDateLabel(group.date)}
+                </h3>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                  {group.meals.length > 0 ? `${group.meals.length}식` : "급식 없음"}
+                </span>
+              </div>
+
+              {group.meals.length > 0 ? (
+                group.meals.map((meal) => (
+                  <MealDetailCard
+                    key={`${meal.date}-${meal.mealType}-${meal.calorieInfo}`}
+                    meal={meal}
+                    showDate={false}
+                  />
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+                  해당 날짜의 급식 정보가 없어요.
+                </div>
+              )}
+            </section>
           ))}
         </div>
       )}
-
-      {visibleMeals[0]?.date && visibleMeals[0].date !== dateKey ? (
-        <p className="mt-4 text-sm text-slate-500">
-          요청한 날짜와 정확히 일치하는 급식이 없어, 제공된 급식 데이터를 대신 표시하고 있어요.
-        </p>
-      ) : null}
     </DashboardCard>
   );
 }

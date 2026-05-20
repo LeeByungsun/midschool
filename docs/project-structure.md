@@ -76,13 +76,13 @@ web/
 │   ├── settings/page.tsx      # 설정
 │   ├── timetable/page.tsx     # 시간표
 │   ├── schedule/page.tsx      # 학사 일정
-│   ├── meals/page.tsx         # 급식 상세
+│   ├── meals/page.tsx         # 주간 급식 상세
 │   ├── timer/page.tsx         # 타이머
 │   └── api/                   # NEIS/가정통신문 BFF route handlers
 ├── components/                # 화면/카드/상태 UI 컴포넌트
 │   ├── home-dashboard.tsx     # 홈 실데이터 대시보드 + 가정통신문 카드 조합
 │   ├── home-timer-card.tsx    # 홈 타이머 요약/빠른 제어 카드
-│   ├── meal-browser.tsx       # 날짜별 급식 상세 조회
+│   ├── meal-browser.tsx       # 홈 급식 카드에서 이동하는 주간 급식 상세 조회
 │   ├── timer-panel.tsx        # 타이머 상세 제어 / 알림 / 오늘 기록
 │   └── data-state.tsx         # 공통 로딩/오류/빈 상태/설정 필요 UI
 ├── hooks/                     # 브라우저 상태 구독 훅

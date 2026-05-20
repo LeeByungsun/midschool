@@ -121,8 +121,9 @@ function buildMealCacheKey(params: {
   officeCode: string;
   schoolCode: string;
   date: string;
+  endDate?: string;
 }) {
-  return `meal:${params.officeCode}:${params.schoolCode}:${params.date}`;
+  return `meal:${params.officeCode}:${params.schoolCode}:${params.date}:${params.endDate ?? params.date}`;
 }
 
 function buildTimetableCacheKey(params: {
@@ -172,12 +173,17 @@ export function fetchMeals(params: {
   officeCode: string;
   schoolCode: string;
   date: string;
+  endDate?: string;
 }) {
   const search = new URLSearchParams({
     officeCode: params.officeCode,
     schoolCode: params.schoolCode,
     date: params.date,
   });
+
+  if (params.endDate) {
+    search.set("endDate", params.endDate);
+  }
 
   return fetchList<MealInfo>(`/api/meals?${search.toString()}`, {
     key: buildMealCacheKey(params),

@@ -15,6 +15,10 @@ function padNumber(value: number) {
   return String(value).padStart(2, "0");
 }
 
+function cloneCalendarDate(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 export function formatDateKey(date: Date) {
   return `${date.getFullYear()}${padNumber(date.getMonth() + 1)}${padNumber(
     date.getDate(),
@@ -37,6 +41,25 @@ export function formatKoreanDateLabel(date: Date | string) {
 
 export function formatKoreanMonthLabel(date: Date) {
   return MONTH_TITLE_FORMATTER.format(date);
+}
+
+export function addDays(date: Date, amount: number) {
+  const next = cloneCalendarDate(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+export function getWeekDates(date: Date) {
+  const current = cloneCalendarDate(date);
+  const dayOfWeek = current.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = addDays(current, mondayOffset);
+
+  return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
+}
+
+export function formatKoreanDateRange(start: Date | string, end: Date | string) {
+  return `${formatKoreanDateLabel(start)} ~ ${formatKoreanDateLabel(end)}`;
 }
 
 export function parseBasicDate(value: string) {

@@ -12,13 +12,20 @@ export async function GET(request: NextRequest) {
   const schoolCode =
     request.nextUrl.searchParams.get("schoolCode")?.trim() ?? undefined;
   const date = request.nextUrl.searchParams.get("date")?.trim() ?? undefined;
+  const endDate =
+    request.nextUrl.searchParams.get("endDate")?.trim() ?? undefined;
 
   try {
     const response = await fetchNeisJson<NeisResponse<MealRowDto>>(
       "hub/mealServiceDietInfo",
-      {
-        MLSV_YMD: date,
-      },
+      endDate
+        ? {
+            MLSV_FROM_YMD: date,
+            MLSV_TO_YMD: endDate,
+          }
+        : {
+            MLSV_YMD: date,
+          },
       {
         officeCode,
         schoolCode,

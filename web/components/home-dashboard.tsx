@@ -312,7 +312,7 @@ export function HomeDashboard() {
               href="/meals"
               className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
             >
-              날짜별 보기
+              일주일 보기
             </Link>
           }
         >
