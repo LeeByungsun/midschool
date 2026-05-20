@@ -2,6 +2,7 @@ package com.bsbarron.midschoolapp.data.repository
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
+import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
 import com.bsbarron.midschoolapp.data.remote.dto.MealRowDto
@@ -107,6 +108,124 @@ class SchoolRepositoryImplTest {
         assertTrue(result.isSuccess)
         assertEquals("J10", apiService.lastScheduleOfficeCode)
         assertEquals("1234567", apiService.lastScheduleSchoolCode)
+    }
+
+    @Test
+    fun `getSchedules saves schedules to cache on success`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            schedulesResponse = successResponse(
+                listOf(
+                    ScheduleRowDto(
+                        date = "20260519",
+                        title = "체육대회",
+                        description = "운동장"
+                    )
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+
+        val result = repository.getSchedules("202605")
+
+        assertTrue(result.isSuccess)
+        assertEquals(
+            listOf(
+                SchoolEvent(
+                    date = "20260519",
+                    title = "체육대회",
+                    description = "운동장"
+                )
+            ),
+            preferencesRepository.savedScheduleCacheEvents
+        )
+    }
+
+    @Test
+    fun `getSchedules returns cached schedules when network fails`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            schedulesResponse = successResponse(emptyList())
+            failSchedules = true
+        }
+        val cacheEvents = listOf(
+            SchoolEvent(date = "20260519", title = "대체행사", description = "캐시에서 복구")
+        )
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        ).apply {
+            scheduleCache[ScheduleCacheKey("J10", "1234567", "202605")] = cacheEvents
+        }
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+
+        val result = repository.getSchedules("202605")
+
+        assertTrue(result.isSuccess)
+        assertEquals(cacheEvents, result.getOrThrow())
+    }
+
+    @Test
+    fun `getSchedules returns cached empty schedules when network fails`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            schedulesResponse = successResponse(emptyList())
+            failSchedules = true
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        ).apply {
+            scheduleCache[ScheduleCacheKey("J10", "1234567", "202605")] = emptyList()
+        }
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+
+        val result = repository.getSchedules("202605")
+
+        assertTrue(result.isSuccess)
+        assertEquals(emptyList<SchoolEvent>(), result.getOrThrow())
+    }
+
+    @Test
+    fun `getSchedules returns failure when both network and cache miss`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            schedulesResponse = successResponse(emptyList())
+            failSchedules = true
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+
+        val result = repository.getSchedules("202605")
+
+        assertTrue(result.isFailure)
     }
 
     @Test
@@ -287,6 +406,7 @@ class SchoolRepositoryImplTest {
         var middleTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
         var highTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
         var schoolInfoResponse: NeisResponse<SchoolInfoRowDto> = successResponse(emptyList())
+        var failSchedules = false
 
         var lastMealOfficeCode: String? = null
         var lastMealSchoolCode: String? = null
@@ -319,6 +439,7 @@ class SchoolRepositoryImplTest {
             schoolCode: String,
             date: String?
         ): NeisResponse<ScheduleRowDto> {
+            if (failSchedules) throw IllegalStateException("schedule api error")
             lastScheduleOfficeCode = officeCode
             lastScheduleSchoolCode = schoolCode
             return schedulesResponse
@@ -382,6 +503,8 @@ class SchoolRepositoryImplTest {
         private var studentInfo: StudentInfo = StudentInfo()
     ) : PreferencesRepository {
         var savedMealCacheArgs: MealCacheArgs? = null
+        var savedScheduleCacheEvents: List<SchoolEvent>? = null
+        val scheduleCache = mutableMapOf<ScheduleCacheKey, List<SchoolEvent>>()
 
         override fun getStudentInfo(): StudentInfo = studentInfo
 
@@ -432,6 +555,24 @@ class SchoolRepositoryImplTest {
             date: String
         ): List<MealInfo>? = null
 
+        override fun saveScheduleCache(
+            officeCode: String,
+            schoolCode: String,
+            date: String,
+            events: List<SchoolEvent>
+        ) {
+            savedScheduleCacheEvents = events
+            scheduleCache[ScheduleCacheKey(officeCode, schoolCode, date)] = events
+        }
+
+        override fun getScheduleCache(
+            officeCode: String,
+            schoolCode: String,
+            date: String
+        ): List<SchoolEvent>? {
+            return scheduleCache[ScheduleCacheKey(officeCode, schoolCode, date)]
+        }
+
         override fun saveTimetableCache(
             officeCode: String,
             schoolCode: String,
@@ -461,5 +602,11 @@ class SchoolRepositoryImplTest {
         val schoolCode: String,
         val date: String,
         val meals: List<MealInfo>
+    )
+
+    private data class ScheduleCacheKey(
+        val officeCode: String,
+        val schoolCode: String,
+        val date: String
     )
 }

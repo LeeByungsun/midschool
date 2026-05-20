@@ -3,6 +3,7 @@ package com.bsbarron.midschoolapp.data.repository
 import android.content.Context
 import com.bsbarron.midschoolapp.UserPreferences
 import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -163,6 +164,44 @@ class PreferencesRepositoryImpl @Inject constructor(
         return runCatching { gson.fromJson<List<TimetableItem>>(raw, type) }.getOrNull()
     }
 
+    override fun saveScheduleCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String,
+        events: List<SchoolEvent>
+    ) {
+        sharedPreferences.edit()
+            .putString(
+                scheduleCacheKey(officeCode, schoolCode, date),
+                gson.toJson(events)
+            )
+            .putLong(
+                scheduleCacheTimestampKey(officeCode, schoolCode, date),
+                System.currentTimeMillis()
+            )
+            .apply()
+    }
+
+    override fun getScheduleCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String
+    ): List<SchoolEvent>? {
+        if (!isCacheFresh(
+                scheduleCacheTimestampKey(officeCode, schoolCode, date),
+                SCHEDULE_CACHE_TTL_MILLIS
+            )
+        ) {
+            clearScheduleCache(officeCode, schoolCode, date)
+            return null
+        }
+        val raw = sharedPreferences.getString(scheduleCacheKey(officeCode, schoolCode, date), null)
+            ?: return null
+        val type = object : TypeToken<List<SchoolEvent>>() {}.type
+        return runCatching { gson.fromJson<List<SchoolEvent>>(raw, type) }
+            .getOrNull()
+    }
+
     override fun getWidgetSettings(appWidgetId: Int): WidgetSettings {
         return WidgetSettings(
             showTomorrowTimetable = sharedPreferences.getBoolean(widgetTomorrowKey(appWidgetId), true)
@@ -211,6 +250,14 @@ class PreferencesRepositoryImpl @Inject constructor(
         return "timetable_cache_ts_${officeCode}_${schoolCode}_${grade}_${classroom}_$date"
     }
 
+    private fun scheduleCacheKey(officeCode: String, schoolCode: String, date: String): String {
+        return "schedule_cache_${officeCode}_${schoolCode}_$date"
+    }
+
+    private fun scheduleCacheTimestampKey(officeCode: String, schoolCode: String, date: String): String {
+        return "schedule_cache_ts_${officeCode}_${schoolCode}_$date"
+    }
+
     private fun widgetTomorrowKey(appWidgetId: Int): String = "widget_${appWidgetId}_show_tomorrow"
 
     private fun widgetMealKey(appWidgetId: Int): String = "widget_${appWidgetId}_show_meal"
@@ -245,9 +292,21 @@ class PreferencesRepositoryImpl @Inject constructor(
             .apply()
     }
 
+    private fun clearScheduleCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String
+    ) {
+        sharedPreferences.edit()
+            .remove(scheduleCacheKey(officeCode, schoolCode, date))
+            .remove(scheduleCacheTimestampKey(officeCode, schoolCode, date))
+            .apply()
+    }
+
     companion object {
         private const val REPOSITORY_PREFS_NAME = "midschool_repository_prefs"
         private const val MEAL_CACHE_TTL_MILLIS = 12 * 60 * 60 * 1000L
         private const val TIMETABLE_CACHE_TTL_MILLIS = 24 * 60 * 60 * 1000L
+        private const val SCHEDULE_CACHE_TTL_MILLIS = 12 * 60 * 60 * 1000L
     }
 }

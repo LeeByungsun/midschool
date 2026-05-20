@@ -2,6 +2,7 @@ package com.bsbarron.midschoolapp.data.repository
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
+import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 
 interface PreferencesRepository {
@@ -25,6 +26,8 @@ interface PreferencesRepository {
     fun clearTimerState()
     fun saveMealCache(officeCode: String, schoolCode: String, date: String, meals: List<MealInfo>)
     fun getMealCache(officeCode: String, schoolCode: String, date: String): List<MealInfo>?
+    fun saveScheduleCache(officeCode: String, schoolCode: String, date: String, events: List<SchoolEvent>)
+    fun getScheduleCache(officeCode: String, schoolCode: String, date: String): List<SchoolEvent>?
     fun saveTimetableCache(
         officeCode: String,
         schoolCode: String,

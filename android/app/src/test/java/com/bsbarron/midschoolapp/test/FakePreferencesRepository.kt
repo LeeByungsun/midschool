@@ -1,6 +1,7 @@
 package com.bsbarron.midschoolapp.test
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
 import com.bsbarron.midschoolapp.data.repository.StudentInfo
@@ -39,6 +40,7 @@ class FakePreferencesRepository(
 
     private val mealCache = mutableMapOf<MealCacheKey, List<MealInfo>>()
     private val timetableCache = mutableMapOf<TimetableCacheKey, List<TimetableItem>>()
+    private val scheduleCache = mutableMapOf<ScheduleCacheKey, List<SchoolEvent>>()
     private val widgetSettings = mutableMapOf<Int, WidgetSettings>()
 
     override fun getStudentInfo(): StudentInfo = currentStudentInfo
@@ -114,6 +116,23 @@ class FakePreferencesRepository(
         date: String
     ): List<MealInfo>? = mealCache[MealCacheKey(officeCode, schoolCode, date)]
 
+    override fun saveScheduleCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String,
+        events: List<SchoolEvent>
+    ) {
+        scheduleCache[ScheduleCacheKey(officeCode, schoolCode, date)] = events
+    }
+
+    override fun getScheduleCache(
+        officeCode: String,
+        schoolCode: String,
+        date: String
+    ): List<SchoolEvent>? {
+        return scheduleCache[ScheduleCacheKey(officeCode, schoolCode, date)]
+    }
+
     override fun saveTimetableCache(
         officeCode: String,
         schoolCode: String,
@@ -158,6 +177,12 @@ class FakePreferencesRepository(
         val schoolCode: String,
         val grade: String,
         val classroom: String,
+        val date: String
+    )
+
+    private data class ScheduleCacheKey(
+        val officeCode: String,
+        val schoolCode: String,
         val date: String
     )
 }

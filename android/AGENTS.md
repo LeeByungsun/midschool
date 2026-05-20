@@ -40,7 +40,8 @@ Jetpack Compose는 현재 메인 UI 기술이 아니므로, 명시적인 전환 
 ## 5. 데이터/네트워크 기준
 - 나이스(NEIS) API 응답 처리는 Repository에서 일관되게 담당합니다.
 - 공통 에러 문구와 API 응답 코드 해석은 UI가 아니라 Repository 쪽에 둡니다.
-- 급식/시간표 캐시는 `PreferencesRepository`를 통해 관리합니다.
+- 급식/시간표/학사 일정 캐시는 `PreferencesRepository`를 통해 관리합니다.
+- 날짜/월 단위 캐시는 조회 기준(학교 코드, 학년/반, 일자/월)이 드러나는 키와 TTL을 함께 유지합니다.
 - 새 저장 값이 필요하면 Activity에서 직접 `SharedPreferences`를 만지지 말고 `PreferencesRepository`에 API를 추가합니다.
 
 ## 6. 위젯/타이머 관련 기준

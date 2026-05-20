@@ -89,7 +89,8 @@ class SchoolRepositoryImpl @Inject constructor(
 
     override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
         val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
-        return runCatching {
+        val cacheKey = date
+        val networkResult = runCatching {
             extractRows(
                 sections = apiService.getSchedules(
                     officeCode = studentInfo.officeCode,
@@ -105,6 +106,27 @@ class SchoolRepositoryImpl @Inject constructor(
                         description = row.description.orEmpty()
                     )
                 }
+        }
+
+        networkResult.getOrNull()?.let { schedules ->
+            if (!cacheKey.isNullOrBlank()) {
+                preferencesRepository.saveScheduleCache(
+                    studentInfo.officeCode,
+                    studentInfo.schoolCode,
+                    cacheKey,
+                    schedules
+                )
+            }
+            return Result.success(schedules)
+        }
+
+        val cachedSchedules = cacheKey?.let {
+            preferencesRepository.getScheduleCache(studentInfo.officeCode, studentInfo.schoolCode, it)
+        }
+        return if (cachedSchedules != null) {
+            Result.success(cachedSchedules)
+        } else {
+            Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("학사 일정을 불러오지 못했어요."))
         }
     }
 

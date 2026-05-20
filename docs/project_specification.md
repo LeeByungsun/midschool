@@ -137,6 +137,21 @@
 - **의존성 주입**: Dagger Hilt
 - **로컬 저장소**: `SharedPreferences` 기반 저장 및 간단 캐시
 
+### 3.4 Android 데이터/캐시 동작
+
+- `SchoolRepository`가 NEIS 호출과 캐시 fallback 판단을 일관되게 담당합니다.
+- `PreferencesRepository`는 학생 정보, 타이머 상태, 위젯 설정과 함께 **급식/시간표/학사 일정 캐시**를 저장합니다.
+- Android 캐시 키는 조회 기준을 그대로 반영합니다.
+  - 급식: `officeCode + schoolCode + 일자(yyyyMMdd)`
+  - 시간표: `officeCode + schoolCode + 학년 + 반 + 일자(yyyyMMdd)`
+  - 학사 일정: `officeCode + schoolCode + 월(yyyyMM)`
+- TTL 기준은 공통 정책과 동일하게 유지합니다.
+  - 급식 12시간
+  - 시간표 24시간
+  - 학사 일정 12시간
+- Android는 최신 요청이 실패했을 때 **같은 조회 키의 신선한 캐시가 남아 있으면 재사용**하고, 신선한 캐시가 없으면 Repository 오류를 그대로 전달합니다.
+- 학사 일정은 `PreferencesRepositoryImpl`이 월 단위(`yyyyMM`) `SchoolEvent` 목록을 `SharedPreferences`에 직렬화해 저장하며, **빈 월 결과도 유효한 캐시**로 유지해 네트워크 실패 시 같은 월의 "일정 없음" 상태를 안정적으로 복구합니다.
+
 ---
 
 ## 4. Web 전용 명세 (Current + Planned Web Scope)
