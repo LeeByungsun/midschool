@@ -28,10 +28,10 @@ import java.util.Locale
 class MealViewModelTest {
 
     @Test
-    fun loadWeekMealsBuildsSevenDayState() = runBlocking {
+    fun loadWeekMealsBuildsWeekdayOnlyState() = runBlocking {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val weekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        val weekDates = (0L..6L).map { offset ->
+        val weekDates = (0L..4L).map { offset ->
             weekStart.plusDays(offset).format(DateTimeFormatter.BASIC_ISO_DATE)
         }
         val schoolRepository = FakeSchoolRepository().apply {
@@ -59,15 +59,15 @@ class MealViewModelTest {
 
         val viewModel = MealViewModel(application, schoolRepository, preferencesRepository)
         val state = withTimeout(1_000L) {
-            viewModel.uiState.first { !it.isLoading && it.items.size == 7 }
+            viewModel.uiState.first { !it.isLoading && it.items.size == 5 }
         }
 
         assertEquals(
             "${weekStart.format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN))} - " +
-                "${weekStart.plusDays(6).format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN))}",
+                "${weekStart.plusDays(4).format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN))}",
             state.weekTitle
         )
-        assertEquals(7, state.items.size)
+        assertEquals(5, state.items.size)
         assertTrue(state.statusText.isBlank())
         assertEquals(weekDates, schoolRepository.requestedMealDates)
         assertTrue(state.items.first().detailText.contains("점심 • 842 kcal"))

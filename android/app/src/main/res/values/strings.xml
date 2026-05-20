@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">중학교도우미</string>
+    <string name="app_name">학교생활도우미</string>
     <string name="home_school_name">중학교도우미</string>
     <string name="home_school_name_placeholder">학교를 설정해 주세요</string>
     <string name="home_date_label">3월 30일 월요일</string>

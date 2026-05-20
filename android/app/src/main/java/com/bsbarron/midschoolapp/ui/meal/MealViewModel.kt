@@ -36,7 +36,7 @@ class MealViewModel @Inject constructor(
 
     fun loadWeekMeals(referenceDate: LocalDate = LocalDate.now()) {
         val weekStart = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        val weekEnd = weekStart.plusDays(6)
+        val weekEnd = weekStart.plusDays(4)
         _uiState.update {
             it.copy(
                 weekTitle = formatWeekTitle(weekStart, weekEnd),
@@ -58,7 +58,7 @@ class MealViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val dayStates = (0L..6L).map { offset ->
+            val dayStates = (0L..4L).map { offset ->
                 val day = weekStart.plusDays(offset)
                 val result = schoolRepository.getMeals(day.format(DateTimeFormatter.BASIC_ISO_DATE))
                 buildDayUiModel(day = day, result = result)
