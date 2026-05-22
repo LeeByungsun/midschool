@@ -46,6 +46,11 @@ type DashboardState = {
   scheduleCachedAt: number | null;
 };
 
+type NoticeRequestState = {
+  requestToken: string;
+  loadState: NoticeLoadState;
+};
+
 const initialState: DashboardState = {
   requestToken: "",
   timetable: [],
@@ -62,8 +67,17 @@ const initialState: DashboardState = {
   scheduleCachedAt: null,
 };
 
-const initialNoticeState: NoticeLoadState = {
+const initialNoticeLoadState: NoticeLoadState = {
   status: "idle",
+};
+
+const loadingNoticeState: NoticeLoadState = {
+  status: "loading",
+};
+
+const initialNoticeState: NoticeRequestState = {
+  requestToken: "",
+  loadState: initialNoticeLoadState,
 };
 
 const DGE_NOTICE_UNSUPPORTED_MESSAGE =
@@ -77,7 +91,7 @@ export function HomeDashboard() {
   const hydrated = useHydrated();
   const studentInfo = useStudentPreferences();
   const [state, setState] = useState<DashboardState>(initialState);
-  const [noticeState, setNoticeState] = useState<NoticeLoadState>(initialNoticeState);
+  const [noticeState, setNoticeState] = useState<NoticeRequestState>(initialNoticeState);
   const [reloadCount, setReloadCount] = useState(0);
   const [noticeReloadCount, setNoticeReloadCount] = useState(0);
 
@@ -93,6 +107,9 @@ export function HomeDashboard() {
     ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}-${nextMonthKey}`
     : "";
   const requestToken = `${requestKey}:${reloadCount}`;
+  const noticeRequestKey = studentInfo
+    ? `${studentInfo.officeCode}-${studentInfo.schoolCode}-${studentInfo.homepage ?? ""}:${noticeReloadCount}`
+    : "";
 
   useEffect(() => {
     let isCancelled = false;
@@ -164,11 +181,9 @@ export function HomeDashboard() {
     let isCancelled = false;
 
     if (!hydrated || !studentInfo) {
-      setNoticeState(initialNoticeState);
       return;
     }
-
-    setNoticeState({ status: "loading" });
+    const activeRequestToken = noticeRequestKey;
 
     fetchNotices({
       officeCode: studentInfo.officeCode,
@@ -182,8 +197,11 @@ export function HomeDashboard() {
         }
 
         setNoticeState({
-          status: "success",
-          items: result.items,
+          requestToken: activeRequestToken,
+          loadState: {
+            status: "success",
+            items: result.items,
+          },
         });
       })
       .catch((error: unknown) => {
@@ -197,16 +215,19 @@ export function HomeDashboard() {
             : "가정통신문 목록을 불러오지 못했어요.";
 
         setNoticeState({
-          status: "error",
-          message,
-          canRetry: message !== DGE_NOTICE_UNSUPPORTED_MESSAGE,
+          requestToken: activeRequestToken,
+          loadState: {
+            status: "error",
+            message,
+            canRetry: message !== DGE_NOTICE_UNSUPPORTED_MESSAGE,
+          },
         });
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [hydrated, noticeReloadCount, studentInfo]);
+  }, [hydrated, noticeReloadCount, noticeRequestKey, studentInfo]);
 
   const upcomingSchedules = useMemo(
     () =>
@@ -226,10 +247,16 @@ export function HomeDashboard() {
     setNoticeReloadCount((prev) => prev + 1);
   };
   const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
+  const noticeLoadState =
+    !hydrated || !studentInfo
+      ? initialNoticeLoadState
+      : noticeState.requestToken === noticeRequestKey
+        ? noticeState.loadState
+        : loadingNoticeState;
   const noticeCardState = resolveNoticeCardState({
     hydrated,
     studentInfo,
-    loadState: noticeState,
+    loadState: noticeLoadState,
   });
   const timetableCacheNotice = formatCacheStatusMessage(
     state.timetableCacheStatus,

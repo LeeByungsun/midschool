@@ -101,6 +101,7 @@
   - 학교 검색/변경 기능으로 조회 기준 학교를 업데이트 가능
 - **메인 대시보드 (`MainActivity`)**
   - 주요 정보 요약 카드 및 타이머 표시
+  - 현재는 급식 / 학사 일정 / 가정통신문 preview / 타이머 흐름으로 홈 카드를 구성
 - **주간 급식 화면 (`MealActivity`)**
   - 메인 대시보드의 급식 카드 탭 시 진입
   - 현재 주(월~일) 기준 일주일치 급식을 날짜별 카드로 확인
@@ -126,6 +127,12 @@
   - 숫자형 타이머와 `TimerRingView` 커스텀 링 뷰 지원
   - Activity + XML 레이아웃 기반 화면 구성
 
+- **Android 가정통신문 preview**
+  - 홈 대시보드에 최근 가정통신문 preview card를 둡니다.
+  - 카드 위치는 학사 일정 아래, 타이머 위를 기본으로 유지합니다.
+  - 학교 미설정 상태에서는 Setup 유도 문구를 보여 주고, 최근 notice URL이 있을 때만 외부 링크 열기 버튼을 활성화합니다.
+  - phase 1에서는 별도 상세 화면보다 preview + 외부 링크 열기 흐름을 우선합니다.
+
 ### 3.3 Android 기술 스택
 
 - **언어/런타임**: Kotlin, Android SDK
@@ -140,6 +147,7 @@
 ### 3.4 Android 데이터/캐시 동작
 
 - `SchoolRepository`가 NEIS 호출과 캐시 fallback 판단을 일관되게 담당합니다.
+- 가정통신문은 Android가 학교 홈페이지를 직접 스크래핑하지 않고, web `app/api/notices/route.ts` BFF를 통해 조회합니다.
 - `PreferencesRepository`는 학생 정보, 타이머 상태, 위젯 설정과 함께 **급식/시간표/학사 일정 캐시**를 저장합니다.
 - Android 캐시 키는 조회 기준을 그대로 반영합니다.
   - 급식: `officeCode + schoolCode + 일자(yyyyMMdd)`
@@ -151,6 +159,9 @@
   - 학사 일정 12시간
 - Android는 최신 요청이 실패했을 때 **같은 조회 키의 신선한 캐시가 남아 있으면 재사용**하고, 신선한 캐시가 없으면 Repository 오류를 그대로 전달합니다.
 - 학사 일정은 `PreferencesRepositoryImpl`이 월 단위(`yyyyMM`) `SchoolEvent` 목록을 `SharedPreferences`에 직렬화해 저장하며, **빈 월 결과도 유효한 캐시**로 유지해 네트워크 실패 시 같은 월의 "일정 없음" 상태를 안정적으로 복구합니다.
+- 가정통신문 조회용 Android 원격 경계는 `NoticeApiService` 와 `SchoolRepository.getNotices()` 로 분리합니다.
+- Android build config 의 `WEB_BASE_URL` 은 로컬 설정이 없을 때도 production(`https://midschool.vercel.app/`) 을 기본값으로 사용합니다.
+- Android notices 응답은 web notices 계약의 `items` / `message` 를 우선 소비하며, web 쪽은 machine-readable `status` / `errorCode` 보강을 포함해 Android 소비 안정성을 높입니다.
 
 ---
 

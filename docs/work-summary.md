@@ -140,6 +140,7 @@
   - web 쪽은 Android 소비를 위한 machine-readable notices contract(`status`, `errorCode`, `items`) 보강이 반영되었다.
   - Android 쪽에는 notices feed/model, notices API service, repository integration, HomeViewModel/MainActivity/activity_main notices 흐름, external URL open, 관련 테스트가 추가되었다.
   - Android `WEB_BASE_URL` 기본값을 local dev 주소(`10.0.2.2:3000`)에서 production 주소(`https://midschool.vercel.app/`)로 바꿔, 별도 로컬 설정이 없을 때도 notices 요청이 실서버를 보도록 조정했다.
+  - 후속 문서 정리로 `TODO.md` 와 `docs/project_specification.md` 에 Android notices phase 1 상태와 production 기본 경로를 반영했다.
 - 검증 메모
   - leader 기준 `web/scripts/test-notice-route-contract.mjs` 통과
   - leader 기준 `android/app:compileDebugKotlin` 통과

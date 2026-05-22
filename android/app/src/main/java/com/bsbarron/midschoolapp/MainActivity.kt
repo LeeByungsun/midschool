@@ -1,7 +1,6 @@
 package com.bsbarron.midschoolapp
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
@@ -18,6 +17,7 @@ import com.bsbarron.midschoolapp.ui.home.HomeNoticeAction
 import com.bsbarron.midschoolapp.ui.home.HomeViewModel
 import com.bsbarron.midschoolapp.ui.timer.TimerPreset
 import com.bsbarron.midschoolapp.ui.timer.TimerViewModel
+import com.bsbarron.midschoolapp.util.ExternalUrlOpener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         is HomeNoticeAction.OpenUrl -> {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(event.url)))
+                            startActivity(ExternalUrlOpener.buildIntent(event.url))
                         }
                     }
                 }
