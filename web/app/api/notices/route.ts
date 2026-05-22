@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";
 import { buildNoticeHomepageCandidates } from "@/lib/notices/candidates";
 import { isRecoverableNoticeError } from "@/lib/notices/errors";
+import { createNoticeErrorResponse, createNoticeSuccessResponse } from "@/lib/notices/response";
 import { mapSchoolInfo } from "@/lib/neis/mapper";
 import { fetchSchoolHomepageNotices } from "@/lib/notices/fetch";
 import type { NeisResponse, SchoolInfoRowDto } from "@/lib/neis/types";
@@ -26,7 +27,10 @@ export async function GET(request: NextRequest) {
 
     if (homepageCandidates.length === 0) {
       return NextResponse.json(
-        { message: "학교 홈페이지 주소를 찾지 못했어요.", items: [] },
+        createNoticeErrorResponse({
+          message: "학교 홈페이지 주소를 찾지 못했어요.",
+          errorCode: "HOMEPAGE_NOT_FOUND",
+        }),
         { status: 404 },
       );
     }
@@ -46,7 +50,7 @@ export async function GET(request: NextRequest) {
           createTimeoutPromise(homepageCandidate),
         ]);
 
-        return NextResponse.json({ items });
+        return NextResponse.json(createNoticeSuccessResponse(items));
       } catch (error) {
         lastError = error;
       }
@@ -56,15 +60,22 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("NOTICES_TIMEOUT:")) {
       return NextResponse.json(
-        {
+        createNoticeErrorResponse({
           message: `가정통신문 목록을 불러오는 시간이 너무 오래 걸려 중단했어요. (homepage: ${resolvedHomepageUrl})`,
-        },
+          errorCode: "NOTICES_TIMEOUT",
+        }),
         { status: 504 },
       );
     }
 
     if (error instanceof NeisClientError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return NextResponse.json(
+        createNoticeErrorResponse({
+          message: error.message,
+          errorCode: "NEIS_ERROR",
+        }),
+        { status: error.status },
+      );
     }
 
     if (isRecoverableNoticeError(error)) {
@@ -74,21 +85,25 @@ export async function GET(request: NextRequest) {
       });
 
       return NextResponse.json(
-        {
+        createNoticeErrorResponse({
           message: recoverableMessage,
-          items: [],
-        },
+          status: isDgeSchoolHomepage(resolvedHomepageUrl) ? "unsupported" : "unavailable",
+          errorCode: isDgeSchoolHomepage(resolvedHomepageUrl)
+            ? "UNSUPPORTED_PROVIDER"
+            : "NOTICE_SOURCE_UNAVAILABLE",
+        }),
         { status: 200 },
       );
     }
 
     return NextResponse.json(
-      {
+      createNoticeErrorResponse({
         message:
           error instanceof Error
             ? `${error.message}${resolvedHomepageUrl ? ` (homepage: ${resolvedHomepageUrl})` : ""}`
             : "가정통신문 목록을 불러오지 못했어요.",
-      },
+        errorCode: "INTERNAL_ERROR",
+      }),
       { status: 500 },
     );
   }

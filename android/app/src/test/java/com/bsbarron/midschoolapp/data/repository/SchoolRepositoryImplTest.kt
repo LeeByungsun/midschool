@@ -1,15 +1,20 @@
 package com.bsbarron.midschoolapp.data.repository
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.NoticeFeed
+import com.bsbarron.midschoolapp.data.model.NoticePreview
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
+import com.bsbarron.midschoolapp.data.remote.NoticeApiService
 import com.bsbarron.midschoolapp.data.remote.dto.MealRowDto
 import com.bsbarron.midschoolapp.data.remote.dto.NeisHeadDto
 import com.bsbarron.midschoolapp.data.remote.dto.NeisResponse
 import com.bsbarron.midschoolapp.data.remote.dto.NeisResultDto
 import com.bsbarron.midschoolapp.data.remote.dto.NeisSection
+import com.bsbarron.midschoolapp.data.remote.dto.NoticeListResponseDto
+import com.bsbarron.midschoolapp.data.remote.dto.NoticeSummaryDto
 import com.bsbarron.midschoolapp.data.remote.dto.ScheduleRowDto
 import com.bsbarron.midschoolapp.data.remote.dto.SchoolInfoRowDto
 import com.bsbarron.midschoolapp.data.remote.dto.TimetableRowDto
@@ -67,7 +72,7 @@ class SchoolRepositoryImplTest {
                 schoolKind = "중학교"
             )
         )
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getMeals("20260519")
 
@@ -101,7 +106,7 @@ class SchoolRepositoryImplTest {
                 schoolKind = "중학교"
             )
         )
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getSchedules("202605")
 
@@ -133,7 +138,7 @@ class SchoolRepositoryImplTest {
                 schoolKind = "중학교"
             )
         )
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getSchedules("202605")
 
@@ -171,7 +176,7 @@ class SchoolRepositoryImplTest {
         ).apply {
             scheduleCache[ScheduleCacheKey("J10", "1234567", "202605")] = cacheEvents
         }
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getSchedules("202605")
 
@@ -197,7 +202,7 @@ class SchoolRepositoryImplTest {
         ).apply {
             scheduleCache[ScheduleCacheKey("J10", "1234567", "202605")] = emptyList()
         }
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getSchedules("202605")
 
@@ -221,7 +226,7 @@ class SchoolRepositoryImplTest {
                 schoolKind = "중학교"
             )
         )
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getSchedules("202605")
 
@@ -253,7 +258,7 @@ class SchoolRepositoryImplTest {
                 schoolKind = "초등학교"
             )
         )
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getTimetable("3", "2", "20260519")
 
@@ -287,7 +292,7 @@ class SchoolRepositoryImplTest {
                 schoolKind = "중학교"
             )
         )
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getTimetable("3", "2", "20260519")
 
@@ -321,7 +326,7 @@ class SchoolRepositoryImplTest {
                 schoolKind = "고등학교"
             )
         )
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository)
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
         val result = repository.getTimetable("2", "4", "20260519")
 
@@ -378,7 +383,7 @@ class SchoolRepositoryImplTest {
                 )
             )
         }
-        val repository = SchoolRepositoryImpl(apiService, FakePreferencesRepository())
+        val repository = SchoolRepositoryImpl(apiService, FakePreferencesRepository(), FakeNoticeApiService())
 
         val result = repository.searchSchools("미사")
 
@@ -391,12 +396,64 @@ class SchoolRepositoryImplTest {
 
     @Test
     fun `getSchedules fails when school selection is missing`() = runBlocking {
-        val repository = SchoolRepositoryImpl(FakeNeisApiService(), FakePreferencesRepository())
+        val repository = SchoolRepositoryImpl(FakeNeisApiService(), FakePreferencesRepository(), FakeNoticeApiService())
 
         val result = repository.getSchedules("202605")
 
         assertTrue(result.isFailure)
         assertEquals("설정에서 학교를 먼저 선택해 주세요.", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getNotices maps notice payload for selected school`() = runBlocking {
+        val noticeApiService = FakeNoticeApiService().apply {
+            noticesResponse = NoticeListResponseDto(
+                items = listOf(
+                    NoticeSummaryDto(
+                        id = "1",
+                        title = "체험학습 안내",
+                        date = "2026-05-22",
+                        author = "교무실",
+                        url = "https://school.example/notices/1",
+                        sourceUrl = "https://school.example/notices"
+                    )
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+        val repository = SchoolRepositoryImpl(FakeNeisApiService(), preferencesRepository, noticeApiService)
+
+        val result = repository.getNotices(limit = 3)
+
+        assertTrue(result.isSuccess)
+        assertEquals("J10", noticeApiService.lastOfficeCode)
+        assertEquals("1234567", noticeApiService.lastSchoolCode)
+        assertEquals(3, noticeApiService.lastLimit)
+        assertEquals(
+            NoticeFeed(
+                items = listOf(
+                    NoticePreview(
+                        id = "1",
+                        title = "체험학습 안내",
+                        date = "2026-05-22",
+                        author = "교무실",
+                        url = "https://school.example/notices/1",
+                        sourceUrl = "https://school.example/notices"
+                    )
+                ),
+                message = null
+            ),
+            result.getOrThrow()
+        )
     }
 
     private class FakeNeisApiService : NeisApiService {
@@ -497,6 +554,24 @@ class SchoolRepositoryImplTest {
             pageSize: Int,
             query: String
         ): NeisResponse<SchoolInfoRowDto> = schoolInfoResponse
+    }
+
+    private class FakeNoticeApiService : NoticeApiService {
+        var noticesResponse: NoticeListResponseDto = NoticeListResponseDto()
+        var lastOfficeCode: String? = null
+        var lastSchoolCode: String? = null
+        var lastLimit: Int? = null
+
+        override suspend fun getNotices(
+            officeCode: String,
+            schoolCode: String,
+            limit: Int
+        ): NoticeListResponseDto {
+            lastOfficeCode = officeCode
+            lastSchoolCode = schoolCode
+            lastLimit = limit
+            return noticesResponse
+        }
     }
 
     private class FakePreferencesRepository(

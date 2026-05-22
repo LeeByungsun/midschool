@@ -1,19 +1,26 @@
 package com.bsbarron.midschoolapp.data.repository
 
+import com.bsbarron.midschoolapp.BuildConfig
 import com.bsbarron.midschoolapp.R
 import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.NoticeFeed
+import com.bsbarron.midschoolapp.data.model.NoticePreview
 import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.remote.NeisApiException
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
+import com.bsbarron.midschoolapp.data.remote.NoticeApiService
 import com.bsbarron.midschoolapp.data.remote.dto.NeisResultDto
 import com.bsbarron.midschoolapp.data.remote.dto.NeisSection
+import java.io.IOException
 import javax.inject.Inject
+import retrofit2.HttpException
 
 class SchoolRepositoryImpl @Inject constructor(
     private val apiService: NeisApiService,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val noticeApiService: NoticeApiService
 ) : SchoolRepository {
 
     override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> = runCatching {
@@ -127,6 +134,38 @@ class SchoolRepositoryImpl @Inject constructor(
             Result.success(cachedSchedules)
         } else {
             Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("학사 일정을 불러오지 못했어요."))
+        }
+    }
+
+    override suspend fun getNotices(limit: Int): Result<NoticeFeed> {
+        val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
+        if (BuildConfig.WEB_BASE_URL.isBlank()) {
+            return Result.failure(IllegalStateException("가정통신문 서버 주소가 설정되지 않았어요."))
+        }
+
+        return try {
+            val response = noticeApiService.getNotices(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                limit = limit.coerceIn(1, 10)
+            )
+            Result.success(
+                NoticeFeed(
+                    items = response.items.map { item ->
+                        NoticePreview(
+                            id = item.id,
+                            title = item.title,
+                            date = item.date,
+                            author = item.author,
+                            url = item.url,
+                            sourceUrl = item.sourceUrl
+                        )
+                    },
+                    message = response.message?.trim()?.takeIf { it.isNotBlank() }
+                )
+            )
+        } catch (error: Exception) {
+            Result.failure(mapNoticeError(error))
         }
     }
 
@@ -253,6 +292,22 @@ class SchoolRepositoryImpl @Inject constructor(
             else -> result?.message?.takeIf { it.isNotBlank() } ?: "$dataLabel 정보를 불러오지 못했어요."
         }
         throw NeisApiException(code = code, message = message)
+    }
+
+    private fun mapNoticeError(error: Exception): Throwable {
+        return when (error) {
+            is HttpException -> {
+                val message = when (error.code()) {
+                    404 -> "학교 홈페이지 주소를 찾지 못해 가정통신문을 불러오지 못했어요."
+                    504 -> "가정통신문 조회가 지연되어 잠시 후 다시 시도해 주세요."
+                    else -> "가정통신문을 불러오지 못했어요."
+                }
+                IllegalStateException(message, error)
+            }
+
+            is IOException -> IllegalStateException("가정통신문 서버에 연결할 수 없어요.", error)
+            else -> error
+        }
     }
 
     companion object {

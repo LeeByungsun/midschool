@@ -1,6 +1,7 @@
 package com.bsbarron.midschoolapp
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
@@ -11,7 +12,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bsbarron.midschoolapp.data.model.HomeContentStatus
 import com.bsbarron.midschoolapp.databinding.ActivityMainBinding
+import com.bsbarron.midschoolapp.ui.home.HomeNoticeAction
 import com.bsbarron.midschoolapp.ui.home.HomeViewModel
 import com.bsbarron.midschoolapp.ui.timer.TimerPreset
 import com.bsbarron.midschoolapp.ui.timer.TimerViewModel
@@ -39,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         bindClicks()
         bindHomeState()
+        bindHomeEvents()
         bindTimerState()
 
         homeViewModel.loadHomeData()
@@ -56,6 +60,9 @@ class MainActivity : AppCompatActivity() {
         }
         binding.mealCard.setOnClickListener {
             startActivity(Intent(this, MealActivity::class.java))
+        }
+        binding.openNoticeButton.setOnClickListener {
+            homeViewModel.onNoticeActionClicked()
         }
         binding.focusPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.FOCUS) }
         binding.breakPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.BREAK) }
@@ -91,9 +98,38 @@ class MainActivity : AppCompatActivity() {
                             startActivity(Intent(this@MainActivity, ScheduleActivity::class.java))
                         }
                     }
-                    if (state.mealSummary.isNotBlank()) binding.mealMenuText.text = state.mealSummary
-                    if (state.mealMeta.isNotBlank()) binding.mealMetaText.text = state.mealMeta
-                    if (state.eventSummary.isNotBlank()) binding.scheduleSummaryText.text = state.eventSummary
+                    binding.mealMenuText.text = state.mealSummary
+                    binding.mealMetaText.text = state.mealMeta
+                    binding.mealMetaText.visibility = if (
+                        state.mealStatus == HomeContentStatus.SUCCESS ||
+                        state.mealStatus == HomeContentStatus.EMPTY
+                    ) {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
+                    binding.scheduleSummaryText.text = state.eventSummary
+                    binding.noticeSummaryText.text = state.notices.summary
+                    binding.openNoticeButton.text = state.notices.actionText
+                    binding.openNoticeButton.isEnabled = state.notices.actionEnabled
+                }
+            }
+        }
+    }
+
+    private fun bindHomeEvents() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.noticeActionEvent.collect { event ->
+                    when (event) {
+                        HomeNoticeAction.OpenSetup -> {
+                            startActivity(Intent(this@MainActivity, SetupActivity::class.java))
+                        }
+
+                        is HomeNoticeAction.OpenUrl -> {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(event.url)))
+                        }
+                    }
                 }
             }
         }

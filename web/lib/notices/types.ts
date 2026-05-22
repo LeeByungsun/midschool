@@ -8,3 +8,26 @@ export type NoticeSummary = {
   url: string;
   sourceUrl: string;
 };
+
+
+export type NoticeResponseStatus =
+  | "success"
+  | "empty"
+  | "unsupported"
+  | "unavailable"
+  | "error";
+
+export type NoticeErrorCode =
+  | "HOMEPAGE_NOT_FOUND"
+  | "NOTICES_TIMEOUT"
+  | "UNSUPPORTED_PROVIDER"
+  | "NOTICE_SOURCE_UNAVAILABLE"
+  | "NEIS_ERROR"
+  | "INTERNAL_ERROR";
+
+export type NoticeListResponse = {
+  status: NoticeResponseStatus;
+  items: NoticeSummary[];
+  message?: string;
+  errorCode?: NoticeErrorCode;
+};

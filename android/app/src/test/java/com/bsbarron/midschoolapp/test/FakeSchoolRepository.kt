@@ -1,6 +1,7 @@
 package com.bsbarron.midschoolapp.test
 
 import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.NoticeFeed
 import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.TimetableItem
@@ -10,6 +11,7 @@ class FakeSchoolRepository(
     var schoolSearchResult: Result<List<SchoolInfo>> = Result.success(emptyList()),
     var mealsResult: Result<List<MealInfo>> = Result.success(emptyList()),
     var schedulesResult: Result<List<SchoolEvent>> = Result.success(emptyList()),
+    var noticesResult: Result<NoticeFeed> = Result.success(NoticeFeed()),
     var timetableResult: Result<List<TimetableItem>> = Result.success(emptyList())
 ) : SchoolRepository {
     var lastSearchQuery: String? = null
@@ -19,6 +21,10 @@ class FakeSchoolRepository(
     val requestedMealDates = mutableListOf<String?>()
     val mealResultsByDate = mutableMapOf<String?, Result<List<MealInfo>>>()
     var schedulesCallCount: Int = 0
+        private set
+    var noticesCallCount: Int = 0
+        private set
+    var lastNoticeLimit: Int? = null
         private set
 
     override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> {
@@ -35,6 +41,12 @@ class FakeSchoolRepository(
     override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
         schedulesCallCount += 1
         return schedulesResult
+    }
+
+    override suspend fun getNotices(limit: Int): Result<NoticeFeed> {
+        noticesCallCount += 1
+        lastNoticeLimit = limit
+        return noticesResult
     }
 
     override suspend fun getTimetable(

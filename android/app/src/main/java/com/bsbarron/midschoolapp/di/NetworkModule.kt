@@ -2,6 +2,7 @@ package com.bsbarron.midschoolapp.di
 
 import com.bsbarron.midschoolapp.BuildConfig
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
+import com.bsbarron.midschoolapp.data.remote.NoticeApiService
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -12,6 +13,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -43,7 +45,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(
+    @Named("neis")
+    fun provideNeisRetrofit(
         okHttpClient: OkHttpClient,
         gson: Gson
     ): Retrofit {
@@ -56,7 +59,27 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideNeisApiService(retrofit: Retrofit): NeisApiService {
+    @Named("web")
+    fun provideWebRetrofit(
+        okHttpClient: OkHttpClient,
+        gson: Gson
+    ): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.WEB_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNeisApiService(@Named("neis") retrofit: Retrofit): NeisApiService {
         return retrofit.create(NeisApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNoticeApiService(@Named("web") retrofit: Retrofit): NoticeApiService {
+        return retrofit.create(NoticeApiService::class.java)
     }
 }

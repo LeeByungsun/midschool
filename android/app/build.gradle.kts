@@ -16,6 +16,7 @@ val localProperties = Properties().apply {
 }
 
 val neisApiKey = localProperties.getProperty("NEIS_API_KEY", "")
+val webBaseUrl = localProperties.getProperty("WEB_BASE_URL", "https://midschool.vercel.app/")
 
 android {
     namespace = "com.bsbarron.midschoolapp"
@@ -31,6 +32,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "NEIS_BASE_URL", "\"https://open.neis.go.kr/\"")
         buildConfigField("String", "NEIS_API_KEY", "\"$neisApiKey\"")
+        buildConfigField("String", "WEB_BASE_URL", "\"$webBaseUrl\"")
     }
 
     buildTypes {

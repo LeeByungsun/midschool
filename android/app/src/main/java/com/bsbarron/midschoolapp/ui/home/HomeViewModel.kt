@@ -5,14 +5,24 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bsbarron.midschoolapp.R
+import com.bsbarron.midschoolapp.data.model.HomeContentStatus
+import com.bsbarron.midschoolapp.data.model.HomeNoticeCardState
 import com.bsbarron.midschoolapp.data.model.HomeUiState
+import com.bsbarron.midschoolapp.data.model.MealInfo
+import com.bsbarron.midschoolapp.data.model.NoticeFeed
+import com.bsbarron.midschoolapp.data.model.NoticePreview
+import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
 import com.bsbarron.midschoolapp.data.repository.SchoolRepository
 import com.bsbarron.midschoolapp.util.isVisibleSchedule
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -30,6 +40,8 @@ class HomeViewModel private constructor(
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _noticeActionEvent = MutableSharedFlow<HomeNoticeAction>(extraBufferCapacity = 1)
+    val noticeActionEvent: SharedFlow<HomeNoticeAction> = _noticeActionEvent.asSharedFlow()
 
     @Inject
     constructor(
@@ -94,11 +106,10 @@ class HomeViewModel private constructor(
                 } else {
                     resolveString(R.string.home_semester_label)
                 },
-                todaySummaryText = if (it.errorMessage != null) {
-                    resolveString(R.string.home_today_summary_error)
-                } else {
-                    resolveString(R.string.home_today_summary_body)
-                }
+                notices = resolveHeaderNoticeState(
+                    current = it.notices,
+                    hasSchoolSelection = hasSchoolSelection
+                )
             )
         }
     }
@@ -107,7 +118,18 @@ class HomeViewModel private constructor(
         viewModelScope.launch {
             val today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
             refreshHeader()
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            _uiState.update {
+                it.copy(
+                    todaySummaryText = resolveString(R.string.home_today_summary_loading),
+                    todayStatus = HomeContentStatus.LOADING,
+                    mealSummary = resolveString(R.string.home_meal_loading),
+                    mealMeta = "",
+                    mealStatus = HomeContentStatus.LOADING,
+                    eventSummary = resolveString(R.string.home_schedule_loading),
+                    scheduleStatus = HomeContentStatus.LOADING
+                )
+            }
 
             val studentInfo = preferencesRepository.getStudentInfo()
             if (!studentInfo.hasSchoolSelection()) {
@@ -115,76 +137,237 @@ class HomeViewModel private constructor(
                     it.copy(
                         isSchoolConfigured = false,
                         todaySummaryText = resolveString(R.string.home_school_not_set_summary),
+                        todayStatus = HomeContentStatus.NOT_CONFIGURED,
                         mealSummary = resolveString(R.string.home_meal_missing_school),
                         mealMeta = "",
+                        mealStatus = HomeContentStatus.NOT_CONFIGURED,
                         eventSummary = resolveString(R.string.home_schedule_missing_school),
-                        isLoading = false,
-                        errorMessage = null
+                        scheduleStatus = HomeContentStatus.NOT_CONFIGURED,
+                        notices = buildSetupRequiredNoticeState()
                     )
                 }
                 return@launch
             }
 
-            val mealsResult = schoolRepository.getMeals(today)
-            val schedulesResult = schoolRepository.getSchedules(today.take(6))
+            val mealsDeferred = async { schoolRepository.getMeals(today) }
+            val schedulesDeferred = async { schoolRepository.getSchedules(today.take(6)) }
+            val noticesDeferred = async { schoolRepository.getNotices(limit = 3) }
 
-            val firstMeal = mealsResult.getOrNull()?.firstOrNull()
-            val mealSummary = firstMeal?.menu
-                ?.let(::formatMealMenu)
-                ?.trim()
-                .orEmpty()
-            val mealMeta = listOfNotNull(
-                firstMeal?.mealType?.takeIf { it.isNotBlank() },
-                firstMeal?.calorieInfo?.takeIf { it.isNotBlank() }
-            ).joinToString(" • ")
-            val eventSummary = schedulesResult.getOrNull()
-                .orEmpty()
-                .filter { it.isVisibleSchedule() }
-                .mapNotNull { event ->
-                    val eventDate = runCatching {
-                        LocalDate.parse(event.date, DateTimeFormatter.BASIC_ISO_DATE)
-                    }.getOrNull() ?: return@mapNotNull null
+            val mealsResult = mealsDeferred.await()
+            val schedulesResult = schedulesDeferred.await()
+            val noticesResult = noticesDeferred.await()
 
-                    if (eventDate.isBefore(LocalDate.now())) {
-                        return@mapNotNull null
-                    }
-
-                    val title = event.title.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-                    val formattedDate = eventDate.format(
-                        DateTimeFormatter.ofPattern("M/d(E)", Locale.KOREAN)
-                    )
-                    val detail = event.description.takeIf { it.isNotBlank() }
-
-                    buildString {
-                        append(formattedDate)
-                        append("  ")
-                        append(title)
-                        if (detail != null) {
-                            append("\n")
-                            append(detail)
-                        }
-                    }
-                }
-                .take(3)
-                .joinToString("\n\n")
-            val errorMessage = mealsResult.exceptionOrNull()?.message
-                ?: schedulesResult.exceptionOrNull()?.message
+            val mealUi = buildMealUi(mealsResult.getOrNull()?.firstOrNull(), mealsResult.exceptionOrNull())
+            val scheduleUi = buildScheduleUi(schedulesResult.getOrNull().orEmpty(), schedulesResult.exceptionOrNull())
+            val todayStatus = when {
+                mealUi.status == HomeContentStatus.ERROR ||
+                    scheduleUi.status == HomeContentStatus.ERROR -> HomeContentStatus.ERROR
+                mealUi.status == HomeContentStatus.EMPTY &&
+                    scheduleUi.status == HomeContentStatus.EMPTY -> HomeContentStatus.EMPTY
+                else -> HomeContentStatus.SUCCESS
+            }
 
             _uiState.update {
                 it.copy(
                     isSchoolConfigured = true,
-                    todaySummaryText = if (errorMessage != null) {
-                        resolveString(R.string.home_today_summary_error)
-                    } else {
-                        resolveString(R.string.home_today_summary_body)
+                    todaySummaryText = when (todayStatus) {
+                        HomeContentStatus.ERROR -> resolveString(R.string.home_today_summary_error)
+                        HomeContentStatus.EMPTY -> resolveString(R.string.home_today_summary_empty)
+                        else -> resolveString(R.string.home_today_summary_body)
                     },
-                    mealSummary = mealSummary.ifBlank { "오늘은 등록된 급식이 없어요." },
-                    mealMeta = mealMeta.ifBlank { "급식 없음" },
-                    eventSummary = eventSummary.ifBlank { "이번 달에 남아 있는 학사 일정이 없어요." },
-                    isLoading = false,
-                    errorMessage = errorMessage
+                    todayStatus = todayStatus,
+                    mealSummary = mealUi.summary,
+                    mealMeta = mealUi.meta,
+                    mealStatus = mealUi.status,
+                    eventSummary = scheduleUi.summary,
+                    scheduleStatus = scheduleUi.status,
+                    notices = buildNoticeCardState(noticesResult)
                 )
             }
+        }
+    }
+
+    fun onNoticeActionClicked() {
+        val noticeState = uiState.value.notices
+        when {
+            noticeState.requiresSetup -> _noticeActionEvent.tryEmit(HomeNoticeAction.OpenSetup)
+            !noticeState.latestNoticeUrl.isNullOrBlank() -> {
+                _noticeActionEvent.tryEmit(HomeNoticeAction.OpenUrl(noticeState.latestNoticeUrl))
+            }
+        }
+    }
+
+    private fun buildMealUi(meal: MealInfo?, error: Throwable?): HomeSectionUi {
+        if (error != null) {
+            return HomeSectionUi(
+                status = HomeContentStatus.ERROR,
+                summary = resolveString(R.string.meal_error_day),
+                meta = ""
+            )
+        }
+
+        if (meal == null) {
+            return HomeSectionUi(
+                status = HomeContentStatus.EMPTY,
+                summary = resolveString(R.string.home_meal_empty),
+                meta = resolveString(R.string.home_meal_empty_meta)
+            )
+        }
+
+        val mealSummary = meal.menu
+            .let(::formatMealMenu)
+            .trim()
+            .ifBlank { resolveString(R.string.home_meal_empty) }
+        val mealMeta = listOfNotNull(
+            meal.mealType.takeIf { it.isNotBlank() },
+            meal.calorieInfo.takeIf { it.isNotBlank() }
+        ).joinToString(" • ")
+            .ifBlank { resolveString(R.string.home_meal_empty_meta) }
+
+        return HomeSectionUi(
+            status = HomeContentStatus.SUCCESS,
+            summary = mealSummary,
+            meta = mealMeta
+        )
+    }
+
+    private fun buildScheduleUi(events: List<SchoolEvent>, error: Throwable?): HomeSectionUi {
+        if (error != null) {
+            return HomeSectionUi(
+                status = HomeContentStatus.ERROR,
+                summary = resolveString(R.string.home_schedule_error),
+                meta = ""
+            )
+        }
+
+        val eventSummary = events
+            .filter { it.isVisibleSchedule() }
+            .mapNotNull { event ->
+                val eventDate = runCatching {
+                    LocalDate.parse(event.date, DateTimeFormatter.BASIC_ISO_DATE)
+                }.getOrNull() ?: return@mapNotNull null
+
+                if (eventDate.isBefore(LocalDate.now())) {
+                    return@mapNotNull null
+                }
+
+                val title = event.title.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                val formattedDate = eventDate.format(
+                    DateTimeFormatter.ofPattern("M/d(E)", Locale.KOREAN)
+                )
+                val detail = event.description.takeIf { it.isNotBlank() }
+
+                buildString {
+                    append(formattedDate)
+                    append("  ")
+                    append(title)
+                    if (detail != null) {
+                        append("\n")
+                        append(detail)
+                    }
+                }
+            }
+            .take(3)
+            .joinToString("\n\n")
+
+        return if (eventSummary.isBlank()) {
+            HomeSectionUi(
+                status = HomeContentStatus.EMPTY,
+                summary = resolveString(R.string.home_schedule_empty)
+            )
+        } else {
+            HomeSectionUi(
+                status = HomeContentStatus.SUCCESS,
+                summary = eventSummary
+            )
+        }
+    }
+
+    private fun buildSetupRequiredNoticeState(): HomeNoticeCardState {
+        return HomeNoticeCardState(
+            summary = resolveString(R.string.home_notice_setup_required),
+            actionText = resolveString(R.string.home_setup_button),
+            actionEnabled = true,
+            latestNoticeUrl = null,
+            requiresSetup = true
+        )
+    }
+
+    private fun buildUnavailableNoticeState(summary: String): HomeNoticeCardState {
+        return HomeNoticeCardState(
+            summary = summary,
+            actionText = resolveString(R.string.home_notice_unavailable_button),
+            actionEnabled = false,
+            latestNoticeUrl = null,
+            requiresSetup = false
+        )
+    }
+
+    private fun resolveHeaderNoticeState(
+        current: HomeNoticeCardState,
+        hasSchoolSelection: Boolean
+    ): HomeNoticeCardState {
+        if (!hasSchoolSelection) {
+            return buildSetupRequiredNoticeState()
+        }
+
+        return if (current.requiresSetup || isUninitializedNoticeState(current)) {
+            buildUnavailableNoticeState(resolveString(R.string.home_notice_empty))
+        } else {
+            current
+        }
+    }
+
+    private fun isUninitializedNoticeState(state: HomeNoticeCardState): Boolean {
+        return state.summary.isBlank() &&
+            state.actionText.isBlank() &&
+            !state.actionEnabled &&
+            state.latestNoticeUrl == null &&
+            !state.requiresSetup
+    }
+
+    private fun buildNoticeCardState(noticesResult: Result<NoticeFeed>): HomeNoticeCardState {
+        return noticesResult.fold(
+            onSuccess = { noticeFeed ->
+                val previewLines = noticeFeed.items
+                    .take(3)
+                    .map(::formatNoticePreviewLine)
+                    .filter { it.isNotBlank() }
+
+                when {
+                    previewLines.isNotEmpty() -> HomeNoticeCardState(
+                        summary = previewLines.joinToString("\n"),
+                        actionText = resolveString(R.string.home_notice_open_button),
+                        actionEnabled = true,
+                        latestNoticeUrl = noticeFeed.items.firstOrNull()?.url,
+                        requiresSetup = false
+                    )
+
+                    !noticeFeed.message.isNullOrBlank() -> HomeNoticeCardState(
+                        summary = noticeFeed.message,
+                        actionText = resolveString(R.string.home_notice_unavailable_button),
+                        actionEnabled = false,
+                        latestNoticeUrl = null,
+                        requiresSetup = false
+                    )
+
+                    else -> buildUnavailableNoticeState(resolveString(R.string.home_notice_empty))
+                }
+            },
+            onFailure = { error ->
+                buildUnavailableNoticeState(
+                    error.message ?: resolveString(R.string.home_notice_error)
+                )
+            }
+        )
+    }
+
+    private fun formatNoticePreviewLine(notice: NoticePreview): String {
+        val date = notice.date.takeIf { it.isNotBlank() }
+        return if (date != null) {
+            resolveString(R.string.home_notice_preview_format, date, notice.title)
+        } else {
+            notice.title
         }
     }
 
@@ -211,4 +394,14 @@ class HomeViewModel private constructor(
         }
     }
 
+    private data class HomeSectionUi(
+        val status: HomeContentStatus,
+        val summary: String,
+        val meta: String = ""
+    )
+}
+
+sealed interface HomeNoticeAction {
+    data object OpenSetup : HomeNoticeAction
+    data class OpenUrl(val url: String) : HomeNoticeAction
 }

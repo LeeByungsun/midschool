@@ -17,7 +17,7 @@ import { HomeTimerCard } from "@/components/home-timer-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel, formatMonthKey } from "@/lib/date";
-import type { NoticeSummary } from "@/lib/notices/types";
+import { resolveNoticeCardState, type NoticeLoadState } from "@/lib/notices/view-state";
 import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
 import { isVisibleSchedule } from "@/lib/schedule";
 import {
@@ -46,12 +46,6 @@ type DashboardState = {
   scheduleCachedAt: number | null;
 };
 
-type NoticeState = {
-  requestToken: string;
-  items: NoticeSummary[];
-  error: string | null;
-};
-
 const initialState: DashboardState = {
   requestToken: "",
   timetable: [],
@@ -68,10 +62,8 @@ const initialState: DashboardState = {
   scheduleCachedAt: null,
 };
 
-const initialNoticeState: NoticeState = {
-  requestToken: "",
-  items: [],
-  error: null,
+const initialNoticeState: NoticeLoadState = {
+  status: "idle",
 };
 
 const DGE_NOTICE_UNSUPPORTED_MESSAGE =
@@ -85,7 +77,7 @@ export function HomeDashboard() {
   const hydrated = useHydrated();
   const studentInfo = useStudentPreferences();
   const [state, setState] = useState<DashboardState>(initialState);
-  const [noticeState, setNoticeState] = useState<NoticeState>(initialNoticeState);
+  const [noticeState, setNoticeState] = useState<NoticeLoadState>(initialNoticeState);
   const [reloadCount, setReloadCount] = useState(0);
   const [noticeReloadCount, setNoticeReloadCount] = useState(0);
 
@@ -101,10 +93,6 @@ export function HomeDashboard() {
     ? `${studentInfo.schoolKind ?? "중학교"}-${studentInfo.grade}-${studentInfo.classroom}-${todayKey}-${monthKey}-${nextMonthKey}`
     : "";
   const requestToken = `${requestKey}:${reloadCount}`;
-  const noticeRequestKey = studentInfo
-    ? `${studentInfo.officeCode}-${studentInfo.schoolCode}-${studentInfo.homepage ?? ""}`
-    : "";
-  const noticeRequestToken = `${noticeRequestKey}:${noticeReloadCount}`;
 
   useEffect(() => {
     let isCancelled = false;
@@ -176,8 +164,11 @@ export function HomeDashboard() {
     let isCancelled = false;
 
     if (!hydrated || !studentInfo) {
+      setNoticeState(initialNoticeState);
       return;
     }
+
+    setNoticeState({ status: "loading" });
 
     fetchNotices({
       officeCode: studentInfo.officeCode,
@@ -191,9 +182,8 @@ export function HomeDashboard() {
         }
 
         setNoticeState({
-          requestToken: noticeRequestToken,
+          status: "success",
           items: result.items,
-          error: null,
         });
       })
       .catch((error: unknown) => {
@@ -201,20 +191,22 @@ export function HomeDashboard() {
           return;
         }
 
+        const message =
+          error instanceof Error
+            ? error.message
+            : "가정통신문 목록을 불러오지 못했어요.";
+
         setNoticeState({
-          requestToken: noticeRequestToken,
-          items: [],
-          error:
-            error instanceof Error
-              ? error.message
-              : "가정통신문 목록을 불러오지 못했어요.",
+          status: "error",
+          message,
+          canRetry: message !== DGE_NOTICE_UNSUPPORTED_MESSAGE,
         });
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [hydrated, noticeReloadCount, noticeRequestToken, studentInfo]);
+  }, [hydrated, noticeReloadCount, studentInfo]);
 
   const upcomingSchedules = useMemo(
     () =>
@@ -234,10 +226,11 @@ export function HomeDashboard() {
     setNoticeReloadCount((prev) => prev + 1);
   };
   const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
-  const isNoticeLoading =
-    hydrated && Boolean(studentInfo) && noticeState.requestToken !== noticeRequestToken;
-  const canRetryNoticeFetch =
-    noticeState.error !== DGE_NOTICE_UNSUPPORTED_MESSAGE;
+  const noticeCardState = resolveNoticeCardState({
+    hydrated,
+    studentInfo,
+    loadState: noticeState,
+  });
   const timetableCacheNotice = formatCacheStatusMessage(
     state.timetableCacheStatus,
     state.timetableCachedAt,
@@ -409,28 +402,26 @@ export function HomeDashboard() {
           title="가정통신문"
           subtitle="선택한 학교 홈페이지에서 최근 목록만 먼저 가져옵니다."
         >
-          {!hydrated ? (
-            <LoadingState message="가정통신문 기준을 준비 중..." />
-          ) : !studentInfo ? (
+          {noticeCardState.status === "not-configured" ? (
             <SetupRequiredState
-              title="초기 설정이 먼저 필요해요."
-              message="학교를 저장하면 가정통신문도 같은 기준으로 가져올 수 있어요."
+              title={noticeCardState.title}
+              message={noticeCardState.message}
             />
-          ) : isNoticeLoading ? (
-            <LoadingState message="가정통신문 목록을 불러오는 중..." />
-          ) : noticeState.error ? (
+          ) : noticeCardState.status === "loading" ? (
+            <LoadingState message={noticeCardState.message} />
+          ) : noticeCardState.status === "error" ? (
             <ErrorState
-              message={noticeState.error}
-              onRetry={canRetryNoticeFetch ? retryNoticeFetch : undefined}
+              message={noticeCardState.message}
+              onRetry={noticeCardState.canRetry ? retryNoticeFetch : undefined}
             />
-          ) : noticeState.items.length === 0 ? (
+          ) : noticeCardState.status === "empty" ? (
             <EmptyState
-              title="가정통신문이 없어요."
-              message="현재 학교 홈페이지에서 확인된 최근 가정통신문이 없어요."
+              title={noticeCardState.title}
+              message={noticeCardState.message}
             />
           ) : (
             <ul className="space-y-3">
-              {noticeState.items.slice(0, 4).map((notice) => (
+              {noticeCardState.items.slice(0, 4).map((notice) => (
                 <li
                   key={`${notice.id}-${notice.date}`}
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"

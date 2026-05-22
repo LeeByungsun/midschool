@@ -9,6 +9,8 @@
     <string name="home_student_info_format">%1$s학년 %2$s반</string>
     <string name="home_today_summary_title">오늘의 학교생활</string>
     <string name="home_today_summary_body">오늘 급식과 학사 일정을 먼저 확인하고, 시간표는 별도 화면에서 자세히 볼 수 있어요.</string>
+    <string name="home_today_summary_loading">오늘 급식과 학사 일정을 불러오는 중이에요.</string>
+    <string name="home_today_summary_empty">오늘 보여줄 급식과 일정이 아직 없어요.</string>
     <string name="home_today_summary_error">나이스 데이터를 불러오지 못해 일부 정보는 기본 화면으로 표시 중입니다.</string>
     <string name="home_settings_button">설정</string>
     <string name="home_setup_button">학교 설정하러 가기</string>
@@ -16,6 +18,9 @@
     <string name="home_timetable_button">시간표 보러 가기</string>
     <string name="home_meal_title">오늘 급식</string>
     <string name="home_meal_missing_school">학교 설정 후 급식 정보를 확인할 수 있어요.</string>
+    <string name="home_meal_loading">오늘 급식을 불러오는 중이에요.</string>
+    <string name="home_meal_empty">오늘은 등록된 급식이 없어요.</string>
+    <string name="home_meal_empty_meta">급식 없음</string>
     <string name="home_meal_menu">잡곡밥, 근대된장국, 제육볶음, 계란말이, 배추김치, 요구르트</string>
     <string name="home_meal_meta">점심 • 842 kcal</string>
     <string name="meal_title">주간 급식</string>
@@ -28,8 +33,17 @@
     <string name="meal_week_placeholder">5월 18일 - 5월 24일</string>
     <string name="home_schedule_title">학사 일정</string>
     <string name="home_schedule_missing_school">학교 설정 후 이번 달 학사 일정을 확인해 주세요.</string>
+    <string name="home_schedule_loading">이번 달 학사 일정을 불러오는 중이에요.</string>
     <string name="home_schedule_button">월간 일정 보기</string>
     <string name="home_schedule_empty">이번 달 일정이 여기에 표시됩니다.</string>
+    <string name="home_schedule_error">학사 일정을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.</string>
+    <string name="home_notice_title">가정통신문</string>
+    <string name="home_notice_setup_required">학교 설정 후 최근 가정통신문을 확인할 수 있어요.</string>
+    <string name="home_notice_empty">최근 가정통신문이 여기에 표시됩니다.</string>
+    <string name="home_notice_error">가정통신문을 불러오지 못했어요.</string>
+    <string name="home_notice_open_button">최근 가정통신문 열기</string>
+    <string name="home_notice_unavailable_button">나중에 다시 보기</string>
+    <string name="home_notice_preview_format">%1$s  %2$s</string>
     <string name="home_timer_title">집중력 타이머</string>
     <string name="home_timer_time">25:00</string>
     <string name="home_timer_subtitle">집중 프리셋을 선택해 시작해 보세요.</string>
