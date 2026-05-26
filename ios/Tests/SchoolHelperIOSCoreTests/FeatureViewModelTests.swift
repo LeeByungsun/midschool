@@ -12,6 +12,9 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.mealSummary, "학교 설정이 필요해요.")
         XCTAssertEqual(viewModel.eventSummary, "학교 설정이 필요해요.")
         XCTAssertEqual(viewModel.noticeSummary, "학교 설정이 필요해요.")
+        XCTAssertEqual(viewModel.noticeActionText, "확인 불가")
+        XCTAssertFalse(viewModel.noticeActionEnabled)
+        XCTAssertNil(viewModel.latestNoticeDestination())
     }
 
     func testHomeViewModelBuildsSummariesFromRepositoryData() async {
@@ -33,8 +36,11 @@ final class FeatureViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.todaySummary, "1교시 국어\n2교시 수학")
         XCTAssertEqual(viewModel.mealSummary, "비빔밥")
-        XCTAssertEqual(viewModel.eventSummary, "체육대회")
-        XCTAssertEqual(viewModel.noticeSummary, "현장학습 안내")
+        XCTAssertEqual(viewModel.eventSummary, "5월 26일  체육대회\n운동장")
+        XCTAssertEqual(viewModel.noticeSummary, "2026-05-26  현장학습 안내")
+        XCTAssertEqual(viewModel.noticeActionText, "가정통신문 열기")
+        XCTAssertTrue(viewModel.noticeActionEnabled)
+        XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com")
     }
 
     func testMealsScheduleAndTimetableViewModelsRespectProfileCompletion() async {
