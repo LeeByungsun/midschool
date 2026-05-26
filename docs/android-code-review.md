@@ -10,7 +10,8 @@
 - 2026-05-26: **4번 주간 급식 순차 호출 항목 수정 완료**
 - 2026-05-26: **5번 재부팅 후 타이머 복구 누락 항목 수정 완료**
 - 2026-05-26: **6번 PreferencesRepositoryImpl 결합도 항목 수정 완료**
-- 현재 남은 활성 항목은 **7번 ~ 9번**
+- 2026-05-26: **7번 Flow 수집기 내 동적 뷰 생성 항목 수정 완료**
+- 현재 남은 활성 항목은 **8번 ~ 9번**
 
 ---
 
@@ -72,11 +73,12 @@
 
 ---
 
-## 7. UI 렌더링 성능 저하 - Flow 수집기 내 동적 뷰 생성 안티패턴 (성능 이슈)
+## 7. UI 렌더링 성능 저하 - Flow 수집기 내 동적 뷰 생성 안티패턴 (성능 이슈) (✅ 2026-05-26 해결)
 *   **위치:** [`TimetableActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/TimetableActivity.kt#L62-L77) 및 [`MealActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/MealActivity.kt#L55-L68)
 *   **상황:** 시간표 및 급식 화면의 각 요소를 구성하기 위해 Flow를 수집(collect)하여 UI에 반영합니다.
 *   **문제점:** 데이터 상태가 변경되어 Flow 수집기가 트리거될 때마다 `container.removeAllViews()`를 호출하고, 아이템 개수만큼 `MaterialCardView`, `LinearLayout`, `TextView` 등의 뷰를 **코드로 매번 새로 생성(Instantiate)하여 추가**하고 있습니다.
 *   **영향:** 안드로이드에서 프로그래밍 방식으로 뷰 객체를 다량 생성 및 레이아웃을 다시 빌드하는 것은 비용이 많이 드는 작업입니다. 상태가 조금만 갱신되어도 화면 전체 뷰를 파괴하고 다시 만들기 때문에, 메모리 오버헤드가 발생하고 화면이 버벅이는 현상(Jank)이 발생합니다. 효율성을 위해 `RecyclerView`와 `ListAdapter`/`DiffUtil` 구조로 개편해야 합니다.
+*   **현재 상태:** `TimetableActivity` 와 `MealActivity` 의 동적 컨테이너 렌더링을 `RecyclerView + ListAdapter + DiffUtil` 구조로 바꿨습니다. 아이템 레이아웃과 adapter를 분리했고, collect 시에는 `submitList()` 만 호출하도록 정리했습니다.
 
 ---
 
