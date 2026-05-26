@@ -11,7 +11,8 @@
 - 2026-05-26: **5번 재부팅 후 타이머 복구 누락 항목 수정 완료**
 - 2026-05-26: **6번 PreferencesRepositoryImpl 결합도 항목 수정 완료**
 - 2026-05-26: **7번 Flow 수집기 내 동적 뷰 생성 항목 수정 완료**
-- 현재 남은 활성 항목은 **8번 ~ 9번**
+- 2026-05-26: **8번 스플래시 회전 시 중복 화면 전환 항목 수정 완료**
+- 현재 남은 활성 항목은 **9번**
 
 ---
 
@@ -82,11 +83,12 @@
 
 ---
 
-## 8. 스플래시 화면 회전 시 중복 화면 전환 오류 (안정성 이슈)
+## 8. 스플래시 화면 회전 시 중복 화면 전환 오류 (안정성 이슈) (✅ 2026-05-26 해결)
 *   **위치:** [`SplashActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/SplashActivity.kt#L40) 및 [`SplashViewModel.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/ui/splash/SplashViewModel.kt)
 *   **상황:** `SplashActivity`가 시작되자마자 ViewModel에 목적지 판단을 지시합니다.
 *   **문제점:** 화면 회전(Configuration Change) 발생 시 `SplashActivity`가 파괴되고 재시작되면서 `viewModel.decideNextScreen()`이 다시 호출됩니다. 하지만 ViewModel 내부에서는 이미 동작 중인 대기 작업(1.2초 지연)을 중복 방지하지 않고 새로 Coroutine을 띄웁니다.
 *   **영향:** 회전 시 동일한 이동 이벤트(MAIN 또는 SETUP 목적지)가 여러 차례 연이어 발생하게 되어, 다음 화면(Activity)이 중복 시작되거나 비정상적인 백스택 꼬임 현상이 생길 수 있습니다. 이미 작업 중일 때는 호출을 무시하거나 이전 Job을 취소하는 플래그/로직이 필요합니다.
+*   **현재 상태:** `SplashViewModel` 에 목적지 판단 job 중복 실행 방지와 단일 navigation dispatch 가드를 추가했습니다. `SplashViewModelTest` 에서 `decideNextScreen()` 을 연속 호출해도 단 한 번만 이벤트가 나가는 회귀 케이스를 검증합니다.
 
 ---
 
