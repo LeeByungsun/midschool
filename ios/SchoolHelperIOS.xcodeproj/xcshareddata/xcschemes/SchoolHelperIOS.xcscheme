@@ -8,6 +8,9 @@
       <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">
         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="384AED6A9A6E51F8FA09FB01" BuildableName="SchoolHelperIOSTests.xctest" BlueprintName="SchoolHelperIOSTests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
       </BuildActionEntry>
+      <BuildActionEntry buildForTesting="NO" buildForRunning="NO" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="7F56226B5929950B267B5780" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+      </BuildActionEntry>
     </BuildActionEntries>
   </BuildAction>
   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"><Testables><TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="384AED6A9A6E51F8FA09FB01" BuildableName="SchoolHelperIOSTests.xctest" BlueprintName="SchoolHelperIOSTests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/></TestableReference></Testables></TestAction>

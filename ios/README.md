@@ -8,6 +8,7 @@
 - SwiftUI 기반 폴더 골격 생성
 - 화면/도메인 구조 초안 정리
 - shared app/widget storage 및 widget snapshot foundation 추가
+- `SchoolHelperWidget` WidgetKit source/target scaffold 추가
 
 관련 문서:
 

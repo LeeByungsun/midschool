@@ -74,6 +74,7 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 - 앱/위젯 shared suite 저장소
 - 오늘/내일 시간표 snapshot 로더
 - 타이머 요약 snapshot
+- `SchoolHelperWidget` WidgetKit source/target scaffold
 
 ---
 
