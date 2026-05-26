@@ -164,11 +164,8 @@ add(f'\t\t{ids["project_release"]} /* Release */ = {{isa = XCBuildConfiguration;
 app_target_settings = {
     'ASSETCATALOG_COMPILER_APPICON_NAME': '""', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
     'CODE_SIGN_ENTITLEMENTS': 'SchoolHelperIOS/SchoolHelperIOS.entitlements',
-    'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '""', 'ENABLE_TESTABILITY': 'YES', 'GENERATE_INFOPLIST_FILE': 'YES',
-    'INFOPLIST_KEY_CFBundleShortVersionString': '1.0',
-    'INFOPLIST_KEY_CFBundleVersion': '1',
-    'INFOPLIST_KEY_CFBundleDisplayName': 'SchoolHelperIOS', 'INFOPLIST_KEY_UIApplicationSceneManifest_Generation': 'YES',
-    'INFOPLIST_KEY_UILaunchScreen_Generation': 'YES', 'INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone': 'UIInterfaceOrientationPortrait',
+    'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '""', 'ENABLE_TESTABILITY': 'YES', 'GENERATE_INFOPLIST_FILE': 'NO',
+    'INFOPLIST_FILE': 'SchoolHelperIOS/Info.plist',
     'IPHONEOS_DEPLOYMENT_TARGET': '17.0', 'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks")',
     'MARKETING_VERSION': '1.0', 'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
     'SUPPORTED_PLATFORMS': '"iphoneos iphonesimulator"', 'SWIFT_EMIT_LOC_STRINGS': 'NO', 'SWIFT_OPTIMIZATION_LEVEL': '"-Onone"', 'SWIFT_VERSION': '5.0', 'TARGETED_DEVICE_FAMILY': '1'
