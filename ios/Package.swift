@@ -31,6 +31,7 @@ let package = Package(
             ],
             sources: [
                 "App/AppState.swift",
+                "App/AppLaunchOverrides.swift",
                 "Core/Models",
                 "Core/Notifications",
                 "Core/Networking",

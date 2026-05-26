@@ -30,4 +30,22 @@ final class AppStateTests: XCTestCase {
         appState.handleDeepLink(URL(string: "schoolhelper://settings")!)
         XCTAssertEqual(appState.selectedRoute, .settings)
     }
+
+    func testRefreshUsesSeededProfileWhenRequested() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let appState = AppState(
+            store: StudentPreferencesStore(defaults: defaults),
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+
+        withEnvironment([
+            "SCHOOLHELPER_SEED_PROFILE": "fixture"
+        ]) {
+            appState.refresh()
+        }
+
+        XCTAssertEqual(appState.profile.schoolName, "미사중학교")
+        XCTAssertTrue(appState.isSetupComplete)
+    }
 }

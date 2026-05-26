@@ -14,7 +14,9 @@ struct SchoolHelperIOSApp: App {
                 }
                 .task {
                     appState.refresh()
-                    await notificationPermissionCoordinator.refreshIfNeeded()
+                    await notificationPermissionCoordinator.refreshIfNeeded(
+                        isSetupComplete: appState.isSetupComplete
+                    )
                 }
         }
     }

@@ -30,6 +30,10 @@ final class AppState: ObservableObject {
     }
 
     func refresh() {
+        if let seededProfile = AppLaunchOverrides.seededProfile() {
+            saveProfile(seededProfile)
+            return
+        }
         profile = store.load()
     }
 

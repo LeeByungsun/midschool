@@ -1,0 +1,28 @@
+import Foundation
+
+enum AppLaunchOverrides {
+    static func seededProfile(from environment: [String: String] = ProcessInfo.processInfo.environment) -> StudentProfile? {
+        if let raw = environment["SCHOOLHELPER_SEED_PROFILE_JSON"], !raw.isEmpty {
+            guard let data = raw.data(using: .utf8) else { return nil }
+            return try? JSONDecoder().decode(StudentProfile.self, from: data)
+        }
+
+        if environment["SCHOOLHELPER_SEED_PROFILE"] == "fixture" {
+            return StudentProfile(
+                grade: "1",
+                classroom: "2",
+                schoolName: "미사중학교",
+                officeCode: "J10",
+                schoolCode: "7531093",
+                schoolKind: "중학교"
+            )
+        }
+
+        return nil
+    }
+
+    static func shouldSkipNotificationRequest(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        let value = environment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"]?.lowercased()
+        return value == "1" || value == "true" || value == "yes"
+    }
+}

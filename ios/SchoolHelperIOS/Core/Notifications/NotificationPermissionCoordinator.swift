@@ -13,7 +13,9 @@ final class NotificationPermissionCoordinator: ObservableObject {
         self.authorizationProvider = authorizationProvider
     }
 
-    func refreshIfNeeded() async {
+    func refreshIfNeeded(isSetupComplete: Bool) async {
+        if shouldSkipNotificationRequest() { return }
+        guard isSetupComplete else { return }
         let settings = timerSettingsStore.load()
         guard settings.notificationEnabled else { return }
 
@@ -22,4 +24,12 @@ final class NotificationPermissionCoordinator: ObservableObject {
             _ = await authorizationProvider.requestAuthorization()
         }
     }
+
+    private func shouldSkipNotificationRequest(
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
+        let value = environment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"]?.lowercased()
+        return value == "1" || value == "true" || value == "yes"
+    }
+
 }

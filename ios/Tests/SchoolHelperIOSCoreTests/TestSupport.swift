@@ -24,6 +24,42 @@ extension StudentProfile {
     }
 }
 
+func withEnvironment<T>(_ overrides: [String: String], run: () -> T) -> T {
+    var previous: [String: String?] = [:]
+    for (key, value) in overrides {
+        previous[key] = ProcessInfo.processInfo.environment[key]
+        setenv(key, value, 1)
+    }
+    defer {
+        for (key, value) in previous {
+            if let value {
+                setenv(key, value, 1)
+            } else {
+                unsetenv(key)
+            }
+        }
+    }
+    return run()
+}
+
+func withAsyncEnvironment<T>(_ overrides: [String: String], run: () async -> T) async -> T {
+    var previous: [String: String?] = [:]
+    for (key, value) in overrides {
+        previous[key] = ProcessInfo.processInfo.environment[key]
+        setenv(key, value, 1)
+    }
+    defer {
+        for (key, value) in previous {
+            if let value {
+                setenv(key, value, 1)
+            } else {
+                unsetenv(key)
+            }
+        }
+    }
+    return await run()
+}
+
 struct StubSchoolRepository: SchoolRepository {
     var searchResults: [SchoolInfo] = []
     var todayMeals: [MealInfo] = []
