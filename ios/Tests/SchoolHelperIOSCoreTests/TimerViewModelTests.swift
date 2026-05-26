@@ -7,10 +7,12 @@ final class TimerViewModelTests: XCTestCase {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)
         let store = TimerPreferencesStore(defaults: defaults)
+        let scheduler = SpyTimerNotificationScheduler()
 
         var currentTime = Date(timeIntervalSince1970: 1_700_000_000)
         let viewModel = TimerViewModel(
             store: store,
+            notificationScheduler: scheduler,
             now: { currentTime },
             sleep: { _ in }
         )
@@ -19,6 +21,9 @@ final class TimerViewModelTests: XCTestCase {
         viewModel.toggle()
         XCTAssertTrue(viewModel.state.isRunning)
         XCTAssertEqual(viewModel.state.remainingSeconds, TimerPreset.shortBreak.durationSeconds)
+        XCTAssertEqual(scheduler.requestAuthorizationCalls, 1)
+        XCTAssertEqual(scheduler.scheduleCalls.count, 1)
+        XCTAssertEqual(scheduler.scheduleCalls.first?.presetTitle, TimerPreset.shortBreak.title)
 
         currentTime = currentTime.addingTimeInterval(120)
         viewModel.syncWithCurrentTime()
@@ -26,9 +31,29 @@ final class TimerViewModelTests: XCTestCase {
 
         viewModel.toggle()
         XCTAssertFalse(viewModel.state.isRunning)
+        XCTAssertEqual(scheduler.cancelCalls, 2)
 
         viewModel.reset()
         XCTAssertEqual(viewModel.state.remainingSeconds, TimerPreset.shortBreak.durationSeconds)
         XCTAssertNil(viewModel.state.targetDate)
+        XCTAssertEqual(scheduler.cancelCalls, 3)
+    }
+}
+
+private final class SpyTimerNotificationScheduler: TimerNotificationScheduling {
+    private(set) var requestAuthorizationCalls = 0
+    private(set) var cancelCalls = 0
+    private(set) var scheduleCalls: [(date: Date, presetTitle: String)] = []
+
+    func requestAuthorizationIfNeeded() {
+        requestAuthorizationCalls += 1
+    }
+
+    func scheduleTimerCompletion(at date: Date, presetTitle: String) {
+        scheduleCalls.append((date, presetTitle))
+    }
+
+    func cancelPendingTimerCompletion() {
+        cancelCalls += 1
     }
 }

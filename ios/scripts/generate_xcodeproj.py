@@ -39,7 +39,7 @@ ids = {k: xid(k) for k in [
     'sources_phase','frameworks_phase','resources_phase','tests_sources_phase','tests_frameworks_phase','tests_resources_phase',
     'project_debug','project_release','app_debug','app_release','tests_debug','tests_release'
 ]}
-core_subgroups = {name: xid(f'group_Core_{name}') for name in ['Models', 'Networking', 'Repositories', 'Storage']}
+core_subgroups = {name: xid(f'group_Core_{name}') for name in ['Models', 'Networking', 'Notifications', 'Repositories', 'Storage']}
 feature_subgroups = {name: xid(f'group_Features_{name}') for name in ['Home', 'Meals', 'Schedule', 'Settings', 'Setup', 'Timer', 'Timetable']}
 
 file_ref_ids = {}

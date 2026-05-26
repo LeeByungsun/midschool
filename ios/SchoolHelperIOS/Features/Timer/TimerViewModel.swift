@@ -6,16 +6,19 @@ final class TimerViewModel: ObservableObject {
     @Published var state: TimerSessionState
 
     private let store: TimerPreferencesStore
+    private let notificationScheduler: TimerNotificationScheduling
     private let now: () -> Date
     private let sleep: @Sendable (UInt64) async -> Void
     private var countdownTask: Task<Void, Never>?
 
     init(
         store: TimerPreferencesStore = TimerPreferencesStore(),
+        notificationScheduler: TimerNotificationScheduling = TimerNotificationScheduler(),
         now: @escaping () -> Date = Date.init,
         sleep: @escaping @Sendable (UInt64) async -> Void = { try? await Task.sleep(nanoseconds: $0) }
     ) {
         self.store = store
+        self.notificationScheduler = notificationScheduler
         self.now = now
         self.sleep = sleep
         self.state = store.load()
@@ -24,6 +27,7 @@ final class TimerViewModel: ObservableObject {
 
     func selectPreset(_ preset: TimerPreset) {
         countdownTask?.cancel()
+        notificationScheduler.cancelPendingTimerCompletion()
         state = TimerSessionState(
             preset: preset,
             totalSeconds: preset.durationSeconds,
@@ -44,6 +48,7 @@ final class TimerViewModel: ObservableObject {
 
     func reset() {
         countdownTask?.cancel()
+        notificationScheduler.cancelPendingTimerCompletion()
         state.remainingSeconds = state.totalSeconds
         state.targetDate = nil
         state.isRunning = false
@@ -65,6 +70,7 @@ final class TimerViewModel: ObservableObject {
 
         if remaining == 0 {
             countdownTask?.cancel()
+            notificationScheduler.cancelPendingTimerCompletion()
             state.targetDate = nil
             state.isRunning = false
             store.save(state)
@@ -75,12 +81,20 @@ final class TimerViewModel: ObservableObject {
         countdownTask?.cancel()
         state.isRunning = true
         state.targetDate = now().addingTimeInterval(TimeInterval(state.remainingSeconds))
+        notificationScheduler.requestAuthorizationIfNeeded()
+        if let targetDate = state.targetDate {
+            notificationScheduler.scheduleTimerCompletion(
+                at: targetDate,
+                presetTitle: state.preset.title
+            )
+        }
         store.save(state)
         startCountdownLoop()
     }
 
     private func pause() {
         countdownTask?.cancel()
+        notificationScheduler.cancelPendingTimerCompletion()
         if let targetDate = state.targetDate {
             state.remainingSeconds = max(0, Int(targetDate.timeIntervalSince(now())))
         }
