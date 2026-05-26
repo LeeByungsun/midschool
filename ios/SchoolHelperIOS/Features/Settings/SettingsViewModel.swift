@@ -9,16 +9,16 @@ final class SettingsViewModel: ObservableObject {
     @Published var message: String = ""
     @Published var isSearching: Bool = false
 
-    private let searchService: SchoolSearchService
+    private let repository: SchoolRepository
 
     init(
         initialProfile: StudentProfile,
-        searchService: SchoolSearchService = MockSchoolSearchService()
+        repository: SchoolRepository = DefaultSchoolRepository()
     ) {
         self.draftProfile = initialProfile
         self.searchQuery = initialProfile.schoolName
         self.selectedSchool = initialProfile.schoolInfo
-        self.searchService = searchService
+        self.repository = repository
     }
 
     func searchSchools() async {
@@ -33,7 +33,7 @@ final class SettingsViewModel: ObservableObject {
         defer { isSearching = false }
 
         do {
-            let schools = try await searchService.searchSchools(query: trimmed)
+            let schools = try await repository.searchSchools(query: trimmed)
             searchResults = schools
             if schools.count == 1, let school = schools.first {
                 selectSchool(school)
