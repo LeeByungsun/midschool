@@ -1,12 +1,22 @@
 import SwiftUI
+import AppIntents
 import WidgetKit
+
+struct SchoolHelperWidgetConfigurationIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "학교도우미 위젯 설정"
+    static var description = IntentDescription("위젯에서 내일 시간표를 보여줄지 선택합니다.")
+
+    @Parameter(title: "내일 시간표 표시", default: true)
+    var showTomorrowTimetable: Bool
+}
 
 struct SchoolHelperWidgetEntry: TimelineEntry {
     let date: Date
     let snapshot: HomeWidgetSnapshot
 }
 
-struct SchoolHelperWidgetProvider: TimelineProvider {
+struct SchoolHelperWidgetProvider: AppIntentTimelineProvider {
+    typealias Intent = SchoolHelperWidgetConfigurationIntent
     private let loader = HomeWidgetSnapshotLoader()
 
     func placeholder(in context: Context) -> SchoolHelperWidgetEntry {
@@ -23,20 +33,16 @@ struct SchoolHelperWidgetProvider: TimelineProvider {
         )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SchoolHelperWidgetEntry) -> Void) {
-        Task {
-            let snapshot = await loader.load()
-            completion(SchoolHelperWidgetEntry(date: Date(), snapshot: snapshot))
-        }
+    func snapshot(for configuration: SchoolHelperWidgetConfigurationIntent, in context: Context) async -> SchoolHelperWidgetEntry {
+        let snapshot = await loader.load(showTomorrow: configuration.showTomorrowTimetable)
+        return SchoolHelperWidgetEntry(date: Date(), snapshot: snapshot)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<SchoolHelperWidgetEntry>) -> Void) {
-        Task {
-            let snapshot = await loader.load()
-            let entry = SchoolHelperWidgetEntry(date: Date(), snapshot: snapshot)
-            let refreshDate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(1800)
-            completion(Timeline(entries: [entry], policy: .after(refreshDate)))
-        }
+    func timeline(for configuration: SchoolHelperWidgetConfigurationIntent, in context: Context) async -> Timeline<SchoolHelperWidgetEntry> {
+        let snapshot = await loader.load(showTomorrow: configuration.showTomorrowTimetable)
+        let entry = SchoolHelperWidgetEntry(date: Date(), snapshot: snapshot)
+        let refreshDate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(1800)
+        return Timeline(entries: [entry], policy: .after(refreshDate))
     }
 }
 
@@ -89,7 +95,11 @@ struct SchoolHelperWidget: Widget {
     let kind = "SchoolHelperWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: SchoolHelperWidgetProvider()) { entry in
+        AppIntentConfiguration(
+            kind: kind,
+            intent: SchoolHelperWidgetConfigurationIntent.self,
+            provider: SchoolHelperWidgetProvider()
+        ) { entry in
             SchoolHelperWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("학교도우미")
