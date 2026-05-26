@@ -18,6 +18,7 @@ struct SchoolHelperWidgetEntry: TimelineEntry {
 struct SchoolHelperWidgetProvider: AppIntentTimelineProvider {
     typealias Intent = SchoolHelperWidgetConfigurationIntent
     private let loader = HomeWidgetSnapshotLoader()
+    private let timerStore = TimerPreferencesStore()
 
     func placeholder(in context: Context) -> SchoolHelperWidgetEntry {
         SchoolHelperWidgetEntry(
@@ -39,9 +40,13 @@ struct SchoolHelperWidgetProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: SchoolHelperWidgetConfigurationIntent, in context: Context) async -> Timeline<SchoolHelperWidgetEntry> {
-        let snapshot = await loader.load(showTomorrow: configuration.showTomorrowTimetable)
-        let entry = SchoolHelperWidgetEntry(date: Date(), snapshot: snapshot)
-        let refreshDate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(1800)
+        let now = Date()
+        let snapshot = await loader.load(now: now, showTomorrow: configuration.showTomorrowTimetable)
+        let entry = SchoolHelperWidgetEntry(date: now, snapshot: snapshot)
+        let refreshDate = HomeWidgetTimelinePlanner.nextRefreshDate(
+            now: now,
+            timerState: timerStore.load()
+        )
         return Timeline(entries: [entry], policy: .after(refreshDate))
     }
 }
