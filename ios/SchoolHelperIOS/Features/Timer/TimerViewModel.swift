@@ -4,8 +4,10 @@ import Combine
 @MainActor
 final class TimerViewModel: ObservableObject {
     @Published var state: TimerSessionState
+    @Published var displayMode: TimerDisplayMode
 
     private let store: TimerPreferencesStore
+    private let settingsStore: TimerSettingsStore
     private let notificationScheduler: TimerNotificationScheduling
     private let now: () -> Date
     private let sleep: @Sendable (UInt64) async -> Void
@@ -13,15 +15,18 @@ final class TimerViewModel: ObservableObject {
 
     init(
         store: TimerPreferencesStore = TimerPreferencesStore(),
+        settingsStore: TimerSettingsStore = TimerSettingsStore(),
         notificationScheduler: TimerNotificationScheduling = TimerNotificationScheduler(),
         now: @escaping () -> Date = Date.init,
         sleep: @escaping @Sendable (UInt64) async -> Void = { try? await Task.sleep(nanoseconds: $0) }
     ) {
         self.store = store
+        self.settingsStore = settingsStore
         self.notificationScheduler = notificationScheduler
         self.now = now
         self.sleep = sleep
         self.state = store.load()
+        self.displayMode = settingsStore.load().displayMode
         refreshRunningState()
     }
 
@@ -56,11 +61,21 @@ final class TimerViewModel: ObservableObject {
     }
 
     func refreshRunningState() {
+        refreshSettings()
         guard state.isRunning else { return }
         syncWithCurrentTime()
         if state.isRunning {
             startCountdownLoop()
         }
+    }
+
+    func refreshSettings() {
+        displayMode = settingsStore.load().displayMode
+    }
+
+    var progressFraction: Double {
+        guard state.totalSeconds > 0 else { return 0 }
+        return Double(state.remainingSeconds) / Double(state.totalSeconds)
     }
 
     func syncWithCurrentTime() {
@@ -81,11 +96,15 @@ final class TimerViewModel: ObservableObject {
         countdownTask?.cancel()
         state.isRunning = true
         state.targetDate = now().addingTimeInterval(TimeInterval(state.remainingSeconds))
-        notificationScheduler.requestAuthorizationIfNeeded()
-        if let targetDate = state.targetDate {
+        let timerSettings = settingsStore.load()
+        if timerSettings.notificationEnabled {
+            notificationScheduler.requestAuthorizationIfNeeded()
+        }
+        if let targetDate = state.targetDate, timerSettings.notificationEnabled {
             notificationScheduler.scheduleTimerCompletion(
                 at: targetDate,
-                presetTitle: state.preset.title
+                presetTitle: state.preset.title,
+                vibrationEnabled: timerSettings.vibrationEnabled
             )
         }
         store.save(state)

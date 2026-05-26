@@ -8,8 +8,28 @@ struct TimerView: View {
             VStack(spacing: 16) {
                 Text(viewModel.state.preset.title)
                     .font(.headline)
-                Text(timeText)
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                if viewModel.displayMode == .count {
+                    Text(timeText)
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                } else {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 16)
+                            .frame(width: 180, height: 180)
+                        Circle()
+                            .trim(from: 0, to: viewModel.progressFraction)
+                            .stroke(Color.blue, style: StrokeStyle(lineWidth: 16, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .frame(width: 180, height: 180)
+                        VStack(spacing: 8) {
+                            Text(timeText)
+                                .font(.system(size: 36, weight: .bold, design: .rounded))
+                            Text("남은 시간")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
                 HStack {
                     ForEach(TimerPreset.allCases, id: \.self) { preset in
                         Button(preset.title) {

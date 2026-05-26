@@ -58,8 +58,20 @@ struct SettingsView: View {
                     ))
                 }
 
+                Section("타이머 설정") {
+                    Picker("표시 모드", selection: $viewModel.timerDisplayMode) {
+                        ForEach(TimerDisplayMode.allCases, id: \.self) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+
+                    Toggle("알림음 사용", isOn: $viewModel.notificationEnabled)
+                    Toggle("진동 사용", isOn: $viewModel.vibrationEnabled)
+                }
+
                 Section {
                     Button("설정 저장") {
+                        viewModel.saveTimerSettings()
                         if let profile = viewModel.buildProfileForSave() {
                             appState.saveProfile(profile)
                         }

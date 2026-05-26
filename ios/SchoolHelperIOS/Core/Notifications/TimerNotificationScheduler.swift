@@ -3,7 +3,7 @@ import UserNotifications
 
 protocol TimerNotificationScheduling {
     func requestAuthorizationIfNeeded()
-    func scheduleTimerCompletion(at date: Date, presetTitle: String)
+    func scheduleTimerCompletion(at date: Date, presetTitle: String, vibrationEnabled: Bool)
     func cancelPendingTimerCompletion()
 }
 
@@ -21,7 +21,7 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
         }
     }
 
-    func scheduleTimerCompletion(at date: Date, presetTitle: String) {
+    func scheduleTimerCompletion(at date: Date, presetTitle: String, vibrationEnabled: Bool) {
         center.getNotificationSettings { [center] settings in
             let isAllowed: Bool
             switch settings.authorizationStatus {
@@ -44,6 +44,9 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
             content.title = "타이머가 끝났어요"
             content.body = "\(presetTitle) 시간이 완료됐어요."
             content.sound = .default
+            if #available(iOS 15.0, *) {
+                content.interruptionLevel = vibrationEnabled ? .timeSensitive : .active
+            }
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: remaining, repeats: false)
             let request = UNNotificationRequest(

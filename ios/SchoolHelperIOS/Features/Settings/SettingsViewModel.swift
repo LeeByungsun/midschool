@@ -9,17 +9,27 @@ final class SettingsViewModel: ObservableObject {
     @Published var selectedSchool: SchoolInfo?
     @Published var message: String = ""
     @Published var isSearching: Bool = false
+    @Published var timerDisplayMode: TimerDisplayMode
+    @Published var notificationEnabled: Bool
+    @Published var vibrationEnabled: Bool
 
     private let repository: SchoolRepository
+    private let timerSettingsStore: TimerSettingsStore
 
     init(
         initialProfile: StudentProfile,
-        repository: SchoolRepository = DefaultSchoolRepository()
+        repository: SchoolRepository = DefaultSchoolRepository(),
+        timerSettingsStore: TimerSettingsStore = TimerSettingsStore()
     ) {
+        let timerSettings = timerSettingsStore.load()
         self.draftProfile = initialProfile
         self.searchQuery = initialProfile.schoolName
         self.selectedSchool = initialProfile.schoolInfo
         self.repository = repository
+        self.timerSettingsStore = timerSettingsStore
+        self.timerDisplayMode = timerSettings.displayMode
+        self.notificationEnabled = timerSettings.notificationEnabled
+        self.vibrationEnabled = timerSettings.vibrationEnabled
     }
 
     func updateSchoolQuery(_ query: String) {
@@ -81,11 +91,25 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func sync(with profile: StudentProfile) {
+        let timerSettings = timerSettingsStore.load()
         draftProfile = profile
         searchQuery = profile.schoolName
         selectedSchool = profile.schoolInfo
         searchResults = []
         message = ""
+        timerDisplayMode = timerSettings.displayMode
+        notificationEnabled = timerSettings.notificationEnabled
+        vibrationEnabled = timerSettings.vibrationEnabled
+    }
+
+    func saveTimerSettings() {
+        timerSettingsStore.save(
+            TimerSettings(
+                displayMode: timerDisplayMode,
+                notificationEnabled: notificationEnabled,
+                vibrationEnabled: vibrationEnabled
+            )
+        )
     }
 
     func buildProfileForSave() -> StudentProfile? {
