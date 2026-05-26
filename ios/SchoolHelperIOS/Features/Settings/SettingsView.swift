@@ -67,6 +67,21 @@ struct SettingsView: View {
 
                     Toggle("알림음 사용", isOn: $viewModel.notificationEnabled)
                     Toggle("진동 사용", isOn: $viewModel.vibrationEnabled)
+                        .disabled(!viewModel.notificationEnabled)
+                }
+
+                Section("알림 권한") {
+                    Text(viewModel.notificationPermissionSummary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+
+                    if viewModel.canRequestNotificationPermission {
+                        Button("알림 권한 요청") {
+                            Task {
+                                await viewModel.requestNotificationPermission()
+                            }
+                        }
+                    }
                 }
 
                 Section {
@@ -81,6 +96,7 @@ struct SettingsView: View {
             .navigationTitle("설정")
             .task {
                 viewModel.sync(with: appState.profile)
+                await viewModel.refreshNotificationPermission()
             }
         }
     }

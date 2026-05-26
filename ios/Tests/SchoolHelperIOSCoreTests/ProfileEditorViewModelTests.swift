@@ -31,7 +31,11 @@ final class ProfileEditorViewModelTests: XCTestCase {
     }
 
     func testSettingsViewModelSyncRefreshesDraftAndSelection() {
-        let viewModel = SettingsViewModel(initialProfile: StudentProfile(), repository: MockSchoolRepository())
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile(),
+            repository: MockSchoolRepository(),
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
         let profile = StudentProfile.fixture()
 
         viewModel.sync(with: profile)

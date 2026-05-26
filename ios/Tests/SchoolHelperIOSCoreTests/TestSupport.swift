@@ -56,3 +56,28 @@ struct StubSchoolRepository: SchoolRepository {
         notices
     }
 }
+
+actor StubNotificationAuthorizationProvider: NotificationAuthorizationProviding {
+    private var statuses: [NotificationAuthorizationStatus]
+    private var requests = 0
+
+    init(statusSequence: [NotificationAuthorizationStatus] = [.authorized]) {
+        self.statuses = statusSequence
+    }
+
+    func authorizationStatus() async -> NotificationAuthorizationStatus {
+        if statuses.count > 1 {
+            return statuses.removeFirst()
+        }
+        return statuses.first ?? .authorized
+    }
+
+    func requestAuthorization() async -> Bool {
+        requests += 1
+        return true
+    }
+
+    func requestCount() -> Int {
+        requests
+    }
+}

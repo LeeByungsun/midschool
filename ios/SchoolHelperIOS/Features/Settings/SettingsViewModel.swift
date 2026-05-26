@@ -12,14 +12,18 @@ final class SettingsViewModel: ObservableObject {
     @Published var timerDisplayMode: TimerDisplayMode
     @Published var notificationEnabled: Bool
     @Published var vibrationEnabled: Bool
+    @Published var notificationPermissionSummary: String = "알림 권한 상태를 확인하는 중이에요."
+    @Published var canRequestNotificationPermission: Bool = false
 
     private let repository: SchoolRepository
     private let timerSettingsStore: TimerSettingsStore
+    private let notificationAuthorizationProvider: NotificationAuthorizationProviding
 
     init(
         initialProfile: StudentProfile,
         repository: SchoolRepository = DefaultSchoolRepository(),
-        timerSettingsStore: TimerSettingsStore = TimerSettingsStore()
+        timerSettingsStore: TimerSettingsStore = TimerSettingsStore(),
+        notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider()
     ) {
         let timerSettings = timerSettingsStore.load()
         self.draftProfile = initialProfile
@@ -27,6 +31,7 @@ final class SettingsViewModel: ObservableObject {
         self.selectedSchool = initialProfile.schoolInfo
         self.repository = repository
         self.timerSettingsStore = timerSettingsStore
+        self.notificationAuthorizationProvider = notificationAuthorizationProvider
         self.timerDisplayMode = timerSettings.displayMode
         self.notificationEnabled = timerSettings.notificationEnabled
         self.vibrationEnabled = timerSettings.vibrationEnabled
@@ -110,6 +115,30 @@ final class SettingsViewModel: ObservableObject {
                 vibrationEnabled: vibrationEnabled
             )
         )
+    }
+
+    func refreshNotificationPermission() async {
+        let status = await notificationAuthorizationProvider.authorizationStatus()
+        applyNotificationAuthorizationStatus(status)
+    }
+
+    func requestNotificationPermission() async {
+        _ = await notificationAuthorizationProvider.requestAuthorization()
+        await refreshNotificationPermission()
+    }
+
+    private func applyNotificationAuthorizationStatus(_ status: NotificationAuthorizationStatus) {
+        switch status {
+        case .authorized:
+            notificationPermissionSummary = "알림 권한이 허용되어 있어요."
+            canRequestNotificationPermission = false
+        case .denied:
+            notificationPermissionSummary = "알림 권한이 꺼져 있어요. 시스템 설정에서 변경해 주세요."
+            canRequestNotificationPermission = false
+        case .notDetermined:
+            notificationPermissionSummary = "타이머 완료 알림을 받으려면 권한이 필요해요."
+            canRequestNotificationPermission = true
+        }
     }
 
     func buildProfileForSave() -> StudentProfile? {
