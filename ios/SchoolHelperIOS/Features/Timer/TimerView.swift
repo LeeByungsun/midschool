@@ -26,7 +26,10 @@ struct TimerView: View {
                     }
                 }
             }
-                .navigationTitle("타이머")
+            .navigationTitle("타이머")
+            .task {
+                viewModel.refreshRunningState()
+            }
         }
     }
 
