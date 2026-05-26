@@ -81,6 +81,7 @@
     <string name="school_search_selected">%1$s를 선택했어요.</string>
     <string name="school_search_error">학교 검색 중 오류가 발생했어요.</string>
     <string name="school_search_reselect_required">기존 설정에 학교 코드가 없어 학교를 다시 검색해 선택해 주세요.</string>
+    <string name="school_search_reselect_current_selection">학교를 바꾸려면 검색 결과에서 다시 선택해 주세요.</string>
     <string name="settings_title">설정</string>
     <string name="settings_description">학교와 학년/반을 수정하면 시간표와 학교 정보 조회 기준이 함께 바뀝니다.</string>
     <string name="settings_timer_display_title">타이머 표시 방식</string>

@@ -10,6 +10,7 @@ import com.bsbarron.midschoolapp.data.repository.SchoolRepository
 import com.bsbarron.midschoolapp.data.repository.StudentInfo
 import com.bsbarron.midschoolapp.data.repository.TimerDisplayMode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -27,6 +28,8 @@ class SettingsViewModel @Inject constructor(
 
     private val appContext = application.applicationContext
     private val studentInfo = preferencesRepository.getStudentInfo()
+    private var schoolSearchJob: Job? = null
+    private var latestSearchRequestId: Long = 0L
     private val _uiState = MutableStateFlow(
         SettingsUiState(
             schoolQuery = studentInfo.schoolName,
@@ -54,10 +57,15 @@ class SettingsViewModel @Inject constructor(
     fun updateSchoolQuery(query: String) {
         val trimmedQuery = query.trim()
         _uiState.update { state ->
-            val keepSelection = state.selectedSchool?.schoolName == trimmedQuery
             state.copy(
                 schoolQuery = query,
-                selectedSchool = if (keepSelection) state.selectedSchool else null
+                selectedSchool = state.selectedSchool,
+                schoolResults = emptyList(),
+                searchMessage = when {
+                    state.selectedSchool != null && state.selectedSchool.schoolName != trimmedQuery ->
+                        appContext.getString(R.string.school_search_reselect_current_selection)
+                    else -> state.searchMessage
+                }
             )
         }
     }
@@ -70,15 +78,18 @@ class SettingsViewModel @Inject constructor(
                     isSearching = false,
                     searchMessage = appContext.getString(R.string.school_search_min_query),
                     schoolResults = emptyList(),
-                    selectedSchool = null
+                    selectedSchool = it.selectedSchool
                 )
             }
             return
         }
 
-        viewModelScope.launch {
+        val requestId = ++latestSearchRequestId
+        schoolSearchJob?.cancel()
+        schoolSearchJob = viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true, searchMessage = "", schoolResults = emptyList()) }
             val result = schoolRepository.searchSchools(query)
+            if (requestId != latestSearchRequestId) return@launch
 
             result.onSuccess { schools ->
                 when {
@@ -87,7 +98,7 @@ class SettingsViewModel @Inject constructor(
                             it.copy(
                                 isSearching = false,
                                 schoolResults = emptyList(),
-                                selectedSchool = null,
+                                selectedSchool = it.selectedSchool,
                                 searchMessage = appContext.getString(R.string.school_search_empty)
                             )
                         }
@@ -122,7 +133,7 @@ class SettingsViewModel @Inject constructor(
                     it.copy(
                         isSearching = false,
                         schoolResults = emptyList(),
-                        selectedSchool = null,
+                        selectedSchool = it.selectedSchool,
                         searchMessage = error.message ?: appContext.getString(R.string.school_search_error)
                     )
                 }
@@ -162,7 +173,7 @@ class SettingsViewModel @Inject constructor(
 
     suspend fun saveSettings() {
         val state = _uiState.value
-        if (state.selectedSchool == null) {
+        if (state.selectedSchool == null || state.selectedSchool.schoolName != state.schoolQuery.trim()) {
             _messageEvent.emit(R.string.setup_error_school_required)
             return
         }

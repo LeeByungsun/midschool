@@ -21,6 +21,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.Duration
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE, sdk = [34])
@@ -132,6 +133,29 @@ class SetupViewModelTest {
     }
 
     @Test
+    fun updateSchoolQuery_whenQueryChanges_preservesCurrentSelectionUntilReselect() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "2",
+                classroom = "3",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+
+        viewModel.updateSchoolQuery("다른 학교")
+
+        assertEquals(selectedSchool, viewModel.uiState.value.selectedSchool)
+        assertEquals(
+            application.getString(R.string.school_search_reselect_current_selection),
+            viewModel.uiState.value.searchMessage
+        )
+    }
+
+    @Test
     fun searchSchools_whenQueryTooShort_showsValidationAndSkipsRepository() {
         val schoolRepository = FakeSchoolRepository()
         val viewModel = SetupViewModel(application, FakePreferencesRepository(), schoolRepository)
@@ -165,6 +189,58 @@ class SetupViewModelTest {
         assertEquals(listOf(selectedSchool), state.schoolResults)
         assertEquals(application.getString(R.string.school_search_single_result), state.searchMessage)
         assertTrue(!state.isSearching)
+    }
+
+    @Test
+    fun searchSchools_whenPreviousRequestFinishesLate_ignoresStaleResult() = runBlocking {
+        val firstSchool = selectedSchool.copy(schoolName = "구미중학교", schoolCode = "1111111")
+        val latestSchool = selectedSchool.copy(schoolName = "미사중학교", schoolCode = "2222222")
+        val schoolRepository = FakeSchoolRepository().apply {
+            searchResultsByQuery["구미"] = Result.success(listOf(firstSchool))
+            searchResultsByQuery["미사"] = Result.success(listOf(latestSchool))
+            searchDelayMillisByQuery["구미"] = 200L
+            searchDelayMillisByQuery["미사"] = 10L
+        }
+        val viewModel = SetupViewModel(application, FakePreferencesRepository(), schoolRepository)
+
+        viewModel.updateSchoolQuery("구미")
+        viewModel.searchSchools()
+        viewModel.updateSchoolQuery("미사")
+        viewModel.searchSchools()
+
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(250))
+        val state = viewModel.uiState.value
+
+        assertEquals(listOf("구미", "미사"), schoolRepository.requestedSearchQueries)
+        assertEquals(latestSchool.schoolName, state.schoolQuery)
+        assertEquals(latestSchool, state.selectedSchool)
+        assertEquals(listOf(latestSchool), state.schoolResults)
+    }
+
+    @Test
+    fun searchSchools_whenQueryFails_preservesCurrentSelection() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "2",
+                classroom = "3",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+        val schoolRepository = FakeSchoolRepository(
+            schoolSearchResult = Result.failure(IllegalStateException("검색 실패"))
+        )
+        val viewModel = SetupViewModel(application, repository, schoolRepository)
+
+        viewModel.updateSchoolQuery("새 학교")
+        viewModel.searchSchools()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val state = viewModel.uiState.value
+        assertEquals(selectedSchool, state.selectedSchool)
+        assertEquals("검색 실패", state.searchMessage)
     }
 
     @Test
@@ -245,7 +321,7 @@ class SetupViewModelTest {
         viewModel.saveStudentInfo()
 
         assertEquals(R.string.setup_error_school_required, messageDeferred.await())
-        assertNull(viewModel.uiState.value.selectedSchool)
+        assertEquals(selectedSchool, viewModel.uiState.value.selectedSchool)
         assertTrue(repository.savedStudentInfoCalls.isEmpty())
     }
 }

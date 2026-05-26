@@ -6,6 +6,7 @@ import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.bsbarron.midschoolapp.data.repository.SchoolRepository
+import kotlinx.coroutines.delay
 
 class FakeSchoolRepository(
     var schoolSearchResult: Result<List<SchoolInfo>> = Result.success(emptyList()),
@@ -16,6 +17,9 @@ class FakeSchoolRepository(
 ) : SchoolRepository {
     var lastSearchQuery: String? = null
         private set
+    val requestedSearchQueries = mutableListOf<String>()
+    val searchResultsByQuery = mutableMapOf<String, Result<List<SchoolInfo>>>()
+    val searchDelayMillisByQuery = mutableMapOf<String, Long>()
     var mealsCallCount: Int = 0
         private set
     val requestedMealDates = mutableListOf<String?>()
@@ -29,7 +33,9 @@ class FakeSchoolRepository(
 
     override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> {
         lastSearchQuery = query
-        return schoolSearchResult
+        requestedSearchQueries += query
+        searchDelayMillisByQuery[query]?.takeIf { it > 0L }?.let { delay(it) }
+        return searchResultsByQuery[query] ?: schoolSearchResult
     }
 
     override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
