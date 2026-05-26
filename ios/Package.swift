@@ -28,6 +28,7 @@ let package = Package(
                 "Features/Setup/SetupView.swift",
                 "Features/Timer/TimerView.swift",
                 "Features/Timetable/TimetableView.swift",
+                "Core/Views",
                 "Resources"
             ],
             sources: [

@@ -42,7 +42,7 @@ ids = {k: xid(k) for k in [
     'widget_embed_build_file','widget_target_proxy','widget_target_dependency',
     'project_debug','project_release','app_debug','app_release','tests_debug','tests_release','widget_debug','widget_release'
 ]}
-core_subgroups = {name: xid(f'group_Core_{name}') for name in ['Models', 'Networking', 'Notifications', 'Repositories', 'Storage']}
+core_subgroups = {name: xid(f'group_Core_{name}') for name in ['Models', 'Networking', 'Notifications', 'Repositories', 'Storage', 'Views']}
 feature_subgroups = {name: xid(f'group_Features_{name}') for name in ['Home', 'Meals', 'Schedule', 'Settings', 'Setup', 'Timer', 'Timetable']}
 
 file_ref_ids = {}

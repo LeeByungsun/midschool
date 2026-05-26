@@ -55,42 +55,7 @@ struct SchoolHelperWidgetEntryView: View {
     var entry: SchoolHelperWidgetEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(entry.snapshot.headerDate)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text(entry.snapshot.schoolLabel)
-                .font(.headline)
-                .lineLimit(2)
-
-            Text(entry.snapshot.timerSummary)
-                .font(.subheadline)
-                .foregroundStyle(.blue)
-
-            Divider()
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("오늘")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text(entry.snapshot.todayTimetable)
-                    .font(.caption)
-                    .lineLimit(4)
-            }
-
-            if let tomorrow = entry.snapshot.tomorrowTimetable {
-                Divider()
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("내일")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text(tomorrow)
-                        .font(.caption)
-                        .lineLimit(3)
-                }
-            }
-        }
+        HomeWidgetSnapshotView(snapshot: entry.snapshot)
         .padding()
         .widgetURL(entry.snapshot.requiresSetup
             ? URL(string: "schoolhelper://settings")
