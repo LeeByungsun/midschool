@@ -4,7 +4,7 @@ final class StudentPreferencesStore {
     private let defaults: UserDefaults
     private let key = "student_profile"
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = AppStorageConfig.userDefaults()) {
         self.defaults = defaults
     }
 

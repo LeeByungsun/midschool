@@ -4,7 +4,7 @@ final class TimerPreferencesStore {
     private let defaults: UserDefaults
     private let key = "timer_session_state"
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = AppStorageConfig.userDefaults()) {
         self.defaults = defaults
     }
 
