@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct SchoolHelperIOSApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var notificationPermissionCoordinator = NotificationPermissionCoordinator()
 
     var body: some Scene {
         WindowGroup {
@@ -10,6 +11,7 @@ struct SchoolHelperIOSApp: App {
                 .environmentObject(appState)
                 .task {
                     appState.refresh()
+                    await notificationPermissionCoordinator.refreshIfNeeded()
                 }
         }
     }
