@@ -24,6 +24,7 @@ class FakeSchoolRepository(
         private set
     val requestedMealDates = mutableListOf<String?>()
     val mealResultsByDate = mutableMapOf<String?, Result<List<MealInfo>>>()
+    val mealDelayMillisByDate = mutableMapOf<String?, Long>()
     var schedulesCallCount: Int = 0
         private set
     var noticesCallCount: Int = 0
@@ -41,6 +42,7 @@ class FakeSchoolRepository(
     override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
         mealsCallCount += 1
         requestedMealDates += date
+        mealDelayMillisByDate[date]?.takeIf { it > 0L }?.let { delay(it) }
         return mealResultsByDate[date] ?: mealsResult
     }
 

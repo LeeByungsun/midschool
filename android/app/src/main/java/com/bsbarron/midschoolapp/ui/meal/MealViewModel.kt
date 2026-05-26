@@ -8,6 +8,8 @@ import com.bsbarron.midschoolapp.data.model.MealInfo
 import com.bsbarron.midschoolapp.data.repository.PreferencesRepository
 import com.bsbarron.midschoolapp.data.repository.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -58,11 +60,15 @@ class MealViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val dayStates = (0L..4L).map { offset ->
-                val day = weekStart.plusDays(offset)
-                val result = schoolRepository.getMeals(day.format(DateTimeFormatter.BASIC_ISO_DATE))
-                buildDayUiModel(day = day, result = result)
-            }
+            val dayStates = (0L..4L)
+                .map { offset ->
+                    async {
+                        val day = weekStart.plusDays(offset)
+                        val result = schoolRepository.getMeals(day.format(DateTimeFormatter.BASIC_ISO_DATE))
+                        buildDayUiModel(day = day, result = result)
+                    }
+                }
+                .awaitAll()
 
             val hasAnyMeals = dayStates.any { it.hasMealData }
             val hasErrors = dayStates.any { it.hasError }

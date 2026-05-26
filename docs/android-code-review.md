@@ -7,7 +7,8 @@
 - 2026-05-26: **1번 NEIS 에러 핸들링 항목은 수정 완료**
 - 2026-05-26: **2번 POST_NOTIFICATIONS 권한 요청 항목도 수정 완료**
 - 2026-05-26: **3번 타이머 per-tick 저장 항목도 수정 완료**
-- 현재 남은 활성 항목은 **4번 ~ 6번**
+- 2026-05-26: **4번 주간 급식 순차 호출 항목도 수정 완료**
+- 현재 남은 활성 항목은 **5번 ~ 6번**
 
 ---
 
@@ -42,11 +43,12 @@
 
 ---
 
-## 4. 주간 급식 조회 시 API 순차(Sequential) 호출 (성능 이슈)
+## 4. 주간 급식 조회 시 API 순차(Sequential) 호출 (성능 이슈) (✅ 2026-05-26 해결)
 *   **위치:** [`MealViewModel.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/ui/meal/MealViewModel.kt#L60-L65)
 *   **상황:** 주간 급식 탭에 진입하면 월요일부터 금요일까지 5일 치의 급식 데이터를 가져옵니다.
 *   **문제점:** `viewModelScope.launch` 내에서 `(0L..4L).map` 루프를 사용해 하루씩 `schoolRepository.getMeals(day)`를 직접 호출하고 있습니다. 이는 5번의 네트워크 요청이 **병렬이 아닌 순차적으로(하나가 끝나야 다음 날 요청 시작) 실행**됨을 의미합니다.
 *   **영향:** 네트워크 환경이 지연될 경우(예: 한 번의 요청에 300ms 소요 시) 총 로딩 시간이 `5 * 300ms = 1.5초` 이상으로 누적되어 화면 진입 로딩이 매우 느려집니다. 코루틴의 `async`와 `awaitAll`을 이용해 5개의 요청을 동시에 던지도록 처리해야 합니다.
+*   **현재 상태:** `MealViewModel.loadWeekMeals()` 를 요일별 `async` + `awaitAll()` 구조로 바꿔 5일 조회를 병렬화했습니다. `MealViewModelTest` 에서 느린 첫 요청이 있어도 주간 날짜 5개가 모두 즉시 요청되는 회귀 케이스를 추가해 검증했습니다.
 
 ---
 

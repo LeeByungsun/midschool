@@ -16,7 +16,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.Duration
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -89,5 +91,37 @@ class MealViewModelTest {
         assertEquals(application.getString(R.string.meal_missing_student_info), state.statusText)
         assertTrue(state.items.isEmpty())
         assertTrue(schoolRepository.requestedMealDates.isEmpty())
+    }
+
+    @Test
+    fun loadWeekMealsStartsWeekdayRequestsInParallel() {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val weekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val weekDates = (0L..4L).map { offset ->
+            weekStart.plusDays(offset).format(DateTimeFormatter.BASIC_ISO_DATE)
+        }
+        val schoolRepository = FakeSchoolRepository().apply {
+            weekDates.forEach { date ->
+                mealResultsByDate[date] = Result.success(emptyList())
+            }
+            mealDelayMillisByDate[weekDates.first()] = 200L
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "구미중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+
+        MealViewModel(application, schoolRepository, preferencesRepository)
+
+        shadowOf(android.os.Looper.getMainLooper()).idleFor(Duration.ofMillis(50))
+
+        assertEquals(5, schoolRepository.requestedMealDates.size)
+        assertEquals(weekDates, schoolRepository.requestedMealDates)
     }
 }
