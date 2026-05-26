@@ -1,11 +1,15 @@
 package com.bsbarron.midschoolapp
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Build
 import android.view.View
 import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -44,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         bindHomeState()
         bindHomeEvents()
         bindTimerState()
+        maybeRequestNotificationPermission()
 
         homeViewModel.loadHomeData()
     }
@@ -167,5 +172,28 @@ class MainActivity : AppCompatActivity() {
         binding.deepPresetCard.setCardBackgroundColor(
             if (selectedPreset == TimerPreset.DEEP_FOCUS) selectedColor else defaultColor
         )
+    }
+
+    private fun maybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (!UserPreferences.isTimerNotificationEnabled(this)) return
+        if (
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            REQUEST_CODE_POST_NOTIFICATIONS
+        )
+    }
+
+    companion object {
+        private const val REQUEST_CODE_POST_NOTIFICATIONS = 4101
     }
 }

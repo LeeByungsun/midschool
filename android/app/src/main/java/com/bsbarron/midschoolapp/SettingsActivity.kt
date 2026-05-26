@@ -1,12 +1,16 @@
 package com.bsbarron.midschoolapp
 
+import android.Manifest
 import android.os.Bundle
+import android.content.pm.PackageManager
+import android.os.Build
 import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -24,6 +28,7 @@ import kotlinx.coroutines.launch
 class SettingsActivity : AppCompatActivity() {
     private val viewModel: SettingsViewModel by viewModels()
     private lateinit var binding: ActivitySettingsBinding
+    private var isRenderingState = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +54,12 @@ class SettingsActivity : AppCompatActivity() {
         binding.searchSchoolButton.setOnClickListener {
             viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
             viewModel.searchSchools()
+        }
+        binding.timerNotificationSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isRenderingState) return@setOnCheckedChangeListener
+            if (isChecked) {
+                maybeRequestNotificationPermission()
+            }
         }
 
         binding.saveSettingsButton.setOnClickListener {
@@ -83,6 +94,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun renderState(state: SettingsUiState) {
+        isRenderingState = true
         if (binding.settingsSchoolQueryInput.text.toString() != state.schoolQuery) {
             binding.settingsSchoolQueryInput.setText(state.schoolQuery)
         }
@@ -107,6 +119,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.schoolResultsLabel.isVisible = state.schoolResults.isNotEmpty()
         binding.schoolResultsGroup.isVisible = state.schoolResults.isNotEmpty()
         renderSchoolResults(state.schoolResults, state.selectedSchool)
+        isRenderingState = false
     }
 
     private fun renderSchoolResults(
@@ -144,5 +157,27 @@ class SettingsActivity : AppCompatActivity() {
                 school.officeName.takeIf { it.isNotBlank() }
             ).joinToString(" • ").ifBlank { null }
         ).joinToString("\n")
+    }
+
+    private fun maybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            REQUEST_CODE_POST_NOTIFICATIONS
+        )
+    }
+
+    companion object {
+        private const val REQUEST_CODE_POST_NOTIFICATIONS = 4102
     }
 }

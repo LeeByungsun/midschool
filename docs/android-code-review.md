@@ -5,7 +5,8 @@
 현재 기준 메모:
 
 - 2026-05-26: **1번 NEIS 에러 핸들링 항목은 수정 완료**
-- 현재 남은 활성 항목은 **2번 ~ 6번**
+- 2026-05-26: **2번 POST_NOTIFICATIONS 권한 요청 항목도 수정 완료**
+- 현재 남은 활성 항목은 **3번 ~ 6번**
 
 ---
 
@@ -21,11 +22,12 @@
 
 ---
 
-## 2. 알림 권한(POST_NOTIFICATIONS) 런타임 요청 부재
+## 2. 알림 권한(POST_NOTIFICATIONS) 런타임 요청 부재 (✅ 2026-05-26 해결)
 *   **위치:** [`TimerAlarmReceiver.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/timer/TimerAlarmReceiver.kt#L39-L47) 및 [`MainActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/MainActivity.kt)
 *   **상황:** Android 13(Tiramisu, API 33) 이상 환경에서는 `POST_NOTIFICATIONS`가 런타임 권한이 되어 사용자의 명시적인 허용이 필요합니다.
 *   **문제점:** `TimerAlarmReceiver`에서 해당 권한이 없을 경우 조기 반환(`return`)하도록 방어 코드는 들어가 있으나, 정작 앱 내의 `MainActivity`나 `SettingsActivity` 등 진입점 화면 어디에서도 **사용자에게 이 알림 권한을 요청(Request)하는 로직이 없습니다.**
 *   **영향:** Android 13 이상 기기에서 타이머 완료 알림이 절대 발생하지 않고 차단됩니다.
+*   **현재 상태:** `MainActivity` 진입 시 알림 설정이 켜져 있고 권한이 없으면 `POST_NOTIFICATIONS` 를 요청하도록 수정했고, `SettingsActivity` 에서 알림 스위치를 켤 때도 같은 권한 요청이 발생하도록 보강했습니다. `MainActivityNavigationTest` 기준 회귀 테스트도 추가했습니다.
 
 ---
 
