@@ -1,11 +1,7 @@
 package com.bsbarron.midschoolapp
 
-import android.graphics.Typeface
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -15,9 +11,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bsbarron.midschoolapp.databinding.ActivityMealBinding
-import com.bsbarron.midschoolapp.ui.meal.MealDayUiModel
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bsbarron.midschoolapp.ui.meal.MealDayAdapter
 import com.bsbarron.midschoolapp.ui.meal.MealViewModel
-import com.google.android.material.card.MaterialCardView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -25,7 +21,7 @@ import kotlinx.coroutines.launch
 class MealActivity : AppCompatActivity() {
     private val viewModel: MealViewModel by viewModels()
     private lateinit var binding: ActivityMealBinding
-    private lateinit var mealContainer: LinearLayout
+    private val mealAdapter = MealDayAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,8 +42,9 @@ class MealActivity : AppCompatActivity() {
             )
             insets
         }
-
-        mealContainer = binding.mealContainer
+        binding.mealRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.mealRecyclerView.adapter = mealAdapter
+        binding.mealRecyclerView.itemAnimator = null
         binding.mealBackButton.setOnClickListener { finish() }
 
         lifecycleScope.launch {
@@ -61,72 +58,9 @@ class MealActivity : AppCompatActivity() {
                         View.VISIBLE
                     }
 
-                    mealContainer.removeAllViews()
-                    state.items.forEach { item ->
-                        mealContainer.addView(createMealCard(item))
-                    }
+                    mealAdapter.submitList(state.items)
                 }
             }
         }
-    }
-
-    private fun createMealCard(item: MealDayUiModel): MaterialCardView {
-        val context = this
-        val card = MaterialCardView(context).apply {
-            radius = resources.getDimension(R.dimen.timetable_card_radius)
-            cardElevation = 0f
-            strokeWidth = resources.getDimensionPixelSize(R.dimen.timetable_card_stroke)
-            setCardBackgroundColor(
-                getColor(
-                    if (item.isToday) {
-                        R.color.brand_green_soft
-                    } else {
-                        R.color.surface_card
-                    }
-                )
-            )
-            strokeColor = getColor(R.color.divider_soft)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = resources.getDimensionPixelSize(R.dimen.timetable_row_spacing)
-            }
-        }
-
-        val column = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(
-                resources.getDimensionPixelSize(R.dimen.timetable_row_padding_horizontal),
-                resources.getDimensionPixelSize(R.dimen.timetable_row_padding_vertical),
-                resources.getDimensionPixelSize(R.dimen.timetable_row_padding_horizontal),
-                resources.getDimensionPixelSize(R.dimen.timetable_row_padding_vertical)
-            )
-        }
-
-        val titleText = TextView(context).apply {
-            text = item.dateLabel
-            setTextColor(getColor(R.color.text_primary))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
-            setTypeface(typeface, Typeface.BOLD)
-        }
-
-        val detailText = TextView(context).apply {
-            text = item.detailText
-            setTextColor(getColor(R.color.text_secondary))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-            setLineSpacing(0f, 1.15f)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = resources.getDimensionPixelSize(R.dimen.timetable_row_spacing)
-            }
-        }
-
-        column.addView(titleText)
-        column.addView(detailText)
-        card.addView(column)
-        return card
     }
 }

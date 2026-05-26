@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/timetable_row_spacing"
+        app:cardBackgroundColor="@color/surface_card"
+        app:cardCornerRadius="@dimen/timetable_card_radius"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/divider_soft"
+        app:strokeWidth="@dimen/timetable_card_stroke">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/timetable_row_padding_horizontal"
+            android:paddingTop="@dimen/timetable_row_padding_vertical"
+            android:paddingEnd="@dimen/timetable_row_padding_horizontal"
+            android:paddingBottom="@dimen/timetable_row_padding_vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="@dimen/timetable_period_badge_width"
+                android:layout_height="@dimen/timetable_period_badge_height"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="@dimen/timetable_period_badge_radius"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/divider_soft"
+                app:strokeWidth="@dimen/timetable_card_stroke">
+
+                <TextView
+                    android:id="@+id/periodText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/subjectText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/timetable_subject_margin_start"
+                android:layout_weight="1"
+                android:textColor="@color/text_primary"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</layout>

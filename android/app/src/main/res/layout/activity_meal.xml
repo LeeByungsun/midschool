@@ -87,12 +87,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="15sp" />
 
-                    <LinearLayout
-                        android:id="@+id/mealContainer"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/mealRecyclerView"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:orientation="vertical" />
+                        android:nestedScrollingEnabled="false" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
