@@ -12,7 +12,8 @@
 - 2026-05-26: **6번 PreferencesRepositoryImpl 결합도 항목 수정 완료**
 - 2026-05-26: **7번 Flow 수집기 내 동적 뷰 생성 항목 수정 완료**
 - 2026-05-26: **8번 스플래시 회전 시 중복 화면 전환 항목 수정 완료**
-- 현재 남은 활성 항목은 **9번**
+- 2026-05-26: **9번 BroadcastReceiver 직접 생성 항목 수정 완료**
+- 현재 남은 활성 항목은 **없음**
 
 ---
 
@@ -92,8 +93,9 @@
 
 ---
 
-## 9. BroadcastReceiver 인스턴스 직접 생성 안티패턴 (구조 문제)
+## 9. BroadcastReceiver 인스턴스 직접 생성 안티패턴 (구조 문제) (✅ 2026-05-26 해결)
 *   **위치:** [`MisSchoolWidgetProvider.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/widget/MisSchoolWidgetProvider.kt#L239-L247)
 *   **상황:** 시간/날짜 변경 등의 이벤트 발생 시 모든 위젯 화면을 갱신합니다.
 *   **문제점:** `updateAllWidgets` companion object 메서드 내부에서 각 위젯 ID마다 `MisSchoolWidgetProvider().updateAppWidget(...)`과 같이 **시스템이 생명주기를 관리하는 BroadcastReceiver 객체를 직접 생성자(`()`)로 인스턴스화**하여 호출하고 있습니다.
 *   **영향:** BroadcastReceiver는 안드로이드의 4대 컴포넌트 중 하나로, 개발자가 코드 상에서 직접 생성하는 행위는 프레임워크 설계 구조를 깨뜨리는 안티패턴입니다. `updateAppWidget` 메서드를 `companion object` 내부의 static 함수로 이동시키거나 별도 Helper 클래스로 이관하여 receiver 인스턴스 직접 생성을 방지해야 합니다.
+*   **현재 상태:** 위젯 갱신 로직을 companion/helper 경로로 끌어올려 `updateAllWidgets()` 가 더 이상 `MisSchoolWidgetProvider()` 인스턴스를 직접 생성하지 않도록 수정했습니다. 현재 코드 기준으로 receiver 직접 생성 경로는 제거되었습니다.

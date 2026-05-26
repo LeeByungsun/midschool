@@ -62,167 +62,6 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach(preferencesRepository::clearWidgetSettings)
     }
 
-    private fun updateAppWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        val schoolRepository = dependencies(context).schoolRepository()
-        val preferencesRepository = dependencies(context).preferencesRepository()
-
-        fun createBaseViews(): RemoteViews {
-            return RemoteViews(context.packageName, R.layout.widget_home).apply {
-                val today = LocalDate.now()
-                val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
-                setTextViewText(
-                    R.id.widgetDateText,
-                    WidgetDateFormatter.formatHeaderDate(today)
-                )
-                setViewVisibility(
-                    R.id.widgetTomorrowSection,
-                    if (widgetSettings.showTomorrowTimetable) View.VISIBLE else View.GONE
-                )
-                setViewVisibility(
-                    R.id.widgetTimetableDivider,
-                    if (widgetSettings.showTomorrowTimetable) View.VISIBLE else View.GONE
-                )
-                val openAppIntent = context.packageManager
-                    .getLaunchIntentForPackage(context.packageName)
-                    ?.apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    }
-                    ?: Intent(context, SplashActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    }
-                val openAppPendingIntent = PendingIntent.getActivity(
-                    context,
-                    appWidgetId + OPEN_APP_REQUEST_CODE_OFFSET,
-                    openAppIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                setOnClickPendingIntent(R.id.widgetContainer, openAppPendingIntent)
-
-                val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
-                    action = ACTION_REFRESH
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                }
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context, appWidgetId, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                setOnClickPendingIntent(R.id.widgetRefreshButton, pendingIntent)
-
-                val configIntent = Intent(context, WidgetConfigActivity::class.java).apply {
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                val configPendingIntent = PendingIntent.getActivity(
-                    context,
-                    appWidgetId + CONFIG_REQUEST_CODE_OFFSET,
-                    configIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                setOnClickPendingIntent(R.id.widgetSettingsButton, configPendingIntent)
-            }
-        }
-
-        val loadingViews = createBaseViews()
-        loadingViews.setTextViewText(R.id.widgetTimetableText, context.getString(R.string.widget_loading))
-        loadingViews.setTextViewText(
-            R.id.widgetTomorrowTimetableText,
-            context.getString(R.string.widget_loading)
-        )
-        appWidgetManager.updateAppWidget(appWidgetId, loadingViews)
-
-        val pendingResult = goAsync()
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val studentInfo = preferencesRepository.getStudentInfo()
-                val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
-                val grade = studentInfo.grade
-                val classroom = studentInfo.classroom
-
-                if (!studentInfo.isComplete()) {
-                    val setupViews = createBaseViews()
-                    setupViews.setTextViewText(
-                        R.id.widgetTimetableText,
-                        context.getString(R.string.widget_requires_student_info)
-                    )
-                    setupViews.setTextViewText(
-                        R.id.widgetTomorrowTimetableText,
-                        context.getString(R.string.widget_requires_student_info)
-                    )
-                    appWidgetManager.updateAppWidget(appWidgetId, setupViews)
-                    return@launch
-                }
-
-                val today = LocalDate.now()
-                val todayStr = today.format(DateTimeFormatter.BASIC_ISO_DATE)
-                val tomorrow = today.plusDays(1)
-                val tomorrowStr = tomorrow.format(DateTimeFormatter.BASIC_ISO_DATE)
-
-                val timetableResultToday = schoolRepository.getTimetable(grade, classroom, todayStr)
-                val timetableResultTomorrow = schoolRepository.getTimetable(grade, classroom, tomorrowStr)
-
-                val timetableTextToday = formatTimetableText(
-                    result = timetableResultToday,
-                    context = context
-                )
-                val timetableTextTomorrow = formatTimetableText(
-                    result = timetableResultTomorrow,
-                    context = context
-                )
-
-                val finalViews = createBaseViews()
-                finalViews.setTextViewText(R.id.widgetTimetableText, timetableTextToday)
-                if (widgetSettings.showTomorrowTimetable) {
-                    finalViews.setTextViewText(R.id.widgetTomorrowTimetableText, timetableTextTomorrow)
-                }
-                appWidgetManager.updateAppWidget(appWidgetId, finalViews)
-
-            } catch (e: Exception) {
-                val errViews = createBaseViews()
-                errViews.setTextViewText(
-                    R.id.widgetTimetableText,
-                    context.getString(R.string.widget_load_error)
-                )
-                errViews.setTextViewText(
-                    R.id.widgetTomorrowTimetableText,
-                    e.message ?: context.getString(R.string.widget_retry_hint)
-                )
-                appWidgetManager.updateAppWidget(appWidgetId, errViews)
-            } finally {
-                pendingResult.finish()
-            }
-        }
-    }
-
-    private fun formatTimetableText(
-        result: Result<List<com.bsbarron.midschoolapp.data.model.TimetableItem>>,
-        context: Context
-    ): String {
-        result.exceptionOrNull()?.message?.let { return it }
-        val items = result.getOrNull().orEmpty()
-            .sortedBy { it.period.toIntOrNull() ?: Int.MAX_VALUE }
-            .mapNotNull { item ->
-                item.subject.takeIf { subject -> subject.isNotBlank() }?.let { subject ->
-                    val period = item.period.takeIf { it.isNotBlank() } ?: "?"
-                    "${period}교시 ${subject.truncatedWidgetSubject()}"
-                }
-            }
-
-        if (items.isEmpty()) {
-            return context.getString(R.string.widget_no_classes)
-        }
-
-        return items.joinToString("\n")
-    }
-
-    private fun String.truncatedWidgetSubject(): String {
-        return if (length > 6) take(5) else this
-    }
-
     companion object {
         const val ACTION_REFRESH = "com.bsbarron.midschoolapp.widget.ACTION_REFRESH"
         private const val CONFIG_REQUEST_CODE_OFFSET = 10_000
@@ -240,10 +79,175 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             val componentName = android.content.ComponentName(context, MisSchoolWidgetProvider::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
             if (appWidgetIds.isNotEmpty()) {
+                val dependencies = dependencies(context)
+                val schoolRepository = dependencies.schoolRepository()
+                val preferencesRepository = dependencies.preferencesRepository()
                 appWidgetIds.forEach { appWidgetId ->
-                    MisSchoolWidgetProvider().updateAppWidget(context, appWidgetManager, appWidgetId)
+                    updateAppWidget(
+                        context = context,
+                        appWidgetManager = appWidgetManager,
+                        appWidgetId = appWidgetId,
+                        schoolRepository = schoolRepository,
+                        preferencesRepository = preferencesRepository
+                    )
                 }
             }
+        }
+
+        private fun updateAppWidget(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int,
+            schoolRepository: SchoolRepository = dependencies(context).schoolRepository(),
+            preferencesRepository: PreferencesRepository = dependencies(context).preferencesRepository()
+        ) {
+            fun createBaseViews(): RemoteViews {
+                return RemoteViews(context.packageName, R.layout.widget_home).apply {
+                    val today = LocalDate.now()
+                    val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
+                    setTextViewText(
+                        R.id.widgetDateText,
+                        WidgetDateFormatter.formatHeaderDate(today)
+                    )
+                    setViewVisibility(
+                        R.id.widgetTomorrowSection,
+                        if (widgetSettings.showTomorrowTimetable) View.VISIBLE else View.GONE
+                    )
+                    setViewVisibility(
+                        R.id.widgetTimetableDivider,
+                        if (widgetSettings.showTomorrowTimetable) View.VISIBLE else View.GONE
+                    )
+                    val openAppIntent = context.packageManager
+                        .getLaunchIntentForPackage(context.packageName)
+                        ?.apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        }
+                        ?: Intent(context, SplashActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        }
+                    val openAppPendingIntent = PendingIntent.getActivity(
+                        context,
+                        appWidgetId + OPEN_APP_REQUEST_CODE_OFFSET,
+                        openAppIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    setOnClickPendingIntent(R.id.widgetContainer, openAppPendingIntent)
+
+                    val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
+                        action = ACTION_REFRESH
+                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                    }
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context, appWidgetId, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    setOnClickPendingIntent(R.id.widgetRefreshButton, pendingIntent)
+
+                    val configIntent = Intent(context, WidgetConfigActivity::class.java).apply {
+                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    val configPendingIntent = PendingIntent.getActivity(
+                        context,
+                        appWidgetId + CONFIG_REQUEST_CODE_OFFSET,
+                        configIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    setOnClickPendingIntent(R.id.widgetSettingsButton, configPendingIntent)
+                }
+            }
+
+            val loadingViews = createBaseViews()
+            loadingViews.setTextViewText(R.id.widgetTimetableText, context.getString(R.string.widget_loading))
+            loadingViews.setTextViewText(
+                R.id.widgetTomorrowTimetableText,
+                context.getString(R.string.widget_loading)
+            )
+            appWidgetManager.updateAppWidget(appWidgetId, loadingViews)
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val studentInfo = preferencesRepository.getStudentInfo()
+                    val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
+                    val grade = studentInfo.grade
+                    val classroom = studentInfo.classroom
+
+                    if (!studentInfo.isComplete()) {
+                        val setupViews = createBaseViews()
+                        setupViews.setTextViewText(
+                            R.id.widgetTimetableText,
+                            context.getString(R.string.widget_requires_student_info)
+                        )
+                        setupViews.setTextViewText(
+                            R.id.widgetTomorrowTimetableText,
+                            context.getString(R.string.widget_requires_student_info)
+                        )
+                        appWidgetManager.updateAppWidget(appWidgetId, setupViews)
+                        return@launch
+                    }
+
+                    val today = LocalDate.now()
+                    val todayStr = today.format(DateTimeFormatter.BASIC_ISO_DATE)
+                    val tomorrow = today.plusDays(1)
+                    val tomorrowStr = tomorrow.format(DateTimeFormatter.BASIC_ISO_DATE)
+
+                    val timetableResultToday = schoolRepository.getTimetable(grade, classroom, todayStr)
+                    val timetableResultTomorrow = schoolRepository.getTimetable(grade, classroom, tomorrowStr)
+
+                    val timetableTextToday = formatTimetableText(
+                        result = timetableResultToday,
+                        context = context
+                    )
+                    val timetableTextTomorrow = formatTimetableText(
+                        result = timetableResultTomorrow,
+                        context = context
+                    )
+
+                    val finalViews = createBaseViews()
+                    finalViews.setTextViewText(R.id.widgetTimetableText, timetableTextToday)
+                    if (widgetSettings.showTomorrowTimetable) {
+                        finalViews.setTextViewText(R.id.widgetTomorrowTimetableText, timetableTextTomorrow)
+                    }
+                    appWidgetManager.updateAppWidget(appWidgetId, finalViews)
+
+                } catch (e: Exception) {
+                    val errViews = createBaseViews()
+                    errViews.setTextViewText(
+                        R.id.widgetTimetableText,
+                        context.getString(R.string.widget_load_error)
+                    )
+                    errViews.setTextViewText(
+                        R.id.widgetTomorrowTimetableText,
+                        e.message ?: context.getString(R.string.widget_retry_hint)
+                    )
+                    appWidgetManager.updateAppWidget(appWidgetId, errViews)
+                }
+            }
+        }
+
+        private fun formatTimetableText(
+            result: Result<List<com.bsbarron.midschoolapp.data.model.TimetableItem>>,
+            context: Context
+        ): String {
+            result.exceptionOrNull()?.message?.let { return it }
+            val items = result.getOrNull().orEmpty()
+                .sortedBy { it.period.toIntOrNull() ?: Int.MAX_VALUE }
+                .mapNotNull { item ->
+                    item.subject.takeIf { subject -> subject.isNotBlank() }?.let { subject ->
+                        val period = item.period.takeIf { it.isNotBlank() } ?: "?"
+                        "${period}교시 ${subject.truncatedWidgetSubject()}"
+                    }
+                }
+
+            if (items.isEmpty()) {
+                return context.getString(R.string.widget_no_classes)
+            }
+
+            return items.joinToString("\n")
+        }
+
+        private fun String.truncatedWidgetSubject(): String {
+            return if (length > 6) take(5) else this
         }
 
         private fun dependencies(context: Context): WidgetProviderEntryPoint {
