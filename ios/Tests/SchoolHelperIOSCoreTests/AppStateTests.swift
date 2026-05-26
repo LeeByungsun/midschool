@@ -83,4 +83,23 @@ final class AppStateTests: XCTestCase {
 
         XCTAssertEqual(appState.selectedRoute, .home)
     }
+
+    func testTimerLaunchOverrideBuildsRunningState() {
+        let referenceNow = Date(timeIntervalSince1970: 1_700_000_000)
+
+        let state = AppLaunchOverrides.timerState(
+            from: [
+                "SCHOOLHELPER_TIMER_PRESET": "shortBreak",
+                "SCHOOLHELPER_TIMER_REMAINING_SECONDS": "123",
+                "SCHOOLHELPER_TIMER_RUNNING": "1"
+            ],
+            now: referenceNow
+        )
+
+        XCTAssertEqual(state?.preset, .shortBreak)
+        XCTAssertEqual(state?.totalSeconds, TimerPreset.shortBreak.durationSeconds)
+        XCTAssertEqual(state?.remainingSeconds, 123)
+        XCTAssertEqual(state?.targetDate, referenceNow.addingTimeInterval(123))
+        XCTAssertEqual(state?.isRunning, true)
+    }
 }

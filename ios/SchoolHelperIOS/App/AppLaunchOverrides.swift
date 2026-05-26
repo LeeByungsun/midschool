@@ -32,4 +32,38 @@ enum AppLaunchOverrides {
         }
         return AppRoute(rawValue: rawValue)
     }
+
+    static func timerState(
+        from environment: [String: String] = ProcessInfo.processInfo.environment,
+        now: Date = Date()
+    ) -> TimerSessionState? {
+        guard
+            let rawPreset = environment["SCHOOLHELPER_TIMER_PRESET"],
+            let preset = TimerPreset(rawValue: rawPreset)
+        else {
+            return nil
+        }
+
+        let totalSeconds = Int(environment["SCHOOLHELPER_TIMER_TOTAL_SECONDS"] ?? "") ?? preset.durationSeconds
+        let remainingSeconds = Int(environment["SCHOOLHELPER_TIMER_REMAINING_SECONDS"] ?? "") ?? totalSeconds
+        let isRunning = truthy(environment["SCHOOLHELPER_TIMER_RUNNING"])
+
+        return TimerSessionState(
+            preset: preset,
+            totalSeconds: totalSeconds,
+            remainingSeconds: remainingSeconds,
+            targetDate: isRunning ? now.addingTimeInterval(TimeInterval(remainingSeconds)) : nil,
+            isRunning: isRunning
+        )
+    }
+
+    private static func truthy(_ rawValue: String?) -> Bool {
+        guard let rawValue else { return false }
+        switch rawValue.lowercased() {
+        case "1", "true", "yes":
+            return true
+        default:
+            return false
+        }
+    }
 }
