@@ -45,6 +45,12 @@ cd android
 ./android/gradlew assembleDebug
 ```
 
+### OMX 팀 명령
+```bash
+./android/scripts/team-school-selection-ab.sh
+./android/scripts/team-widget-timetable-check.sh
+```
+
 ## 폴더 구조 요약
 
 ```text
@@ -77,4 +83,5 @@ android/
 - 프로젝트 전체 스펙: `../docs/project_specification.md`
 - 프로젝트 구조: `../docs/project-structure.md`
 - Android Studio 사용 안내: `../docs/android-studio-setup.md`
+- Android 앞으로 할 일: `../docs/android-app-todo.md`
 - Android 전용 작업 규칙: `AGENTS.md`

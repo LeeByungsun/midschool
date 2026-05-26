@@ -226,7 +226,35 @@ class SchoolRepositoryImpl @Inject constructor(
                 }
         }
 
+        val cachedItems = cacheKey?.let {
+            preferencesRepository.getTimetableCache(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                grade = grade,
+                classroom = classroom,
+                date = it
+            )
+        }
+
         networkResult.getOrNull()?.let { items ->
+            if (items.isNotEmpty()) {
+                if (!cacheKey.isNullOrBlank()) {
+                    preferencesRepository.saveTimetableCache(
+                        officeCode = studentInfo.officeCode,
+                        schoolCode = studentInfo.schoolCode,
+                        grade = grade,
+                        classroom = classroom,
+                        date = cacheKey,
+                        items = items
+                    )
+                }
+                return Result.success(items)
+            }
+
+            if (!cachedItems.isNullOrEmpty()) {
+                return Result.success(cachedItems)
+            }
+
             if (!cacheKey.isNullOrBlank()) {
                 preferencesRepository.saveTimetableCache(
                     officeCode = studentInfo.officeCode,
@@ -240,16 +268,7 @@ class SchoolRepositoryImpl @Inject constructor(
             return Result.success(items)
         }
 
-        val cachedItems = cacheKey?.let {
-            preferencesRepository.getTimetableCache(
-                officeCode = studentInfo.officeCode,
-                schoolCode = studentInfo.schoolCode,
-                grade = grade,
-                classroom = classroom,
-                date = it
-            )
-        }
-        return if (!cachedItems.isNullOrEmpty()) {
+        return if (cachedItems != null) {
             Result.success(cachedItems)
         } else {
             Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("시간표 정보를 불러오지 못했어요."))

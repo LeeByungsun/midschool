@@ -138,6 +138,7 @@ npm run build
 
 - 멀티플랫폼 기능 / 정책 스펙: `docs/project_specification.md`
 - Android 학교선택 검토 메모: `docs/android-school-selection-review.md`
+- Android 앞으로 할 일: `docs/android-app-todo.md`
 - 현재 저장소 구조 문서: `docs/project-structure.md`
 - Android Studio 열기 안내: `docs/android-studio-setup.md`
 - 웹 전용 안내: `web/README.md`

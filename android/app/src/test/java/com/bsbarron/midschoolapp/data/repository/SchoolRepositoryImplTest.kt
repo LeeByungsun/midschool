@@ -21,6 +21,7 @@ import com.bsbarron.midschoolapp.data.remote.dto.TimetableRowDto
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -337,6 +338,66 @@ class SchoolRepositoryImplTest {
     }
 
     @Test
+    fun `getTimetable keeps cached timetable when network returns empty rows`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            middleTimetableResponse = successResponse(emptyList())
+        }
+        val cachedItems = listOf(
+            TimetableItem(
+                date = "20260519",
+                period = "1",
+                subject = "과학",
+                grade = "3",
+                classroom = "2"
+            )
+        )
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "3",
+                classroom = "2",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        ).apply {
+            timetableCache[TimetableCacheKey("J10", "1234567", "3", "2", "20260519")] = cachedItems
+        }
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+
+        val result = repository.getTimetable("3", "2", "20260519")
+
+        assertTrue(result.isSuccess)
+        assertEquals(cachedItems, result.getOrThrow())
+        assertNull(preferencesRepository.savedTimetableCacheArgs)
+    }
+
+    @Test
+    fun `getTimetable returns cached empty timetable when network fails`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            failMiddleTimetable = true
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "3",
+                classroom = "2",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        ).apply {
+            timetableCache[TimetableCacheKey("J10", "1234567", "3", "2", "20260519")] = emptyList()
+        }
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+
+        val result = repository.getTimetable("3", "2", "20260519")
+
+        assertTrue(result.isSuccess)
+        assertEquals(emptyList<TimetableItem>(), result.getOrThrow())
+    }
+
+    @Test
     fun `searchSchools filters to elementary, middle and high schools`() = runBlocking {
         val apiService = FakeNeisApiService().apply {
             schoolInfoResponse = successResponse(
@@ -464,6 +525,9 @@ class SchoolRepositoryImplTest {
         var highTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
         var schoolInfoResponse: NeisResponse<SchoolInfoRowDto> = successResponse(emptyList())
         var failSchedules = false
+        var failElementaryTimetable = false
+        var failMiddleTimetable = false
+        var failHighTimetable = false
 
         var lastMealOfficeCode: String? = null
         var lastMealSchoolCode: String? = null
@@ -513,6 +577,7 @@ class SchoolRepositoryImplTest {
             classroom: String,
             date: String?
         ): NeisResponse<TimetableRowDto> {
+            if (failElementaryTimetable) throw IllegalStateException("elementary timetable api error")
             elementaryCalled = true
             return elementaryTimetableResponse
         }
@@ -528,6 +593,7 @@ class SchoolRepositoryImplTest {
             classroom: String,
             date: String?
         ): NeisResponse<TimetableRowDto> {
+            if (failMiddleTimetable) throw IllegalStateException("timetable api error")
             middleCalled = true
             return middleTimetableResponse
         }
@@ -543,6 +609,7 @@ class SchoolRepositoryImplTest {
             classroom: String,
             date: String?
         ): NeisResponse<TimetableRowDto> {
+            if (failHighTimetable) throw IllegalStateException("high timetable api error")
             highCalled = true
             return highTimetableResponse
         }
@@ -579,7 +646,9 @@ class SchoolRepositoryImplTest {
     ) : PreferencesRepository {
         var savedMealCacheArgs: MealCacheArgs? = null
         var savedScheduleCacheEvents: List<SchoolEvent>? = null
+        var savedTimetableCacheArgs: TimetableCacheArgs? = null
         val scheduleCache = mutableMapOf<ScheduleCacheKey, List<SchoolEvent>>()
+        val timetableCache = mutableMapOf<TimetableCacheKey, List<TimetableItem>>()
 
         override fun getStudentInfo(): StudentInfo = studentInfo
 
@@ -655,7 +724,10 @@ class SchoolRepositoryImplTest {
             classroom: String,
             date: String,
             items: List<TimetableItem>
-        ) = Unit
+        ) {
+            savedTimetableCacheArgs = TimetableCacheArgs(officeCode, schoolCode, grade, classroom, date, items)
+            timetableCache[TimetableCacheKey(officeCode, schoolCode, grade, classroom, date)] = items
+        }
 
         override fun getTimetableCache(
             officeCode: String,
@@ -663,7 +735,9 @@ class SchoolRepositoryImplTest {
             grade: String,
             classroom: String,
             date: String
-        ): List<TimetableItem>? = null
+        ): List<TimetableItem>? {
+            return timetableCache[TimetableCacheKey(officeCode, schoolCode, grade, classroom, date)]
+        }
 
         override fun getWidgetSettings(appWidgetId: Int): WidgetSettings = WidgetSettings()
 
@@ -682,6 +756,23 @@ class SchoolRepositoryImplTest {
     private data class ScheduleCacheKey(
         val officeCode: String,
         val schoolCode: String,
+        val date: String
+    )
+
+    private data class TimetableCacheArgs(
+        val officeCode: String,
+        val schoolCode: String,
+        val grade: String,
+        val classroom: String,
+        val date: String,
+        val items: List<TimetableItem>
+    )
+
+    private data class TimetableCacheKey(
+        val officeCode: String,
+        val schoolCode: String,
+        val grade: String,
+        val classroom: String,
         val date: String
     )
 }

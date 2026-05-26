@@ -2,6 +2,7 @@ package com.bsbarron.midschoolapp.data.repository
 
 import android.content.Context
 import com.bsbarron.midschoolapp.data.model.SchoolEvent
+import com.bsbarron.midschoolapp.data.model.TimetableItem
 import com.google.gson.Gson
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -92,6 +93,38 @@ class PreferencesRepositoryImplTest {
         )
         assertFalse(repositoryPrefs().contains(scheduleCacheKey(officeCode, schoolCode, month)))
         assertFalse(repositoryPrefs().contains(scheduleCacheTimestampKey(officeCode, schoolCode, month)))
+    }
+
+    @Test
+    fun `timetable cache preserves empty day result for same class and date`() {
+        preferencesRepository.saveTimetableCache(
+            officeCode = "J10",
+            schoolCode = "1234567",
+            grade = "3",
+            classroom = "2",
+            date = "20260519",
+            items = emptyList()
+        )
+
+        assertEquals(
+            emptyList<TimetableItem>(),
+            preferencesRepository.getTimetableCache(
+                officeCode = "J10",
+                schoolCode = "1234567",
+                grade = "3",
+                classroom = "2",
+                date = "20260519"
+            )
+        )
+        assertNull(
+            preferencesRepository.getTimetableCache(
+                officeCode = "J10",
+                schoolCode = "1234567",
+                grade = "3",
+                classroom = "1",
+                date = "20260519"
+            )
+        )
     }
 
     private fun repositoryPrefs() =
