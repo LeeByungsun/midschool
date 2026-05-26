@@ -48,4 +48,39 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(appState.profile.schoolName, "미사중학교")
         XCTAssertTrue(appState.isSetupComplete)
     }
+
+    func testRefreshAppliesInitialRouteOverrideWhenSetupIsComplete() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let appState = AppState(
+            store: StudentPreferencesStore(defaults: defaults),
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+
+        withEnvironment([
+            "SCHOOLHELPER_SEED_PROFILE": "fixture",
+            "SCHOOLHELPER_INITIAL_ROUTE": "timetable"
+        ]) {
+            appState.refresh()
+        }
+
+        XCTAssertEqual(appState.selectedRoute, .timetable)
+    }
+
+    func testRefreshIgnoresNonSettingsRouteOverrideWhenSetupIsIncomplete() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let appState = AppState(
+            store: StudentPreferencesStore(defaults: defaults),
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+
+        withEnvironment([
+            "SCHOOLHELPER_INITIAL_ROUTE": "timetable"
+        ]) {
+            appState.refresh()
+        }
+
+        XCTAssertEqual(appState.selectedRoute, .home)
+    }
 }

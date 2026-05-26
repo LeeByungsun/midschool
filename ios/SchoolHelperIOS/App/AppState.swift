@@ -32,9 +32,11 @@ final class AppState: ObservableObject {
     func refresh() {
         if let seededProfile = AppLaunchOverrides.seededProfile() {
             saveProfile(seededProfile)
+            applyInitialRouteOverride()
             return
         }
         profile = store.load()
+        applyInitialRouteOverride()
     }
 
     func saveProfile(_ profile: StudentProfile) {
@@ -58,6 +60,14 @@ final class AppState: ObservableObject {
         }
 
         guard let route = AppRoute(rawValue: routeString) else { return }
+        selectedRoute = route
+    }
+
+    private func applyInitialRouteOverride() {
+        guard let route = AppLaunchOverrides.initialRoute() else { return }
+        if !isSetupComplete && route != .settings {
+            return
+        }
         selectedRoute = route
     }
 }

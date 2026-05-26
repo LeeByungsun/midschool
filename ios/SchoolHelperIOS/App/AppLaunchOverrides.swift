@@ -25,4 +25,11 @@ enum AppLaunchOverrides {
         let value = environment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"]?.lowercased()
         return value == "1" || value == "true" || value == "yes"
     }
+
+    static func initialRoute(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> AppRoute? {
+        guard let rawValue = environment["SCHOOLHELPER_INITIAL_ROUTE"]?.lowercased() else {
+            return nil
+        }
+        return AppRoute(rawValue: rawValue)
+    }
 }
