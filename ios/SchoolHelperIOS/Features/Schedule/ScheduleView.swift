@@ -36,7 +36,7 @@ struct ScheduleView: View {
                     VStack(alignment: .leading) {
                         Text(item.title)
                             .font(.headline)
-                        Text(item.date)
+                        Text(formattedScheduleDate(item.date))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Text(item.description)
@@ -48,5 +48,19 @@ struct ScheduleView: View {
                 await viewModel.load(profile: appState.profile)
             }
         }
+    }
+
+    private func formattedScheduleDate(_ rawDate: String) -> String {
+        let parser = DateFormatter()
+        parser.locale = Locale(identifier: "ko_KR")
+        parser.dateFormat = "yyyyMMdd"
+        guard let date = parser.date(from: rawDate) else {
+            return rawDate
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "M월 d일 EEEE"
+        return formatter.string(from: date)
     }
 }

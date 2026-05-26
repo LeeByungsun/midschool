@@ -55,6 +55,32 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
         XCTAssertEqual(meals.map(\.date), ["20260526", "20260527", "20260528", "20260529", "20260530"])
     }
 
+    func testFetchTodayMealsFiltersOutRowsFromOtherDates() async throws {
+        let searchService = StubSchoolSearchService(result: .success([]))
+        let neisService = SpyNEISService()
+        await neisService.setMealsHandler { _, _, date in
+            [
+                MealInfo(date: date, mealType: "점심", menu: "오늘 급식", calorieInfo: "700 kcal"),
+                MealInfo(date: "20260530", mealType: "점심", menu: "다른 날짜 급식", calorieInfo: "600 kcal")
+            ]
+        }
+        let noticesService = StubNoticesService(result: [])
+        let repository = DefaultSchoolRepository(
+            schoolSearchService: searchService,
+            neisService: neisService,
+            noticesService: noticesService,
+            fallback: StubSchoolRepository()
+        )
+
+        let meals = try await repository.fetchTodayMeals(
+            for: .fixture(),
+            date: fixtureDate(year: 2026, month: 5, day: 26)
+        )
+
+        XCTAssertEqual(meals.map(\.menu), ["오늘 급식"])
+        XCTAssertEqual(meals.map(\.date), ["20260526"])
+    }
+
     func testFetchScheduleFallsBackWhenRemoteServiceFails() async throws {
         let fallbackEvents = [
             SchoolEvent(date: "202605", title: "체육대회", description: "운동장")
@@ -106,9 +132,11 @@ private actor SpyNEISService: NEISServicing {
     private var mealsHandler: MealsHandler?
     private var mealDates: [String] = []
     private var scheduleMonths: [String] = []
+    private let mealsError: Error?
     private let scheduleError: Error?
 
-    init(scheduleError: Error? = nil) {
+    init(mealsError: Error? = nil, scheduleError: Error? = nil) {
+        self.mealsError = mealsError
         self.scheduleError = scheduleError
     }
 
@@ -130,6 +158,9 @@ private actor SpyNEISService: NEISServicing {
         date: String
     ) async throws -> [MealInfo] {
         mealDates.append(date)
+        if let mealsError {
+            throw mealsError
+        }
         return mealsHandler?(officeCode, schoolCode, date) ?? []
     }
 
@@ -154,6 +185,30 @@ private actor SpyNEISService: NEISServicing {
         date: String
     ) async throws -> [TimetableItem] {
         []
+    }
+}
+
+extension DefaultSchoolRepositoryTests {
+    func testFetchWeekMealsFallbackUsesRequestedDates() async throws {
+        let searchService = StubSchoolSearchService(result: .success([]))
+        let neisService = SpyNEISService(mealsError: TestError.expected)
+        let noticesService = StubNoticesService(result: [])
+        let repository = DefaultSchoolRepository(
+            schoolSearchService: searchService,
+            neisService: neisService,
+            noticesService: noticesService,
+            fallback: MockSchoolRepository()
+        )
+
+        let meals = try await repository.fetchWeekMeals(
+            for: .fixture(),
+            weekStart: fixtureDate(year: 2026, month: 5, day: 26)
+        )
+
+        XCTAssertEqual(
+            meals.map(\.date),
+            ["20260526", "20260527", "20260528", "20260529", "20260530"]
+        )
     }
 }
 

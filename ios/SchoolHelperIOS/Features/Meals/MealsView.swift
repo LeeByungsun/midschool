@@ -34,7 +34,7 @@ struct MealsView: View {
 
                 ForEach(viewModel.items) { item in
                     VStack(alignment: .leading) {
-                        Text(item.date)
+                        Text(formattedMealDate(item.date))
                             .font(.headline)
                         Text(item.menu)
                         Text(item.calorieInfo)
@@ -48,5 +48,19 @@ struct MealsView: View {
                 await viewModel.load(profile: appState.profile)
             }
         }
+    }
+
+    private func formattedMealDate(_ rawDate: String) -> String {
+        let parser = DateFormatter()
+        parser.locale = Locale(identifier: "ko_KR")
+        parser.dateFormat = "yyyyMMdd"
+        guard let date = parser.date(from: rawDate) else {
+            return rawDate
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "M월 d일 EEEE"
+        return formatter.string(from: date)
     }
 }

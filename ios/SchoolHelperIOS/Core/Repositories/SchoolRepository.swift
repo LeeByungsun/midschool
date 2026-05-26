@@ -47,7 +47,17 @@ struct MockSchoolRepository: SchoolRepository {
     }
 
     func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] {
-        [MealInfo(date: "20260526", mealType: "점심", menu: "비빔밥\n미역국", calorieInfo: "712 kcal")]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd"
+        formatter.locale = Locale(identifier: "ko_KR")
+        return [
+            MealInfo(
+                date: formatter.string(from: date),
+                mealType: "점심",
+                menu: "비빔밥\n미역국",
+                calorieInfo: "712 kcal"
+            )
+        ]
     }
 
     func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] {
@@ -141,6 +151,7 @@ struct DefaultSchoolRepository: SchoolRepository {
                 schoolCode: profile.schoolCode,
                 date: key
             )
+            .filter { $0.date == key }
         } catch {
             return try await fallback.fetchTodayMeals(for: profile, date: date)
         }
