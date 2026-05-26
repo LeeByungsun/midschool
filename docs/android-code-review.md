@@ -8,7 +8,8 @@
 - 2026-05-26: **2번 POST_NOTIFICATIONS 권한 요청 항목도 수정 완료**
 - 2026-05-26: **3번 타이머 per-tick 저장 항목도 수정 완료**
 - 2026-05-26: **4번 주간 급식 순차 호출 항목도 수정 완료**
-- 현재 남은 활성 항목은 **5번 ~ 6번**
+- 2026-05-26: **5번 재부팅 후 타이머 복구 누락 항목도 수정 완료**
+- 현재 남은 활성 항목은 **6번**
 
 ---
 
@@ -52,11 +53,12 @@
 
 ---
 
-## 5. 디바이스 재부팅 시 타이머 복구 처리 누락 (정책 누락)
+## 5. 디바이스 재부팅 시 타이머 복구 처리 누락 (정책 누락) (✅ 2026-05-26 해결)
 *   **위치:** [`AndroidManifest.xml`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/AndroidManifest.xml#L7)
 *   **상황:** 디바이스가 재부팅되면 OS에 등록된 AlarmManager의 알람이 모두 삭제됩니다.
 *   **문제점:** Manifest에는 `RECEIVE_BOOT_COMPLETED` 권한이 선언되어 있고 위젯 리시버에서 이 이벤트를 필터링하고 있지만, 정작 **타이머 알람을 복구하는 전용 BroadcastReceiver가 존재하지 않습니다.**
 *   **영향:** 타이머가 동작 중인 상태에서 사용자의 스마트폰이 재부팅되면 알람이 완전히 해제되며, 사용자는 지정된 시간(집중 시간 완료 등)에 알림을 받지 못하게 됩니다.
+*   **현재 상태:** `TimerBootReceiver` 와 `TimerBootRestorer` 를 추가해 `BOOT_COMPLETED` 수신 시 저장된 타이머 상태를 읽고, 아직 유효한 `targetAtMillis` 가 있으면 다시 스케줄하도록 보강했습니다. 이미 만료된 타이머 상태는 정리하도록 했고, `TimerBootRestorerTest` 로 회귀 검증했습니다.
 
 ---
 

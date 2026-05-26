@@ -19,6 +19,13 @@
         <receiver
             android:name=".timer.TimerAlarmReceiver"
             android:exported="false" />
+        <receiver
+            android:name=".timer.TimerBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <activity
             android:name=".widget.WidgetConfigActivity"
             android:exported="true" />
