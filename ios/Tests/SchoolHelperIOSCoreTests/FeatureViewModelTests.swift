@@ -24,6 +24,7 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.timerSummary, "집중 • 40:00")
         XCTAssertEqual(viewModel.todaySummary, "학교와 학년/반을 먼저 설정해 주세요.")
         XCTAssertEqual(viewModel.mealSummary, "학교 설정이 필요해요.")
+        XCTAssertEqual(viewModel.mealMeta, "")
         XCTAssertEqual(viewModel.eventSummary, "학교 설정이 필요해요.")
         XCTAssertEqual(viewModel.noticeSummary, "학교 설정이 필요해요.")
         XCTAssertEqual(viewModel.noticeActionText, "확인 불가")
@@ -61,6 +62,7 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.timerSummary, "휴식 • 07:00 남음")
         XCTAssertEqual(viewModel.todaySummary, "1교시 국어\n2교시 수학")
         XCTAssertEqual(viewModel.mealSummary, "비빔밥")
+        XCTAssertEqual(viewModel.mealMeta, "점심 • 700 kcal")
         XCTAssertEqual(viewModel.eventSummary, "5월 26일  체육대회\n운동장")
         XCTAssertEqual(viewModel.noticeSummary, "2026-05-26  현장학습 안내")
         XCTAssertEqual(viewModel.noticeActionText, "가정통신문 열기")
@@ -102,6 +104,7 @@ final class FeatureViewModelTests: XCTestCase {
         await viewModel.load(profile: .fixture())
 
         XCTAssertEqual(viewModel.mealSummary, "비빔밥 (1.5)\n미역국")
+        XCTAssertEqual(viewModel.mealMeta, "점심 • 700 kcal")
         XCTAssertEqual(
             viewModel.eventSummary,
             "5월 28일  과학 행사\n강당\n\n5월 29일  체육대회\n운동장"

@@ -65,6 +65,11 @@ struct HomeView: View {
 
                 Section("오늘 급식") {
                     Text(viewModel.mealSummary)
+                    if !viewModel.mealMeta.isEmpty {
+                        Text(viewModel.mealMeta)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                     NavigationLink("주간 급식 보기") {
                         MealsView()
                             .environmentObject(appState)
@@ -93,15 +98,22 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("새로고침") {
-                        Task { await viewModel.load(profile: appState.profile) }
+                        Task { await refreshHome() }
                     }
                 }
             }
-            .task {
-                await viewModel.load(profile: appState.profile)
+            .task(id: appState.profile) {
+                await refreshHome()
+            }
+            .onAppear {
                 timerViewModel.refreshRunningState()
             }
         }
+    }
+
+    private func refreshHome() async {
+        await viewModel.load(profile: appState.profile)
+        timerViewModel.refreshRunningState()
     }
 
     private var timerDisplay: some View {

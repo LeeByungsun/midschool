@@ -6,6 +6,7 @@ final class HomeViewModel: ObservableObject {
     @Published var dateLabel: String = ""
     @Published var todaySummary: String = "오늘 시간표를 불러오는 중…"
     @Published var mealSummary: String = "오늘 급식을 불러오는 중…"
+    @Published var mealMeta: String = ""
     @Published var eventSummary: String = "일정을 불러오는 중…"
     @Published var noticeSummary: String = "가정통신문을 불러오는 중…"
     @Published var noticeActionText: String = "가정통신문 열기"
@@ -35,6 +36,7 @@ final class HomeViewModel: ObservableObject {
         guard profile.isComplete else {
             todaySummary = "학교와 학년/반을 먼저 설정해 주세요."
             mealSummary = "학교 설정이 필요해요."
+            mealMeta = ""
             eventSummary = "학교 설정이 필요해요."
             noticeSummary = "학교 설정이 필요해요."
             noticeActionText = "확인 불가"
@@ -55,6 +57,7 @@ final class HomeViewModel: ObservableObject {
 
         todaySummary = timetableItems.isEmpty ? "오늘 시간표가 없어요." : timetableItems.map { "\($0.period)교시 \($0.subject)" }.joined(separator: "\n")
         mealSummary = mealItems.first.map(formatMealMenu) ?? "오늘 급식이 없어요."
+        mealMeta = mealItems.first.map(formatMealMeta) ?? ""
         let visibleEventSummaries = eventItems
             .filter { isVisibleSchedule($0) }
             .filter { !isPastSchedule($0, referenceDate: currentDate) }
@@ -126,6 +129,15 @@ final class HomeViewModel: ObservableObject {
             .joined(separator: "\n")
 
         return formatted.isEmpty ? "오늘 급식이 없어요." : formatted
+    }
+
+    private func formatMealMeta(_ meal: MealInfo) -> String {
+        [
+            meal.mealType.trimmingCharacters(in: .whitespacesAndNewlines),
+            meal.calorieInfo.trimmingCharacters(in: .whitespacesAndNewlines)
+        ]
+        .filter { !$0.isEmpty }
+        .joined(separator: " • ")
     }
 
     private func formatMealLine(_ line: String) -> String {
