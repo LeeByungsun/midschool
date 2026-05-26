@@ -68,6 +68,46 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com")
     }
 
+    func testHomeViewModelFiltersPastAndBlockedSchedulesAndFormatsMealMenu() async {
+        let repository = StubSchoolRepository(
+            todayMeals: [
+                MealInfo(
+                    date: "20260526",
+                    mealType: "점심",
+                    menu: "비빔밥(1.5)<br/>미역국",
+                    calorieInfo: "700 kcal"
+                )
+            ],
+            schedule: [
+                SchoolEvent(date: "20260520", title: "지난 일정", description: "무시"),
+                SchoolEvent(date: "20260527", title: "토요휴업일", description: ""),
+                SchoolEvent(date: "20260528", title: "과학 행사", description: "강당"),
+                SchoolEvent(date: "20260529", title: "체육대회", description: "운동장")
+            ]
+        )
+        let viewModel = HomeViewModel(
+            repository: repository,
+            timerStateProvider: {
+                TimerSessionState(
+                    preset: .focus,
+                    totalSeconds: 2400,
+                    remainingSeconds: 2400,
+                    targetDate: nil,
+                    isRunning: false
+                )
+            },
+            now: { fixtureDate(year: 2026, month: 5, day: 26) }
+        )
+
+        await viewModel.load(profile: .fixture())
+
+        XCTAssertEqual(viewModel.mealSummary, "비빔밥 (1.5)\n미역국")
+        XCTAssertEqual(
+            viewModel.eventSummary,
+            "5월 28일  과학 행사\n강당\n\n5월 29일  체육대회\n운동장"
+        )
+    }
+
     func testMealsScheduleAndTimetableViewModelsRespectProfileCompletion() async {
         let repository = StubSchoolRepository(
             weekMeals: [MealInfo(date: "20260526", mealType: "점심", menu: "급식", calorieInfo: "650 kcal")],

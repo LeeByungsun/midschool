@@ -54,15 +54,20 @@ final class HomeViewModel: ObservableObject {
         let noticeItems = (try? await notices) ?? []
 
         todaySummary = timetableItems.isEmpty ? "오늘 시간표가 없어요." : timetableItems.map { "\($0.period)교시 \($0.subject)" }.joined(separator: "\n")
-        mealSummary = mealItems.first?.menu ?? "오늘 급식이 없어요."
-        eventSummary = eventItems.isEmpty
-            ? "가까운 일정이 없어요."
-            : eventItems.prefix(3).map { event in
+        mealSummary = mealItems.first.map(formatMealMenu) ?? "오늘 급식이 없어요."
+        let visibleEventSummaries = eventItems
+            .filter { isVisibleSchedule($0) }
+            .filter { !isPastSchedule($0, referenceDate: currentDate) }
+            .prefix(3)
+            .map { event in
                 if event.description.isEmpty {
                     return "\(formattedEventDate(event.date))  \(event.title)"
                 }
                 return "\(formattedEventDate(event.date))  \(event.title)\n\(event.description)"
-            }.joined(separator: "\n\n")
+            }
+        eventSummary = visibleEventSummaries.isEmpty
+            ? "가까운 일정이 없어요."
+            : visibleEventSummaries.joined(separator: "\n\n")
 
         if noticeItems.isEmpty {
             noticeSummary = "새 가정통신문이 없어요."
@@ -100,6 +105,71 @@ final class HomeViewModel: ObservableObject {
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "M월 d일 EEEE"
         return formatter.string(from: date)
+    }
+
+    private func formatMealMenu(_ meal: MealInfo) -> String {
+        let formatted = meal.menu
+            .replacingOccurrences(
+                of: "<br\\s*/?>",
+                with: "\n",
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: "[ \\t]+",
+                with: " ",
+                options: .regularExpression
+            )
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .map(formatMealLine)
+            .joined(separator: "\n")
+
+        return formatted.isEmpty ? "오늘 급식이 없어요." : formatted
+    }
+
+    private func formatMealLine(_ line: String) -> String {
+        let pattern = #"^(.*?)(\(([^)]*)\))?$"#
+        guard
+            let regex = try? NSRegularExpression(pattern: pattern),
+            let match = regex.firstMatch(
+                in: line,
+                range: NSRange(location: 0, length: line.utf16.count)
+            ),
+            let nameRange = Range(match.range(at: 1), in: line)
+        else {
+            return line.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        let name = line[nameRange].trimmingCharacters(in: .whitespacesAndNewlines)
+        guard
+            match.numberOfRanges > 3,
+            let allergyRange = Range(match.range(at: 3), in: line)
+        else {
+            return name
+        }
+
+        let allergy = line[allergyRange].trimmingCharacters(in: .whitespacesAndNewlines)
+        return allergy.isEmpty ? name : "\(name) (\(allergy))"
+    }
+
+    private func isVisibleSchedule(_ event: SchoolEvent) -> Bool {
+        let blockedKeywords = ["토요휴업일"]
+        return blockedKeywords.allSatisfy { keyword in
+            !event.title.contains(keyword) && !event.description.contains(keyword)
+        }
+    }
+
+    private func isPastSchedule(_ event: SchoolEvent, referenceDate: Date) -> Bool {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyyMMdd"
+        guard let eventDate = formatter.date(from: event.date) else {
+            return false
+        }
+
+        let calendar = Calendar(identifier: .gregorian)
+        return calendar.startOfDay(for: eventDate) < calendar.startOfDay(for: referenceDate)
     }
 
     private func formatTimerSummary(_ state: TimerSessionState) -> String {
