@@ -50,7 +50,7 @@ project_release_config_id = xid('project_release_config')
 target_debug_config_id = xid('target_debug_config')
 target_release_config_id = xid('target_release_config')
 
-core_subgroups = {name: xid(f'group_Core_{name}') for name in ['Models', 'Networking', 'Storage']}
+core_subgroups = {name: xid(f'group_Core_{name}') for name in ['Models', 'Networking', 'Repositories', 'Storage']}
 feature_subgroups = {name: xid(f'group_Features_{name}') for name in ['Home', 'Meals', 'Schedule', 'Settings', 'Setup', 'Timer', 'Timetable']}
 
 file_ref_ids = {}

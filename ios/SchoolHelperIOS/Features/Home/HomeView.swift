@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var appState: AppState
+    @StateObject private var viewModel = HomeViewModel()
 
     var body: some View {
         NavigationStack {
@@ -12,13 +13,16 @@ struct HomeView: View {
                         .foregroundStyle(.secondary)
                 }
                 Section("요약") {
-                    Text("오늘 시간표")
-                    Text("오늘 급식")
-                    Text("다가오는 일정")
-                    Text("타이머")
+                    Text(viewModel.todaySummary)
+                    Text(viewModel.mealSummary)
+                    Text(viewModel.eventSummary)
+                    Text(viewModel.noticeSummary)
                 }
             }
             .navigationTitle("학교도우미")
+            .task {
+                await viewModel.load(profile: appState.profile)
+            }
         }
     }
 }
