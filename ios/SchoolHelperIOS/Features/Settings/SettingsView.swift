@@ -4,6 +4,9 @@ struct SettingsView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: SettingsViewModel
+    @State private var widgetPreview: HomeWidgetSnapshot?
+    @State private var isLoadingWidgetPreview = false
+    private let widgetPreviewLoader = HomeWidgetSnapshotLoader()
 
     init() {
         _viewModel = StateObject(wrappedValue: SettingsViewModel(initialProfile: StudentProfile()))
@@ -16,6 +19,21 @@ struct SettingsView: View {
                     Text(appState.profile.schoolName.isEmpty ? "학교 미설정" : appState.profile.schoolName)
                     Text(appState.profile.isComplete ? "\(appState.profile.grade)학년 \(appState.profile.classroom)반" : "설정 미완료")
                         .foregroundStyle(.secondary)
+                }
+
+                Section("위젯 미리보기") {
+                    if let widgetPreview {
+                        WidgetPreviewCard(snapshot: widgetPreview)
+                    } else if isLoadingWidgetPreview {
+                        ProgressView("위젯 미리보기를 불러오는 중…")
+                    } else {
+                        Text("위젯 미리보기를 준비하지 못했어요.")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("위젯 설정") {
+                    Toggle("내일 시간표 표시", isOn: $viewModel.showTomorrowTimetable)
                 }
 
                 Section("학교 검색") {
@@ -85,10 +103,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("위젯 설정") {
-                    Toggle("내일 시간표 표시", isOn: $viewModel.showTomorrowTimetable)
-                }
-
                 Section {
                     Button("설정 저장") {
                         viewModel.saveTimerSettings()
@@ -111,6 +125,73 @@ struct SettingsView: View {
                 viewModel.sync(with: appState.profile)
                 await viewModel.refreshNotificationPermission()
             }
+            .task(id: widgetPreviewTaskKey) {
+                await loadWidgetPreview()
+            }
         }
+    }
+
+    private var widgetPreviewTaskKey: String {
+        [
+            appState.profile.schoolCode,
+            appState.profile.grade,
+            appState.profile.classroom,
+            viewModel.showTomorrowTimetable ? "1" : "0"
+        ].joined(separator: "|")
+    }
+
+    private func loadWidgetPreview() async {
+        isLoadingWidgetPreview = true
+        let snapshot = await widgetPreviewLoader.load(showTomorrow: viewModel.showTomorrowTimetable)
+        widgetPreview = snapshot
+        isLoadingWidgetPreview = false
+    }
+}
+
+private struct WidgetPreviewCard: View {
+    let snapshot: HomeWidgetSnapshot
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(snapshot.headerDate)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text(snapshot.schoolLabel)
+                .font(.headline)
+
+            Text(snapshot.timerSummary)
+                .font(.subheadline)
+                .foregroundStyle(.blue)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("오늘")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(snapshot.todayTimetable)
+                    .font(.caption)
+                    .lineLimit(4)
+            }
+
+            if let tomorrow = snapshot.tomorrowTimetable {
+                Divider()
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("내일")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(tomorrow)
+                        .font(.caption)
+                        .lineLimit(3)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 }
