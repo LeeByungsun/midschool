@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var appState: AppState
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: SettingsViewModel
 
     init() {
@@ -98,6 +99,14 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("설정")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("닫기") {
+                        dismiss()
+                    }
+                }
+            }
             .task {
                 viewModel.sync(with: appState.profile)
                 await viewModel.refreshNotificationPermission()
