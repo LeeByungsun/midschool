@@ -22,7 +22,7 @@ struct RootTabView: View {
                         .tabItem { Label("일정", systemImage: "list.bullet.rectangle") }
                 }
                 .sheet(isPresented: timerPresented) {
-                    TimerView()
+                    TimerView(showsDismissButton: true)
                 }
                 .sheet(isPresented: settingsPresented) {
                     SettingsView()

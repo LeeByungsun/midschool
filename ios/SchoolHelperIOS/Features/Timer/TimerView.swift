@@ -1,7 +1,13 @@
 import SwiftUI
 
 struct TimerView: View {
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = TimerViewModel()
+    private let showsDismissButton: Bool
+
+    init(showsDismissButton: Bool = false) {
+        self.showsDismissButton = showsDismissButton
+    }
 
     var body: some View {
         NavigationStack {
@@ -47,6 +53,16 @@ struct TimerView: View {
                 }
             }
             .navigationTitle("타이머")
+            .navigationBarTitleDisplayMode(showsDismissButton ? .inline : .automatic)
+            .toolbar {
+                if showsDismissButton {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("닫기") {
+                            dismiss()
+                        }
+                    }
+                }
+            }
             .task {
                 viewModel.refreshRunningState()
             }
