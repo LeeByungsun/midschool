@@ -9,9 +9,18 @@ struct HomeView: View {
         NavigationStack {
             List {
                 Section("학생 정보") {
+                    Text(viewModel.dateLabel)
+                        .font(.headline)
                     Text(appState.profile.schoolName.isEmpty ? "학교 미설정" : appState.profile.schoolName)
                     Text(appState.profile.isComplete ? "\(appState.profile.grade)학년 \(appState.profile.classroom)반" : "학년/반 미완료")
                         .foregroundStyle(.secondary)
+                }
+
+                Section("타이머") {
+                    Text(viewModel.timerSummary)
+                    NavigationLink("타이머 열기") {
+                        TimerView()
+                    }
                 }
 
                 Section("오늘 시간표") {

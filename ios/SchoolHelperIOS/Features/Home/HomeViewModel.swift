@@ -3,26 +3,35 @@ import Combine
 
 @MainActor
 final class HomeViewModel: ObservableObject {
+    @Published var dateLabel: String = ""
     @Published var todaySummary: String = "오늘 시간표를 불러오는 중…"
     @Published var mealSummary: String = "오늘 급식을 불러오는 중…"
     @Published var eventSummary: String = "일정을 불러오는 중…"
     @Published var noticeSummary: String = "가정통신문을 불러오는 중…"
     @Published var noticeActionText: String = "가정통신문 열기"
     @Published var noticeActionEnabled: Bool = false
+    @Published var timerSummary: String = ""
 
     private let repository: SchoolRepository
+    private let timerStateProvider: () -> TimerSessionState
     private let now: () -> Date
     private(set) var latestNoticeURL: URL?
 
     init(
         repository: SchoolRepository = DefaultSchoolRepository(),
+        timerStateProvider: @escaping () -> TimerSessionState = { TimerPreferencesStore().load() },
         now: @escaping () -> Date = Date.init
     ) {
         self.repository = repository
+        self.timerStateProvider = timerStateProvider
         self.now = now
     }
 
     func load(profile: StudentProfile) async {
+        let currentDate = now()
+        dateLabel = formattedCurrentDate(currentDate)
+        timerSummary = formatTimerSummary(timerStateProvider())
+
         guard profile.isComplete else {
             todaySummary = "학교와 학년/반을 먼저 설정해 주세요."
             mealSummary = "학교 설정이 필요해요."
@@ -34,7 +43,6 @@ final class HomeViewModel: ObservableObject {
             return
         }
 
-        let currentDate = now()
         async let timetable = repository.fetchTimetable(for: profile, date: currentDate)
         async let meals = repository.fetchTodayMeals(for: profile, date: currentDate)
         async let events = repository.fetchSchedule(for: profile, month: currentDate)
@@ -85,5 +93,23 @@ final class HomeViewModel: ObservableObject {
 
         formatter.dateFormat = "M월 d일"
         return formatter.string(from: date)
+    }
+
+    private func formattedCurrentDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "M월 d일 EEEE"
+        return formatter.string(from: date)
+    }
+
+    private func formatTimerSummary(_ state: TimerSessionState) -> String {
+        let minutes = max(0, state.remainingSeconds) / 60
+        let seconds = max(0, state.remainingSeconds) % 60
+        let timeText = String(format: "%02d:%02d", minutes, seconds)
+
+        if state.isRunning {
+            return "\(state.preset.title) • \(timeText) 남음"
+        }
+        return "\(state.preset.title) • \(timeText)"
     }
 }

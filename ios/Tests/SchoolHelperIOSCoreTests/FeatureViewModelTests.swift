@@ -4,10 +4,24 @@ import XCTest
 @MainActor
 final class FeatureViewModelTests: XCTestCase {
     func testHomeViewModelShowsSetupMessagesWhenProfileIsIncomplete() async {
-        let viewModel = HomeViewModel(repository: StubSchoolRepository())
+        let viewModel = HomeViewModel(
+            repository: StubSchoolRepository(),
+            timerStateProvider: {
+                TimerSessionState(
+                    preset: .focus,
+                    totalSeconds: 2400,
+                    remainingSeconds: 2400,
+                    targetDate: nil,
+                    isRunning: false
+                )
+            },
+            now: { fixtureDate(year: 2026, month: 5, day: 26) }
+        )
 
         await viewModel.load(profile: StudentProfile())
 
+        XCTAssertEqual(viewModel.dateLabel, "5월 26일 화요일")
+        XCTAssertEqual(viewModel.timerSummary, "집중 • 40:00")
         XCTAssertEqual(viewModel.todaySummary, "학교와 학년/반을 먼저 설정해 주세요.")
         XCTAssertEqual(viewModel.mealSummary, "학교 설정이 필요해요.")
         XCTAssertEqual(viewModel.eventSummary, "학교 설정이 필요해요.")
@@ -29,11 +43,22 @@ final class FeatureViewModelTests: XCTestCase {
         )
         let viewModel = HomeViewModel(
             repository: repository,
+            timerStateProvider: {
+                TimerSessionState(
+                    preset: .shortBreak,
+                    totalSeconds: 600,
+                    remainingSeconds: 420,
+                    targetDate: fixtureDate(year: 2026, month: 5, day: 26).addingTimeInterval(420),
+                    isRunning: true
+                )
+            },
             now: { fixtureDate(year: 2026, month: 5, day: 26) }
         )
 
         await viewModel.load(profile: .fixture())
 
+        XCTAssertEqual(viewModel.dateLabel, "5월 26일 화요일")
+        XCTAssertEqual(viewModel.timerSummary, "휴식 • 07:00 남음")
         XCTAssertEqual(viewModel.todaySummary, "1교시 국어\n2교시 수학")
         XCTAssertEqual(viewModel.mealSummary, "비빔밥")
         XCTAssertEqual(viewModel.eventSummary, "5월 26일  체육대회\n운동장")
