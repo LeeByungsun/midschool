@@ -12,7 +12,9 @@ import com.bsbarron.midschoolapp.data.remote.NeisApiException
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
 import com.bsbarron.midschoolapp.data.remote.NoticeApiService
 import com.bsbarron.midschoolapp.data.remote.dto.NeisResultDto
+import com.bsbarron.midschoolapp.data.remote.dto.NeisResponse
 import com.bsbarron.midschoolapp.data.remote.dto.NeisSection
+import com.bsbarron.midschoolapp.data.remote.dto.TimetableRowDto
 import java.io.IOException
 import javax.inject.Inject
 import retrofit2.HttpException
@@ -29,8 +31,10 @@ class SchoolRepositoryImpl @Inject constructor(
             "학교 이름은 두 글자 이상 입력해 주세요."
         }
 
+        val response = apiService.getSchools(query = trimmedQuery)
         extractRows(
-            sections = apiService.getSchools(query = trimmedQuery).schoolInfo,
+            rootResult = response.result,
+            sections = response.schoolInfo,
             dataLabel = "학교 검색"
         )
             .map { row ->
@@ -59,12 +63,14 @@ class SchoolRepositoryImpl @Inject constructor(
         val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
         val cacheKey = date
         val networkResult = runCatching {
+            val response = apiService.getMeals(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                date = date
+            )
             extractRows(
-                sections = apiService.getMeals(
-                    officeCode = studentInfo.officeCode,
-                    schoolCode = studentInfo.schoolCode,
-                    date = date
-                ).mealServiceDietInfo,
+                rootResult = response.result,
+                sections = response.mealServiceDietInfo,
                 dataLabel = "급식"
             )
                 .map { row ->
@@ -98,12 +104,14 @@ class SchoolRepositoryImpl @Inject constructor(
         val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
         val cacheKey = date
         val networkResult = runCatching {
+            val response = apiService.getSchedules(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                date = date
+            )
             extractRows(
-                sections = apiService.getSchedules(
-                    officeCode = studentInfo.officeCode,
-                    schoolCode = studentInfo.schoolCode,
-                    date = date
-                ).schoolSchedule,
+                rootResult = response.result,
+                sections = response.schoolSchedule,
                 dataLabel = "학사 일정"
             )
                 .map { row ->
@@ -177,14 +185,14 @@ class SchoolRepositoryImpl @Inject constructor(
         val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
         val cacheKey = date
         val networkResult = runCatching {
-            val timetableSections = when (studentInfo.schoolKind) {
+            val response: NeisResponse<TimetableRowDto> = when (studentInfo.schoolKind) {
                 ELEMENTARY_SCHOOL_KIND -> apiService.getElementaryTimetable(
                     officeCode = studentInfo.officeCode,
                     schoolCode = studentInfo.schoolCode,
                     grade = grade,
                     classroom = classroom,
                     date = date
-                ).elsTimetable
+                )
 
                 MIDDLE_SCHOOL_KIND -> apiService.getMiddleTimetable(
                     officeCode = studentInfo.officeCode,
@@ -192,7 +200,7 @@ class SchoolRepositoryImpl @Inject constructor(
                     grade = grade,
                     classroom = classroom,
                     date = date
-                ).misTimetable
+                )
 
                 HIGH_SCHOOL_KIND -> apiService.getHighTimetable(
                     officeCode = studentInfo.officeCode,
@@ -200,7 +208,7 @@ class SchoolRepositoryImpl @Inject constructor(
                     grade = grade,
                     classroom = classroom,
                     date = date
-                ).hisTimetable
+                )
 
                 else -> apiService.getMiddleTimetable(
                     officeCode = studentInfo.officeCode,
@@ -208,11 +216,17 @@ class SchoolRepositoryImpl @Inject constructor(
                     grade = grade,
                     classroom = classroom,
                     date = date
-                ).misTimetable
+                )
             }
 
             extractRows(
-                sections = timetableSections,
+                rootResult = response.result,
+                sections = when (studentInfo.schoolKind) {
+                    ELEMENTARY_SCHOOL_KIND -> response.elsTimetable
+                    MIDDLE_SCHOOL_KIND -> response.misTimetable
+                    HIGH_SCHOOL_KIND -> response.hisTimetable
+                    else -> response.misTimetable
+                },
                 dataLabel = "시간표"
             )
                 .map { row ->
@@ -285,15 +299,16 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     private fun <T> extractRows(
+        rootResult: NeisResultDto?,
         sections: List<NeisSection<T>>?,
         dataLabel: String
     ): List<T> {
-        val result = sections.orEmpty()
+        val nestedResult = sections.orEmpty()
             .firstNotNullOfOrNull { section ->
                 section.head.orEmpty().firstNotNullOfOrNull { it.result }
             }
 
-        validateResult(result, dataLabel)
+        validateResult(rootResult ?: nestedResult, dataLabel)
         return sections.orEmpty().getOrNull(1)?.row.orEmpty()
     }
 

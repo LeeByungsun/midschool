@@ -6,6 +6,7 @@ import com.bsbarron.midschoolapp.data.model.NoticePreview
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
+import com.bsbarron.midschoolapp.data.remote.NeisApiException
 import com.bsbarron.midschoolapp.data.remote.NeisApiService
 import com.bsbarron.midschoolapp.data.remote.NoticeApiService
 import com.bsbarron.midschoolapp.data.remote.dto.MealRowDto
@@ -47,6 +48,12 @@ private fun <T> successResponse(rows: List<T>): NeisResponse<T> {
     )
 }
 
+private fun <T> errorResponse(code: String, message: String): NeisResponse<T> {
+    return NeisResponse(
+        result = NeisResultDto(code = code, message = message)
+    )
+}
+
 class SchoolRepositoryImplTest {
 
     @Test
@@ -82,6 +89,31 @@ class SchoolRepositoryImplTest {
         assertEquals("1234567", apiService.lastMealSchoolCode)
         assertEquals("J10", preferencesRepository.savedMealCacheArgs?.officeCode)
         assertEquals("1234567", preferencesRepository.savedMealCacheArgs?.schoolCode)
+    }
+
+    @Test
+    fun `getMeals returns failure when NEIS root result contains error`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            mealsResponse = errorResponse("ERROR-300", "인증 실패")
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+
+        val result = repository.getMeals("20260519")
+
+        assertTrue(result.isFailure)
+        assertEquals("나이스 인증키를 다시 확인해 주세요.", result.exceptionOrNull()?.message)
+        assertTrue(result.exceptionOrNull() is NeisApiException)
+        assertNull(preferencesRepository.savedMealCacheArgs)
     }
 
     @Test
@@ -232,6 +264,30 @@ class SchoolRepositoryImplTest {
         val result = repository.getSchedules("202605")
 
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `getSchedules returns failure when NEIS root result contains validation error`() = runBlocking {
+        val apiService = FakeNeisApiService().apply {
+            schedulesResponse = errorResponse("INFO-100", "필수 파라미터 누락")
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+
+        val result = repository.getSchedules("202605")
+
+        assertTrue(result.isFailure)
+        assertEquals("학사 일정 조회에 필요한 값이 누락되었어요.", result.exceptionOrNull()?.message)
+        assertTrue(result.exceptionOrNull() is NeisApiException)
     }
 
     @Test

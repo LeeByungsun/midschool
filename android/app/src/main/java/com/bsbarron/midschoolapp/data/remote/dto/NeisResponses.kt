@@ -3,6 +3,8 @@ package com.bsbarron.midschoolapp.data.remote.dto
 import com.google.gson.annotations.SerializedName
 
 data class NeisResponse<T>(
+    @SerializedName("RESULT")
+    val result: NeisResultDto? = null,
     @SerializedName("mealServiceDietInfo")
     val mealServiceDietInfo: List<NeisSection<T>>? = null,
     @SerializedName("SchoolSchedule")
