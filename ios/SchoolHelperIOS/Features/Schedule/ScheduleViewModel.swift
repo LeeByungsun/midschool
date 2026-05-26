@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 @MainActor
 final class ScheduleViewModel: ObservableObject {
@@ -6,7 +7,7 @@ final class ScheduleViewModel: ObservableObject {
 
     private let repository: SchoolRepository
 
-    init(repository: SchoolRepository = MockSchoolRepository()) {
+    init(repository: SchoolRepository = DefaultSchoolRepository()) {
         self.repository = repository
     }
 

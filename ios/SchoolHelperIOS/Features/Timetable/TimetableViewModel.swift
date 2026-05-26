@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 @MainActor
 final class TimetableViewModel: ObservableObject {
@@ -7,7 +8,7 @@ final class TimetableViewModel: ObservableObject {
 
     private let repository: SchoolRepository
 
-    init(repository: SchoolRepository = MockSchoolRepository()) {
+    init(repository: SchoolRepository = DefaultSchoolRepository()) {
         self.repository = repository
     }
 

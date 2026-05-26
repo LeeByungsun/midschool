@@ -84,6 +84,7 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 ### 네트워크
 - URLSession 기반 client
 - NEIS / notices 경계 분리
+- notices는 Android와 동일하게 web `/api/notices` BFF를 우선 사용
 
 ---
 
@@ -112,13 +113,14 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 3. Setup/Home/Settings 흐름 우선 연결
 4. NEIS client와 mock 데이터/실데이터 경계 설계
 5. 화면별 ViewModel/Model 정리
+6. SwiftPM 기반 코어 회귀 테스트 경로 유지
 
 ---
 
 ## 6. 아직 열려 있는 결정
 
 - SwiftUI 앱을 어떤 Xcode 프로젝트 구조로 둘지
-- notices를 iOS에서 직접 부를지, Android처럼 BFF를 우선 둘지
+- SwiftUI 화면용 Xcode target 검증 외에 SwiftPM 코어 테스트를 얼마나 넓힐지
 - 위젯/알림을 1차에 넣을지 2차로 미룰지
 
-현재는 **기능 parity를 우선하는 iPhone 앱 골격 생성**이 먼저입니다.
+현재는 **기능 parity를 우선하는 iPhone 앱 골격 생성 + 코어 회귀 테스트 경로 유지**가 먼저입니다.

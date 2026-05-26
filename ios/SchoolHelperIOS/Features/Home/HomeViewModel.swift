@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 @MainActor
 final class HomeViewModel: ObservableObject {
@@ -8,9 +9,14 @@ final class HomeViewModel: ObservableObject {
     @Published var noticeSummary: String = "가정통신문을 불러오는 중…"
 
     private let repository: SchoolRepository
+    private let now: () -> Date
 
-    init(repository: SchoolRepository = MockSchoolRepository()) {
+    init(
+        repository: SchoolRepository = DefaultSchoolRepository(),
+        now: @escaping () -> Date = Date.init
+    ) {
         self.repository = repository
+        self.now = now
     }
 
     func load(profile: StudentProfile) async {
@@ -22,9 +28,10 @@ final class HomeViewModel: ObservableObject {
             return
         }
 
-        async let timetable = repository.fetchTimetable(for: profile, date: Date())
-        async let meals = repository.fetchTodayMeals(for: profile, date: Date())
-        async let events = repository.fetchSchedule(for: profile, month: Date())
+        let currentDate = now()
+        async let timetable = repository.fetchTimetable(for: profile, date: currentDate)
+        async let meals = repository.fetchTodayMeals(for: profile, date: currentDate)
+        async let events = repository.fetchSchedule(for: profile, month: currentDate)
         async let notices = repository.fetchNotices(for: profile, limit: 1)
 
         let timetableItems = (try? await timetable) ?? []

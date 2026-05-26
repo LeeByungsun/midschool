@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 @MainActor
 final class SetupViewModel: ObservableObject {
@@ -19,6 +20,19 @@ final class SetupViewModel: ObservableObject {
         self.searchQuery = initialProfile.schoolName
         self.selectedSchool = initialProfile.schoolInfo
         self.repository = repository
+    }
+
+    func updateSchoolQuery(_ query: String) {
+        searchQuery = query
+        searchResults = []
+
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let selectedSchool, selectedSchool.schoolName != trimmed {
+            self.selectedSchool = nil
+            message = trimmed.isEmpty ? "" : "검색 결과에서 학교를 다시 선택해 주세요."
+        } else if trimmed.isEmpty {
+            message = ""
+        }
     }
 
     func searchSchools() async {
@@ -67,8 +81,9 @@ final class SetupViewModel: ObservableObject {
     }
 
     func buildProfileForSave() -> StudentProfile? {
-        guard let school = selectedSchool else {
-            message = "학교를 먼저 선택해 주세요."
+        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let school = selectedSchool, school.schoolName == trimmedQuery else {
+            message = "학교를 검색 후 다시 선택해 주세요."
             return nil
         }
         guard !draftProfile.grade.isEmpty, !draftProfile.classroom.isEmpty else {

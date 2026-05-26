@@ -18,7 +18,10 @@ struct SettingsView: View {
                 }
 
                 Section("학교 검색") {
-                    TextField("학교 이름", text: $viewModel.searchQuery)
+                    TextField("학교 이름", text: Binding(
+                        get: { viewModel.searchQuery },
+                        set: { viewModel.updateSchoolQuery($0) }
+                    ))
                     Button(viewModel.isSearching ? "검색 중..." : "학교 검색") {
                         Task { await viewModel.searchSchools() }
                     }
@@ -45,8 +48,14 @@ struct SettingsView: View {
                 }
 
                 Section("학생 정보") {
-                    TextField("학년", text: $viewModel.draftProfile.grade)
-                    TextField("반", text: $viewModel.draftProfile.classroom)
+                    TextField("학년", text: Binding(
+                        get: { viewModel.draftProfile.grade },
+                        set: { viewModel.updateGrade($0) }
+                    ))
+                    TextField("반", text: Binding(
+                        get: { viewModel.draftProfile.classroom },
+                        set: { viewModel.updateClassroom($0) }
+                    ))
                 }
 
                 Section {
@@ -59,9 +68,7 @@ struct SettingsView: View {
             }
             .navigationTitle("설정")
             .task {
-                viewModel.draftProfile = appState.profile
-                viewModel.searchQuery = appState.profile.schoolName
-                viewModel.selectedSchool = appState.profile.schoolInfo
+                viewModel.sync(with: appState.profile)
             }
         }
     }

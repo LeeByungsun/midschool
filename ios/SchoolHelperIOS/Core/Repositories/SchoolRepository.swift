@@ -9,6 +9,38 @@ protocol SchoolRepository {
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview]
 }
 
+protocol NEISServicing {
+    func fetchMeals(
+        officeCode: String,
+        schoolCode: String,
+        date: String
+    ) async throws -> [MealInfo]
+    func fetchSchedule(
+        officeCode: String,
+        schoolCode: String,
+        month: String
+    ) async throws -> [SchoolEvent]
+    func fetchTimetable(
+        officeCode: String,
+        schoolCode: String,
+        schoolKind: String,
+        grade: String,
+        classroom: String,
+        date: String
+    ) async throws -> [TimetableItem]
+}
+
+protocol NoticesServicing {
+    func fetchNotices(
+        officeCode: String,
+        schoolCode: String,
+        limit: Int
+    ) async throws -> [NoticePreview]
+}
+
+extension NEISClient: SchoolSearchService, NEISServicing {}
+extension NoticesClient: NoticesServicing {}
+
 struct MockSchoolRepository: SchoolRepository {
     func searchSchools(query: String) async throws -> [SchoolInfo] {
         try await MockSchoolSearchService().searchSchools(query: query)
@@ -59,69 +91,132 @@ struct MockSchoolRepository: SchoolRepository {
 }
 
 struct DefaultSchoolRepository: SchoolRepository {
-    private let neisClient: NEISClient
-    private let noticesClient: NoticesClient
-    private let fallback: MockSchoolRepository
+    private let schoolSearchService: SchoolSearchService
+    private let neisService: NEISServicing
+    private let noticesService: NoticesServicing
+    private let fallback: SchoolRepository
+    private let calendar: Calendar
 
     init(
+        schoolSearchService: SchoolSearchService? = nil,
         neisClient: NEISClient = NEISClient(),
-        noticesClient: NoticesClient = NoticesClient(),
-        fallback: MockSchoolRepository = MockSchoolRepository()
+        noticesService: NoticesServicing = NoticesClient(),
+        fallback: SchoolRepository = MockSchoolRepository(),
+        calendar: Calendar = .current
     ) {
-        self.neisClient = neisClient
-        self.noticesClient = noticesClient
+        self.schoolSearchService = schoolSearchService ?? neisClient
+        self.neisService = neisClient
+        self.noticesService = noticesService
         self.fallback = fallback
+        self.calendar = calendar
+    }
+
+    init(
+        schoolSearchService: SchoolSearchService,
+        neisService: NEISServicing,
+        noticesService: NoticesServicing,
+        fallback: SchoolRepository = MockSchoolRepository(),
+        calendar: Calendar = .current
+    ) {
+        self.schoolSearchService = schoolSearchService
+        self.neisService = neisService
+        self.noticesService = noticesService
+        self.fallback = fallback
+        self.calendar = calendar
     }
 
     func searchSchools(query: String) async throws -> [SchoolInfo] {
-        (try? await neisClient.searchSchools(query: query)) ?? fallback.searchSchools(query: query)
+        do {
+            return try await schoolSearchService.searchSchools(query: query)
+        } catch {
+            return try await fallback.searchSchools(query: query)
+        }
     }
 
     func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        let key = formatter.string(from: date)
-        return (try? await neisClient.fetchMeals(
-            officeCode: profile.officeCode,
-            schoolCode: profile.schoolCode,
-            date: key
-        )) ?? fallback.fetchTodayMeals(for: profile, date: date)
+        let key = formattedString(from: date, format: "yyyyMMdd")
+        do {
+            return try await neisService.fetchMeals(
+                officeCode: profile.officeCode,
+                schoolCode: profile.schoolCode,
+                date: key
+            )
+        } catch {
+            return try await fallback.fetchTodayMeals(for: profile, date: date)
+        }
     }
 
     func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] {
-        (try? await fallback.fetchWeekMeals(for: profile, weekStart: weekStart)) ?? []
+        let dates = weekDates(startingAt: weekStart)
+        var meals: [MealInfo] = []
+
+        for date in dates {
+            let dayMeals = try await fetchTodayMeals(for: profile, date: date)
+            meals.append(contentsOf: dayMeals)
+        }
+
+        return meals.sorted {
+            if $0.date == $1.date {
+                return $0.mealType < $1.mealType
+            }
+            return $0.date < $1.date
+        }
     }
 
     func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        let key = formatter.string(from: date)
-        return (try? await neisClient.fetchTimetable(
-            officeCode: profile.officeCode,
-            schoolCode: profile.schoolCode,
-            schoolKind: profile.schoolKind,
-            grade: profile.grade,
-            classroom: profile.classroom,
-            date: key
-        )) ?? fallback.fetchTimetable(for: profile, date: date)
+        let key = formattedString(from: date, format: "yyyyMMdd")
+        do {
+            return try await neisService.fetchTimetable(
+                officeCode: profile.officeCode,
+                schoolCode: profile.schoolCode,
+                schoolKind: profile.schoolKind,
+                grade: profile.grade,
+                classroom: profile.classroom,
+                date: key
+            )
+        } catch {
+            return try await fallback.fetchTimetable(for: profile, date: date)
+        }
     }
 
     func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMM"
-        let key = formatter.string(from: month)
-        return (try? await neisClient.fetchSchedule(
-            officeCode: profile.officeCode,
-            schoolCode: profile.schoolCode,
-            month: key
-        )) ?? fallback.fetchSchedule(for: profile, month: month)
+        let key = formattedString(from: month, format: "yyyyMM")
+        do {
+            return try await neisService.fetchSchedule(
+                officeCode: profile.officeCode,
+                schoolCode: profile.schoolCode,
+                month: key
+            )
+        } catch {
+            return try await fallback.fetchSchedule(for: profile, month: month)
+        }
     }
 
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] {
-        (try? await noticesClient.fetchNotices(
-            officeCode: profile.officeCode,
-            schoolCode: profile.schoolCode,
-            limit: limit
-        )) ?? fallback.fetchNotices(for: profile, limit: limit)
+        do {
+            return try await noticesService.fetchNotices(
+                officeCode: profile.officeCode,
+                schoolCode: profile.schoolCode,
+                limit: limit
+            )
+        } catch {
+            return try await fallback.fetchNotices(for: profile, limit: limit)
+        }
+    }
+
+    private func formattedString(from date: Date, format: String) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.dateFormat = format
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = calendar.timeZone
+        return formatter.string(from: date)
+    }
+
+    private func weekDates(startingAt weekStart: Date) -> [Date] {
+        let startOfDay = calendar.startOfDay(for: weekStart)
+        return (0..<5).compactMap { offset in
+            calendar.date(byAdding: .day, value: offset, to: startOfDay)
+        }
     }
 }

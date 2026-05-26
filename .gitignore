@@ -9,6 +9,8 @@ captures/
 
 .idea/
 .vscode/
+ios/.build/
+ios/.build-task2/
 docs/skills/
 local.properties
 .omx/

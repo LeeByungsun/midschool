@@ -12,7 +12,10 @@ struct SetupView: View {
         NavigationStack {
             Form {
                 Section("학교 검색") {
-                    TextField("학교 이름", text: $viewModel.searchQuery)
+                    TextField("학교 이름", text: Binding(
+                        get: { viewModel.searchQuery },
+                        set: { viewModel.updateSchoolQuery($0) }
+                    ))
                     Button(viewModel.isSearching ? "검색 중..." : "학교 검색") {
                         Task { await viewModel.searchSchools() }
                     }
