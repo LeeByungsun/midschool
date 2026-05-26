@@ -92,6 +92,9 @@ struct SchoolHelperWidgetEntryView: View {
             }
         }
         .padding()
+        .widgetURL(entry.snapshot.requiresSetup
+            ? URL(string: "schoolhelper://settings")
+            : URL(string: "schoolhelper://timetable"))
     }
 }
 

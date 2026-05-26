@@ -9,6 +9,9 @@ struct SchoolHelperIOSApp: App {
         WindowGroup {
             RootTabView()
                 .environmentObject(appState)
+                .onOpenURL { url in
+                    appState.handleDeepLink(url)
+                }
                 .task {
                     appState.refresh()
                     await notificationPermissionCoordinator.refreshIfNeeded()

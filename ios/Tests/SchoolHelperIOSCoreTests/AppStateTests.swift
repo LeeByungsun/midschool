@@ -16,4 +16,18 @@ final class AppStateTests: XCTestCase {
 
         XCTAssertEqual(reloader.reloadCount, 1)
     }
+
+    func testHandleDeepLinkRoutesToTargetTab() {
+        let appState = AppState(
+            store: StudentPreferencesStore(defaults: UserDefaults(suiteName: #function)!),
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+        appState.profile = .fixture()
+
+        appState.handleDeepLink(URL(string: "schoolhelper://timer")!)
+        XCTAssertEqual(appState.selectedRoute, .timer)
+
+        appState.handleDeepLink(URL(string: "schoolhelper://settings")!)
+        XCTAssertEqual(appState.selectedRoute, .settings)
+    }
 }
