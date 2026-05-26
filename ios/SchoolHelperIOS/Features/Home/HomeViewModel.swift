@@ -11,6 +11,7 @@ final class HomeViewModel: ObservableObject {
     @Published var noticeSummary: String = "가정통신문을 불러오는 중…"
     @Published var noticeActionText: String = "가정통신문 열기"
     @Published var noticeActionEnabled: Bool = false
+    @Published var noticeRequiresSetup: Bool = false
     @Published var timerSummary: String = ""
 
     private let repository: SchoolRepository
@@ -38,9 +39,10 @@ final class HomeViewModel: ObservableObject {
             mealSummary = "학교 설정이 필요해요."
             mealMeta = ""
             eventSummary = "학교 설정이 필요해요."
-            noticeSummary = "학교 설정이 필요해요."
-            noticeActionText = "확인 불가"
-            noticeActionEnabled = false
+            noticeSummary = "학교 설정 후 최근 가정통신문을 확인할 수 있어요."
+            noticeActionText = "학교 설정하러 가기"
+            noticeActionEnabled = true
+            noticeRequiresSetup = true
             latestNoticeURL = nil
             return
         }
@@ -76,6 +78,7 @@ final class HomeViewModel: ObservableObject {
             noticeSummary = "새 가정통신문이 없어요."
             noticeActionText = "확인 불가"
             noticeActionEnabled = false
+            noticeRequiresSetup = false
             latestNoticeURL = nil
         } else {
             noticeSummary = noticeItems.prefix(3).map { notice in
@@ -84,6 +87,7 @@ final class HomeViewModel: ObservableObject {
             latestNoticeURL = URL(string: noticeItems.first?.url ?? "")
             noticeActionText = "가정통신문 열기"
             noticeActionEnabled = latestNoticeURL != nil
+            noticeRequiresSetup = false
         }
     }
 

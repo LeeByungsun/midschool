@@ -89,6 +89,8 @@ struct HomeView: View {
                     Button(viewModel.noticeActionText) {
                         if let url = viewModel.latestNoticeDestination() {
                             openURL(url)
+                        } else if viewModel.noticeRequiresSetup {
+                            appState.selectedRoute = .settings
                         }
                     }
                     .disabled(!viewModel.noticeActionEnabled)

@@ -26,9 +26,10 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.mealSummary, "학교 설정이 필요해요.")
         XCTAssertEqual(viewModel.mealMeta, "")
         XCTAssertEqual(viewModel.eventSummary, "학교 설정이 필요해요.")
-        XCTAssertEqual(viewModel.noticeSummary, "학교 설정이 필요해요.")
-        XCTAssertEqual(viewModel.noticeActionText, "확인 불가")
-        XCTAssertFalse(viewModel.noticeActionEnabled)
+        XCTAssertEqual(viewModel.noticeSummary, "학교 설정 후 최근 가정통신문을 확인할 수 있어요.")
+        XCTAssertEqual(viewModel.noticeActionText, "학교 설정하러 가기")
+        XCTAssertTrue(viewModel.noticeActionEnabled)
+        XCTAssertTrue(viewModel.noticeRequiresSetup)
         XCTAssertNil(viewModel.latestNoticeDestination())
     }
 
@@ -67,6 +68,7 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.noticeSummary, "2026-05-26  현장학습 안내")
         XCTAssertEqual(viewModel.noticeActionText, "가정통신문 열기")
         XCTAssertTrue(viewModel.noticeActionEnabled)
+        XCTAssertFalse(viewModel.noticeRequiresSetup)
         XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com")
     }
 
