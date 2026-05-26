@@ -37,6 +37,9 @@ class FakePreferencesRepository(
     val savedTimerDisplayModes = mutableListOf<TimerDisplayMode>()
     val savedNotificationEnabledValues = mutableListOf<Boolean>()
     val savedVibrationEnabledValues = mutableListOf<Boolean>()
+    val savedTimerStates = mutableListOf<TimerPreferenceState>()
+    var clearTimerStateCallCount: Int = 0
+        private set
 
     private val mealCache = mutableMapOf<MealCacheKey, List<MealInfo>>()
     private val timetableCache = mutableMapOf<TimetableCacheKey, List<TimetableItem>>()
@@ -89,9 +92,11 @@ class FakePreferencesRepository(
             targetAtMillis = targetAtMillis,
             isRunning = isRunning
         )
+        savedTimerStates += currentTimerState
     }
 
     override fun clearTimerState() {
+        clearTimerStateCallCount += 1
         currentTimerState = TimerPreferenceState(
             presetName = "FOCUS",
             totalMillis = 0L,

@@ -95,10 +95,6 @@ class TimerViewModel @Inject constructor(
                         progressFraction = calculateProgress(millisUntilFinished, it.totalMillis)
                     )
                 }
-                saveTimerState(
-                    isRunning = true,
-                    targetAtMillis = System.currentTimeMillis() + millisUntilFinished
-                )
             }
 
             override fun onFinish() {

@@ -6,7 +6,8 @@
 
 - 2026-05-26: **1번 NEIS 에러 핸들링 항목은 수정 완료**
 - 2026-05-26: **2번 POST_NOTIFICATIONS 권한 요청 항목도 수정 완료**
-- 현재 남은 활성 항목은 **3번 ~ 6번**
+- 2026-05-26: **3번 타이머 per-tick 저장 항목도 수정 완료**
+- 현재 남은 활성 항목은 **4번 ~ 6번**
 
 ---
 
@@ -31,12 +32,13 @@
 
 ---
 
-## 3. 타이머 동작 시 매 초마다 SharedPreferences 디스크 쓰기 수행 (성능 이슈)
+## 3. 타이머 동작 시 매 초마다 SharedPreferences 디스크 쓰기 수행 (성능 이슈) (✅ 2026-05-26 해결)
 *   **위치:** [`TimerViewModel.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/ui/timer/TimerViewModel.kt#L88-L102)
 *   **상황:** 타이머가 흐르는 동안 `CountDownTimer.onTick` 콜백이 매 초(1000ms)마다 호출됩니다.
 *   **문제점:** 매 초마다 `saveTimerState`를 호출하여 `System.currentTimeMillis() + millisUntilFinished`로 계산한 값을 SharedPreferences에 `apply()` 하고 있습니다.
     *   타이머 시작 시점(Start)에 완료 목표 절대 시간인 `targetAtMillis` 값을 **최초 1회만 고정해서 저장**해 두면, 앱이 강제 종료되거나 다시 켜졌을 때 `targetAtMillis - 현재_시스템_시간` 만 계산해도 남은 시간을 알아낼 수 있어 매 초마다 저장할 필요가 전혀 없습니다.
 *   **영향:** `apply()`는 비동기식으로 동작하지만, 매 초마다 SharedPreferences 메모리 캐시 변경 및 디스크 파일 쓰기 큐를 채우게 되므로 불필요한 GC(Garbage Collection) 유발, 배터리 소모 및 파일 입출력 오버헤드를 일으킵니다.
+*   **현재 상태:** `TimerViewModel` 에서 러닝 시작 시점에만 `targetAtMillis` 중심으로 저장하고, `onTick` 마다 저장하던 호출을 제거했습니다. pause 시에는 마지막 `remainingMillis` 만 한 번 저장하도록 유지했고, `TimerViewModelTest` 회귀 테스트로 검증했습니다.
 
 ---
 
