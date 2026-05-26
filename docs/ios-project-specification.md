@@ -76,6 +76,7 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 - 타이머 요약 snapshot
 - `SchoolHelperWidget` WidgetKit source/target scaffold
 - app group entitlement scaffold
+- 위젯용 `내일 시간표 표시` 설정 저장
 
 ---
 

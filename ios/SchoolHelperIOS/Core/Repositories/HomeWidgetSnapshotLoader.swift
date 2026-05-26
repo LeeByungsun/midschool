@@ -3,24 +3,29 @@ import Foundation
 struct HomeWidgetSnapshotLoader {
     private let profileStore: StudentPreferencesStore
     private let timerStore: TimerPreferencesStore
+    private let widgetSettingsStore: WidgetSettingsStore
     private let repository: SchoolRepository
     private let calendar: Calendar
 
     init(
         profileStore: StudentPreferencesStore = StudentPreferencesStore(),
         timerStore: TimerPreferencesStore = TimerPreferencesStore(),
+        widgetSettingsStore: WidgetSettingsStore = WidgetSettingsStore(),
         repository: SchoolRepository = DefaultSchoolRepository(),
         calendar: Calendar = Calendar(identifier: .gregorian)
     ) {
         self.profileStore = profileStore
         self.timerStore = timerStore
+        self.widgetSettingsStore = widgetSettingsStore
         self.repository = repository
         self.calendar = calendar
     }
 
-    func load(now: Date = Date(), showTomorrow: Bool = true) async -> HomeWidgetSnapshot {
+    func load(now: Date = Date(), showTomorrow: Bool? = nil) async -> HomeWidgetSnapshot {
         let profile = profileStore.load()
         let timerState = timerStore.load()
+        let widgetSettings = widgetSettingsStore.load()
+        let shouldShowTomorrow = showTomorrow ?? widgetSettings.showTomorrowTimetable
         let schoolLabel = profile.isComplete
             ? "\(profile.schoolName) \(profile.grade)학년 \(profile.classroom)반"
             : "학교와 학년/반 설정 필요"
@@ -34,14 +39,14 @@ struct HomeWidgetSnapshotLoader {
                 schoolLabel: schoolLabel,
                 timerSummary: timerSummary,
                 todayTimetable: "시간표를 보려면 설정을 완료해 주세요.",
-                tomorrowTimetable: showTomorrow ? "시간표를 보려면 설정을 완료해 주세요." : nil,
+                tomorrowTimetable: shouldShowTomorrow ? "시간표를 보려면 설정을 완료해 주세요." : nil,
                 requiresSetup: true
             )
         }
 
         let todayLines = (try? await repository.fetchTimetable(for: profile, date: now)).orEmpty
         let tomorrowDate = calendar.date(byAdding: .day, value: 1, to: now) ?? now
-        let tomorrowLines = showTomorrow
+        let tomorrowLines = shouldShowTomorrow
             ? (try? await repository.fetchTimetable(for: profile, date: tomorrowDate)).orEmpty
             : []
 
@@ -50,7 +55,7 @@ struct HomeWidgetSnapshotLoader {
             schoolLabel: schoolLabel,
             timerSummary: timerSummary,
             todayTimetable: Self.timetableSummary(from: todayLines, emptyMessage: "오늘 수업이 없어요."),
-            tomorrowTimetable: showTomorrow
+            tomorrowTimetable: shouldShowTomorrow
                 ? Self.timetableSummary(from: tomorrowLines, emptyMessage: "내일 수업이 없어요.")
                 : nil,
             requiresSetup: false

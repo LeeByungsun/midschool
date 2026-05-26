@@ -7,6 +7,7 @@ final class SettingsViewModelTests: XCTestCase {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)
         let timerSettingsStore = TimerSettingsStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
         timerSettingsStore.save(
             TimerSettings(
                 displayMode: .ring,
@@ -19,12 +20,14 @@ final class SettingsViewModelTests: XCTestCase {
             initialProfile: StudentProfile.fixture(),
             repository: MockSchoolRepository(),
             timerSettingsStore: timerSettingsStore,
+            widgetSettingsStore: widgetSettingsStore,
             notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
         )
 
         XCTAssertEqual(viewModel.timerDisplayMode, .ring)
         XCTAssertFalse(viewModel.notificationEnabled)
         XCTAssertFalse(viewModel.vibrationEnabled)
+        XCTAssertTrue(viewModel.showTomorrowTimetable)
     }
 
     func testSettingsViewModelRefreshesAndRequestsNotificationPermission() async {
@@ -46,5 +49,24 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.canRequestNotificationPermission)
         let requestCount = await provider.requestCount()
         XCTAssertEqual(requestCount, 1)
+    }
+
+    func testSettingsViewModelSavesWidgetSettings() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let timerSettingsStore = TimerSettingsStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile.fixture(),
+            repository: MockSchoolRepository(),
+            timerSettingsStore: timerSettingsStore,
+            widgetSettingsStore: widgetSettingsStore,
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        viewModel.showTomorrowTimetable = false
+        viewModel.saveTimerSettings()
+
+        XCTAssertFalse(widgetSettingsStore.load().showTomorrowTimetable)
     }
 }

@@ -14,27 +14,33 @@ final class SettingsViewModel: ObservableObject {
     @Published var vibrationEnabled: Bool
     @Published var notificationPermissionSummary: String = "알림 권한 상태를 확인하는 중이에요."
     @Published var canRequestNotificationPermission: Bool = false
+    @Published var showTomorrowTimetable: Bool
 
     private let repository: SchoolRepository
     private let timerSettingsStore: TimerSettingsStore
+    private let widgetSettingsStore: WidgetSettingsStore
     private let notificationAuthorizationProvider: NotificationAuthorizationProviding
 
     init(
         initialProfile: StudentProfile,
         repository: SchoolRepository = DefaultSchoolRepository(),
         timerSettingsStore: TimerSettingsStore = TimerSettingsStore(),
+        widgetSettingsStore: WidgetSettingsStore = WidgetSettingsStore(),
         notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider()
     ) {
         let timerSettings = timerSettingsStore.load()
+        let widgetSettings = widgetSettingsStore.load()
         self.draftProfile = initialProfile
         self.searchQuery = initialProfile.schoolName
         self.selectedSchool = initialProfile.schoolInfo
         self.repository = repository
         self.timerSettingsStore = timerSettingsStore
+        self.widgetSettingsStore = widgetSettingsStore
         self.notificationAuthorizationProvider = notificationAuthorizationProvider
         self.timerDisplayMode = timerSettings.displayMode
         self.notificationEnabled = timerSettings.notificationEnabled
         self.vibrationEnabled = timerSettings.vibrationEnabled
+        self.showTomorrowTimetable = widgetSettings.showTomorrowTimetable
     }
 
     func updateSchoolQuery(_ query: String) {
@@ -97,6 +103,7 @@ final class SettingsViewModel: ObservableObject {
 
     func sync(with profile: StudentProfile) {
         let timerSettings = timerSettingsStore.load()
+        let widgetSettings = widgetSettingsStore.load()
         draftProfile = profile
         searchQuery = profile.schoolName
         selectedSchool = profile.schoolInfo
@@ -105,6 +112,7 @@ final class SettingsViewModel: ObservableObject {
         timerDisplayMode = timerSettings.displayMode
         notificationEnabled = timerSettings.notificationEnabled
         vibrationEnabled = timerSettings.vibrationEnabled
+        showTomorrowTimetable = widgetSettings.showTomorrowTimetable
     }
 
     func saveTimerSettings() {
@@ -114,6 +122,9 @@ final class SettingsViewModel: ObservableObject {
                 notificationEnabled: notificationEnabled,
                 vibrationEnabled: vibrationEnabled
             )
+        )
+        widgetSettingsStore.save(
+            WidgetSettings(showTomorrowTimetable: showTomorrowTimetable)
         )
     }
 

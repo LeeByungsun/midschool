@@ -84,6 +84,10 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("위젯 설정") {
+                    Toggle("내일 시간표 표시", isOn: $viewModel.showTomorrowTimetable)
+                }
+
                 Section {
                     Button("설정 저장") {
                         viewModel.saveTimerSettings()

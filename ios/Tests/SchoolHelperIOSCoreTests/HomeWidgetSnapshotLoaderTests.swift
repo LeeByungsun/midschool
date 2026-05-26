@@ -7,6 +7,7 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
         defaults.removePersistentDomain(forName: #function)
         let profileStore = StudentPreferencesStore(defaults: defaults)
         let timerStore = TimerPreferencesStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
         timerStore.save(
             TimerSessionState(
                 preset: .focus,
@@ -19,6 +20,7 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
         let loader = HomeWidgetSnapshotLoader(
             profileStore: profileStore,
             timerStore: timerStore,
+            widgetSettingsStore: widgetSettingsStore,
             repository: StubSchoolRepository()
         )
 
@@ -37,6 +39,7 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
         let profileStore = StudentPreferencesStore(defaults: defaults)
         profileStore.save(.fixture())
         let timerStore = TimerPreferencesStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
         timerStore.save(
             TimerSessionState(
                 preset: .shortBreak,
@@ -60,6 +63,7 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
         let loader = HomeWidgetSnapshotLoader(
             profileStore: profileStore,
             timerStore: timerStore,
+            widgetSettingsStore: widgetSettingsStore,
             repository: repository
         )
 
@@ -70,6 +74,27 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
         XCTAssertEqual(snapshot.timerSummary, "휴식 • 07:00 남음")
         XCTAssertEqual(snapshot.todayTimetable, "1교시 국어\n2교시 수학")
         XCTAssertEqual(snapshot.tomorrowTimetable, "1교시 영어")
+    }
+
+    func testSnapshotCanHideTomorrowTimetableFromSharedSettings() async {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let profileStore = StudentPreferencesStore(defaults: defaults)
+        profileStore.save(.fixture())
+        let timerStore = TimerPreferencesStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        widgetSettingsStore.save(WidgetSettings(showTomorrowTimetable: false))
+
+        let loader = HomeWidgetSnapshotLoader(
+            profileStore: profileStore,
+            timerStore: timerStore,
+            widgetSettingsStore: widgetSettingsStore,
+            repository: WidgetTimetableRepository(todayItems: [], tomorrowItems: [])
+        )
+
+        let snapshot = await loader.load(now: fixtureDate(year: 2026, month: 5, day: 26))
+
+        XCTAssertNil(snapshot.tomorrowTimetable)
     }
 }
 
