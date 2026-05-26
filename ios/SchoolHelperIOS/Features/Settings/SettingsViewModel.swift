@@ -20,13 +20,15 @@ final class SettingsViewModel: ObservableObject {
     private let timerSettingsStore: TimerSettingsStore
     private let widgetSettingsStore: WidgetSettingsStore
     private let notificationAuthorizationProvider: NotificationAuthorizationProviding
+    private let widgetTimelineReloader: WidgetTimelineReloading
 
     init(
         initialProfile: StudentProfile,
         repository: SchoolRepository = DefaultSchoolRepository(),
         timerSettingsStore: TimerSettingsStore = TimerSettingsStore(),
         widgetSettingsStore: WidgetSettingsStore = WidgetSettingsStore(),
-        notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider()
+        notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider(),
+        widgetTimelineReloader: WidgetTimelineReloading = WidgetTimelineReloader()
     ) {
         let timerSettings = timerSettingsStore.load()
         let widgetSettings = widgetSettingsStore.load()
@@ -37,6 +39,7 @@ final class SettingsViewModel: ObservableObject {
         self.timerSettingsStore = timerSettingsStore
         self.widgetSettingsStore = widgetSettingsStore
         self.notificationAuthorizationProvider = notificationAuthorizationProvider
+        self.widgetTimelineReloader = widgetTimelineReloader
         self.timerDisplayMode = timerSettings.displayMode
         self.notificationEnabled = timerSettings.notificationEnabled
         self.vibrationEnabled = timerSettings.vibrationEnabled
@@ -126,6 +129,7 @@ final class SettingsViewModel: ObservableObject {
         widgetSettingsStore.save(
             WidgetSettings(showTomorrowTimetable: showTomorrowTimetable)
         )
+        widgetTimelineReloader.reloadAllTimelines()
     }
 
     func refreshNotificationPermission() async {

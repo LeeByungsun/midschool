@@ -9,6 +9,7 @@ final class TimerViewModel: ObservableObject {
     private let store: TimerPreferencesStore
     private let settingsStore: TimerSettingsStore
     private let notificationScheduler: TimerNotificationScheduling
+    private let widgetTimelineReloader: WidgetTimelineReloading
     private let now: () -> Date
     private let sleep: @Sendable (UInt64) async -> Void
     private var countdownTask: Task<Void, Never>?
@@ -17,12 +18,14 @@ final class TimerViewModel: ObservableObject {
         store: TimerPreferencesStore = TimerPreferencesStore(),
         settingsStore: TimerSettingsStore = TimerSettingsStore(),
         notificationScheduler: TimerNotificationScheduling = TimerNotificationScheduler(),
+        widgetTimelineReloader: WidgetTimelineReloading = WidgetTimelineReloader(),
         now: @escaping () -> Date = Date.init,
         sleep: @escaping @Sendable (UInt64) async -> Void = { try? await Task.sleep(nanoseconds: $0) }
     ) {
         self.store = store
         self.settingsStore = settingsStore
         self.notificationScheduler = notificationScheduler
+        self.widgetTimelineReloader = widgetTimelineReloader
         self.now = now
         self.sleep = sleep
         self.state = store.load()
@@ -41,6 +44,7 @@ final class TimerViewModel: ObservableObject {
             isRunning: false
         )
         store.save(state)
+        widgetTimelineReloader.reloadAllTimelines()
     }
 
     func toggle() {
@@ -58,6 +62,7 @@ final class TimerViewModel: ObservableObject {
         state.targetDate = nil
         state.isRunning = false
         store.save(state)
+        widgetTimelineReloader.reloadAllTimelines()
     }
 
     func refreshRunningState() {
@@ -89,6 +94,7 @@ final class TimerViewModel: ObservableObject {
             state.targetDate = nil
             state.isRunning = false
             store.save(state)
+            widgetTimelineReloader.reloadAllTimelines()
         }
     }
 
@@ -108,6 +114,7 @@ final class TimerViewModel: ObservableObject {
             )
         }
         store.save(state)
+        widgetTimelineReloader.reloadAllTimelines()
         startCountdownLoop()
     }
 
@@ -120,6 +127,7 @@ final class TimerViewModel: ObservableObject {
         state.targetDate = nil
         state.isRunning = false
         store.save(state)
+        widgetTimelineReloader.reloadAllTimelines()
     }
 
     private func startCountdownLoop() {

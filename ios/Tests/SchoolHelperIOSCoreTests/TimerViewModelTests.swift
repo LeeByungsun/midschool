@@ -9,6 +9,7 @@ final class TimerViewModelTests: XCTestCase {
         let store = TimerPreferencesStore(defaults: defaults)
         let settingsStore = TimerSettingsStore(defaults: defaults)
         let scheduler = SpyTimerNotificationScheduler()
+        let reloader = SpyWidgetTimelineReloader()
         settingsStore.save(
             TimerSettings(
                 displayMode: .ring,
@@ -22,12 +23,14 @@ final class TimerViewModelTests: XCTestCase {
             store: store,
             settingsStore: settingsStore,
             notificationScheduler: scheduler,
+            widgetTimelineReloader: reloader,
             now: { currentTime },
             sleep: { _ in }
         )
 
         XCTAssertEqual(viewModel.displayMode, .ring)
         viewModel.selectPreset(.shortBreak)
+        XCTAssertEqual(reloader.reloadCount, 1)
         viewModel.toggle()
         XCTAssertTrue(viewModel.state.isRunning)
         XCTAssertEqual(viewModel.state.remainingSeconds, TimerPreset.shortBreak.durationSeconds)
@@ -35,6 +38,7 @@ final class TimerViewModelTests: XCTestCase {
         XCTAssertEqual(scheduler.scheduleCalls.count, 1)
         XCTAssertEqual(scheduler.scheduleCalls.first?.presetTitle, TimerPreset.shortBreak.title)
         XCTAssertEqual(scheduler.scheduleCalls.first?.vibrationEnabled, false)
+        XCTAssertEqual(reloader.reloadCount, 2)
 
         currentTime = currentTime.addingTimeInterval(120)
         viewModel.syncWithCurrentTime()
@@ -43,11 +47,13 @@ final class TimerViewModelTests: XCTestCase {
         viewModel.toggle()
         XCTAssertFalse(viewModel.state.isRunning)
         XCTAssertEqual(scheduler.cancelCalls, 2)
+        XCTAssertEqual(reloader.reloadCount, 3)
 
         viewModel.reset()
         XCTAssertEqual(viewModel.state.remainingSeconds, TimerPreset.shortBreak.durationSeconds)
         XCTAssertNil(viewModel.state.targetDate)
         XCTAssertEqual(scheduler.cancelCalls, 3)
+        XCTAssertEqual(reloader.reloadCount, 4)
     }
 }
 

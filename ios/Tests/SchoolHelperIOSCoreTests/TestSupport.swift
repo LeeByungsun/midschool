@@ -81,3 +81,11 @@ actor StubNotificationAuthorizationProvider: NotificationAuthorizationProviding 
         requests
     }
 }
+
+final class SpyWidgetTimelineReloader: WidgetTimelineReloading {
+    private(set) var reloadCount = 0
+
+    func reloadAllTimelines() {
+        reloadCount += 1
+    }
+}

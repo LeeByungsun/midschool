@@ -56,17 +56,20 @@ final class SettingsViewModelTests: XCTestCase {
         defaults.removePersistentDomain(forName: #function)
         let timerSettingsStore = TimerSettingsStore(defaults: defaults)
         let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        let reloader = SpyWidgetTimelineReloader()
         let viewModel = SettingsViewModel(
             initialProfile: StudentProfile.fixture(),
             repository: MockSchoolRepository(),
             timerSettingsStore: timerSettingsStore,
             widgetSettingsStore: widgetSettingsStore,
-            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider(),
+            widgetTimelineReloader: reloader
         )
 
         viewModel.showTomorrowTimetable = false
         viewModel.saveTimerSettings()
 
         XCTAssertFalse(widgetSettingsStore.load().showTomorrowTimetable)
+        XCTAssertEqual(reloader.reloadCount, 1)
     }
 }
