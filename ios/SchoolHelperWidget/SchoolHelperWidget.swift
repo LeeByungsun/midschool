@@ -84,6 +84,7 @@ struct SchoolHelperWidgetEntryView: View {
     }
 }
 
+@main
 struct SchoolHelperWidget: Widget {
     let kind = "SchoolHelperWidget"
 

@@ -146,8 +146,12 @@ test_sources = ', '.join(test_build_ids[r] + f' /* {Path(r).name} in Sources */'
 add(f'\t\t{ids["tests_sources_phase"]} /* Sources */ = {{isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({test_sources}); runOnlyForDeploymentPostprocessing = 0; }};')
 add(f'\t\t{ids["tests_frameworks_phase"]} /* Frameworks */ = {{isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
 add(f'\t\t{ids["tests_resources_phase"]} /* Resources */ = {{isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
-widget_sources = ', '.join(widget_build_ids[r] + f' /* {Path(r).name} in Sources */' for r in widget_ref_ids)
-add(f'\t\t{ids["widget_sources_phase"]} /* Sources */ = {{isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({widget_sources}); runOnlyForDeploymentPostprocessing = 0; }};')
+widget_core_sources = [r for r in file_ref_ids if r.startswith('Core/')]
+widget_source_entries = ', '.join(
+    [widget_build_ids[r] + f' /* {Path(r).name} in Sources */' for r in widget_ref_ids] +
+    [build_file_ids[r] + f' /* {Path(r).name} in Sources */' for r in widget_core_sources]
+)
+add(f'\t\t{ids["widget_sources_phase"]} /* Sources */ = {{isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({widget_source_entries}); runOnlyForDeploymentPostprocessing = 0; }};')
 add(f'\t\t{ids["widget_frameworks_phase"]} /* Frameworks */ = {{isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
 add(f'\t\t{ids["widget_resources_phase"]} /* Resources */ = {{isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
 
@@ -156,6 +160,7 @@ add(f'\t\t{ids["project_debug"]} /* Debug */ = {{isa = XCBuildConfiguration; bui
 add(f'\t\t{ids["project_release"]} /* Release */ = {{isa = XCBuildConfiguration; buildSettings = {project_settings}; name = Release; }};')
 app_target_settings = {
     'ASSETCATALOG_COMPILER_APPICON_NAME': '""', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
+    'CODE_SIGN_ENTITLEMENTS': 'SchoolHelperIOS/SchoolHelperIOS.entitlements',
     'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '""', 'ENABLE_TESTABILITY': 'YES', 'GENERATE_INFOPLIST_FILE': 'YES',
     'INFOPLIST_KEY_CFBundleDisplayName': 'SchoolHelperIOS', 'INFOPLIST_KEY_UIApplicationSceneManifest_Generation': 'YES',
     'INFOPLIST_KEY_UILaunchScreen_Generation': 'YES', 'INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone': 'UIInterfaceOrientationPortrait',
@@ -183,6 +188,7 @@ test_release = '{ ' + ' '.join(f'{k} = {v};' for k,v in test_release_settings.it
 add(f'\t\t{ids["tests_release"]} /* Release */ = {{isa = XCBuildConfiguration; buildSettings = {test_release}; name = Release; }};')
 widget_target_settings = {
     'APPLICATION_EXTENSION_API_ONLY': 'YES', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
+    'CODE_SIGN_ENTITLEMENTS': 'SchoolHelperWidget/SchoolHelperWidget.entitlements',
     'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '""', 'GENERATE_INFOPLIST_FILE': 'YES',
     'INFOPLIST_KEY_CFBundleDisplayName': 'SchoolHelperWidget',
     'INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier': 'com.apple.widgetkit-extension',
