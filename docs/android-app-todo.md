@@ -25,7 +25,9 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 - 홈 대시보드 가정통신문 preview 카드
 - Repository / Preferences 기반의 기본 캐시 구조
 
-즉, **기본 앱 구조와 핵심 조회 기능은 이미 구현되어 있고**, 지금 남은 일은 주로 **학교 선택 흐름 완성**, **조회 기준의 동적화**, **가정통신문 검증**, **품질 보강**입니다.
+추가로, **학교 선택 A/B(검색/선택 UI + 학교 identity 저장)** 도 현재 브랜치 기준 구현되어 있습니다.
+
+지금 남은 일은 주로 **마이그레이션 UX 정리**, **검색 상태 품질 보강**, **추가 회귀 검증**, **운영 검증**입니다.
 
 ---
 
@@ -50,6 +52,18 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 - [x] SharedPreferences 기반 저장/캐시
 - [x] Retrofit + OkHttp + Gson 기반 원격 연동
 
+### 학교 선택 / 저장 계약
+
+- [x] Setup 화면 학교 검색 입력/결과 선택 UI
+- [x] Settings 화면 학교 변경 흐름
+- [x] 학교 선택 완료 전 Setup 미완료 처리
+- [x] `officeCode` 저장
+- [x] `schoolCode` 저장
+- [x] `schoolKind` 저장
+- [x] 저장된 학교 기준 급식/일정/시간표 조회
+- [x] `schoolKind` 기반 시간표 엔드포인트 분기
+- [x] 홈 학교명 동적 표시
+
 ### 타이머/위젯
 
 - [x] 타이머 ViewModel/UiState
@@ -66,109 +80,25 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 ---
 
-## 3. 핵심 미완 항목
+## 3. 지금 남은 핵심 과제
 
-아래는 현재 Android에서 가장 큰 미완 영역입니다.
+### A. 레거시 사용자 마이그레이션 UX
 
-### A. 학교 검색/선택 기능
+- [ ] 학년/반만 저장된 기존 사용자가 왜 Setup으로 돌아가는지 안내 문구 추가
+- [ ] partial prefs를 reset할지 재입력으로 유도할지 UX 정책 확정
 
-- [ ] Setup 화면에 학교 검색 입력/결과 선택 UI 추가
-- [ ] Settings 화면에 학교 변경 흐름 추가
-- [ ] 학교 선택 완료 전에는 설정 완료로 처리하지 않도록 정리
+### B. 학교 검색 상태 안정성
 
-### B. 학교 코드/학교 종류 저장
+- [ ] 빠른 연속 검색 시 오래된 응답이 최신 결과를 덮지 않도록 정리
+- [ ] 검색 실패/빈 결과 시 기존 선택을 유지할지 초기화할지 UX 정책 정리
 
-- [ ] `officeCode` 저장
-- [ ] `schoolCode` 저장
-- [ ] `schoolKind` 저장
-- [ ] 기존 사용자 데이터 마이그레이션 또는 재설정 흐름 정의
+### C. 회귀 검증 보강
 
-### C. 실제 조회 기준 동적화
+- [ ] Setup 검색 결과 상태 테스트 추가 보강
+- [ ] Settings 검색 결과 상태 테스트 추가 보강
+- [ ] persistence/setup-complete 규칙 테스트 유지
 
-- [ ] 급식 조회가 저장된 학교 기준으로 동작
-- [ ] 일정 조회가 저장된 학교 기준으로 동작
-- [ ] 시간표 조회가 저장된 학교 기준으로 동작
-- [ ] `schoolKind`에 따라 `misTimetable` / `elsTimetable` 분기
-
-### D. 홈 표시값 동기화
-
-- [ ] 홈 학교명을 저장된 학교 기준으로 표시
-- [ ] Setup/Settings/홈이 같은 사용자 설정 계약을 사용하도록 정리
-
-### E. 캐시 키 정리
-
-- [ ] 급식 캐시에 학교 identity 포함
-- [ ] 시간표 캐시에 학교 identity 포함
-- [ ] 일정 캐시에 학교 identity 포함
-
-현재는 학교 선택 기능이 완전히 연결되지 않으면, UI와 실제 조회 학교가 어긋날 위험이 큽니다.
-
----
-
-## 4. 우선순위별 앞으로 할 일
-
-## 1순위 — 학교 선택 기능을 실제 동작까지 완성
-
-이 단계가 가장 중요합니다.
-
-완료 기준:
-
-- 사용자가 학교를 검색하고 선택할 수 있음
-- 선택한 학교의 `officeCode`, `schoolCode`, `schoolKind`가 저장됨
-- 이후 급식/시간표/일정이 모두 선택한 학교 기준으로 조회됨
-
-세부 작업:
-
-- [ ] `SetupActivity` / `SetupViewModel` 학교 검색 흐름 추가
-- [ ] `SettingsActivity` / `SettingsViewModel` 학교 변경 흐름 추가
-- [ ] `PreferencesRepository`에 학교 identity 읽기/쓰기 API 추가
-- [ ] `UserPreferences` 모델 확장
-- [ ] 설정 완료 조건 재정의
-- [ ] 홈 화면 학교명 동적 표시로 교체
-
----
-
-## 2순위 — Repository/NEIS 조회 계약 정리
-
-완료 기준:
-
-- Repository가 고정 학교 코드가 아니라 저장된 학교 정보로 조회
-- 시간표가 학교 종류에 맞는 엔드포인트를 사용
-- 잘못된 학교/종류 조합 시 오류가 일관되게 처리됨
-
-세부 작업:
-
-- [ ] `SchoolRepositoryImpl`의 고정 `officeCode`, `schoolCode` 제거
-- [ ] `schoolKind` 기반 시간표 엔드포인트 분기 추가
-- [ ] NEIS 오류 문구를 학교 설정 문제와 일반 네트워크 오류로 구분
-- [ ] 관련 단위 테스트 보강
-
----
-
-## 3순위 — 캐시/복구 전략을 학교 선택 구조에 맞게 재정리
-
-완료 기준:
-
-- 학교를 바꿔도 캐시가 섞이지 않음
-- 같은 학교/같은 기준 조회에서는 기존 복구 전략이 유지됨
-
-세부 작업:
-
-- [ ] 급식 캐시 키에 `officeCode + schoolCode + 일자` 반영 재검증
-- [ ] 시간표 캐시 키에 `officeCode + schoolCode + 학년 + 반 + 일자` 반영 재검증
-- [ ] 일정 캐시 키에 `officeCode + schoolCode + 월` 반영 재검증
-- [ ] 학교 변경 시 오래된 캐시 처리 정책 정리
-
----
-
-## 4순위 — 가정통신문 실제 운영 검증
-
-완료 기준:
-
-- production notices 경로가 Android 실기기/에뮬레이터에서 안정적으로 동작
-- 미지원 학교/교육청에 대한 fallback 문구가 명확함
-
-세부 작업:
+### D. 운영 검증
 
 - [ ] Android 실기기에서 production notices 수동 확인
 - [ ] 에뮬레이터에서 production notices 수동 확인
@@ -177,20 +107,47 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 ---
 
-## 5순위 — 품질 보강
+## 4. 우선순위별 앞으로 할 일
+
+## 1순위 — 마이그레이션 UX와 검색 상태 품질 정리
 
 완료 기준:
 
-- 학교 선택 추가 이후 회귀가 테스트로 막힘
-- 주요 입력/상태/전환 흐름이 안정적임
+- 레거시 사용자가 Setup 재진입 이유를 이해할 수 있음
+- 학교 검색 중 상태 경합/선택 소실 위험이 줄어듦
 
 세부 작업:
 
-- [ ] SetupViewModel 테스트에 학교 선택 케이스 추가
-- [ ] SettingsViewModel 테스트에 학교 변경 케이스 추가
-- [ ] Repository 테스트에 학교 종류 분기 추가
-- [ ] MainActivity/HomeViewModel의 학교 표시 동기화 테스트 추가
-- [ ] 문자열/하드코딩/접근성 점검
+- [ ] Setup/Settings에서 partial prefs 사용자 안내 문구 설계
+- [ ] 검색 요청 취소 또는 request token 처리 검토
+- [ ] 검색 실패 시 선택 유지 정책 확정
+
+## 2순위 — 회귀 검증 유지
+
+완료 기준:
+
+- 학교 선택/저장/완료 상태 핵심 흐름이 테스트로 보호됨
+
+세부 작업:
+
+- [x] SetupViewModel 저장 검증 테스트
+- [x] SettingsViewModel 저장/재선택 검증 테스트
+- [x] Repository 학교 코드/학교 종류 분기 테스트
+- [x] 홈 학교명 동기화 테스트
+- [x] persistence/setup-complete 규칙 테스트
+- [ ] 경쟁 검색/선택 유지 UX 테스트 보강
+
+## 3순위 — 운영 검증
+
+완료 기준:
+
+- notices와 학교 선택 흐름이 실기기/에뮬레이터에서 안정적으로 동작
+
+세부 작업:
+
+- [ ] Android 실기기에서 production notices 수동 확인
+- [ ] 에뮬레이터에서 production notices 수동 확인
+- [ ] 미지원 학교 fallback 문구/버튼 흐름 점검
 
 ---
 
@@ -198,14 +155,10 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 다음 스프린트는 아래 순서가 가장 안전합니다.
 
-1. 학교 선택 UI 추가
-2. Preferences 모델/저장소 확장
-3. Repository의 조회 기준 동적화
-4. 시간표 엔드포인트 분기
-5. 캐시 키 재검증
-6. 홈 학교명 동기화
-7. notices 실기기 검증
-8. 테스트 보강
+1. 레거시 partial prefs 안내 UX 정리
+2. 검색 요청 경합/선택 유지 정책 정리
+3. 관련 회귀 테스트 추가
+4. notices 실기기 검증
 
 ---
 
@@ -213,17 +166,17 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 지금 Android에서 가장 큰 제품 리스크는:
 
-**학교를 바꾸는 것처럼 보이지만 실제 조회 학교는 바뀌지 않는 상태가 될 수 있다는 점**입니다.
+**기능 미구현 자체가 아니라, 기존 사용자 마이그레이션과 학교 검색 상태가 헷갈릴 수 있다는 점**입니다.
 
-그래서 앞으로 할 일의 핵심은 단순 UI 추가가 아니라,
+즉, 다음 단계의 핵심은 단순 UI 추가가 아니라,
 
-**학교 선택 UI + 저장 계약 + Repository 조회 기준 + 캐시 키**를 한 묶음으로 끝내는 것입니다.
+**partial prefs 안내 + 검색 상태 안정성 + 회귀 테스트 유지**를 한 묶음으로 정리하는 것입니다.
 
 ---
 
 ## 7. 관련 파일 빠른 진입점
 
-학교 선택 기능 작업 시 먼저 볼 파일:
+학교 선택 기능 후속 작업 시 먼저 볼 파일:
 
 - `android/app/src/main/java/com/bsbarron/midschoolapp/SetupActivity.kt`
 - `android/app/src/main/java/com/bsbarron/midschoolapp/SettingsActivity.kt`
@@ -233,7 +186,8 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 - `android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/PreferencesRepository.kt`
 - `android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/PreferencesRepositoryImpl.kt`
 - `android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/SchoolRepositoryImpl.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/data/remote/NeisApiService.kt`
+- `android/app/src/main/java/com/bsbarron/midschoolapp/ui/home/HomeViewModel.kt`
+- `android/app/src/main/java/com/bsbarron/midschoolapp/ui/splash/SplashViewModel.kt`
 - `android/app/src/main/res/layout/activity_setup.xml`
 - `android/app/src/main/res/layout/activity_settings.xml`
 
@@ -249,13 +203,8 @@ Android 앞으로 할 일을 바로 병렬 실행할 수 있도록 아래 팀 �
 
 대상:
 
-- 3. 핵심 미완 항목의 A. 학교 검색/선택 기능
-- 3. 핵심 미완 항목의 B. 학교 코드/학교 종류 저장
+- 학교 검색/선택 UI와 저장 계약 관련 후속 정리
 
 ### 위젯 시간표 자동 업데이트 확인
 
 - `android/scripts/team-widget-timetable-check.sh`
-
-대상:
-
-- 위젯 자동 업데이트 시 간헐적으로 시간표를 못 가져오는 문제 조사/검증

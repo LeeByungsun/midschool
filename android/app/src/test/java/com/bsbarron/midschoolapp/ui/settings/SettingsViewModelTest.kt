@@ -1,7 +1,7 @@
 package com.bsbarron.midschoolapp.ui.settings
 
 import android.app.Application
-import android.content.Context
+import android.os.Looper
 import com.bsbarron.midschoolapp.R
 import com.bsbarron.midschoolapp.data.model.SchoolInfo
 import com.bsbarron.midschoolapp.data.repository.StudentInfo
@@ -18,10 +18,17 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE, sdk = [34])
 class SettingsViewModelTest {
 
-    private val application = TestApplication()
+    private val application: Application = RuntimeEnvironment.getApplication()
 
     private val selectedSchool = SchoolInfo(
         officeCode = "J10",
@@ -29,6 +36,24 @@ class SettingsViewModelTest {
         schoolName = "미사중학교",
         schoolKind = "중학교"
     )
+
+    @Test
+    fun init_whenLegacySchoolNameExists_requiresSchoolReselection() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "4",
+                schoolName = selectedSchool.schoolName
+            )
+        )
+
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val state = viewModel.uiState.value
+
+        assertEquals(selectedSchool.schoolName, state.schoolQuery)
+        assertEquals(application.getString(R.string.school_search_reselect_required), state.searchMessage)
+        assertEquals(null, state.selectedSchool)
+    }
 
     @Test
     fun init_readsCurrentStudentAndTimerSettings() {
@@ -60,6 +85,25 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun init_whenLegacySchoolInfoIsIncomplete_prefillsQueryWithoutSelectingSchool() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "4",
+                schoolName = selectedSchool.schoolName
+            )
+        )
+
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val state = viewModel.uiState.value
+
+        assertEquals(selectedSchool.schoolName, state.schoolQuery)
+        assertNull(state.selectedSchool)
+        assertEquals("1", state.grade)
+        assertEquals("4", state.classroom)
+    }
+
+    @Test
     fun updateSchoolQuery_whenTrimmedTextMatchesSelectedSchool_keepsSelection() {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(
@@ -77,6 +121,73 @@ class SettingsViewModelTest {
 
         assertEquals("  ${selectedSchool.schoolName}  ", viewModel.uiState.value.schoolQuery)
         assertEquals(selectedSchool, viewModel.uiState.value.selectedSchool)
+    }
+
+    @Test
+    fun searchSchools_whenQueryTooShort_showsValidationAndSkipsRepository() {
+        val schoolRepository = FakeSchoolRepository()
+        val viewModel = SettingsViewModel(application, FakePreferencesRepository(), schoolRepository)
+
+        viewModel.updateSchoolQuery("미")
+        viewModel.searchSchools()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val state = viewModel.uiState.value
+        assertEquals(application.getString(R.string.school_search_min_query), state.searchMessage)
+        assertTrue(state.schoolResults.isEmpty())
+        assertNull(state.selectedSchool)
+        assertNull(schoolRepository.lastSearchQuery)
+    }
+
+    @Test
+    fun searchSchools_whenSingleResult_selectsSchoolAndShowsMessage() {
+        val schoolRepository = FakeSchoolRepository(
+            schoolSearchResult = Result.success(listOf(selectedSchool))
+        )
+        val viewModel = SettingsViewModel(application, FakePreferencesRepository(), schoolRepository)
+
+        viewModel.updateSchoolQuery("미사중")
+        viewModel.searchSchools()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val state = viewModel.uiState.value
+        assertEquals("미사중", schoolRepository.lastSearchQuery)
+        assertEquals(selectedSchool.schoolName, state.schoolQuery)
+        assertEquals(selectedSchool, state.selectedSchool)
+        assertEquals(listOf(selectedSchool), state.schoolResults)
+        assertEquals(application.getString(R.string.school_search_single_result), state.searchMessage)
+        assertFalse(state.isSearching)
+    }
+
+    @Test
+    fun searchSchools_whenMultipleResults_requiresExplicitSelection() {
+        val alternativeSchool = selectedSchool.copy(
+            schoolCode = "7654321",
+            schoolName = "미사여자중학교"
+        )
+        val schoolRepository = FakeSchoolRepository(
+            schoolSearchResult = Result.success(listOf(selectedSchool, alternativeSchool))
+        )
+        val viewModel = SettingsViewModel(application, FakePreferencesRepository(), schoolRepository)
+
+        viewModel.updateSchoolQuery("미사")
+        viewModel.searchSchools()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val searchState = viewModel.uiState.value
+        assertEquals(listOf(selectedSchool, alternativeSchool), searchState.schoolResults)
+        assertNull(searchState.selectedSchool)
+        assertEquals(application.getString(R.string.school_search_select_result), searchState.searchMessage)
+
+        viewModel.selectSchool(alternativeSchool)
+
+        val selectedState = viewModel.uiState.value
+        assertEquals(alternativeSchool.schoolName, selectedState.schoolQuery)
+        assertEquals(alternativeSchool, selectedState.selectedSchool)
+        assertEquals(
+            application.getString(R.string.school_search_selected, alternativeSchool.schoolName),
+            selectedState.searchMessage
+        )
     }
 
     @Test
@@ -191,11 +302,7 @@ class SettingsViewModelTest {
         viewModel.saveSettings()
 
         assertEquals(R.string.setup_error_school_required, messageDeferred.await())
-        assertNull(viewModel.uiState.value.selectedSchool)
+        assertEquals(null, viewModel.uiState.value.selectedSchool)
         assertTrue(repository.savedStudentInfoCalls.isEmpty())
-    }
-
-    private class TestApplication : Application() {
-        override fun getApplicationContext(): Context = this
     }
 }

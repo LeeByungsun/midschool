@@ -31,6 +31,11 @@ class SettingsViewModel @Inject constructor(
         SettingsUiState(
             schoolQuery = studentInfo.schoolName,
             selectedSchool = studentInfo.takeIf { it.hasSchoolSelection() }?.toSchoolInfo(),
+            searchMessage = if (studentInfo.schoolName.isNotBlank() && !studentInfo.hasSchoolSelection()) {
+                appContext.getString(R.string.school_search_reselect_required)
+            } else {
+                ""
+            },
             grade = studentInfo.grade,
             classroom = studentInfo.classroom,
             isRingMode = preferencesRepository.getTimerDisplayMode() == TimerDisplayMode.RING,

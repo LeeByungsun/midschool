@@ -8,6 +8,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,13 +26,53 @@ class PreferencesRepositoryImplTest {
     @Before
     fun setUp() {
         context = RuntimeEnvironment.getApplication().applicationContext
+        clearUserPrefs()
         clearRepositoryPrefs()
+        clearUserPrefs()
         preferencesRepository = PreferencesRepositoryImpl(context, Gson())
     }
 
     @After
     fun tearDown() {
+        clearUserPrefs()
         clearRepositoryPrefs()
+        clearUserPrefs()
+    }
+
+    @Test
+    fun `student info round trips school identity and completeness`() {
+        val studentInfo = StudentInfo(
+            grade = "2",
+            classroom = "5",
+            schoolName = "미사중학교",
+            officeCode = "J10",
+            schoolCode = "1234567",
+            schoolKind = "중학교"
+        )
+
+        preferencesRepository.saveStudentInfo(studentInfo)
+
+        assertEquals(studentInfo, preferencesRepository.getStudentInfo())
+        assertTrue(preferencesRepository.hasStudentInfo())
+    }
+
+    @Test
+    fun `has student info returns false when legacy data misses school identity`() {
+        userPrefs().edit()
+            .putString(KEY_GRADE, "2")
+            .putString(KEY_CLASSROOM, "5")
+            .putString(KEY_SCHOOL_NAME, "미사중학교")
+            .commit()
+
+        assertEquals(
+            StudentInfo(
+                grade = "2",
+                classroom = "5",
+                schoolName = "미사중학교"
+            ),
+            preferencesRepository.getStudentInfo()
+        )
+        assertFalse(preferencesRepository.hasStudentInfo())
     }
 
     @Test
@@ -130,8 +171,15 @@ class PreferencesRepositoryImplTest {
     private fun repositoryPrefs() =
         context.getSharedPreferences(REPOSITORY_PREFS_NAME, Context.MODE_PRIVATE)
 
+    private fun userPrefs() =
+        context.getSharedPreferences(USER_PREFS_NAME, Context.MODE_PRIVATE)
+
     private fun clearRepositoryPrefs() {
         repositoryPrefs().edit().clear().commit()
+    }
+
+    private fun clearUserPrefs() {
+        userPrefs().edit().clear().commit()
     }
 
     private fun scheduleCacheKey(officeCode: String, schoolCode: String, date: String): String {
@@ -144,6 +192,10 @@ class PreferencesRepositoryImplTest {
 
     companion object {
         private const val REPOSITORY_PREFS_NAME = "midschool_repository_prefs"
+        private const val USER_PREFS_NAME = "midschool_prefs"
+        private const val KEY_GRADE = "grade"
+        private const val KEY_CLASSROOM = "classroom"
+        private const val KEY_SCHOOL_NAME = "school_name"
         private const val SCHEDULE_CACHE_TTL_MILLIS = 12 * 60 * 60 * 1000L
     }
 }

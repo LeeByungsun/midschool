@@ -30,6 +30,11 @@ class SetupViewModel @Inject constructor(
         SetupUiState(
             schoolQuery = initialStudentInfo.schoolName,
             selectedSchool = initialStudentInfo.takeIf { it.hasSchoolSelection() }?.toSchoolInfo(),
+            searchMessage = if (initialStudentInfo.schoolName.isNotBlank() && !initialStudentInfo.hasSchoolSelection()) {
+                appContext.getString(R.string.school_search_reselect_required)
+            } else {
+                ""
+            },
             grade = initialStudentInfo.grade,
             classroom = initialStudentInfo.classroom
         )

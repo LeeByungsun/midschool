@@ -150,6 +150,30 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun refreshHeader_prioritizesSchoolSetupHintWhenSchoolSelectionIsMissing() {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "2",
+                schoolName = "구미중학교"
+            )
+        )
+        val viewModel = HomeViewModel(application, FakeSchoolRepository(), repository)
+
+        viewModel.refreshHeader()
+
+        assertEquals(
+            application.getString(R.string.home_school_not_set_hint),
+            viewModel.uiState.value.classSummary
+        )
+        assertEquals(
+            application.getString(R.string.home_notice_setup_required),
+            viewModel.uiState.value.notices.summary
+        )
+    }
+
+    @Test
     fun loadHomeData_exposesLoadingStateBeforeRepositoryResponsesReturn() = runBlocking {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val repository = FakePreferencesRepository(

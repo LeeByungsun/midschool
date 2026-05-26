@@ -99,10 +99,10 @@ class HomeViewModel private constructor(
                 dateLabel = LocalDate.now().format(
                     DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
                 ),
-                classSummary = if (grade.isNotBlank() && classroom.isNotBlank()) {
-                    resolveString(R.string.home_student_info_format, grade, classroom)
-                } else if (!hasSchoolSelection) {
+                classSummary = if (!hasSchoolSelection) {
                     resolveString(R.string.home_school_not_set_hint)
+                } else if (grade.isNotBlank() && classroom.isNotBlank()) {
+                    resolveString(R.string.home_student_info_format, grade, classroom)
                 } else {
                     resolveString(R.string.home_semester_label)
                 },
