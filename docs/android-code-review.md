@@ -9,7 +9,8 @@
 - 2026-05-26: **3번 타이머 per-tick 저장 항목도 수정 완료**
 - 2026-05-26: **4번 주간 급식 순차 호출 항목도 수정 완료**
 - 2026-05-26: **5번 재부팅 후 타이머 복구 누락 항목도 수정 완료**
-- 현재 남은 활성 항목은 **6번**
+- 2026-05-26: **6번 PreferencesRepositoryImpl 결합도 항목도 수정 완료**
+- 현재 남은 활성 항목은 **없음**
 
 ---
 
@@ -62,8 +63,9 @@
 
 ---
 
-## 6. 의존성 주입(DI) 아키텍처 결합도 이슈
+## 6. 의존성 주입(DI) 아키텍처 결합도 이슈 (✅ 2026-05-26 해결)
 *   **위치:** [`PreferencesRepositoryImpl.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/PreferencesRepositoryImpl.kt#L22-L32)
 *   **상황:** Hilt를 통해 Repository 패턴과 의존성 주입을 잘 설계하셨습니다.
 *   **문제점:** `PreferencesRepositoryImpl` 내부에서 데이터 저장/조회를 처리할 때, Hilt로 주입받는 인스턴스가 아니라 static Singleton 객체인 `UserPreferences`의 정적 메서드를 직접 호출하고 있습니다.
 *   **영향:** 단위 테스트(Unit Test)를 작성할 때 Repository의 Preferences 행위를 모킹(Mocking)하기 어려워져, 테스트 작성 편의성 및 설계의 결합도 관점에서 아쉬운 구조입니다. `UserPreferences` 내부 코드를 `PreferencesRepositoryImpl`로 병합하거나 `UserPreferences`를 인스턴스화하여 의존성 주입하도록 개선하면 테스트 작성이 한결 편리해집니다.
+*   **현재 상태:** `PreferencesRepositoryImpl` 이 static `UserPreferences`를 직접 호출하지 않도록 `UserPreferencesStore` 추상화와 `AndroidUserPreferencesStore` 구현을 도입했습니다. repository는 injected store만 의존하고, Hilt 바인딩과 `PreferencesRepositoryImplTest` 도 새 구조 기준으로 갱신했습니다.

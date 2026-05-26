@@ -29,7 +29,7 @@ class PreferencesRepositoryImplTest {
         clearUserPrefs()
         clearRepositoryPrefs()
         clearUserPrefs()
-        preferencesRepository = PreferencesRepositoryImpl(context, Gson())
+        preferencesRepository = PreferencesRepositoryImpl(context, Gson(), AndroidUserPreferencesStore(context))
     }
 
     @After

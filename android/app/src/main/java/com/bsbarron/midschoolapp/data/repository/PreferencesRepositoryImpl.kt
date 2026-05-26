@@ -1,7 +1,6 @@
 package com.bsbarron.midschoolapp.data.repository
 
 import android.content.Context
-import com.bsbarron.midschoolapp.UserPreferences
 import com.bsbarron.midschoolapp.data.model.MealInfo
 import com.bsbarron.midschoolapp.data.model.SchoolEvent
 import com.bsbarron.midschoolapp.data.model.TimetableItem
@@ -12,7 +11,8 @@ import javax.inject.Inject
 
 class PreferencesRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val gson: Gson
+    private val gson: Gson,
+    private val userPreferencesStore: UserPreferencesStore
 ) : PreferencesRepository {
 
     private val sharedPreferences by lazy {
@@ -20,50 +20,50 @@ class PreferencesRepositoryImpl @Inject constructor(
     }
 
     override fun getStudentInfo(): StudentInfo {
-        return UserPreferences.getStudentInfo(context)
+        return userPreferencesStore.getStudentInfo()
     }
 
     override fun hasStudentInfo(): Boolean {
-        return UserPreferences.hasStudentInfo(context)
+        return userPreferencesStore.hasStudentInfo()
     }
 
     override fun saveStudentInfo(studentInfo: StudentInfo) {
-        UserPreferences.saveStudentInfo(context, studentInfo)
+        userPreferencesStore.saveStudentInfo(studentInfo)
     }
 
     override fun getTimerDisplayMode(): TimerDisplayMode {
-        return when (UserPreferences.getTimerDisplayMode(context)) {
-            UserPreferences.TIMER_DISPLAY_RING -> TimerDisplayMode.RING
+        return when (userPreferencesStore.getTimerDisplayMode()) {
+            TIMER_DISPLAY_RING -> TimerDisplayMode.RING
             else -> TimerDisplayMode.COUNT
         }
     }
 
     override fun saveTimerDisplayMode(displayMode: TimerDisplayMode) {
         val value = when (displayMode) {
-            TimerDisplayMode.COUNT -> UserPreferences.TIMER_DISPLAY_COUNT
-            TimerDisplayMode.RING -> UserPreferences.TIMER_DISPLAY_RING
+            TimerDisplayMode.COUNT -> TIMER_DISPLAY_COUNT
+            TimerDisplayMode.RING -> TIMER_DISPLAY_RING
         }
-        UserPreferences.saveTimerDisplayMode(context, value)
+        userPreferencesStore.saveTimerDisplayMode(value)
     }
 
     override fun isTimerNotificationEnabled(): Boolean {
-        return UserPreferences.isTimerNotificationEnabled(context)
+        return userPreferencesStore.isTimerNotificationEnabled()
     }
 
     override fun saveTimerNotificationEnabled(enabled: Boolean) {
-        UserPreferences.saveTimerNotificationEnabled(context, enabled)
+        userPreferencesStore.saveTimerNotificationEnabled(enabled)
     }
 
     override fun isTimerVibrationEnabled(): Boolean {
-        return UserPreferences.isTimerVibrationEnabled(context)
+        return userPreferencesStore.isTimerVibrationEnabled()
     }
 
     override fun saveTimerVibrationEnabled(enabled: Boolean) {
-        UserPreferences.saveTimerVibrationEnabled(context, enabled)
+        userPreferencesStore.saveTimerVibrationEnabled(enabled)
     }
 
     override fun getTimerState(): TimerPreferenceState {
-        val state = UserPreferences.getTimerState(context)
+        val state = userPreferencesStore.getTimerState()
         return TimerPreferenceState(
             presetName = state.presetName,
             totalMillis = state.totalMillis,
@@ -80,8 +80,7 @@ class PreferencesRepositoryImpl @Inject constructor(
         targetAtMillis: Long,
         isRunning: Boolean
     ) {
-        UserPreferences.saveTimerState(
-            context = context,
+        userPreferencesStore.saveTimerState(
             presetName = presetName,
             totalMillis = totalMillis,
             remainingMillis = remainingMillis,
@@ -91,7 +90,7 @@ class PreferencesRepositoryImpl @Inject constructor(
     }
 
     override fun clearTimerState() {
-        UserPreferences.clearTimerState(context)
+        userPreferencesStore.clearTimerState()
     }
 
     override fun saveMealCache(
@@ -305,6 +304,8 @@ class PreferencesRepositoryImpl @Inject constructor(
 
     companion object {
         private const val REPOSITORY_PREFS_NAME = "midschool_repository_prefs"
+        private const val TIMER_DISPLAY_COUNT = "count"
+        private const val TIMER_DISPLAY_RING = "ring"
         private const val MEAL_CACHE_TTL_MILLIS = 12 * 60 * 60 * 1000L
         private const val TIMETABLE_CACHE_TTL_MILLIS = 24 * 60 * 60 * 1000L
         private const val SCHEDULE_CACHE_TTL_MILLIS = 12 * 60 * 60 * 1000L
