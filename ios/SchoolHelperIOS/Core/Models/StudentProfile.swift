@@ -15,4 +15,16 @@ struct StudentProfile: Codable, Equatable {
     var isComplete: Bool {
         !grade.isEmpty && !classroom.isEmpty && hasSchoolSelection
     }
+
+    var schoolInfo: SchoolInfo? {
+        guard hasSchoolSelection else { return nil }
+        return SchoolInfo(
+            officeCode: officeCode,
+            officeName: "",
+            schoolCode: schoolCode,
+            schoolName: schoolName,
+            schoolKind: schoolKind,
+            roadAddress: ""
+        )
+    }
 }

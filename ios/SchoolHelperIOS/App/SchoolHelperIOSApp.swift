@@ -8,6 +8,9 @@ struct SchoolHelperIOSApp: App {
         WindowGroup {
             RootTabView()
                 .environmentObject(appState)
+                .task {
+                    appState.refresh()
+                }
         }
     }
 }

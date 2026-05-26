@@ -22,6 +22,7 @@ struct RootTabView: View {
                 }
             } else {
                 SetupView()
+                    .environmentObject(appState)
             }
         }
     }
