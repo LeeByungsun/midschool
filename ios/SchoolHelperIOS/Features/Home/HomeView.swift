@@ -96,6 +96,14 @@ struct HomeView: View {
             }
             .navigationTitle("학교도우미")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        appState.selectedRoute = .settings
+                    } label: {
+                        Label("설정", systemImage: "gearshape")
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("새로고침") {
                         Task { await refreshHome() }
