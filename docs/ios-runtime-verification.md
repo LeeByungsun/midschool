@@ -44,6 +44,24 @@ xcodebuild \
   build
 ```
 
+### 2.3 재현 스크립트
+
+```bash
+ios/scripts/capture_runtime_screens.sh
+```
+
+기본적으로 아래 화면을 순서대로 재생성합니다.
+
+- home
+- timetable
+- meals
+- schedule
+- settings
+- timer
+- timer-running-1 / timer-running-2
+
+출력 경로 기본값은 `/tmp/misschool-ios-captures` 입니다.
+
 ### 2.3 시뮬레이터 launch override
 
 공통 환경:
