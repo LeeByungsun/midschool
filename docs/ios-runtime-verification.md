@@ -95,6 +95,14 @@ ios/scripts/capture_runtime_screens.sh
 
 출력 경로 기본값은 `/tmp/misschool-ios-captures` 입니다.
 
+딥링크 확인 다이얼로그 재현:
+
+```bash
+ios/scripts/capture_deeplink_prompt.sh
+```
+
+기본 출력 경로는 `/tmp/deeplink-confirm.png` 입니다.
+
 ### 2.3 시뮬레이터 launch override
 
 공통 환경:
@@ -195,6 +203,7 @@ xcodebuild \
 ### 3.6 딥링크
 
 - `timetable-after-deeplink-success.png`
+- `/tmp/deeplink-confirm.png` (`ios/scripts/capture_deeplink_prompt.sh` 로 재현 가능)
 
 확인 내용:
 - `schoolhelper://timetable` 호출 시
