@@ -57,6 +57,9 @@ struct SchoolHelperWidgetEntryView: View {
     var body: some View {
         HomeWidgetSnapshotView(snapshot: entry.snapshot)
         .padding()
+        .containerBackground(for: .widget) {
+            Color(.secondarySystemBackground)
+        }
         .widgetURL(entry.snapshot.requiresSetup
             ? URL(string: "schoolhelper://settings")
             : URL(string: "schoolhelper://timetable"))
