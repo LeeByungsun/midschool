@@ -44,11 +44,19 @@ struct HomeWidgetSnapshotLoader {
             )
         }
 
-        let todayLines = (try? await repository.fetchTimetable(for: profile, date: now)).orEmpty
         let tomorrowDate = calendar.date(byAdding: .day, value: 1, to: now) ?? now
-        let tomorrowLines = shouldShowTomorrow
-            ? (try? await repository.fetchTimetable(for: profile, date: tomorrowDate)).orEmpty
-            : []
+        let todayLines: [TimetableItem]
+        let tomorrowLines: [TimetableItem]
+
+        if shouldShowTomorrow {
+            async let todayFetch = repository.fetchTimetable(for: profile, date: now)
+            async let tomorrowFetch = repository.fetchTimetable(for: profile, date: tomorrowDate)
+            todayLines = (try? await todayFetch).orEmpty
+            tomorrowLines = (try? await tomorrowFetch).orEmpty
+        } else {
+            todayLines = (try? await repository.fetchTimetable(for: profile, date: now)).orEmpty
+            tomorrowLines = []
+        }
 
         return HomeWidgetSnapshot(
             headerDate: headerDate,

@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import Dispatch
 
 protocol TimerNotificationScheduling {
     func requestAuthorizationIfNeeded()
@@ -17,7 +18,9 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
     func requestAuthorizationIfNeeded() {
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .notDetermined else { return }
-            center.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+            DispatchQueue.main.async {
+                center.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+            }
         }
     }
 

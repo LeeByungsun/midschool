@@ -159,11 +159,18 @@ struct DefaultSchoolRepository: SchoolRepository {
 
     func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] {
         let dates = weekDates(startingAt: weekStart)
-        var meals: [MealInfo] = []
+        let meals = try await withThrowingTaskGroup(of: [MealInfo].self) { group in
+            for date in dates {
+                group.addTask {
+                    try await self.fetchTodayMeals(for: profile, date: date)
+                }
+            }
 
-        for date in dates {
-            let dayMeals = try await fetchTodayMeals(for: profile, date: date)
-            meals.append(contentsOf: dayMeals)
+            var collected: [MealInfo] = []
+            for try await dayMeals in group {
+                collected.append(contentsOf: dayMeals)
+            }
+            return collected
         }
 
         return meals.sorted {

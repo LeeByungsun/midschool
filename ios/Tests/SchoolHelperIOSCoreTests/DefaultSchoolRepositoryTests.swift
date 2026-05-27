@@ -49,7 +49,7 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
 
         let requestedMealDates = await neisService.requestedMealDates()
         XCTAssertEqual(
-            requestedMealDates,
+            requestedMealDates.sorted(),
             ["20260526", "20260527", "20260528", "20260529", "20260530"]
         )
         XCTAssertEqual(meals.map(\.date), ["20260526", "20260527", "20260528", "20260529", "20260530"])

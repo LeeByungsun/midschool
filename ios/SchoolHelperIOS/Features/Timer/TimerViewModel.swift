@@ -33,6 +33,10 @@ final class TimerViewModel: ObservableObject {
         refreshRunningState()
     }
 
+    deinit {
+        countdownTask?.cancel()
+    }
+
     func selectPreset(_ preset: TimerPreset) {
         countdownTask?.cancel()
         notificationScheduler.cancelPendingTimerCompletion()
@@ -133,8 +137,8 @@ final class TimerViewModel: ObservableObject {
     private func startCountdownLoop() {
         countdownTask?.cancel()
         countdownTask = Task { [weak self] in
-            guard let self else { return }
             while !Task.isCancelled {
+                guard let self else { break }
                 await self.sleep(1_000_000_000)
                 if Task.isCancelled { break }
                 await MainActor.run {
