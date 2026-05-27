@@ -10,6 +10,7 @@
 - shared app/widget storage 및 widget snapshot foundation 추가
 - `SchoolHelperWidget` WidgetKit source/target scaffold 추가
 - app group entitlement scaffold 추가
+- `SchoolHelperWidget.xcscheme` 공유 스킴 추가
 
 관련 문서:
 
@@ -27,3 +28,8 @@
 - Schedule
 - Timer
 - Settings
+
+실행 참고:
+
+- 앱 스킴: `SchoolHelperIOS`
+- 위젯 스킴: `SchoolHelperWidget`

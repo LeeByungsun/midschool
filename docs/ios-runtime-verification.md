@@ -44,6 +44,19 @@ xcodebuild \
   build
 ```
 
+### 2.2.1 Xcode 공유 스킴
+
+- 앱 스킴: `SchoolHelperIOS`
+- 위젯 스킴: `SchoolHelperWidget`
+
+위젯 스킴에는 아래 debug env 가 기본으로 들어 있습니다.
+
+```text
+_XCWidgetKind=SchoolHelperWidget
+_XCWidgetFamily=medium
+_XCWidgetDefaultView=timeline
+```
+
 ### 2.3 재현 스크립트
 
 ```bash
