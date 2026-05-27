@@ -25,7 +25,9 @@ final class ScheduleViewModel: ObservableObject {
             statusText = "학교와 학년/반을 먼저 설정해 주세요."
             return
         }
-        items = (try? await repository.fetchSchedule(for: profile, month: month)) ?? []
+        items = ((try? await repository.fetchSchedule(for: profile, month: month)) ?? [])
+            .filter(isVisibleSchedule)
+            .sorted { $0.date < $1.date }
         statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
     }
 
@@ -50,5 +52,12 @@ final class ScheduleViewModel: ObservableObject {
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "yyyy년 M월"
         monthTitle = formatter.string(from: currentMonth)
+    }
+
+    private func isVisibleSchedule(_ event: SchoolEvent) -> Bool {
+        let blockedKeywords = ["토요휴업일"]
+        return blockedKeywords.allSatisfy { keyword in
+            !event.title.contains(keyword) && !event.description.contains(keyword)
+        }
     }
 }

@@ -169,4 +169,25 @@ final class FeatureViewModelTests: XCTestCase {
         await timetableViewModel.showNextDay()
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 27일 수요일")
     }
+
+    func testScheduleViewModelFiltersBlockedEventsAndSortsByDate() async {
+        let repository = StubSchoolRepository(
+            schedule: [
+                SchoolEvent(date: "20260529", title: "행사 B", description: "강당"),
+                SchoolEvent(date: "20260527", title: "토요휴업일", description: ""),
+                SchoolEvent(date: "20260528", title: "행사 A", description: "교실")
+            ]
+        )
+        let viewModel = ScheduleViewModel(repository: repository)
+
+        await viewModel.load(profile: .fixture(), month: fixtureDate(year: 2026, month: 5, day: 1))
+
+        XCTAssertEqual(
+            viewModel.items,
+            [
+                SchoolEvent(date: "20260528", title: "행사 A", description: "교실"),
+                SchoolEvent(date: "20260529", title: "행사 B", description: "강당")
+            ]
+        )
+    }
 }
