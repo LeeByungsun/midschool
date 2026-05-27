@@ -46,4 +46,18 @@ final class ProfileEditorViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.searchResults.isEmpty)
         XCTAssertEqual(viewModel.message, "")
     }
+
+    func testSettingsViewModelRejectsSaveWhenSchoolSelectionNoLongerMatchesQuery() {
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile.fixture(),
+            repository: MockSchoolRepository(),
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        viewModel.updateSchoolQuery("다른학교")
+        let savedProfile = viewModel.buildProfileForSave()
+
+        XCTAssertNil(savedProfile)
+        XCTAssertEqual(viewModel.message, "학교를 검색 후 다시 선택해 주세요.")
+    }
 }

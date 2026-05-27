@@ -105,9 +105,10 @@ struct SettingsView: View {
 
                 Section {
                     Button("설정 저장") {
-                        viewModel.saveTimerSettings()
                         if let profile = viewModel.buildProfileForSave() {
+                            viewModel.saveTimerSettings()
                             appState.saveProfile(profile)
+                            dismiss()
                         }
                     }
                 }
