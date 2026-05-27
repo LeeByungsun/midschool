@@ -7,6 +7,7 @@ ios_root = root / 'ios'
 src_root = ios_root / 'SchoolHelperIOS'
 widget_root = ios_root / 'SchoolHelperWidget'
 tests_root = ios_root / 'SchoolHelperIOSTests'
+ui_tests_root = ios_root / 'SchoolHelperIOSUITests'
 proj_dir = ios_root / 'SchoolHelperIOS.xcodeproj'
 workspace_dir = proj_dir / 'project.xcworkspace'
 scheme_dir = proj_dir / 'xcshareddata' / 'xcschemes'
@@ -30,17 +31,18 @@ scheme_dir.mkdir(parents=True, exist_ok=True)
 swift_files = sorted([p for p in src_root.rglob('*.swift') if p.is_file()])
 widget_files = sorted([p for p in widget_root.rglob('*.swift') if p.is_file()]) if widget_root.exists() else []
 test_files = sorted([p for p in tests_root.rglob('*.swift') if p.is_file()]) if tests_root.exists() else []
+ui_test_files = sorted([p for p in ui_tests_root.rglob('*.swift') if p.is_file()]) if ui_tests_root.exists() else []
 resource_files = [resources_dir]
 
 def xid(name: str) -> str:
     return hashlib.md5(name.encode()).hexdigest().upper()[:24]
 
 ids = {k: xid(k) for k in [
-    'project','root_group','source_root_group','widget_root_group','products_group','app_group','core_group','features_group','resources_group','tests_group',
-    'product_ref','tests_product_ref','widget_product_ref','app_target','tests_target','widget_target','project_config_list','app_config_list','tests_config_list','widget_config_list',
-    'sources_phase','frameworks_phase','resources_phase','embed_appex_phase','tests_sources_phase','tests_frameworks_phase','tests_resources_phase','widget_sources_phase','widget_frameworks_phase','widget_resources_phase',
-    'widget_embed_build_file','widget_target_proxy','widget_target_dependency',
-    'project_debug','project_release','app_debug','app_release','tests_debug','tests_release','widget_debug','widget_release'
+    'project','root_group','source_root_group','widget_root_group','products_group','app_group','core_group','features_group','resources_group','tests_group','ui_tests_group',
+    'product_ref','tests_product_ref','ui_tests_product_ref','widget_product_ref','app_target','tests_target','ui_tests_target','widget_target','project_config_list','app_config_list','tests_config_list','ui_tests_config_list','widget_config_list',
+    'sources_phase','frameworks_phase','resources_phase','embed_appex_phase','tests_sources_phase','tests_frameworks_phase','tests_resources_phase','ui_tests_sources_phase','ui_tests_frameworks_phase','ui_tests_resources_phase','widget_sources_phase','widget_frameworks_phase','widget_resources_phase',
+    'widget_embed_build_file','widget_target_proxy','widget_target_dependency','ui_tests_target_proxy','ui_tests_target_dependency',
+    'project_debug','project_release','app_debug','app_release','tests_debug','tests_release','ui_tests_debug','ui_tests_release','widget_debug','widget_release'
 ]}
 core_subgroups = {name: xid(f'group_Core_{name}') for name in ['Models', 'Networking', 'Notifications', 'Repositories', 'Storage', 'Views']}
 feature_subgroups = {name: xid(f'group_Features_{name}') for name in ['Home', 'Meals', 'Schedule', 'Settings', 'Setup', 'Timer', 'Timetable']}
@@ -58,6 +60,13 @@ for path in test_files:
     rel = path.relative_to(tests_root).as_posix()
     test_ref_ids[rel] = xid('testref:' + rel)
     test_build_ids[rel] = xid('testbuild:' + rel)
+
+ui_test_ref_ids = {}
+ui_test_build_ids = {}
+for path in ui_test_files:
+    rel = path.relative_to(ui_tests_root).as_posix()
+    ui_test_ref_ids[rel] = xid('uitestref:' + rel)
+    ui_test_build_ids[rel] = xid('uitestbuild:' + rel)
 
 resource_ref_ids = {}
 resource_build_ids = {}
@@ -89,6 +98,7 @@ for p in swift_files:
         feature_files[parts[1]].append('/'.join(parts))
 
 test_group_files = [p.relative_to(tests_root).as_posix() for p in test_files]
+ui_test_group_files = [p.relative_to(ui_tests_root).as_posix() for p in ui_test_files]
 
 add('// !$*UTF8*$!')
 add('{')
@@ -101,29 +111,34 @@ for rel, fid in file_ref_ids.items():
     add(f'\t\t{fid} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{Path(rel).name}"; sourceTree = "<group>"; }};')
 for rel, fid in test_ref_ids.items():
     add(f'\t\t{fid} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{Path(rel).name}"; sourceTree = "<group>"; }};')
+for rel, fid in ui_test_ref_ids.items():
+    add(f'\t\t{fid} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{Path(rel).name}"; sourceTree = "<group>"; }};')
 for rel, fid in widget_ref_ids.items():
     add(f'\t\t{fid} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{Path(rel).name}"; sourceTree = "<group>"; }};')
 for rel, fid in resource_ref_ids.items():
     add(f'\t\t{fid} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "{Path(rel).name}"; sourceTree = "<group>"; }};')
 add(f'\t\t{ids["product_ref"]} /* SchoolHelperIOS.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; path = SchoolHelperIOS.app; sourceTree = BUILT_PRODUCTS_DIR; }};')
 add(f'\t\t{ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = SchoolHelperIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};')
+add(f'\t\t{ids["ui_tests_product_ref"]} /* SchoolHelperIOSUITests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = SchoolHelperIOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};')
 add(f'\t\t{ids["widget_product_ref"]} /* SchoolHelperWidget.appex */ = {{isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = SchoolHelperWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; }};')
 
 for rel, bid in build_file_ids.items():
     add(f'\t\t{bid} /* {Path(rel).name} in Sources */ = {{isa = PBXBuildFile; fileRef = {file_ref_ids[rel]} /* {Path(rel).name} */; }};')
 for rel, bid in test_build_ids.items():
     add(f'\t\t{bid} /* {Path(rel).name} in Sources */ = {{isa = PBXBuildFile; fileRef = {test_ref_ids[rel]} /* {Path(rel).name} */; }};')
+for rel, bid in ui_test_build_ids.items():
+    add(f'\t\t{bid} /* {Path(rel).name} in Sources */ = {{isa = PBXBuildFile; fileRef = {ui_test_ref_ids[rel]} /* {Path(rel).name} */; }};')
 for rel, bid in widget_build_ids.items():
     add(f'\t\t{bid} /* {Path(rel).name} in Sources */ = {{isa = PBXBuildFile; fileRef = {widget_ref_ids[rel]} /* {Path(rel).name} */; }};')
 for rel, bid in resource_build_ids.items():
     add(f'\t\t{bid} /* {Path(rel).name} in Resources */ = {{isa = PBXBuildFile; fileRef = {resource_ref_ids[rel]} /* {Path(rel).name} */; }};')
 add(f'\t\t{ids["widget_embed_build_file"]} /* SchoolHelperWidget.appex in Embed App Extensions */ = {{isa = PBXBuildFile; fileRef = {ids["widget_product_ref"]} /* SchoolHelperWidget.appex */; settings = {{ATTRIBUTES = (RemoveHeadersOnCopy, ); }}; }};')
 
-add(f'\t\t{ids["root_group"]} = {{isa = PBXGroup; children = ({ids["source_root_group"]} /* SchoolHelperIOS */, {ids["widget_root_group"]} /* SchoolHelperWidget */, {ids["tests_group"]} /* SchoolHelperIOSTests */, {ids["products_group"]} /* Products */); sourceTree = "<group>"; }};')
+add(f'\t\t{ids["root_group"]} = {{isa = PBXGroup; children = ({ids["source_root_group"]} /* SchoolHelperIOS */, {ids["widget_root_group"]} /* SchoolHelperWidget */, {ids["tests_group"]} /* SchoolHelperIOSTests */, {ids["ui_tests_group"]} /* SchoolHelperIOSUITests */, {ids["products_group"]} /* Products */); sourceTree = "<group>"; }};')
 add(f'\t\t{ids["source_root_group"]} /* SchoolHelperIOS */ = {{isa = PBXGroup; children = ({ids["app_group"]} /* App */, {ids["core_group"]} /* Core */, {ids["features_group"]} /* Features */, {ids["resources_group"]} /* Resources */); path = SchoolHelperIOS; sourceTree = "<group>"; }};')
 widget_children = ', '.join(widget_ref_ids[r] + f' /* {Path(r).name} */' for r in widget_ref_ids)
 add(f'\t\t{ids["widget_root_group"]} /* SchoolHelperWidget */ = {{isa = PBXGroup; children = ({widget_children}); path = SchoolHelperWidget; sourceTree = "<group>"; }};')
-add(f'\t\t{ids["products_group"]} /* Products */ = {{isa = PBXGroup; children = ({ids["product_ref"]} /* SchoolHelperIOS.app */, {ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */, {ids["widget_product_ref"]} /* SchoolHelperWidget.appex */); name = Products; sourceTree = "<group>"; }};')
+add(f'\t\t{ids["products_group"]} /* Products */ = {{isa = PBXGroup; children = ({ids["product_ref"]} /* SchoolHelperIOS.app */, {ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */, {ids["ui_tests_product_ref"]} /* SchoolHelperIOSUITests.xctest */, {ids["widget_product_ref"]} /* SchoolHelperWidget.appex */); name = Products; sourceTree = "<group>"; }};')
 app_children = ', '.join(file_ref_ids[r] + f' /* {Path(r).name} */' for r in app_files)
 add(f'\t\t{ids["app_group"]} /* App */ = {{isa = PBXGroup; children = ({app_children}); path = App; sourceTree = "<group>"; }};')
 add(f'\t\t{ids["core_group"]} /* Core */ = {{isa = PBXGroup; children = ({", ".join(core_subgroups[k] + f" /* {k} */" for k in core_subgroups)}); path = Core; sourceTree = "<group>"; }};')
@@ -138,6 +153,8 @@ res_children = ', '.join(resource_ref_ids[r] + f' /* {Path(r).name} */' for r in
 add(f'\t\t{ids["resources_group"]} /* Resources */ = {{isa = PBXGroup; children = ({res_children}); path = Resources; sourceTree = "<group>"; }};')
 test_children = ', '.join(test_ref_ids[r] + f' /* {Path(r).name} */' for r in test_group_files)
 add(f'\t\t{ids["tests_group"]} /* SchoolHelperIOSTests */ = {{isa = PBXGroup; children = ({test_children}); path = SchoolHelperIOSTests; sourceTree = "<group>"; }};')
+ui_test_children = ', '.join(ui_test_ref_ids[r] + f' /* {Path(r).name} */' for r in ui_test_group_files)
+add(f'\t\t{ids["ui_tests_group"]} /* SchoolHelperIOSUITests */ = {{isa = PBXGroup; children = ({ui_test_children}); path = SchoolHelperIOSUITests; sourceTree = "<group>"; }};')
 
 sources_children = ', '.join(build_file_ids[r] + f' /* {Path(r).name} in Sources */' for r in file_ref_ids)
 add(f'\t\t{ids["sources_phase"]} /* Sources */ = {{isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({sources_children}); runOnlyForDeploymentPostprocessing = 0; }};')
@@ -149,6 +166,10 @@ test_sources = ', '.join(test_build_ids[r] + f' /* {Path(r).name} in Sources */'
 add(f'\t\t{ids["tests_sources_phase"]} /* Sources */ = {{isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({test_sources}); runOnlyForDeploymentPostprocessing = 0; }};')
 add(f'\t\t{ids["tests_frameworks_phase"]} /* Frameworks */ = {{isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
 add(f'\t\t{ids["tests_resources_phase"]} /* Resources */ = {{isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
+ui_test_sources = ', '.join(ui_test_build_ids[r] + f' /* {Path(r).name} in Sources */' for r in ui_test_ref_ids)
+add(f'\t\t{ids["ui_tests_sources_phase"]} /* Sources */ = {{isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({ui_test_sources}); runOnlyForDeploymentPostprocessing = 0; }};')
+add(f'\t\t{ids["ui_tests_frameworks_phase"]} /* Frameworks */ = {{isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
+add(f'\t\t{ids["ui_tests_resources_phase"]} /* Resources */ = {{isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
 widget_core_sources = [r for r in file_ref_ids if r.startswith('Core/')]
 widget_source_entries = ', '.join(
     [widget_build_ids[r] + f' /* {Path(r).name} in Sources */' for r in widget_ref_ids] +
@@ -204,13 +225,30 @@ add(f'\t\t{ids["widget_release"]} /* Release */ = {{isa = XCBuildConfiguration; 
 add(f'\t\t{ids["project_config_list"]} = {{isa = XCConfigurationList; buildConfigurations = ({ids["project_debug"]} /* Debug */, {ids["project_release"]} /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; }};')
 add(f'\t\t{ids["app_config_list"]} = {{isa = XCConfigurationList; buildConfigurations = ({ids["app_debug"]} /* Debug */, {ids["app_release"]} /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; }};')
 add(f'\t\t{ids["tests_config_list"]} = {{isa = XCConfigurationList; buildConfigurations = ({ids["tests_debug"]} /* Debug */, {ids["tests_release"]} /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; }};')
+ui_test_target_settings = {
+    'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
+    'GENERATE_INFOPLIST_FILE': 'YES', 'IPHONEOS_DEPLOYMENT_TARGET': '17.0',
+    'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks")',
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios.uitests', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
+    'SUPPORTED_PLATFORMS': '"iphoneos iphonesimulator"', 'SWIFT_OPTIMIZATION_LEVEL': '"-Onone"', 'SWIFT_VERSION': '5.0',
+    'TARGETED_DEVICE_FAMILY': '1', 'TEST_TARGET_NAME': 'SchoolHelperIOS'
+}
+ui_test_settings = '{ ' + ' '.join(f'{k} = {v};' for k,v in ui_test_target_settings.items()) + ' }'
+add(f'\t\t{ids["ui_tests_debug"]} /* Debug */ = {{isa = XCBuildConfiguration; buildSettings = {ui_test_settings}; name = Debug; }};')
+ui_test_release_settings = ui_test_target_settings | {'SWIFT_OPTIMIZATION_LEVEL': '"-O"'}
+ui_test_release = '{ ' + ' '.join(f'{k} = {v};' for k,v in ui_test_release_settings.items()) + ' }'
+add(f'\t\t{ids["ui_tests_release"]} /* Release */ = {{isa = XCBuildConfiguration; buildSettings = {ui_test_release}; name = Release; }};')
+add(f'\t\t{ids["ui_tests_config_list"]} = {{isa = XCConfigurationList; buildConfigurations = ({ids["ui_tests_debug"]} /* Debug */, {ids["ui_tests_release"]} /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; }};')
 add(f'\t\t{ids["widget_config_list"]} = {{isa = XCConfigurationList; buildConfigurations = ({ids["widget_debug"]} /* Debug */, {ids["widget_release"]} /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; }};')
 add(f'\t\t{ids["widget_target_proxy"]} /* PBXContainerItemProxy */ = {{isa = PBXContainerItemProxy; containerPortal = {ids["project"]} /* Project object */; proxyType = 1; remoteGlobalIDString = {ids["widget_target"]}; remoteInfo = SchoolHelperWidget; }};')
 add(f'\t\t{ids["widget_target_dependency"]} /* PBXTargetDependency */ = {{isa = PBXTargetDependency; target = {ids["widget_target"]} /* SchoolHelperWidget */; targetProxy = {ids["widget_target_proxy"]} /* PBXContainerItemProxy */; }};')
+add(f'\t\t{ids["ui_tests_target_proxy"]} /* PBXContainerItemProxy */ = {{isa = PBXContainerItemProxy; containerPortal = {ids["project"]} /* Project object */; proxyType = 1; remoteGlobalIDString = {ids["app_target"]}; remoteInfo = SchoolHelperIOS; }};')
+add(f'\t\t{ids["ui_tests_target_dependency"]} /* PBXTargetDependency */ = {{isa = PBXTargetDependency; target = {ids["app_target"]} /* SchoolHelperIOS */; targetProxy = {ids["ui_tests_target_proxy"]} /* PBXContainerItemProxy */; }};')
 add(f'\t\t{ids["app_target"]} /* SchoolHelperIOS */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["app_config_list"]}; buildPhases = ({ids["sources_phase"]} /* Sources */, {ids["frameworks_phase"]} /* Frameworks */, {ids["resources_phase"]} /* Resources */, {ids["embed_appex_phase"]} /* Embed App Extensions */); buildRules = (); dependencies = ({ids["widget_target_dependency"]} /* PBXTargetDependency */); name = SchoolHelperIOS; productName = SchoolHelperIOS; productReference = {ids["product_ref"]} /* SchoolHelperIOS.app */; productType = "com.apple.product-type.application"; }};')
 add(f'\t\t{ids["tests_target"]} /* SchoolHelperIOSTests */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["tests_config_list"]}; buildPhases = ({ids["tests_sources_phase"]} /* Sources */, {ids["tests_frameworks_phase"]} /* Frameworks */, {ids["tests_resources_phase"]} /* Resources */); buildRules = (); dependencies = (); name = SchoolHelperIOSTests; productName = SchoolHelperIOSTests; productReference = {ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */; productType = "com.apple.product-type.bundle.unit-test"; }};')
+add(f'\t\t{ids["ui_tests_target"]} /* SchoolHelperIOSUITests */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["ui_tests_config_list"]}; buildPhases = ({ids["ui_tests_sources_phase"]} /* Sources */, {ids["ui_tests_frameworks_phase"]} /* Frameworks */, {ids["ui_tests_resources_phase"]} /* Resources */); buildRules = (); dependencies = ({ids["ui_tests_target_dependency"]} /* PBXTargetDependency */); name = SchoolHelperIOSUITests; productName = SchoolHelperIOSUITests; productReference = {ids["ui_tests_product_ref"]} /* SchoolHelperIOSUITests.xctest */; productType = "com.apple.product-type.bundle.ui-testing"; }};')
 add(f'\t\t{ids["widget_target"]} /* SchoolHelperWidget */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["widget_config_list"]}; buildPhases = ({ids["widget_sources_phase"]} /* Sources */, {ids["widget_frameworks_phase"]} /* Frameworks */, {ids["widget_resources_phase"]} /* Resources */); buildRules = (); dependencies = (); name = SchoolHelperWidget; productName = SchoolHelperWidget; productReference = {ids["widget_product_ref"]} /* SchoolHelperWidget.appex */; productType = "com.apple.product-type.app-extension"; }};')
-add(f'\t\t{ids["project"]} /* Project object */ = {{isa = PBXProject; attributes = {{ LastUpgradeCheck = 1620; TargetAttributes = {{ {ids["app_target"]} = {{ CreatedOnToolsVersion = 16.2; }}; {ids["tests_target"]} = {{ CreatedOnToolsVersion = 16.2; TestTargetID = {ids["app_target"]}; }}; {ids["widget_target"]} = {{ CreatedOnToolsVersion = 16.2; }}; }}; }}; buildConfigurationList = {ids["project_config_list"]}; compatibilityVersion = "Xcode 15.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = {ids["root_group"]}; productRefGroup = {ids["products_group"]}; projectDirPath = ""; projectRoot = ""; targets = ({ids["app_target"]} /* SchoolHelperIOS */, {ids["tests_target"]} /* SchoolHelperIOSTests */, {ids["widget_target"]} /* SchoolHelperWidget */); }};')
+add(f'\t\t{ids["project"]} /* Project object */ = {{isa = PBXProject; attributes = {{ LastUpgradeCheck = 1620; TargetAttributes = {{ {ids["app_target"]} = {{ CreatedOnToolsVersion = 16.2; }}; {ids["tests_target"]} = {{ CreatedOnToolsVersion = 16.2; TestTargetID = {ids["app_target"]}; }}; {ids["ui_tests_target"]} = {{ CreatedOnToolsVersion = 16.2; TestTargetID = {ids["app_target"]}; }}; {ids["widget_target"]} = {{ CreatedOnToolsVersion = 16.2; }}; }}; }}; buildConfigurationList = {ids["project_config_list"]}; compatibilityVersion = "Xcode 15.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = {ids["root_group"]}; productRefGroup = {ids["products_group"]}; projectDirPath = ""; projectRoot = ""; targets = ({ids["app_target"]} /* SchoolHelperIOS */, {ids["tests_target"]} /* SchoolHelperIOSTests */, {ids["ui_tests_target"]} /* SchoolHelperIOSUITests */, {ids["widget_target"]} /* SchoolHelperWidget */); }};')
 add('\t};')
 add(f'\trootObject = {ids["project"]} /* Project object */;')
 add('}')
@@ -240,6 +278,44 @@ scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
 </Scheme>
 '''
 (scheme_dir / 'SchoolHelperIOS.xcscheme').write_text(scheme)
+
+ui_scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion="1620" version="1.7">
+  <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
+    <BuildActionEntries>
+      <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="NO" buildForAnalyzing="YES">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+      </BuildActionEntry>
+      <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["ui_tests_target"]}" BuildableName="SchoolHelperIOSUITests.xctest" BlueprintName="SchoolHelperIOSUITests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+      </BuildActionEntry>
+    </BuildActionEntries>
+  </BuildAction>
+  <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
+    <Testables>
+      <TestableReference skipped="NO">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["ui_tests_target"]}" BuildableName="SchoolHelperIOSUITests.xctest" BlueprintName="SchoolHelperIOSUITests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <MacroExpansion>
+          <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        </MacroExpansion>
+      </TestableReference>
+    </Testables>
+  </TestAction>
+  <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES">
+    <BuildableProductRunnable runnableDebuggingMode="0">
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+    </BuildableProductRunnable>
+  </LaunchAction>
+  <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES">
+    <BuildableProductRunnable runnableDebuggingMode="0">
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+    </BuildableProductRunnable>
+  </ProfileAction>
+  <AnalyzeAction buildConfiguration="Debug"/>
+  <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
+</Scheme>
+'''
+(scheme_dir / 'SchoolHelperIOSUI.xcscheme').write_text(ui_scheme)
 
 widget_scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
 <Scheme LastUpgradeVersion="1620" version="1.7">

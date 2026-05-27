@@ -32,4 +32,5 @@
 실행 참고:
 
 - 앱 스킴: `SchoolHelperIOS`
+- UI 테스트 스킴: `SchoolHelperIOSUI`
 - 위젯 스킴: `SchoolHelperWidget`

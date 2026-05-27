@@ -47,6 +47,7 @@ xcodebuild \
 ### 2.2.1 Xcode 공유 스킴
 
 - 앱 스킴: `SchoolHelperIOS`
+- UI 테스트 스킴: `SchoolHelperIOSUI`
 - 위젯 스킴: `SchoolHelperWidget`
 
 위젯 스킴에는 아래 debug env 가 기본으로 들어 있습니다.
@@ -56,6 +57,24 @@ _XCWidgetKind=SchoolHelperWidget
 _XCWidgetFamily=medium
 _XCWidgetDefaultView=timeline
 ```
+
+### 2.2.2 UI 테스트
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+xcodebuild \
+  -project ios/SchoolHelperIOS.xcodeproj \
+  -scheme SchoolHelperIOSUI \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
+  test
+```
+
+현재 검증하는 실제 상호작용:
+
+- 홈 탭이 `More` 없이 표시됨
+- 홈에서 설정 modal 진입/닫기
+- 설정 modal 안 위젯 미리보기 섹션 표시
+- 타이머 modal 진입 시 닫기 버튼 표시
 
 ### 2.3 재현 스크립트
 
@@ -153,7 +172,26 @@ SIMCTL_CHILD_SCHOOLHELPER_TIMER_RUNNING=1
 - 위젯 미리보기 카드
 - 위젯/앱 미리보기 공통 렌더 경로
 
-### 3.5 딥링크
+### 3.5 UI 자동 검증
+
+검증 명령:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+xcodebuild \
+  -project ios/SchoolHelperIOS.xcodeproj \
+  -scheme SchoolHelperIOSUI \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
+  test
+```
+
+확인 내용:
+- 홈 탭 기본 구조
+- 설정 modal 열기/닫기
+- 설정 안 위젯 미리보기
+- 타이머 modal 닫기 버튼
+
+### 3.6 딥링크
 
 - `timetable-after-deeplink-success.png`
 
