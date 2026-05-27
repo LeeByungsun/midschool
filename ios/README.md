@@ -15,6 +15,7 @@
 
 - `../docs/project_specification.md`
 - `../docs/ios-project-specification.md`
+- `../docs/ios-runtime-verification.md`
 - `../.codex/skills/ios-architecture/SKILL.md`
 
 목표 기능:
