@@ -73,6 +73,7 @@ xcodebuild \
 
 - 홈 탭이 `More` 없이 표시됨
 - 홈에서 설정 modal 진입/닫기
+- 설정 modal 저장 버튼으로 홈 복귀
 - 설정 modal 안 위젯 미리보기 섹션 표시
 - 타이머 modal 진입 시 닫기 버튼 표시
 

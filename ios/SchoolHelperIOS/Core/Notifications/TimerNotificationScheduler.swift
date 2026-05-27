@@ -10,12 +10,18 @@ protocol TimerNotificationScheduling {
 
 final class TimerNotificationScheduler: TimerNotificationScheduling {
     private let center: UNUserNotificationCenter
+    private let environment: [String: String]
 
-    init(center: UNUserNotificationCenter = .current()) {
+    init(
+        center: UNUserNotificationCenter = .current(),
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) {
         self.center = center
+        self.environment = environment
     }
 
     func requestAuthorizationIfNeeded() {
+        if shouldSkipNotificationRequest() { return }
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .notDetermined else { return }
             DispatchQueue.main.async {
@@ -65,6 +71,11 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
 
     func cancelPendingTimerCompletion() {
         center.removePendingNotificationRequests(withIdentifiers: [Self.notificationIdentifier])
+    }
+
+    private func shouldSkipNotificationRequest() -> Bool {
+        let value = environment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"]?.lowercased()
+        return value == "1" || value == "true" || value == "yes"
     }
 
     private static let notificationIdentifier = "schoolhelper.timer.complete"

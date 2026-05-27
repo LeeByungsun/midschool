@@ -62,9 +62,11 @@ final class TimerViewModel: ObservableObject {
     func reset() {
         countdownTask?.cancel()
         notificationScheduler.cancelPendingTimerCompletion()
-        state.remainingSeconds = state.totalSeconds
-        state.targetDate = nil
-        state.isRunning = false
+        updateState {
+            $0.remainingSeconds = $0.totalSeconds
+            $0.targetDate = nil
+            $0.isRunning = false
+        }
         store.save(state)
         widgetTimelineReloader.reloadAllTimelines()
     }
@@ -90,13 +92,17 @@ final class TimerViewModel: ObservableObject {
     func syncWithCurrentTime() {
         guard state.isRunning, let targetDate = state.targetDate else { return }
         let remaining = max(0, Int(targetDate.timeIntervalSince(now())))
-        state.remainingSeconds = remaining
+        updateState {
+            $0.remainingSeconds = remaining
+            if remaining == 0 {
+                $0.targetDate = nil
+                $0.isRunning = false
+            }
+        }
 
         if remaining == 0 {
             countdownTask?.cancel()
             notificationScheduler.cancelPendingTimerCompletion()
-            state.targetDate = nil
-            state.isRunning = false
             store.save(state)
             widgetTimelineReloader.reloadAllTimelines()
         }
@@ -104,8 +110,10 @@ final class TimerViewModel: ObservableObject {
 
     private func start() {
         countdownTask?.cancel()
-        state.isRunning = true
-        state.targetDate = now().addingTimeInterval(TimeInterval(state.remainingSeconds))
+        updateState {
+            $0.isRunning = true
+            $0.targetDate = now().addingTimeInterval(TimeInterval($0.remainingSeconds))
+        }
         let timerSettings = settingsStore.load()
         if timerSettings.notificationEnabled {
             notificationScheduler.requestAuthorizationIfNeeded()
@@ -125,11 +133,13 @@ final class TimerViewModel: ObservableObject {
     private func pause() {
         countdownTask?.cancel()
         notificationScheduler.cancelPendingTimerCompletion()
-        if let targetDate = state.targetDate {
-            state.remainingSeconds = max(0, Int(targetDate.timeIntervalSince(now())))
+        updateState {
+            if let targetDate = $0.targetDate {
+                $0.remainingSeconds = max(0, Int(targetDate.timeIntervalSince(now())))
+            }
+            $0.targetDate = nil
+            $0.isRunning = false
         }
-        state.targetDate = nil
-        state.isRunning = false
         store.save(state)
         widgetTimelineReloader.reloadAllTimelines()
     }
@@ -149,5 +159,11 @@ final class TimerViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    private func updateState(_ mutate: (inout TimerSessionState) -> Void) {
+        var next = state
+        mutate(&next)
+        state = next
     }
 }

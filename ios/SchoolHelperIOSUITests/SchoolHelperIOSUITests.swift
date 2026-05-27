@@ -25,6 +25,17 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 5))
     }
 
+    func testSettingsSaveDismissesModal() {
+        let app = makeSeededApp(initialRoute: "settings")
+        app.launch()
+
+        let saveButton = app.buttons["settings-save-button"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
+        saveButton.tap()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 5))
+    }
+
     func testSettingsModalShowsWidgetPreview() {
         let app = makeSeededApp(initialRoute: "settings")
         app.launch()

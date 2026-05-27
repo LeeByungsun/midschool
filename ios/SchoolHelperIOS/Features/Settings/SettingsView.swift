@@ -103,15 +103,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section {
-                    Button("설정 저장") {
-                        if let profile = viewModel.buildProfileForSave() {
-                            viewModel.saveTimerSettings()
-                            appState.saveProfile(profile)
-                            dismiss()
-                        }
-                    }
-                }
             }
             .navigationTitle("설정")
             .navigationBarTitleDisplayMode(.inline)
@@ -120,6 +111,13 @@ struct SettingsView: View {
                     Button("닫기") {
                         dismiss()
                     }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("저장") {
+                        saveSettings()
+                    }
+                    .accessibilityIdentifier("settings-save-button")
                 }
             }
             .task {
@@ -146,6 +144,13 @@ struct SettingsView: View {
         let snapshot = await widgetPreviewLoader.load(showTomorrow: viewModel.showTomorrowTimetable)
         widgetPreview = snapshot
         isLoadingWidgetPreview = false
+    }
+
+    private func saveSettings() {
+        guard let profile = viewModel.buildProfileForSave() else { return }
+        viewModel.saveTimerSettings()
+        appState.saveProfile(profile)
+        dismiss()
     }
 }
 
