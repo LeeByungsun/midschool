@@ -33,7 +33,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 
 2026-05-28 최신 확인:
 
-- 54 tests passed
+- 55 tests passed
 - 가정통신문 BFF query/응답 매핑
 - 가정통신문 날짜 누락 시 Android와 동일하게 제목만 표시
 - 타이머 알림 OFF 시 권한 요청/완료 알림 예약 생략
@@ -84,10 +84,11 @@ xcodebuild \
 
 2026-05-28 최신 확인:
 
-- 커밋: `d4aa052`
+- 앱 코드 커밋: `4ed3c2f` (실기기에 설치한 최신 비문서 앱 코드)
+- 이후 `191c747`은 해당 실기기 설치 결과를 문서화한 커밋
 - 결과: `** TEST SUCCEEDED **`
 - `SchoolHelperIOSUITests`: 6 tests, 0 failures
-- xcresult: `/tmp/misschool-ios-ui-setup-save/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_13-04-43-+0900.xcresult`
+- xcresult: `/tmp/misschool-ios-ui-parity-audit/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_13-15-35-+0900.xcresult`
 
 현재 검증하는 실제 상호작용:
 

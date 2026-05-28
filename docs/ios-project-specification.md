@@ -1,6 +1,6 @@
 # 학교도우미 iOS 앱 스펙 초안
 
-기준일: 2026-05-26
+기준일: 2026-05-28
 
 이 문서는 `docs/project_specification.md` 의 공통 요구사항을 바탕으로,
 `ios/` 폴더에서 구현할 iPhone용 앱 범위를 정리한 iOS 전용 스펙 초안입니다.
@@ -169,3 +169,5 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 - full App Group 실기기 빌드: widget provisioning profile에 App Group entitlement 반영 필요
 
 현재는 **기능 parity를 우선하는 iPhone 앱 구현 + 코어 회귀 테스트 + simulator/device-preview 검증**을 기준으로 진행합니다.
+
+상세 parity 감사는 `docs/ios-parity-audit.md` 를 기준으로 추적합니다.
