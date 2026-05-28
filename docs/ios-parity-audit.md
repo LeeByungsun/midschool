@@ -113,10 +113,12 @@ Android 기준:
 - `SchoolDataCacheStore`
 - `DefaultSchoolRepositoryTests`
 - UI 테스트 `testSeededTimetableShowsCoreContent`
+- `ios/scripts/verify_live_school_data.py` 로 live NEIS `misTimetable` row 확인
+- 2026-05-28 미사중학교 1학년 2반 기준 sample `수학` 확인
 
 남은 수동 확인:
 
-- 실기기에서 실제 날짜 이동 UX와 live NEIS 응답 표시를 눈으로 확인.
+- 실기기 화면에서 실제 날짜 이동 UX와 live NEIS 응답 렌더링을 눈으로 확인.
 
 ### 2.5 급식
 
@@ -135,10 +137,12 @@ Android 기준:
 - `SchoolDataCacheStore`
 - `DefaultSchoolRepositoryTests`
 - UI 테스트 `testSeededMealsShowsCoreContent`
+- `ios/scripts/verify_live_school_data.py` 로 live NEIS `mealServiceDietInfo` row 확인
+- 2026-05-28 미사중학교 기준 sample `발아현미밥` 포함 급식 확인
 
 남은 수동 확인:
 
-- 실기기에서 live NEIS 기준 실제 주간 리스트 스크롤/표시 확인.
+- 실기기 화면에서 live NEIS 기준 실제 주간 리스트 스크롤/표시 확인.
 
 ### 2.6 학사 일정
 
@@ -157,10 +161,12 @@ Android 기준:
 - `SchoolRepository.fetchSchedule`
 - `DefaultSchoolRepositoryTests`
 - UI 테스트 `testSeededScheduleShowsCoreContent`
+- `ios/scripts/verify_live_school_data.py` 로 live NEIS `SchoolSchedule` row 확인
+- 2026-05-28 미사중학교 2026년 5월 기준 sample `노동절` 확인
 
 남은 수동 확인:
 
-- 실기기에서 live NEIS 기준 월 이동/목록 표시 확인.
+- 실기기 화면에서 live NEIS 기준 월 이동/목록 표시 확인.
 
 ### 2.7 타이머
 
@@ -235,10 +241,12 @@ Android 기준:
 - `HomeViewModel`
 - `NEISClientTests`
 - `FeatureViewModelTests`
+- `ios/scripts/verify_live_school_data.py` 로 live web `/api/notices` BFF item 확인
+- 2026-05-28 미사중학교 기준 sample `2026학년도미사 오케스트라 아침 맞이 콘서트일정 안내` 확인
 
 남은 수동 확인:
 
-- 실기기에서 외부 링크 전환 확인.
+- 실기기 화면에서 실제 가정통신문 렌더링과 외부 링크 전환 확인.
 
 ### 2.10 홈 화면 위젯
 
@@ -297,6 +305,7 @@ Android 기준:
 - `ios/scripts/test_device_ui.sh` 는 `Timed out while enabling automation mode` 실패를 기본 1회 자동 재시도한다.
 - 2026-05-28 같은 derived data로 재실행한 실제 iPhone 9개 전체 UI 테스트가 `TEST SUCCEEDED` 로 통과했다. xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh` 로 retry wrapper 기본 경로의 1개 UI 테스트 통과를 확인했다.
+- 2026-05-28 `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py` 로 미사중학교 live NEIS/BFF backend 데이터 계약을 확인했다.
 
 따라서 현재 완료라고 말할 수 있는 범위:
 
@@ -305,12 +314,14 @@ Android 기준:
 - 실제 iPhone UI 테스트(9개 자동 테스트 기준)
 - SwiftPM 코어 회귀 테스트
 - 실기기 앱 본체 설치/실행
+- live NEIS/BFF backend 데이터 smoke
 
 아직 완료라고 말할 수 없는 범위:
 
 - 홈 화면 WidgetKit 실제 배치/탭 end-to-end
 - App Group 기반 앱/위젯 공유 데이터 실기기 end-to-end
 - 실기기 알림 권한/완료 알림 UX
+- 실제 iPhone 화면의 live 데이터 날짜 이동/외부 링크 UX 눈검증
 
 ---
 
@@ -321,4 +332,4 @@ Android 기준:
 3. `ENTITLEMENTS_MODE=app-groups TEAM_ID=... ios/scripts/install_device.sh` 로 full App Group 빌드를 실행한다.
 4. 실제 iPhone 홈 화면에 위젯을 배치해 오늘/내일 시간표와 탭 라우팅을 확인한다.
 5. 타이머를 1분 이하로 시작해 실기기 알림 권한 요청과 완료 알림을 확인한다.
-6. 급식/시간표/일정/가정통신문을 실제 저장 프로필 기준으로 눈으로 확인한다.
+6. `verify_live_school_data.py` 로 live backend 계약을 재확인한 뒤, 실제 iPhone 화면에서 날짜 이동/주간 스크롤/외부 링크 UX를 눈으로 확인한다.

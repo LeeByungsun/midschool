@@ -173,6 +173,8 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 - 2026-05-28 실제 iPhone 9개 전체 UI 테스트 통과
 - `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-3 ios/scripts/test_device_ui.sh`
 - `SchoolHelperIOSUITests`: 9 tests, 0 failures
+- 2026-05-28 live NEIS/BFF backend 데이터 smoke 통과
+- `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py`
 
 현재는 **기능 parity를 우선하는 iPhone 앱 구현 + 코어 회귀 테스트 + simulator/device-preview 검증**을 기준으로 진행합니다.
 

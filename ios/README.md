@@ -66,6 +66,17 @@ ios/scripts/verify_device_notification.sh
 REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 ```
 
+live NEIS/BFF 데이터 smoke:
+
+```bash
+# 미사중학교 기준 실제 NEIS 급식/시간표/일정과 notices BFF 응답 확인
+DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py
+```
+
+- 기본값은 `SCHOOL_NAME=미사중학교`, `OFFICE_CODE=J10`, `SCHOOL_CODE=7692129`, `GRADE=1`, `CLASSROOM=2` 입니다.
+- `NEIS_API_KEY` 는 앱에 저장하지 않고 이 스크립트에서도 환경변수로만 선택 주입합니다. 키가 없으면 iOS 앱과 동일하게 `KEY` 없이 공개 조회를 시도합니다.
+- notices는 `WEB_BASE_URL` 의 `/api/notices` BFF를 호출합니다. 기본값은 `https://midschool.vercel.app/` 입니다.
+
 실제 iPhone UI 테스트:
 
 ```bash

@@ -297,6 +297,29 @@ REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 - 재확인 결과: `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
 - 제한: 실제 알림 배너 도착은 iPhone 잠금/백그라운드 상태에서 사람이 확인해야 하므로 최종 UX 검증은 아직 수동 확인 대기
 
+### 2.4.3 live NEIS/BFF 데이터 smoke
+
+iOS 앱이 사용하는 live 데이터 계약을 앱 외부에서 반복 검증하려면 아래 스크립트를 사용합니다.
+
+```bash
+DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py
+```
+
+확인 범위:
+
+- NEIS `schoolInfo` 에서 `미사중학교` / `J10` / `7692129` 확인
+- NEIS `mealServiceDietInfo` 급식 row 확인
+- NEIS `misTimetable` 1학년 2반 시간표 row 확인
+- NEIS `SchoolSchedule` 월간 일정 row 확인
+- web `/api/notices` BFF live item 확인
+
+2026-05-28 확인:
+
+- 명령: `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py`
+- 결과: `{"status":"ok"}` JSON 출력
+- sample: 급식 `발아현미밥`, 시간표 `수학`, 일정 `노동절`, 가정통신문 `2026학년도미사 오케스트라 아침 맞이 콘서트일정 안내`
+- 제한: backend live 데이터 계약을 검증하는 smoke이며, 실제 iPhone 화면 렌더링/날짜 이동/외부 링크 전환 UX를 눈으로 증명하지는 않는다.
+
 ### 2.5 재현 스크립트
 
 ```bash
@@ -471,16 +494,18 @@ xcodebuild \
 - 주요 탭 화면이 simulator 와 실제 iPhone 9개 UI 테스트에서 직접 확인됨
 - 주요 상태 변화(타이머 감소)도 simulator 에서 직접 확인됨
 - 위젯 콘텐츠는 앱 안 미리보기로 직접 확인됨
+- live NEIS/BFF backend 데이터 계약은 `verify_live_school_data.py` 로 직접 확인됨
 
 하지만 아래는 아직 미완료입니다.
 
 - 홈 화면 위젯의 실제 배치/탭 동작
 - 시스템 확인 다이얼로그 이후 최종 전환
 - 실기기 알림/권한 최종 UX
+- 실제 iPhone 화면에서 live 데이터 날짜 이동/외부 링크 UX 눈검증
 
 즉, 현재 상태는:
 
-**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 9개 자동 UI 검증 완료”** 이지만
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 9개 자동 UI 검증, live NEIS/BFF backend smoke 완료”** 이지만
 **“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---
