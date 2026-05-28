@@ -46,6 +46,7 @@ final class AppStateTests: XCTestCase {
         }
 
         XCTAssertEqual(appState.profile.schoolName, "미사중학교")
+        XCTAssertEqual(appState.profile.schoolCode, "7692129")
         XCTAssertTrue(appState.isSetupComplete)
     }
 

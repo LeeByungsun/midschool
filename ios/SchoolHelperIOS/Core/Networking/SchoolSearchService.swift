@@ -9,7 +9,7 @@ struct MockSchoolSearchService: SchoolSearchService {
         SchoolInfo(
             officeCode: "J10",
             officeName: "경기도교육청",
-            schoolCode: "7531093",
+            schoolCode: "7692129",
             schoolName: "미사중학교",
             schoolKind: "중학교",
             roadAddress: "경기도 하남시"
@@ -17,7 +17,7 @@ struct MockSchoolSearchService: SchoolSearchService {
         SchoolInfo(
             officeCode: "J10",
             officeName: "경기도교육청",
-            schoolCode: "7531094",
+            schoolCode: "7531163",
             schoolName: "미사고등학교",
             schoolKind: "고등학교",
             roadAddress: "경기도 하남시"

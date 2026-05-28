@@ -13,7 +13,7 @@ enum AppLaunchOverrides {
                 classroom: "2",
                 schoolName: "미사중학교",
                 officeCode: "J10",
-                schoolCode: "7531093",
+                schoolCode: "7692129",
                 schoolKind: "중학교"
             )
         }
