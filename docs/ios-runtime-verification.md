@@ -357,6 +357,7 @@ ios/scripts/test_widget_sim.sh
 - 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh`
 - 결과: `Widget simulator packaging verified`
 - 확인 범위: `SchoolHelperWidget` scheme build, embedded `SchoolHelperWidget.appex`, WidgetKit extension point, app/widget bundle id, widget tap route, app/widget App Group entitlement/config source
+- 앱 라우터 쪽은 `AppStateTests/testWidgetDeepLinksRouteToSetupOrTimetable` 로 `schoolhelper://settings` 와 `schoolhelper://timetable` 처리를 검증합니다.
 
 위젯/App Group 전체 준비도는 아래 wrapper로 재현합니다.
 

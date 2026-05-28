@@ -31,6 +31,22 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(appState.selectedRoute, .settings)
     }
 
+    func testWidgetDeepLinksRouteToSetupOrTimetable() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let appState = AppState(
+            store: StudentPreferencesStore(defaults: defaults),
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+
+        appState.handleDeepLink(URL(string: "schoolhelper://settings")!)
+        XCTAssertEqual(appState.selectedRoute, .settings)
+
+        appState.profile = .fixture()
+        appState.handleDeepLink(URL(string: "schoolhelper://timetable")!)
+        XCTAssertEqual(appState.selectedRoute, .timetable)
+    }
+
     func testRefreshUsesSeededProfileWhenRequested() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)
