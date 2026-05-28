@@ -306,6 +306,7 @@ Android 기준:
 현재 확보된 증거:
 
 - 2026-05-28 `ios/scripts/verify_ios_local_readiness.sh` 로 로컬 통합 검증 경로를 고정했다.
+- 2026-05-28 `RUN_LIVE_BACKEND=1 DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-live-final ios/scripts/verify_ios_local_readiness.sh` 로 Python/Shell 문법, SwiftPM 62 tests, 위젯 simulator packaging, live NEIS/BFF/notice URL smoke, goal audit expected incomplete를 한 번에 확인했다.
 - 2026-05-28 `ios/scripts/audit_ios_goal_readiness.py` 는 agent skill/spec/workspace/core feature/verifier artifact를 `pass` 로 확인했지만, widget profile App Group 누락과 시스템 수동 증거 대기로 `complete=false`, exit `20` 을 반환했다.
 - `ios/scripts/validate_ios_system_evidence.py` 는 실제 iPhone 홈 화면 위젯/App Group/알림 UX 수동 증거 JSON이 모두 채워졌는지 검증한다.
 - iPhone 15 Pro 실기기에 `device-preview` 모드로 앱 설치/실행 성공.

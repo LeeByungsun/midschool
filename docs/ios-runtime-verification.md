@@ -45,6 +45,13 @@ ios/scripts/verify_ios_local_readiness.sh
 이 스크립트는 Python/Shell 문법, SwiftPM 코어 테스트, 위젯 패키징/App Group readiness, 목표 완료 audit을 순서대로 확인합니다.
 현재 widget provisioning profile과 시스템 수동 증거 blocker는 예상 incomplete로 허용합니다.
 
+2026-05-28 추가 확인:
+
+- 명령: `RUN_LIVE_BACKEND=1 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-live-final ios/scripts/verify_ios_local_readiness.sh`
+- 결과: 통과
+- 포함 증거: SwiftPM 62 tests 통과, 위젯 simulator packaging 통과, live `schoolInfo`/`mealServiceDietInfo`/`misTimetable`/`SchoolSchedule`/notices BFF/notice URL HTTP 200 및 제목 매칭 통과
+- 남은 예상 incomplete: widget provisioning profile App Group 누락, `ios/system-evidence.local.json` 미작성
+
 현재 iOS 앱은 아래 4단계로 검증합니다.
 
 1. SwiftPM 코어 회귀 테스트
