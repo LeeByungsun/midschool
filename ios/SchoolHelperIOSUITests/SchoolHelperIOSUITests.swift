@@ -145,6 +145,31 @@ final class SchoolHelperIOSUITests: XCTestCase {
         )
     }
 
+    func testLiveNoticeButtonOpensOperatingSafariURL() throws {
+        #if !(LIVE_UI_TEST_ENABLED && EXTERNAL_LINK_TEST_ENABLED)
+        try XCTSkipUnless(
+            false,
+            "live external notice link UI test is opt-in because it depends on external services and opens Safari"
+        )
+        #endif
+
+        let app = makeLiveApp()
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 10))
+        XCTAssertTrue(scrollToStaticText(containing: "오케스트라", in: app, maxSwipes: 8))
+        XCTAssertTrue(scrollToButton(named: "가정통신문 열기", in: app, maxSwipes: 3))
+        app.buttons["가정통신문 열기"].tap()
+
+        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+        XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 10))
+        XCTAssertTrue(
+            waitForAnyElement(containing: "misaj-m.goegh.kr", in: safari, timeout: 20)
+                || waitForAnyElement(containing: "오케스트라", in: safari, timeout: 20)
+                || waitForAnyElement(containing: "2026학년도", in: safari, timeout: 20)
+        )
+    }
+
     func testLiveSchoolDataDisplaysBackendContent() throws {
         #if !LIVE_UI_TEST_ENABLED
         try XCTSkipUnless(

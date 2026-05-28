@@ -12,13 +12,21 @@ TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"
 ENTITLEMENTS_MODE="${ENTITLEMENTS_MODE:-device-preview}"
 LIVE_UI_TEST="${LIVE_UI_TEST:-0}"
 EXTERNAL_LINK_TEST="${EXTERNAL_LINK_TEST:-0}"
+LIVE_EXTERNAL_LINK_TEST="${LIVE_EXTERNAL_LINK_TEST:-0}"
 LIVE_NAVIGATION_TEST="${LIVE_NAVIGATION_TEST:-0}"
 APP_GROUP_PROFILE_CHECK="${APP_GROUP_PROFILE_CHECK:-strict}"
-if [[ "$LIVE_NAVIGATION_TEST" == "1" || "$LIVE_NAVIGATION_TEST" == "true" || "$LIVE_NAVIGATION_TEST" == "yes" ]]; then
+
+is_enabled() {
+  [[ "$1" == "1" || "$1" == "true" || "$1" == "yes" ]]
+}
+
+if is_enabled "$LIVE_EXTERNAL_LINK_TEST"; then
+  ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveNoticeButtonOpensOperatingSafariURL}"
+elif is_enabled "$LIVE_NAVIGATION_TEST"; then
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveDateNavigationUpdatesTitles}"
-elif [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
+elif is_enabled "$LIVE_UI_TEST"; then
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent}"
-elif [[ "$EXTERNAL_LINK_TEST" == "1" || "$EXTERNAL_LINK_TEST" == "true" || "$EXTERNAL_LINK_TEST" == "yes" ]]; then
+elif is_enabled "$EXTERNAL_LINK_TEST"; then
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testNoticeButtonOpensExternalSafariURL}"
 else
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile}"
@@ -116,10 +124,10 @@ XCODEBUILD_ARGS=(
 )
 
 SWIFT_FLAGS=()
-if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" || "$LIVE_NAVIGATION_TEST" == "1" || "$LIVE_NAVIGATION_TEST" == "true" || "$LIVE_NAVIGATION_TEST" == "yes" ]]; then
+if is_enabled "$LIVE_UI_TEST" || is_enabled "$LIVE_NAVIGATION_TEST" || is_enabled "$LIVE_EXTERNAL_LINK_TEST"; then
   SWIFT_FLAGS+=(-DLIVE_UI_TEST_ENABLED)
 fi
-if [[ "$EXTERNAL_LINK_TEST" == "1" || "$EXTERNAL_LINK_TEST" == "true" || "$EXTERNAL_LINK_TEST" == "yes" ]]; then
+if is_enabled "$EXTERNAL_LINK_TEST" || is_enabled "$LIVE_EXTERNAL_LINK_TEST"; then
   SWIFT_FLAGS+=(-DEXTERNAL_LINK_TEST_ENABLED)
 fi
 if [[ "${#SWIFT_FLAGS[@]}" -gt 0 ]]; then
@@ -141,6 +149,7 @@ echo "Only testing: ${ONLY_TESTING:-<all>}"
 echo "Live UI test: $LIVE_UI_TEST"
 echo "Live navigation test: $LIVE_NAVIGATION_TEST"
 echo "External link test: $EXTERNAL_LINK_TEST"
+echo "Live external link test: $LIVE_EXTERNAL_LINK_TEST"
 
 XCODEBUILD_LOG="${XCODEBUILD_LOG:-$DERIVED_DATA_PATH/test_device_ui.xcodebuild.log}"
 AUTOMATION_RETRY_LIMIT="${AUTOMATION_RETRY_LIMIT:-1}"

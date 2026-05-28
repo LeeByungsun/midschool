@@ -239,11 +239,15 @@ LIVE_NAVIGATION_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 
 ```bash
 ios/scripts/test_external_link_ui.sh
+ios/scripts/test_live_external_link_ui.sh
 EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
+LIVE_EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 ```
 
 `EXTERNAL_LINK_TEST=1` 은 UI test target에 `-DEXTERNAL_LINK_TEST_ENABLED` Swift flag를 주입하고,
 seeded fallback notice의 `가정통신문 열기` 버튼이 Safari를 foreground로 전환하고, URL/페이지 텍스트에 `example.com` 또는 `Example Domain` 이 노출되는지 확인합니다.
+`LIVE_EXTERNAL_LINK_TEST=1` 은 `-DLIVE_UI_TEST_ENABLED -DEXTERNAL_LINK_TEST_ENABLED` 를 함께 주입하고,
+live BFF notice인 `오케스트라` 항목의 `가정통신문 열기` 버튼이 실제 학교 홈페이지(`misaj-m.goegh.kr`) Safari 화면으로 전환되는지 확인합니다.
 기본 UI 회귀 테스트에서는 외부 앱 전환 테스트가 skip 처리되므로 Safari 상태에 흔들리지 않습니다.
 
 2026-05-28 simulator 가정통신문 외부 링크 전용 테스트:
@@ -261,6 +265,22 @@ seeded fallback notice의 `가정통신문 열기` 버튼이 Safari를 foregroun
 - `SchoolHelperIOSUITests/testNoticeButtonOpensExternalSafariURL`: 1 test, 0 failures
 - 확인 범위: seeded 홈 `현장학습 안내` 표시 → `가정통신문 열기` 탭 → Safari foreground 전환
 - xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
+
+2026-05-28 simulator 운영 가정통신문 외부 링크 전용 테스트:
+
+- 명령: `ios/scripts/test_live_external_link_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests/testLiveNoticeButtonOpensOperatingSafariURL`: 1 test, 0 failures
+- 확인 범위: live 홈 `오케스트라` 공지 표시 → `가정통신문 열기` 탭 → Safari foreground 전환 → `misaj-m.goegh.kr`/`오케스트라`/`2026학년도` 중 하나 노출 확인
+- xcresult: `/tmp/misschool-ios-live-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_17-04-55-+0900.xcresult`
+
+2026-05-28 실제 iPhone 운영 가정통신문 외부 링크 전용 테스트:
+
+- 명령: `LIVE_EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-external-link-ui-test ios/scripts/test_device_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests/testLiveNoticeButtonOpensOperatingSafariURL`: 1 test, 0 failures
+- 확인 범위: 실제 iPhone에서 live 홈 `오케스트라` 공지 표시 → `가정통신문 열기` 탭 → Safari foreground 전환 → `misaj-m.goegh.kr`/`오케스트라`/`2026학년도` 중 하나 노출 확인
+- xcresult: `/tmp/misschool-ios-device-live-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_17-07-23-+0900.xcresult`
 
 현재 검증하는 실제 상호작용:
 
@@ -406,7 +426,10 @@ UNLOCK_WAIT_SECONDS=20 REMAINING_SECONDS=20 ios/scripts/verify_device_notificati
 - 2026-05-28 상태 파일 검증 보강 후 설치 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-notification-status-install-v2 LAUNCH=0 ios/scripts/install_device.sh`
 - 설치 결과: `BUILD SUCCEEDED`, `App installed`
 - 2026-05-28 상태 파일 검증 명령: `SMOKE_RUN_ID=notification-status-v5 UNLOCK_WAIT_SECONDS=6 DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-status-v5 ios/scripts/verify_device_notification.sh`
-- 상태 파일 검증 결과: 기기 잠금 상태로 launch 거절 감지 후 `UNLOCK_WAIT_SECONDS` 대기/재시도 경로 동작 확인. 최종 알림 예약 상태 파일 검증은 기기 잠금 해제 후 재실행 필요
+- 상태 파일 검증 결과: 기기 잠금 상태로 launch 거절 감지 후 `UNLOCK_WAIT_SECONDS` 대기/재시도 경로 동작 확인
+- 2026-05-28 잠금 해제 후 상태 파일 검증 명령: `SMOKE_RUN_ID=notification-status-final-1779955391 UNLOCK_WAIT_SECONDS=20 DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-status-final TEAM_ID=2TJFP5788P ios/scripts/verify_device_notification.sh`
+- 잠금 해제 후 상태 파일 검증 결과: `authorizationStatus=authorized`, `scheduled=true`, `pending=true`, `remainingSeconds=20`, `presetTitle=휴식`, `runID=notification-status-final-1779955391` 확인
+- 상태 파일: `/tmp/misschool-ios-device-notification-status-final/schoolhelper-notification-smoke.json`
 - 제한: 실제 알림 배너 도착은 iPhone 잠금/백그라운드 상태에서 사람이 확인해야 하므로 최종 UX 검증은 아직 수동 확인 대기
 
 알림 권한 설정 화면의 안내/요청 버튼 상태는 시스템 권한 팝업에 의존하지 않도록
@@ -648,7 +671,7 @@ xcodebuild \
 - live NEIS/BFF 데이터의 simulator 날짜 이동 UX는 `test_live_navigation_ui.sh` 로 직접 확인됨
 - live NEIS/BFF 데이터의 실제 iPhone 앱 화면 렌더링은 `test_device_ui.sh` + `LIVE_UI_TEST=1` 로 직접 확인됨
 - live NEIS/BFF 데이터의 실제 iPhone 날짜 이동 UX는 `test_device_ui.sh` + `LIVE_NAVIGATION_TEST=1` 로 직접 확인됨
-- 가정통신문 외부 링크의 Safari 전환은 simulator 및 실제 iPhone에서 `EXTERNAL_LINK_TEST=1` 로 직접 확인됨. simulator에서는 URL/페이지 텍스트까지 확인됨
+- 가정통신문 외부 링크의 Safari 전환은 seeded 및 live 운영 notice 모두 simulator/실제 iPhone에서 직접 확인됨. live 운영 notice는 `LIVE_EXTERNAL_LINK_TEST=1` 로 `misaj-m.goegh.kr`/공지 텍스트 노출까지 확인됨
 - 알림 권한 설정 화면의 안내/요청 버튼 상태 변화는 simulator 및 실제 iPhone에서 launch override 기반 UI 테스트로 직접 확인됨
 
 하지만 아래는 아직 미완료입니다.
@@ -656,11 +679,10 @@ xcodebuild \
 - 홈 화면 위젯의 실제 배치/탭 동작
 - 시스템 확인 다이얼로그 이후 최종 전환
 - 실기기 시스템 권한 팝업/완료 알림 배너 최종 UX
-- 실제 iPhone Safari에서 운영 notice 웹페이지 콘텐츠 렌더링 눈검증
 
 즉, 현재 상태는:
 
-**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/notice URL/simulator/실기기 UI smoke, simulator/실기기 live 날짜 이동 UX, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/notice URL/simulator/실기기 UI smoke, simulator/실기기 live 날짜 이동 UX, seeded/live 가정통신문 외부 링크 전환 smoke, 알림 예약 pending smoke, 알림 권한 설정 UI smoke 완료”** 이지만
 **“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---

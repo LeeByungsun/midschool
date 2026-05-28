@@ -305,7 +305,8 @@ Android 기준:
 - `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh` 로 알림 smoke launch 성공을 확인했다. 실제 알림 배너 도착은 수동 확인 대기다.
 - 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=8 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh` 로 알림 smoke launch를 재확인했다.
-- 2026-05-28 알림 smoke에 sandbox 상태 파일 검증을 추가했다. `SMOKE_RUN_ID=notification-status-v5 UNLOCK_WAIT_SECONDS=6 DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-status-v5 ios/scripts/verify_device_notification.sh` 는 기기 잠금 상태로 launch 거절을 감지하고 대기/재시도 후 exit 5로 종료했다. 기기 잠금 해제 후 같은 경로로 `scheduled=true`/`pending=true` 상태 파일 검증 가능.
+- 2026-05-28 알림 smoke에 sandbox 상태 파일 검증을 추가했다. `SMOKE_RUN_ID=notification-status-v5 UNLOCK_WAIT_SECONDS=6 DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-status-v5 ios/scripts/verify_device_notification.sh` 는 기기 잠금 상태로 launch 거절을 감지하고 대기/재시도 후 exit 5로 종료했다.
+- 2026-05-28 잠금 해제 후 `SMOKE_RUN_ID=notification-status-final-1779955391 UNLOCK_WAIT_SECONDS=20 DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-status-final TEAM_ID=2TJFP5788P ios/scripts/verify_device_notification.sh` 로 sandbox 상태 파일의 `scheduled=true`/`pending=true`/`authorizationStatus=authorized`/`runID` 일치를 확인했다. 상태 파일: `/tmp/misschool-ios-device-notification-status-final/schoolhelper-notification-smoke.json`.
 - 2026-05-28 선택된 학교 표시 개선 후 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-selected-school-smoke LAUNCH=0 ios/scripts/install_device.sh` 로 실제 iPhone 앱 본체 설치 성공을 확인했다.
 
 제약:
@@ -332,6 +333,8 @@ Android 기준:
 - 2026-05-28 `UNLOCK_WAIT_SECONDS=20 LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test-ready ios/scripts/test_device_ui.sh` 로 실제 iPhone live 날짜 이동 UX를 확인했다. 시간표/급식/일정 제목이 각각 다음 날/다음 주/다음 달로 갱신됐다. xcresult: `/tmp/misschool-ios-device-live-navigation-ui-test-ready/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-34-27-+0900.xcresult`
 - 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환과 URL/페이지 텍스트를 확인했다. xcresult: `/tmp/misschool-ios-external-link-url-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-27-48-+0900.xcresult`
 - 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
+- 2026-05-28 `ios/scripts/test_live_external_link_ui.sh` 로 simulator 운영 가정통신문 외부 링크 전환과 `misaj-m.goegh.kr`/공지 텍스트 노출을 확인했다. xcresult: `/tmp/misschool-ios-live-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_17-04-55-+0900.xcresult`
+- 2026-05-28 `LIVE_EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-external-link-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 운영 가정통신문 외부 링크 전환과 `misaj-m.goegh.kr`/공지 텍스트 노출을 확인했다. xcresult: `/tmp/misschool-ios-device-live-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_17-07-23-+0900.xcresult`
 - 2026-05-28 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-notification-permission-ui-test-final '-only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary' test` 로 simulator 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`
 - 2026-05-28 `ONLY_TESTING=SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-notification-permission-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-device-notification-permission-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-01-31-+0900.xcresult`
 
@@ -347,7 +350,7 @@ Android 기준:
 - live NEIS/BFF simulator 날짜 이동 UX smoke
 - live NEIS/BFF 실제 iPhone UI 렌더링 smoke
 - live NEIS/BFF 실제 iPhone 날짜 이동 UX smoke
-- 가정통신문 외부 링크 Safari 전환 및 simulator URL/페이지 텍스트 smoke
+- seeded/live 가정통신문 외부 링크 Safari 전환 및 simulator/실제 iPhone URL·페이지 텍스트 smoke
 - 알림 권한 설정 화면 안내/요청 버튼 UI smoke
 
 아직 완료라고 말할 수 없는 범위:
