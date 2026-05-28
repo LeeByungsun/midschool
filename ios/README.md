@@ -34,3 +34,14 @@
 - 앱 스킴: `SchoolHelperIOS`
 - UI 테스트 스킴: `SchoolHelperIOSUI`
 - 위젯 스킴: `SchoolHelperWidget`
+
+
+실제 iPhone 설치:
+
+```bash
+TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
+```
+
+- 기본 `ENTITLEMENTS_MODE=device-preview` 는 App Group entitlement를 제외하고 앱 본체 확인에 집중합니다.
+- 위젯/App Group까지 검증하려면 Apple Developer capability 설정 후 `ENTITLEMENTS_MODE=app-groups` 로 실행합니다.
+- NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 `KEY` 없이 공개 조회를 시도합니다.

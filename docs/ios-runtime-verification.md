@@ -1,6 +1,6 @@
 # 학교도우미 iOS 런타임 검증 메모
 
-기준일: 2026-05-27
+기준일: 2026-05-28
 
 이 문서는 `ios/` 앱의 현재 런타임 검증 경로와 확보된 증거를 정리합니다.
 
@@ -76,6 +76,41 @@ xcodebuild \
 - 설정 modal 저장 버튼으로 홈 복귀
 - 설정 modal 안 위젯 미리보기 섹션 표시
 - 타이머 modal 진입 시 닫기 버튼 표시
+
+
+### 2.4 실제 iPhone 설치/실행
+
+실제 기기 검증은 아래 조건이 필요합니다.
+
+- iPhone Developer Mode 활성화
+- Mac과 iPhone 페어링
+- Xcode Apple Development signing identity
+- `TEAM_ID` 환경변수
+
+기본 설치 명령:
+
+```bash
+TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
+```
+
+기본값은 `ENTITLEMENTS_MODE=device-preview` 입니다.
+이 모드는 실기기에서 앱 화면을 빠르게 보기 위해 App Group entitlement를 빌드 명령에서 제외합니다.
+따라서 앱 본체 확인은 가능하지만 홈 화면 위젯의 App Group 데이터 공유는 완전 검증이 아닙니다.
+
+App Group까지 검증하려면 Apple Developer portal/provisioning profile에
+`group.com.leebyungsun.schoolhelperios` capability가 반영되어 있어야 합니다.
+그 후 아래처럼 실행합니다.
+
+```bash
+ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
+```
+
+개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
+
+1. `설정`
+2. `일반`
+3. `VPN 및 기기 관리`
+4. Apple Development 프로필 신뢰
 
 ### 2.3 재현 스크립트
 
@@ -249,3 +284,26 @@ xcodebuild \
 
 **“핵심 기능은 구현 + 다수의 런타임 증거 확보”** 이지만  
 **“시스템 UI/홈 화면 위젯/실기기 검증까지 끝난 최종 완료”** 는 아님.
+
+---
+
+## 6. NEIS API 키 관리
+
+iOS 앱은 NEIS API 키를 앱 번들에 저장하지 않습니다.
+
+현재 구현:
+
+- `NEISClient.Config.fromEnvironment()` 가 `ProcessInfo.processInfo.environment` 에서 값을 읽음
+- 읽는 키:
+  - `NEIS_API_KEY`
+  - `NEIS_BASE_URL`
+  - `WEB_BASE_URL`
+- `NEIS_API_KEY` 가 있으면 `KEY` query item을 붙임
+- `NEIS_API_KEY` 가 없으면 `KEY` query item을 생략함
+
+학교 검색은 키 없이도 동작해야 하므로, 실기기 직접 실행에서도 `KEY` 없이 호출합니다.
+키가 필요한 운영 요청은 iOS 앱에 키를 내장하지 말고 서버/BFF에서 처리하는 방향이 안전합니다.
+
+실기기 앱 아이콘 직접 실행 시에는 환경변수가 전달되지 않습니다.
+그래서 iOS 앱은 키가 없어도 기본 조회가 가능한 경로를 우선 사용해야 합니다.
+
