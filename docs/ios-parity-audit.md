@@ -311,6 +311,7 @@ Android 기준:
 
 - full App Group 실기기 빌드는 앱 profile과 위젯 profile이 모두 같은 App Group을 가져야 한다.
 - 현재 외부 provisioning 상태에서는 위젯 profile의 App Group entitlement가 비어 있어 full App Group 검증이 막힌다.
+- 2026-05-28 `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-attempt LAUNCH=0 ios/scripts/install_device.sh` 로 Xcode profile 갱신/빌드를 시도했지만, `com.leebyungsun.schoolhelperios.widget` profile이 App Group entitlement와 맞지 않아 실패했다.
 - 실제 iPhone UI 자동 테스트는 `ios/scripts/test_device_ui.sh` 로 signing override를 적용해 실행한다.
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-test-script ios/scripts/test_device_ui.sh` 로 실제 iPhone에서 초기 설정 학교 검색/선택/저장 UI 테스트가 `TEST SUCCEEDED` 로 통과했다.
 - 2026-05-28 `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-all-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 전체 UI 테스트 6개가 모두 통과했다.

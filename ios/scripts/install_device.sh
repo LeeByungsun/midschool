@@ -12,6 +12,7 @@ DEVICE_ID="${DEVICE_ID:-}"
 TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"
 LAUNCH="${LAUNCH:-1}"
 ENTITLEMENTS_MODE="${ENTITLEMENTS_MODE:-device-preview}"
+APP_GROUP_PROFILE_CHECK="${APP_GROUP_PROFILE_CHECK:-strict}"
 
 export DEVELOPER_DIR
 
@@ -72,7 +73,25 @@ case "$ENTITLEMENTS_MODE" in
     BUILD_SETTINGS+=(CODE_SIGN_ENTITLEMENTS=)
     ;;
   app-groups)
-    "$ROOT_DIR/ios/scripts/check_app_group_profiles.py"
+    if ! "$ROOT_DIR/ios/scripts/check_app_group_profiles.py"; then
+      case "$APP_GROUP_PROFILE_CHECK" in
+        strict)
+          exit 1
+          ;;
+        warn)
+          echo "Continuing despite App Group profile precheck failure because APP_GROUP_PROFILE_CHECK=warn." >&2
+          echo "xcodebuild -allowProvisioningUpdates may refresh profiles, or it may fail with the signing error." >&2
+          ;;
+        skip)
+          echo "Skipping App Group profile precheck because APP_GROUP_PROFILE_CHECK=skip." >&2
+          ;;
+        *)
+          echo "Unknown APP_GROUP_PROFILE_CHECK: $APP_GROUP_PROFILE_CHECK" >&2
+          echo "Use 'strict', 'warn', or 'skip'." >&2
+          exit 4
+          ;;
+      esac
+    fi
     ;;
   *)
     echo "Unknown ENTITLEMENTS_MODE: $ENTITLEMENTS_MODE" >&2
@@ -86,6 +105,7 @@ APP_PATH="$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION-iphoneos/SchoolHelper
 echo "Device: $DEVICE_ID"
 echo "Team: $TEAM_ID"
 echo "Entitlements mode: $ENTITLEMENTS_MODE"
+echo "App Group profile check: $APP_GROUP_PROFILE_CHECK"
 echo "DerivedData: $DERIVED_DATA_PATH"
 
 xcodebuild \

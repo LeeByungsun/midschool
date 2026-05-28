@@ -110,6 +110,7 @@ EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - 실기기 UI 테스트는 `CODE_SIGNING_ALLOWED=YES` signing override가 필요하므로 `test_device_ui.sh` 를 사용합니다.
 - `test_device_ui.sh` 는 기기 잠금 상태를 감지해 종료합니다. 잠금 해제를 기다리며 실행하려면 `UNLOCK_WAIT_SECONDS=120` 처럼 대기 시간을 지정합니다.
 - `Timed out while enabling automation mode` 는 기본 1회 자동 재시도합니다. 필요하면 `AUTOMATION_RETRY_LIMIT=0` 으로 끌 수 있습니다.
+- `APP_GROUP_PROFILE_CHECK=warn` 은 `ENTITLEMENTS_MODE=app-groups` 에서 profile precheck 실패 후에도 Xcode profile 갱신/빌드를 시도합니다.
 - `LIVE_UI_TEST=1` 은 live UI 테스트 전용 Swift flag를 켜고 `testLiveSchoolDataDisplaysBackendContent` 만 실행합니다.
 - `LIVE_NAVIGATION_TEST=1` 은 live UI 테스트 전용 Swift flag를 켜고 `testLiveDateNavigationUpdatesTitles` 만 실행합니다.
 - `EXTERNAL_LINK_TEST=1` 은 외부 앱 전환 테스트 전용 Swift flag를 켜고 `testNoticeButtonOpensExternalSafariURL` 만 실행합니다.

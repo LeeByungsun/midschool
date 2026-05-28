@@ -13,6 +13,7 @@ ENTITLEMENTS_MODE="${ENTITLEMENTS_MODE:-device-preview}"
 LIVE_UI_TEST="${LIVE_UI_TEST:-0}"
 EXTERNAL_LINK_TEST="${EXTERNAL_LINK_TEST:-0}"
 LIVE_NAVIGATION_TEST="${LIVE_NAVIGATION_TEST:-0}"
+APP_GROUP_PROFILE_CHECK="${APP_GROUP_PROFILE_CHECK:-strict}"
 if [[ "$LIVE_NAVIGATION_TEST" == "1" || "$LIVE_NAVIGATION_TEST" == "true" || "$LIVE_NAVIGATION_TEST" == "yes" ]]; then
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveDateNavigationUpdatesTitles}"
 elif [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
@@ -78,7 +79,25 @@ case "$ENTITLEMENTS_MODE" in
     BUILD_SETTINGS+=(CODE_SIGN_ENTITLEMENTS=)
     ;;
   app-groups)
-    "$ROOT_DIR/ios/scripts/check_app_group_profiles.py"
+    if ! "$ROOT_DIR/ios/scripts/check_app_group_profiles.py"; then
+      case "$APP_GROUP_PROFILE_CHECK" in
+        strict)
+          exit 1
+          ;;
+        warn)
+          echo "Continuing despite App Group profile precheck failure because APP_GROUP_PROFILE_CHECK=warn." >&2
+          echo "xcodebuild -allowProvisioningUpdates may refresh profiles, or it may fail with the signing error." >&2
+          ;;
+        skip)
+          echo "Skipping App Group profile precheck because APP_GROUP_PROFILE_CHECK=skip." >&2
+          ;;
+        *)
+          echo "Unknown APP_GROUP_PROFILE_CHECK: $APP_GROUP_PROFILE_CHECK" >&2
+          echo "Use 'strict', 'warn', or 'skip'." >&2
+          exit 4
+          ;;
+      esac
+    fi
     ;;
   *)
     echo "Unknown ENTITLEMENTS_MODE: $ENTITLEMENTS_MODE" >&2
@@ -116,6 +135,7 @@ XCODEBUILD_ARGS+=("${BUILD_SETTINGS[@]}" test)
 echo "Device: $DEVICE_ID"
 echo "Team: $TEAM_ID"
 echo "Entitlements mode: $ENTITLEMENTS_MODE"
+echo "App Group profile check: $APP_GROUP_PROFILE_CHECK"
 echo "DerivedData: $DERIVED_DATA_PATH"
 echo "Only testing: ${ONLY_TESTING:-<all>}"
 echo "Live UI test: $LIVE_UI_TEST"

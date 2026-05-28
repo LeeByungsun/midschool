@@ -309,10 +309,20 @@ ios/scripts/check_app_group_profiles.py
 ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
 ```
 
+기본 `APP_GROUP_PROFILE_CHECK=strict` 는 로컬 profile precheck 실패 시 즉시 중단합니다.
+Apple Developer portal에서 capability를 반영했지만 로컬 profile만 오래된 상태라면,
+아래처럼 `warn` 모드로 `xcodebuild -allowProvisioningUpdates` 갱신 시도를 실행할 수 있습니다.
+
+```bash
+APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
+```
+
 2026-05-28 기준 실제 확인 결과:
 
 - `com.leebyungsun.schoolhelperios`: App Group 포함
 - `com.leebyungsun.schoolhelperios.widget`: App Group 미포함
+- `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-attempt LAUNCH=0 ios/scripts/install_device.sh` 로 Xcode profile 갱신/빌드를 시도했지만 widget profile mismatch로 실패함
+  - 오류: `Provisioning profile "iOS Team Provisioning Profile: com.leebyungsun.schoolhelperios.widget" doesn't match the entitlements file's value for the com.apple.security.application-groups entitlement.`
 - 최신 device-preview 설치 확인:
   - 커밋: `4ed3c2f`
   - 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-latest-4ed3c2f LAUNCH=1 ios/scripts/install_device.sh`
@@ -320,7 +330,7 @@ ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
   - 결과: `BUILD SUCCEEDED`, `App installed`, `Launched application`
   - 설치 bundle id: `com.leebyungsun.schoolhelperios`
 
-따라서 현재 full App Group 실기기 빌드는 widget provisioning profile 갱신 전까지 실패합니다.
+따라서 현재 full App Group 실기기 빌드는 widget identifier에 App Group capability가 반영된 provisioning profile 갱신 전까지 실패합니다.
 
 개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
 
