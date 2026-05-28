@@ -9,22 +9,32 @@ struct StudentProfile: Codable, Equatable {
     var schoolKind: String = ""
 
     var hasSchoolSelection: Bool {
-        !schoolName.isEmpty && !officeCode.isEmpty && !schoolCode.isEmpty && !schoolKind.isEmpty
+        schoolName.isNotBlank && officeCode.isNotBlank && schoolCode.isNotBlank && schoolKind.isNotBlank
     }
 
     var isComplete: Bool {
-        !grade.isEmpty && !classroom.isEmpty && hasSchoolSelection
+        grade.isNotBlank && classroom.isNotBlank && hasSchoolSelection
     }
 
     var schoolInfo: SchoolInfo? {
         guard hasSchoolSelection else { return nil }
         return SchoolInfo(
-            officeCode: officeCode,
+            officeCode: officeCode.trimmed,
             officeName: "",
-            schoolCode: schoolCode,
-            schoolName: schoolName,
-            schoolKind: schoolKind,
+            schoolCode: schoolCode.trimmed,
+            schoolName: schoolName.trimmed,
+            schoolKind: schoolKind.trimmed,
             roadAddress: ""
         )
+    }
+}
+
+private extension String {
+    var trimmed: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var isNotBlank: Bool {
+        !trimmed.isEmpty
     }
 }

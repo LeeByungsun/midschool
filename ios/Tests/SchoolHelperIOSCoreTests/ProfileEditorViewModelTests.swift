@@ -3,6 +3,17 @@ import XCTest
 
 @MainActor
 final class ProfileEditorViewModelTests: XCTestCase {
+    func testStudentProfileUsesBlankAwareCompletionLikeAndroid() {
+        var profile = StudentProfile.fixture()
+        profile.grade = " "
+        XCTAssertFalse(profile.isComplete)
+
+        profile = StudentProfile.fixture()
+        profile.schoolCode = "\n"
+        XCTAssertFalse(profile.hasSchoolSelection)
+        XCTAssertNil(profile.schoolInfo)
+    }
+
     func testSetupViewModelRejectsShortSearchQueries() async {
         let viewModel = SetupViewModel(initialProfile: StudentProfile(), repository: MockSchoolRepository())
         viewModel.searchQuery = "가"
@@ -28,6 +39,31 @@ final class ProfileEditorViewModelTests: XCTestCase {
         XCTAssertEqual(savedProfile?.schoolName, "미사중학교")
         XCTAssertEqual(savedProfile?.grade, "1")
         XCTAssertEqual(savedProfile?.classroom, "2")
+    }
+
+    func testSetupViewModelRequiresReselectWhenStoredSchoolCodeIsMissing() {
+        let viewModel = SetupViewModel(
+            initialProfile: .schoolNameOnly(),
+            repository: MockSchoolRepository()
+        )
+
+        XCTAssertEqual(viewModel.searchQuery, "미사중학교")
+        XCTAssertNil(viewModel.selectedSchool)
+        XCTAssertEqual(viewModel.message, "기존 설정에 학교 코드가 없어 학교를 다시 검색해 선택해 주세요.")
+    }
+
+    func testSetupViewModelRejectsBlankGradeAndClassroom() async {
+        var initialProfile = StudentProfile()
+        initialProfile.grade = " "
+        initialProfile.classroom = "\n"
+        let viewModel = SetupViewModel(initialProfile: initialProfile, repository: MockSchoolRepository())
+        viewModel.searchQuery = "미사중학교"
+
+        await viewModel.searchSchools()
+        let savedProfile = viewModel.buildProfileForSave()
+
+        XCTAssertNil(savedProfile)
+        XCTAssertEqual(viewModel.message, "학년/반을 입력해 주세요.")
     }
 
     func testSetupViewModelIgnoresStaleSchoolSearchResults() async {
@@ -106,6 +142,32 @@ final class ProfileEditorViewModelTests: XCTestCase {
 
         XCTAssertNil(savedProfile)
         XCTAssertEqual(viewModel.message, "학교를 검색 후 다시 선택해 주세요.")
+    }
+
+    func testSettingsViewModelRequiresReselectWhenStoredSchoolCodeIsMissing() {
+        let viewModel = SettingsViewModel(
+            initialProfile: .schoolNameOnly(),
+            repository: MockSchoolRepository(),
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        XCTAssertEqual(viewModel.searchQuery, "미사중학교")
+        XCTAssertNil(viewModel.selectedSchool)
+        XCTAssertEqual(viewModel.message, "기존 설정에 학교 코드가 없어 학교를 다시 검색해 선택해 주세요.")
+    }
+
+    func testSettingsViewModelSyncRequiresReselectWhenStoredSchoolCodeIsMissing() {
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile.fixture(),
+            repository: MockSchoolRepository(),
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        viewModel.sync(with: .schoolNameOnly())
+
+        XCTAssertEqual(viewModel.searchQuery, "미사중학교")
+        XCTAssertNil(viewModel.selectedSchool)
+        XCTAssertEqual(viewModel.message, "기존 설정에 학교 코드가 없어 학교를 다시 검색해 선택해 주세요.")
     }
 
     func testSettingsViewModelIgnoresStaleSchoolSearchResults() async {
@@ -189,5 +251,18 @@ private struct DelayedSearchRepository: SchoolRepository {
 
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] {
         []
+    }
+}
+
+private extension StudentProfile {
+    static func schoolNameOnly() -> StudentProfile {
+        StudentProfile(
+            grade: "1",
+            classroom: "2",
+            schoolName: "미사중학교",
+            officeCode: "",
+            schoolCode: "",
+            schoolKind: ""
+        )
     }
 }

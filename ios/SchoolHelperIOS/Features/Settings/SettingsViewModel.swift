@@ -36,6 +36,7 @@ final class SettingsViewModel: ObservableObject {
         self.draftProfile = initialProfile
         self.searchQuery = initialProfile.schoolName
         self.selectedSchool = initialProfile.schoolInfo
+        self.message = Self.initialSchoolMessage(for: initialProfile)
         self.repository = repository
         self.timerSettingsStore = timerSettingsStore
         self.widgetSettingsStore = widgetSettingsStore
@@ -136,7 +137,7 @@ final class SettingsViewModel: ObservableObject {
         searchQuery = profile.schoolName
         selectedSchool = profile.schoolInfo
         searchResults = []
-        message = ""
+        message = Self.initialSchoolMessage(for: profile)
         timerDisplayMode = timerSettings.displayMode
         notificationEnabled = timerSettings.notificationEnabled
         vibrationEnabled = timerSettings.vibrationEnabled
@@ -187,12 +188,16 @@ final class SettingsViewModel: ObservableObject {
             message = "학교를 검색 후 다시 선택해 주세요."
             return nil
         }
-        guard !draftProfile.grade.isEmpty, !draftProfile.classroom.isEmpty else {
+        let trimmedGrade = draftProfile.grade.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedClassroom = draftProfile.classroom.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedGrade.isEmpty, !trimmedClassroom.isEmpty else {
             message = "학년/반을 입력해 주세요."
             return nil
         }
 
         var profile = draftProfile
+        profile.grade = trimmedGrade
+        profile.classroom = trimmedClassroom
         profile.schoolName = school.schoolName
         profile.officeCode = school.officeCode
         profile.schoolCode = school.schoolCode
@@ -203,5 +208,13 @@ final class SettingsViewModel: ObservableObject {
     private func isLatestSearch(requestID: Int, query: String) -> Bool {
         requestID == latestSearchRequestID &&
             searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) == query
+    }
+
+    private static func initialSchoolMessage(for profile: StudentProfile) -> String {
+        let schoolName = profile.schoolName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !schoolName.isEmpty && !profile.hasSchoolSelection {
+            return "기존 설정에 학교 코드가 없어 학교를 다시 검색해 선택해 주세요."
+        }
+        return ""
     }
 }
