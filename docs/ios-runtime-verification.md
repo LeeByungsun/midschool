@@ -32,6 +32,23 @@ ios/scripts/audit_ios_goal_readiness.py
 
 `ios/system-evidence.local.json` 은 로컬 증거 기록용이며 git에 커밋하지 않습니다.
 
+남은 수동 UX 증거는 아래 helper로 안전하게 기록합니다. 실제로 눈으로 확인한 항목만 flag로 넣습니다.
+
+```bash
+ios/scripts/record_ios_system_evidence.py \
+  --app-group-device-build-verified \
+  --app-group-shared-data-verified \
+  --home-widget-placed \
+  --home-widget-content-verified \
+  --home-widget-tap-opens-app \
+  --notification-banner-verified \
+  --notification-sound-or-vibration-verified \
+  --append-note "홈 화면 위젯과 알림 배너를 실제 iPhone에서 확인함"
+
+ios/scripts/validate_ios_system_evidence.py
+ios/scripts/audit_ios_goal_readiness.py
+```
+
 ---
 
 ## 1. 현재 검증 방식

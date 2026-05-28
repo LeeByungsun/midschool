@@ -133,6 +133,7 @@ def main() -> int:
             "ios/scripts/verify_device_notification.sh",
             "ios/scripts/verify_device_app_group_data.sh",
             "ios/scripts/validate_ios_system_evidence.py",
+            "ios/scripts/record_ios_system_evidence.py",
             "ios/system-evidence.template.json",
         ]),
         run_profile_check(),

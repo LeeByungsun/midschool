@@ -28,6 +28,7 @@ python3 -m py_compile \
   "$ROOT_DIR/ios/scripts/audit_ios_goal_readiness.py" \
   "$ROOT_DIR/ios/scripts/check_app_group_profiles.py" \
   "$ROOT_DIR/ios/scripts/validate_ios_system_evidence.py" \
+  "$ROOT_DIR/ios/scripts/record_ios_system_evidence.py" \
   "$ROOT_DIR/ios/scripts/verify_live_school_data.py"
 
 section "Shell syntax checks"

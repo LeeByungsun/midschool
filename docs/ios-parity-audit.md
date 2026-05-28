@@ -312,6 +312,7 @@ Android 기준:
 - 2026-05-28 `RUN_LIVE_BACKEND=1 DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-live-final ios/scripts/verify_ios_local_readiness.sh` 로 Python/Shell 문법, SwiftPM 62 tests, 위젯 simulator packaging, live NEIS/BFF/notice URL smoke, goal audit expected incomplete를 한 번에 확인했다.
 - 2026-05-28 `ios/scripts/audit_ios_goal_readiness.py` 는 agent skill/spec/workspace/core feature/verifier artifact와 full App Group profiles를 `pass` 로 확인했지만, 시스템 수동 증거 대기로 `complete=false`, exit `20` 을 반환했다.
 - `ios/scripts/validate_ios_system_evidence.py` 는 실제 iPhone 홈 화면 위젯/App Group/알림 UX 수동 증거 JSON이 모두 채워졌는지 검증한다.
+- `ios/scripts/record_ios_system_evidence.py` 는 실제로 눈검증한 UX 항목만 명시적 flag로 `ios/system-evidence.local.json` 에 기록한다.
 - iPhone 15 Pro 실기기에 `device-preview` 모드로 앱 설치/실행 성공.
 - `device-preview` 모드는 App Group entitlement를 제외하므로 앱 본체 확인용이다.
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-2tj-device-preview ENTITLEMENTS_MODE=device-preview ios/scripts/install_device.sh` 로 현재 Xcode 계정의 Team ID와 signing-required 설정을 재확인했다. 결과는 `BUILD SUCCEEDED`, `App installed`; `codesign -vvv --strict` 통과. 앱 실행은 기기 잠금으로 `RequestDenied`/`Locked` 상태에서 중단됐다.
