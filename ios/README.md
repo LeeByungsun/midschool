@@ -107,6 +107,15 @@ ios/scripts/test_widget_sim.sh
 - 앱/위젯 entitlements source와 `AppStorageConfig.appGroupSuiteName` 이 `group.com.leebyungsun.schoolhelperios` 로 맞춰져 있는지도 확인합니다.
 - 기본 출력은 짧게 유지하며, 전체 `xcodebuild` 로그가 필요하면 `VERBOSE=1 ios/scripts/test_widget_sim.sh` 로 실행합니다.
 
+목표 완료 준비도 감사:
+
+```bash
+ios/scripts/audit_ios_goal_readiness.py
+```
+
+- 원래 iOS 목표의 핵심 산출물, 기능 surface, 검증 스크립트, App Group profile, 남은 시스템 수동 증거를 JSON으로 출력합니다.
+- 모든 항목이 완료되면 exit `0`, 아직 남은 증거가 있으면 exit `20` 입니다.
+
 위젯/App Group 준비도 검증:
 
 ```bash

@@ -22,6 +22,7 @@
 - 화면 이름이 아니라 같은 학생 기능과 데이터 의미를 기준으로 비교한다.
 - iOS 정책상 Android와 1:1로 같을 수 없는 기능은 플랫폼 차이로 분리한다.
 - 자동 테스트가 덮지 않는 시스템 UI/실기기 항목은 완료가 아니라 수동 검증 대기로 기록한다.
+- `ios/scripts/audit_ios_goal_readiness.py` 는 이 목표의 완료 준비도를 JSON으로 재감사하며, 미완료/외부 blocker가 있으면 exit `20` 으로 종료한다.
 
 ---
 
@@ -302,6 +303,7 @@ Android 기준:
 
 현재 확보된 증거:
 
+- 2026-05-28 `ios/scripts/audit_ios_goal_readiness.py` 는 agent skill/spec/workspace/core feature/verifier artifact를 `pass` 로 확인했지만, widget profile App Group 누락과 시스템 수동 증거 대기로 `complete=false`, exit `20` 을 반환했다.
 - iPhone 15 Pro 실기기에 `device-preview` 모드로 앱 설치/실행 성공.
 - `device-preview` 모드는 App Group entitlement를 제외하므로 앱 본체 확인용이다.
 - `ios/scripts/verify_device_parity.sh` 로 설치된 실기기 앱의 초기 설정 launch, seeded home, 주요 딥링크, running timer launch smoke를 반복 실행할 수 있다.
