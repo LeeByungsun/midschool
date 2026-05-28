@@ -183,9 +183,9 @@ project_settings = '{ CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 5.0; }'
 add(f'\t\t{ids["project_debug"]} /* Debug */ = {{isa = XCBuildConfiguration; buildSettings = {project_settings}; name = Debug; }};')
 add(f'\t\t{ids["project_release"]} /* Release */ = {{isa = XCBuildConfiguration; buildSettings = {project_settings}; name = Release; }};')
 app_target_settings = {
-    'ASSETCATALOG_COMPILER_APPICON_NAME': '""', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
+    'ASSETCATALOG_COMPILER_APPICON_NAME': '""', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'YES', 'CODE_SIGNING_REQUIRED': 'YES',
     'CODE_SIGN_ENTITLEMENTS': 'SchoolHelperIOS/SchoolHelperIOS.entitlements',
-    'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '""', 'ENABLE_TESTABILITY': 'YES', 'GENERATE_INFOPLIST_FILE': 'NO',
+    'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '2TJFP5788P', 'ENABLE_TESTABILITY': 'YES', 'GENERATE_INFOPLIST_FILE': 'NO',
     'INFOPLIST_FILE': 'SchoolHelperIOS/Info.plist',
     'IPHONEOS_DEPLOYMENT_TARGET': '17.0', 'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks")',
     'MARKETING_VERSION': '1.0', 'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
@@ -198,7 +198,7 @@ app_release = '{ ' + ' '.join(f'{k} = {v};' for k,v in app_release_settings.item
 add(f'\t\t{ids["app_release"]} /* Release */ = {{isa = XCBuildConfiguration; buildSettings = {app_release}; name = Release; }};')
 
 test_target_settings = {
-    'BUNDLE_LOADER': '"$(TEST_HOST)"', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
+    'BUNDLE_LOADER': '"$(TEST_HOST)"', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'YES', 'CODE_SIGNING_REQUIRED': 'YES',
     'ENABLE_TESTABILITY': 'YES',
     'GENERATE_INFOPLIST_FILE': 'YES', 'IPHONEOS_DEPLOYMENT_TARGET': '17.0', 'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks")',
     'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios.tests', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
@@ -210,9 +210,9 @@ test_release_settings = test_target_settings | {'ENABLE_TESTABILITY': 'NO', 'SWI
 test_release = '{ ' + ' '.join(f'{k} = {v};' for k,v in test_release_settings.items()) + ' }'
 add(f'\t\t{ids["tests_release"]} /* Release */ = {{isa = XCBuildConfiguration; buildSettings = {test_release}; name = Release; }};')
 widget_target_settings = {
-    'APPLICATION_EXTENSION_API_ONLY': 'YES', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
+    'APPLICATION_EXTENSION_API_ONLY': 'YES', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'YES', 'CODE_SIGNING_REQUIRED': 'YES',
     'CODE_SIGN_ENTITLEMENTS': 'SchoolHelperWidget/SchoolHelperWidget.entitlements',
-    'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '""', 'GENERATE_INFOPLIST_FILE': 'NO',
+    'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '2TJFP5788P', 'GENERATE_INFOPLIST_FILE': 'NO',
     'INFOPLIST_FILE': 'SchoolHelperWidget/Info.plist',
     'IPHONEOS_DEPLOYMENT_TARGET': '17.0',
     'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks")',
@@ -226,7 +226,7 @@ add(f'\t\t{ids["project_config_list"]} = {{isa = XCConfigurationList; buildConfi
 add(f'\t\t{ids["app_config_list"]} = {{isa = XCConfigurationList; buildConfigurations = ({ids["app_debug"]} /* Debug */, {ids["app_release"]} /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; }};')
 add(f'\t\t{ids["tests_config_list"]} = {{isa = XCConfigurationList; buildConfigurations = ({ids["tests_debug"]} /* Debug */, {ids["tests_release"]} /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; }};')
 ui_test_target_settings = {
-    'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'NO', 'CODE_SIGNING_REQUIRED': 'NO',
+    'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'YES', 'CODE_SIGNING_REQUIRED': 'YES',
     'GENERATE_INFOPLIST_FILE': 'YES', 'IPHONEOS_DEPLOYMENT_TARGET': '17.0',
     'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks")',
     'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios.uitests', 'PRODUCT_NAME': '"$(TARGET_NAME)"',

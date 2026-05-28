@@ -435,6 +435,14 @@ ios/scripts/verify_widget_app_group_readiness.sh
   - 기기: `00008130-0012603E3CC3001C`
   - 결과: `BUILD SUCCEEDED`, `App installed`, `Launched application`
   - 설치 bundle id: `com.leebyungsun.schoolhelperios`
+- 2026-05-28 재확인:
+  - 인증서 Team ID: `OU=2TJFP5788P`, `O=Byungsun Lee`
+  - 프로젝트 기본값: `DEVELOPMENT_TEAM=2TJFP5788P`, `CODE_SIGNING_ALLOWED=YES`, `CODE_SIGNING_REQUIRED=YES`
+  - 명령: `TEAM_ID=2TJFP5788P DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-2tj-device-preview LAUNCH=1 ENTITLEMENTS_MODE=device-preview ios/scripts/install_device.sh`
+  - 결과: `BUILD SUCCEEDED`, `App installed`
+  - signing 검증: `/tmp/misschool-ios-2tj-device-preview/Build/Products/Debug-iphoneos/SchoolHelperIOS.app` 는 `codesign -vvv --strict` 기준 `valid on disk` 및 `satisfies its Designated Requirement`
+  - entitlements: `application-identifier=2TJFP5788P.com.leebyungsun.schoolhelperios`, `com.apple.developer.team-identifier=2TJFP5788P`
+  - launch 결과: iPhone 잠금 상태로 `RequestDenied` / `Locked` 발생. 앱 설치와 서명은 통과했고, 실행 확인은 기기 잠금 해제 후 재시도 필요.
 
 따라서 현재 full App Group 실기기 빌드는 widget identifier에 App Group capability가 반영된 provisioning profile 갱신 전까지 실패합니다.
 
