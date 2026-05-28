@@ -35,6 +35,20 @@ final class SetupViewModel: ObservableObject {
         }
     }
 
+    func searchSchoolsAfterDebounce() async {
+        let trimmed = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else { return }
+        guard selectedSchool?.schoolName != trimmed else { return }
+
+        do {
+            try await Task.sleep(nanoseconds: 450_000_000)
+        } catch {
+            return
+        }
+        guard !Task.isCancelled else { return }
+        await searchSchools()
+    }
+
     func searchSchools() async {
         let trimmed = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 2 else {

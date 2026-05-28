@@ -16,6 +16,10 @@ struct SetupView: View {
                         get: { viewModel.searchQuery },
                         set: { viewModel.updateSchoolQuery($0) }
                     ))
+                    .submitLabel(.search)
+                    .onSubmit {
+                        Task { await viewModel.searchSchools() }
+                    }
                     Button(viewModel.isSearching ? "검색 중..." : "학교 검색") {
                         Task { await viewModel.searchSchools() }
                     }
@@ -36,6 +40,11 @@ struct SetupView: View {
                                 Text("\(school.schoolKind) • \(school.officeName)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+                                if !school.roadAddress.isEmpty {
+                                    Text(school.roadAddress)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
@@ -61,6 +70,9 @@ struct SetupView: View {
                 }
             }
             .navigationTitle("초기 설정")
+            .task(id: viewModel.searchQuery) {
+                await viewModel.searchSchoolsAfterDebounce()
+            }
         }
     }
 }

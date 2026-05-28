@@ -27,7 +27,6 @@ struct NEISClient {
 
     enum ClientError: LocalizedError {
         case invalidConfiguration
-        case missingApiKey
         case invalidRequest(String)
         case invalidResponse
         case network(Int)
@@ -37,8 +36,6 @@ struct NEISClient {
             switch self {
             case .invalidConfiguration:
                 return "iOS NEIS 설정이 잘못되었어요."
-            case .missingApiKey:
-                return "NEIS_API_KEY가 설정되지 않았어요."
             case .invalidRequest(let endpoint):
                 return "\(endpoint) 요청을 만들지 못했어요."
             case .invalidResponse:
@@ -196,7 +193,6 @@ struct NEISClient {
         schoolCode: String? = nil
     ) async throws -> Response {
         guard let config else { throw ClientError.invalidConfiguration }
-        guard !config.apiKey.isEmpty else { throw ClientError.missingApiKey }
         guard let url = URL(string: endpoint, relativeTo: config.baseURL) else {
             throw ClientError.invalidRequest(endpoint)
         }
@@ -205,11 +201,14 @@ struct NEISClient {
         }
 
         var queryItems = [
-            URLQueryItem(name: "KEY", value: config.apiKey),
             URLQueryItem(name: "Type", value: "json"),
             URLQueryItem(name: "pIndex", value: "1"),
             URLQueryItem(name: "pSize", value: "100"),
         ]
+
+        if !config.apiKey.isEmpty {
+            queryItems.insert(URLQueryItem(name: "KEY", value: config.apiKey), at: 0)
+        }
 
         if includeSchoolContext {
             if let officeCode, !officeCode.isEmpty {
