@@ -318,6 +318,7 @@ Android 기준:
 - 2026-05-28 `RUN_DEVICE_BUILD=1 TEAM_ID=2TJFP5788P DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-app-group-readiness-now ios/scripts/verify_widget_app_group_readiness.sh` 로 simulator 위젯 smoke, App Group profile precheck, full App Group 실기기 build/install을 통과했다.
 - 앱/위젯 산출물은 `codesign -vvv --strict` 를 통과했고, 둘 다 `com.apple.security.application-groups=[group.com.leebyungsun.schoolhelperios]` entitlement를 포함한다.
 - 2026-05-28 `RUN_LIVE_BACKEND=1 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-post-appgroup ios/scripts/verify_ios_local_readiness.sh` 로 SwiftPM 62 tests, 위젯 simulator packaging, App Group profile precheck, live NEIS/BFF smoke를 통합 재검증했다.
+- `ios/scripts/verify_device_app_group_data.sh` 로 실제 iPhone App Group container의 `student_profile` 저장 여부를 복사/검증할 수 있게 고정했다.
 - `ios/scripts/verify_device_parity.sh` 로 설치된 실기기 앱의 초기 설정 launch, seeded home, 주요 딥링크, running timer launch smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh` 로 주요 딥링크와 running timer launch 명령 성공을 확인했다.
 - `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.

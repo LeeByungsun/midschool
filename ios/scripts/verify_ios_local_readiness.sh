@@ -38,7 +38,8 @@ bash -n \
   "$ROOT_DIR/ios/scripts/verify_ios_local_readiness.sh" \
   "$ROOT_DIR/ios/scripts/install_device.sh" \
   "$ROOT_DIR/ios/scripts/test_device_ui.sh" \
-  "$ROOT_DIR/ios/scripts/verify_device_notification.sh"
+  "$ROOT_DIR/ios/scripts/verify_device_notification.sh" \
+  "$ROOT_DIR/ios/scripts/verify_device_app_group_data.sh"
 
 if is_truthy "$RUN_SWIFT_TESTS"; then
   section "SwiftPM core regression tests"

@@ -452,6 +452,14 @@ ios/scripts/verify_widget_app_group_readiness.sh
 
 따라서 full App Group 실기기 설치/서명 blocker는 해소됐고, 남은 완료 조건은 실제 홈 화면 위젯 배치/탭과 알림 배너 UX 수동 증거입니다.
 
+실기기 App Group 공유 데이터 smoke는 아래 명령으로 재현합니다. 기기가 잠겨 있으면 unlock 후 재실행하거나 `UNLOCK_WAIT_SECONDS` 를 지정합니다.
+
+```bash
+TEAM_ID=2TJFP5788P DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 ios/scripts/verify_device_app_group_data.sh
+```
+
+이 smoke는 앱을 seeded profile로 실행한 뒤 실제 iPhone의 App Group container에서 `Library/Preferences/group.com.leebyungsun.schoolhelperios.plist` 를 복사하고 `student_profile` 이 미사중학교 fixture 값으로 저장됐는지 확인합니다. 홈 화면 위젯 배치/탭 UX는 여전히 수동 확인 대상입니다.
+
 개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
 
 1. `설정`
