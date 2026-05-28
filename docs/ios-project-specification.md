@@ -168,6 +168,12 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 - 실기기 알림/권한 UX
 - full App Group 실기기 빌드: widget provisioning profile에 App Group entitlement 반영 필요
 
+최근 검증:
+
+- 2026-05-28 실제 iPhone 9개 전체 UI 테스트 통과
+- `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-3 ios/scripts/test_device_ui.sh`
+- `SchoolHelperIOSUITests`: 9 tests, 0 failures
+
 현재는 **기능 parity를 우선하는 iPhone 앱 구현 + 코어 회귀 테스트 + simulator/device-preview 검증**을 기준으로 진행합니다.
 
 상세 parity 감사는 `docs/ios-parity-audit.md` 를 기준으로 추적합니다.

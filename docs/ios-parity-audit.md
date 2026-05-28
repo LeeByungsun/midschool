@@ -291,14 +291,15 @@ Android 기준:
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-test-script ios/scripts/test_device_ui.sh` 로 실제 iPhone에서 초기 설정 학교 검색/선택/저장 UI 테스트가 `TEST SUCCEEDED` 로 통과했다.
 - 2026-05-28 `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-all-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 전체 UI 테스트 6개가 모두 통과했다.
 - 2026-05-28 simulator 전체 UI 테스트는 시간표/급식/일정 콘텐츠 검증을 포함해 9개가 모두 통과했다.
-- 2026-05-28 9개 전체 UI 테스트의 실기기 재시도는 앱/테스트 러너 빌드 후 기기 잠금 상태(`Unlock buggyani to Continue`)에서 중단했다.
+- 2026-05-28 9개 전체 UI 테스트의 실기기 재시도는 한 번 `Unlock buggyani to Continue`, 한 번 `Timed out while enabling automation mode.` 로 실패했다.
 - `ios/scripts/test_device_ui.sh` 는 잠금 상태를 감지하면 `The iPhone is locked...` 메시지와 xcodebuild log 경로를 출력하고 exit 5로 종료한다.
+- 2026-05-28 같은 derived data로 재실행한 실제 iPhone 9개 전체 UI 테스트가 `TEST SUCCEEDED` 로 통과했다. xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 
 따라서 현재 완료라고 말할 수 있는 범위:
 
 - iOS 앱 본체의 핵심 기능 구현
 - simulator UI 테스트
-- 실제 iPhone UI 테스트(기존 6개 자동 테스트 기준)
+- 실제 iPhone UI 테스트(9개 자동 테스트 기준)
 - SwiftPM 코어 회귀 테스트
 - 실기기 앱 본체 설치/실행
 
@@ -317,5 +318,4 @@ Android 기준:
 3. `ENTITLEMENTS_MODE=app-groups TEAM_ID=... ios/scripts/install_device.sh` 로 full App Group 빌드를 실행한다.
 4. 실제 iPhone 홈 화면에 위젯을 배치해 오늘/내일 시간표와 탭 라우팅을 확인한다.
 5. 타이머를 1분 이하로 시작해 실기기 알림 권한 요청과 완료 알림을 확인한다.
-6. 기기 잠금 해제 상태에서 9개 전체 UI 테스트를 다시 실행한다.
-7. 급식/시간표/일정/가정통신문을 실제 저장 프로필 기준으로 눈으로 확인한다.
+6. 급식/시간표/일정/가정통신문을 실제 저장 프로필 기준으로 눈으로 확인한다.

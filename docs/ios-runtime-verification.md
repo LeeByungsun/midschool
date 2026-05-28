@@ -151,7 +151,7 @@ xcodebuild \
 - 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test ios/scripts/test_device_ui.sh`
 - 결과: 테스트 시작 직후 중단
 - 원인: 기기가 잠겨 있어 Xcode가 `Unlock buggyani to Continue` 상태로 대기함
-- 해석: 9개 전체 UI 테스트의 실기기 재검증은 기기 잠금 해제 후 재실행이 필요하다. 기존 6개 실기기 통과 증거는 유지한다.
+- 해석: 잠금 상태에서는 9개 전체 UI 테스트를 시작할 수 없었다. 이후 잠금 해제 상태에서 재시도해 통과했다.
 
 2026-05-28 실제 iPhone 전체 UI 테스트 잠금 감지 스크립트 재시도:
 
@@ -159,7 +159,17 @@ xcodebuild \
 - 결과: 앱/테스트 러너 빌드 후 기기 잠금 감지로 exit 5
 - 감지 메시지: `The iPhone is locked. Unlock the device and rerun this script.`
 - xcodebuild log: `/tmp/misschool-ios-device-ui-tabs-test-2/test_device_ui.xcodebuild.log`
-- 해석: 실기기 9개 전체 UI 테스트는 아직 잠금 해제 상태에서 재검증이 필요하지만, 장시간 대기 대신 명확한 실패 메시지와 로그 경로를 남기도록 스크립트를 보강했다.
+- 해석: 장시간 대기 대신 명확한 실패 메시지와 로그 경로를 남기도록 스크립트를 보강했다.
+
+2026-05-28 실제 iPhone 9개 전체 UI 테스트 최종 재시도:
+
+- 1차 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-3 ios/scripts/test_device_ui.sh`
+- 1차 결과: UI testing 초기화 단계에서 `Timed out while enabling automation mode.` 로 실패
+- 2차 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-3 ios/scripts/test_device_ui.sh`
+- 2차 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests`: 9 tests, 0 failures
+- 확인 범위: 초기 설정 학교 검색/선택/저장, 홈 탭 구조, 시간표 핵심 콘텐츠, 급식 핵심 콘텐츠, 일정 핵심 콘텐츠, 설정 modal, 설정 저장, 위젯 미리보기, 타이머 modal
+- xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 
 현재 검증하는 실제 상호작용:
 
@@ -409,7 +419,7 @@ xcodebuild \
 2026-05-28 최신 결과:
 
 - `** TEST SUCCEEDED **`
-- `Executed 6 tests, with 0 failures`
+- 실제 iPhone 9개 전체 UI 테스트 기준 `Executed 9 tests, with 0 failures`
 
 확인 내용:
 - 초기 설정 NEIS 학교 검색/저장/홈 진입
@@ -453,7 +463,7 @@ xcodebuild \
 - iOS 전용 스펙 문서 존재
 - 팀 분석/개발 수행됨
 - 핵심 기능 화면 구현됨
-- 주요 탭 화면이 simulator 에서 직접 확인됨
+- 주요 탭 화면이 simulator 와 실제 iPhone 9개 UI 테스트에서 직접 확인됨
 - 주요 상태 변화(타이머 감소)도 simulator 에서 직접 확인됨
 - 위젯 콘텐츠는 앱 안 미리보기로 직접 확인됨
 
@@ -465,8 +475,8 @@ xcodebuild \
 
 즉, 현재 상태는:
 
-**“핵심 기능은 구현 + 다수의 런타임 증거 확보”** 이지만  
-**“시스템 UI/홈 화면 위젯/실기기 검증까지 끝난 최종 완료”** 는 아님.
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 9개 자동 UI 검증 완료”** 이지만
+**“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---
 
