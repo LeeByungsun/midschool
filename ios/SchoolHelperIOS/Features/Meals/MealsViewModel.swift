@@ -8,24 +8,31 @@ final class MealsViewModel: ObservableObject {
     @Published var items: [MealInfo] = []
 
     private let repository: SchoolRepository
+    private let todayProvider: () -> Date
     private let calendar = Calendar(identifier: .gregorian)
     private var latestProfile = StudentProfile()
-    private var referenceDate: Date = Date()
+    private var referenceDate: Date
 
-    init(repository: SchoolRepository = DefaultSchoolRepository()) {
+    init(
+        repository: SchoolRepository = DefaultSchoolRepository(),
+        todayProvider: @escaping () -> Date = { AppLaunchOverrides.referenceDate() ?? Date() }
+    ) {
         self.repository = repository
+        self.todayProvider = todayProvider
+        self.referenceDate = todayProvider()
     }
 
-    func load(profile: StudentProfile, referenceDate: Date = Date()) async {
+    func load(profile: StudentProfile, referenceDate: Date? = nil) async {
         latestProfile = profile
-        self.referenceDate = referenceDate
+        let effectiveReferenceDate = referenceDate ?? todayProvider()
+        self.referenceDate = effectiveReferenceDate
         guard profile.isComplete else {
             items = []
-            weekTitle = formatWeekTitle(start: Self.startOfSchoolWeek(containing: referenceDate))
+            weekTitle = formatWeekTitle(start: Self.startOfSchoolWeek(containing: effectiveReferenceDate))
             statusText = "학교와 학년/반을 먼저 설정해 주세요."
             return
         }
-        let weekStart = Self.startOfSchoolWeek(containing: referenceDate)
+        let weekStart = Self.startOfSchoolWeek(containing: effectiveReferenceDate)
         weekTitle = formatWeekTitle(start: weekStart)
         items = (try? await repository.fetchWeekMeals(for: profile, weekStart: weekStart)) ?? []
         statusText = items.isEmpty ? "선택한 주 급식이 없어요." : ""
@@ -37,7 +44,7 @@ final class MealsViewModel: ObservableObject {
     }
 
     func showCurrentWeek() async {
-        referenceDate = Date()
+        referenceDate = todayProvider()
         await load(profile: latestProfile, referenceDate: referenceDate)
     }
 

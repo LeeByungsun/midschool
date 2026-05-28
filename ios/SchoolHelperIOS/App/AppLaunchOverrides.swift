@@ -37,6 +37,21 @@ enum AppLaunchOverrides {
         return AppRoute(rawValue: rawValue)
     }
 
+    static func referenceDate(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> Date? {
+        guard let rawValue = environment["SCHOOLHELPER_REFERENCE_DATE"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !rawValue.isEmpty
+        else {
+            return nil
+        }
+
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyyMMdd"
+        formatter.isLenient = false
+        return formatter.date(from: rawValue)
+    }
 
     static func shouldScheduleTimerNotification(
         from environment: [String: String] = ProcessInfo.processInfo.environment

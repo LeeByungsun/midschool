@@ -8,24 +8,30 @@ final class ScheduleViewModel: ObservableObject {
     @Published var items: [SchoolEvent] = []
 
     private let repository: SchoolRepository
+    private let todayProvider: () -> Date
     private let calendar = Calendar(identifier: .gregorian)
     private var latestProfile = StudentProfile()
-    private var currentMonth: Date = Date()
+    private var currentMonth: Date
 
-    init(repository: SchoolRepository = DefaultSchoolRepository()) {
+    init(
+        repository: SchoolRepository = DefaultSchoolRepository(),
+        todayProvider: @escaping () -> Date = { AppLaunchOverrides.referenceDate() ?? Date() }
+    ) {
         self.repository = repository
+        self.todayProvider = todayProvider
+        self.currentMonth = todayProvider()
     }
 
-    func load(profile: StudentProfile, month: Date = Date()) async {
+    func load(profile: StudentProfile, month: Date? = nil) async {
         latestProfile = profile
-        currentMonth = month
+        currentMonth = month ?? todayProvider()
         refreshMonthTitle()
         guard profile.isComplete else {
             items = []
             statusText = "학교와 학년/반을 먼저 설정해 주세요."
             return
         }
-        items = ((try? await repository.fetchSchedule(for: profile, month: month)) ?? [])
+        items = ((try? await repository.fetchSchedule(for: profile, month: currentMonth)) ?? [])
             .filter(isVisibleSchedule)
             .sorted { $0.date < $1.date }
         statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
@@ -37,7 +43,7 @@ final class ScheduleViewModel: ObservableObject {
     }
 
     func showCurrentMonth() async {
-        currentMonth = Date()
+        currentMonth = todayProvider()
         await load(profile: latestProfile, month: currentMonth)
     }
 

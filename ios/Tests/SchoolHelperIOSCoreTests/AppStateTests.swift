@@ -133,4 +133,15 @@ final class AppStateTests: XCTestCase {
         ]))
     }
 
+    func testReferenceDateLaunchOverrideParsesYYYYMMDD() {
+        let date = AppLaunchOverrides.referenceDate([
+            "SCHOOLHELPER_REFERENCE_DATE": "20260528"
+        ])
+
+        XCTAssertEqual(date, fixtureDate(year: 2026, month: 5, day: 28))
+        XCTAssertNil(AppLaunchOverrides.referenceDate([
+            "SCHOOLHELPER_REFERENCE_DATE": "2026-05-28"
+        ]))
+    }
+
 }

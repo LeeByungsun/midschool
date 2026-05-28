@@ -318,7 +318,21 @@ DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py
 - 명령: `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py`
 - 결과: `{"status":"ok"}` JSON 출력
 - sample: 급식 `발아현미밥`, 시간표 `수학`, 일정 `노동절`, 가정통신문 `2026학년도미사 오케스트라 아침 맞이 콘서트일정 안내`
-- 제한: backend live 데이터 계약을 검증하는 smoke이며, 실제 iPhone 화면 렌더링/날짜 이동/외부 링크 전환 UX를 눈으로 증명하지는 않는다.
+
+live backend 응답이 실제 앱 화면까지 렌더링되는지 simulator에서 확인하려면 아래 opt-in UI 테스트를 사용합니다.
+
+```bash
+ios/scripts/test_live_ui.sh
+```
+
+2026-05-28 확인:
+
+- 명령: `ios/scripts/test_live_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent`: 1 test, 0 failures
+- 확인 범위: 홈/시간표/급식/일정 화면에서 live sample `수학`, `발아현미밥`, `오케스트라`, `노동절` 렌더링
+- xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-24-15-+0900.xcresult`
+- 제한: simulator 화면 렌더링 검증이며, 실제 iPhone 화면에서 날짜 이동/외부 링크 전환 UX를 눈으로 증명하지는 않는다.
 
 ### 2.5 재현 스크립트
 
@@ -495,6 +509,7 @@ xcodebuild \
 - 주요 상태 변화(타이머 감소)도 simulator 에서 직접 확인됨
 - 위젯 콘텐츠는 앱 안 미리보기로 직접 확인됨
 - live NEIS/BFF backend 데이터 계약은 `verify_live_school_data.py` 로 직접 확인됨
+- live NEIS/BFF 데이터의 simulator 앱 화면 렌더링은 `test_live_ui.sh` 로 직접 확인됨
 
 하지만 아래는 아직 미완료입니다.
 

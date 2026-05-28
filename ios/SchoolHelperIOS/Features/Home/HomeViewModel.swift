@@ -22,7 +22,7 @@ final class HomeViewModel: ObservableObject {
     init(
         repository: SchoolRepository = DefaultSchoolRepository(),
         timerStateProvider: @escaping () -> TimerSessionState = { TimerPreferencesStore().load() },
-        now: @escaping () -> Date = Date.init
+        now: @escaping () -> Date = { AppLaunchOverrides.referenceDate() ?? Date() }
     ) {
         self.repository = repository
         self.timerStateProvider = timerStateProvider

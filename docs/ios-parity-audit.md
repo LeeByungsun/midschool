@@ -114,6 +114,7 @@ Android 기준:
 - `DefaultSchoolRepositoryTests`
 - UI 테스트 `testSeededTimetableShowsCoreContent`
 - `ios/scripts/verify_live_school_data.py` 로 live NEIS `misTimetable` row 확인
+- UI 테스트 `testLiveSchoolDataDisplaysBackendContent` 로 simulator 화면 렌더링 확인
 - 2026-05-28 미사중학교 1학년 2반 기준 sample `수학` 확인
 
 남은 수동 확인:
@@ -138,6 +139,7 @@ Android 기준:
 - `DefaultSchoolRepositoryTests`
 - UI 테스트 `testSeededMealsShowsCoreContent`
 - `ios/scripts/verify_live_school_data.py` 로 live NEIS `mealServiceDietInfo` row 확인
+- UI 테스트 `testLiveSchoolDataDisplaysBackendContent` 로 simulator 화면 렌더링 확인
 - 2026-05-28 미사중학교 기준 sample `발아현미밥` 포함 급식 확인
 
 남은 수동 확인:
@@ -162,6 +164,7 @@ Android 기준:
 - `DefaultSchoolRepositoryTests`
 - UI 테스트 `testSeededScheduleShowsCoreContent`
 - `ios/scripts/verify_live_school_data.py` 로 live NEIS `SchoolSchedule` row 확인
+- UI 테스트 `testLiveSchoolDataDisplaysBackendContent` 로 simulator 화면 렌더링 확인
 - 2026-05-28 미사중학교 2026년 5월 기준 sample `노동절` 확인
 
 남은 수동 확인:
@@ -242,6 +245,7 @@ Android 기준:
 - `NEISClientTests`
 - `FeatureViewModelTests`
 - `ios/scripts/verify_live_school_data.py` 로 live web `/api/notices` BFF item 확인
+- UI 테스트 `testLiveSchoolDataDisplaysBackendContent` 로 simulator 홈 화면 렌더링 확인
 - 2026-05-28 미사중학교 기준 sample `2026학년도미사 오케스트라 아침 맞이 콘서트일정 안내` 확인
 
 남은 수동 확인:
@@ -306,6 +310,7 @@ Android 기준:
 - 2026-05-28 같은 derived data로 재실행한 실제 iPhone 9개 전체 UI 테스트가 `TEST SUCCEEDED` 로 통과했다. xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh` 로 retry wrapper 기본 경로의 1개 UI 테스트 통과를 확인했다.
 - 2026-05-28 `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py` 로 미사중학교 live NEIS/BFF backend 데이터 계약을 확인했다.
+- 2026-05-28 `ios/scripts/test_live_ui.sh` 로 simulator 앱 화면의 live NEIS/BFF 렌더링을 확인했다. xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-24-15-+0900.xcresult`
 
 따라서 현재 완료라고 말할 수 있는 범위:
 
@@ -315,6 +320,7 @@ Android 기준:
 - SwiftPM 코어 회귀 테스트
 - 실기기 앱 본체 설치/실행
 - live NEIS/BFF backend 데이터 smoke
+- live NEIS/BFF simulator UI 렌더링 smoke
 
 아직 완료라고 말할 수 없는 범위:
 

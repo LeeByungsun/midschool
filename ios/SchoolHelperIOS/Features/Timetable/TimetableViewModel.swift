@@ -3,17 +3,23 @@ import Combine
 
 @MainActor
 final class TimetableViewModel: ObservableObject {
-    @Published var date: Date = Date()
+    @Published var date: Date
     @Published var dateTitle: String = ""
     @Published var statusText: String = ""
     @Published var items: [TimetableItem] = []
 
     private let repository: SchoolRepository
+    private let todayProvider: () -> Date
     private let calendar = Calendar(identifier: .gregorian)
     private var latestProfile = StudentProfile()
 
-    init(repository: SchoolRepository = DefaultSchoolRepository()) {
+    init(
+        repository: SchoolRepository = DefaultSchoolRepository(),
+        todayProvider: @escaping () -> Date = { AppLaunchOverrides.referenceDate() ?? Date() }
+    ) {
         self.repository = repository
+        self.todayProvider = todayProvider
+        self.date = todayProvider()
         refreshDateTitle()
     }
 
@@ -35,7 +41,7 @@ final class TimetableViewModel: ObservableObject {
     }
 
     func showToday() async {
-        date = Date()
+        date = todayProvider()
         await load(profile: latestProfile)
     }
 

@@ -106,6 +106,33 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars.staticTexts["타이머"].exists)
     }
 
+    func testLiveSchoolDataDisplaysBackendContent() throws {
+        try XCTSkipUnless(
+            FileManager.default.fileExists(atPath: "/tmp/misschool-ios-enable-live-ui-test"),
+            "live NEIS/BFF UI test is opt-in because it depends on external services"
+        )
+
+        let app = makeLiveApp()
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 10))
+        XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 30))
+        XCTAssertTrue(scrollToStaticText(containing: "발아현미밥", in: app, maxSwipes: 8))
+        XCTAssertTrue(scrollToStaticText(containing: "오케스트라", in: app, maxSwipes: 8))
+
+        app.tabBars.buttons["시간표"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 10))
+        XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 30))
+
+        app.tabBars.buttons["급식"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 10))
+        XCTAssertTrue(scrollToStaticText(containing: "발아현미밥", in: app, maxSwipes: 8))
+
+        app.tabBars.buttons["일정"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 10))
+        XCTAssertTrue(scrollToStaticText(containing: "노동절", in: app, maxSwipes: 8))
+    }
+
     private func makeSeededApp(initialRoute: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["SCHOOLHELPER_SEED_PROFILE_JSON"] = seededProfileJSON()
@@ -125,9 +152,33 @@ final class SchoolHelperIOSUITests: XCTestCase {
         return app
     }
 
+    private func makeLiveApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        let environment = ProcessInfo.processInfo.environment
+        app.launchEnvironment["SCHOOLHELPER_SEED_PROFILE_JSON"] = liveProfileJSON()
+        app.launchEnvironment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"] = "1"
+        app.launchEnvironment["SCHOOLHELPER_REFERENCE_DATE"] = environment["SCHOOLHELPER_LIVE_TEST_DATE"] ?? "20260528"
+        if let neisBaseURL = environment["NEIS_BASE_URL"] {
+            app.launchEnvironment["NEIS_BASE_URL"] = neisBaseURL
+        }
+        if let webBaseURL = environment["WEB_BASE_URL"] {
+            app.launchEnvironment["WEB_BASE_URL"] = webBaseURL
+        }
+        if let neisAPIKey = environment["NEIS_API_KEY"] {
+            app.launchEnvironment["NEIS_API_KEY"] = neisAPIKey
+        }
+        return app
+    }
+
     private func seededProfileJSON() -> String {
         """
         {"grade":"1","classroom":"2","schoolName":"미사중학교","officeCode":"J10","schoolCode":"ui-\(UUID().uuidString)","schoolKind":"중학교"}
+        """
+    }
+
+    private func liveProfileJSON() -> String {
+        """
+        {"grade":"1","classroom":"2","schoolName":"미사중학교","officeCode":"J10","schoolCode":"7692129","schoolKind":"중학교"}
         """
     }
 
