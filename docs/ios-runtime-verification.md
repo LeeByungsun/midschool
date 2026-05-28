@@ -341,8 +341,22 @@ APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID i
 
 - `com.leebyungsun.schoolhelperios`: App Group 포함
 - `com.leebyungsun.schoolhelperios.widget`: App Group 미포함
+- `ios/scripts/check_app_group_profiles.py` 재실행 결과도 동일함. 앱 profile은 `OK`, 위젯 profile은 groups `[]` 로 `FAIL`.
 - `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-attempt LAUNCH=0 ios/scripts/install_device.sh` 로 Xcode profile 갱신/빌드를 시도했지만 widget profile mismatch로 실패함
   - 오류: `Provisioning profile "iOS Team Provisioning Profile: com.leebyungsun.schoolhelperios.widget" doesn't match the entitlements file's value for the com.apple.security.application-groups entitlement.`
+- `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-check LAUNCH=0 ios/scripts/install_device.sh` 재시도 역시 같은 widget profile mismatch로 실패함.
+
+자동화 가능한 위젯 패키징 검증은 별도 simulator smoke로 고정했습니다.
+
+```bash
+ios/scripts/test_widget_sim.sh
+```
+
+2026-05-28 확인 결과:
+
+- 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh`
+- 결과: `Widget simulator packaging verified`
+- 확인 범위: `SchoolHelperWidget` scheme build, embedded `SchoolHelperWidget.appex`, WidgetKit extension point, app/widget bundle id, app/widget App Group entitlement source
 - 최신 device-preview 설치 확인:
   - 커밋: `4ed3c2f`
   - 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-latest-4ed3c2f LAUNCH=1 ios/scripts/install_device.sh`

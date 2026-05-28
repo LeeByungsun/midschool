@@ -96,6 +96,17 @@ ios/scripts/test_live_external_link_ui.sh
 - `test_live_navigation_ui.sh` 는 같은 기준일로 시간표 다음 날, 급식 다음 주, 일정 다음 달 제목 갱신을 검증합니다.
 - `test_live_external_link_ui.sh` 는 live BFF notice의 `가정통신문 열기`가 Safari에서 `misaj-m.goegh.kr`/공지 텍스트로 열리는지 검증합니다.
 
+위젯 simulator 패키징 smoke:
+
+```bash
+ios/scripts/test_widget_sim.sh
+```
+
+- `SchoolHelperWidget` scheme이 simulator에서 빌드되는지 확인합니다.
+- 빌드된 `SchoolHelperIOS.app/PlugIns/SchoolHelperWidget.appex` 존재, WidgetKit extension point, app/widget bundle id를 확인합니다.
+- 앱/위젯 entitlements source에 `group.com.leebyungsun.schoolhelperios` 가 들어 있는지도 확인합니다.
+- 기본 출력은 짧게 유지하며, 전체 `xcodebuild` 로그가 필요하면 `VERBOSE=1 ios/scripts/test_widget_sim.sh` 로 실행합니다.
+
 실제 iPhone UI 테스트:
 
 ```bash
