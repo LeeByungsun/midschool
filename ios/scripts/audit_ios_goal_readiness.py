@@ -62,6 +62,34 @@ def run_profile_check() -> AuditItem:
     )
 
 
+def run_system_evidence_check() -> AuditItem:
+    command = [str(ROOT / "ios/scripts/validate_ios_system_evidence.py")]
+    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=False)
+    evidence = ["ios/scripts/validate_ios_system_evidence.py"]
+    missing = [
+        "Real iPhone home-screen WidgetKit placement/content/tap E2E",
+        "Full App Group app/widget shared-data E2E on real iPhone",
+        "Real iPhone system notification banner/sound/vibration UX",
+    ]
+
+    if result.stdout.strip():
+        try:
+            payload = json.loads(result.stdout)
+            evidence.extend(payload.get("evidence") or [])
+            missing = payload.get("missing") or missing
+        except json.JSONDecodeError:
+            evidence.append(result.stdout.strip())
+    if result.stderr.strip():
+        evidence.append(result.stderr.strip())
+
+    return AuditItem(
+        id="system_level_manual_evidence",
+        status="pass" if result.returncode == 0 else "manual_pending",
+        evidence=evidence,
+        missing=[] if result.returncode == 0 else missing,
+    )
+
+
 def main() -> int:
     items: list[AuditItem] = [
         item_from_files("ios_agent_skill", [".codex/skills/ios-architecture/SKILL.md"]),
@@ -98,20 +126,11 @@ def main() -> int:
             "ios/scripts/verify_live_school_data.py",
             "ios/scripts/test_widget_sim.sh",
             "ios/scripts/verify_widget_app_group_readiness.sh",
+            "ios/scripts/validate_ios_system_evidence.py",
+            "ios/system-evidence.template.json",
         ]),
         run_profile_check(),
-        AuditItem(
-            id="system_level_manual_evidence",
-            status="manual_pending",
-            evidence=[
-                "docs/ios-parity-audit.md records completed simulator/device-preview and live-data smoke evidence",
-            ],
-            missing=[
-                "Real iPhone home-screen WidgetKit placement/content/tap E2E",
-                "Full App Group app/widget shared-data E2E on real iPhone",
-                "Real iPhone system notification banner/sound/vibration UX",
-            ],
-        ),
+        run_system_evidence_check(),
     ]
 
     complete = all(item.status == "pass" for item in items)

@@ -24,3 +24,4 @@ TODO.md
 .codex/skills/.system/**
 !.codex/prompts/
 !.codex/prompts/**
+ios/system-evidence.local.json

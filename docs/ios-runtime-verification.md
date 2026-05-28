@@ -21,6 +21,17 @@ ios/scripts/audit_ios_goal_readiness.py
 - `system_level_manual_evidence` 는 실제 홈 화면 위젯/App Group/알림 배너 UX 대기로 `manual_pending`
 - 전체 결과: `complete=false`, exit `20`
 
+시스템 수동 증거를 기록할 때는 아래 템플릿을 사용합니다.
+
+```bash
+cp ios/system-evidence.template.json ios/system-evidence.local.json
+# 실제 iPhone에서 확인한 뒤 local JSON 값을 true/문자열로 채움
+ios/scripts/validate_ios_system_evidence.py
+ios/scripts/audit_ios_goal_readiness.py
+```
+
+`ios/system-evidence.local.json` 은 로컬 증거 기록용이며 git에 커밋하지 않습니다.
+
 ---
 
 ## 1. 현재 검증 방식

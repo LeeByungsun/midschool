@@ -115,6 +115,8 @@ ios/scripts/audit_ios_goal_readiness.py
 
 - 원래 iOS 목표의 핵심 산출물, 기능 surface, 검증 스크립트, App Group profile, 남은 시스템 수동 증거를 JSON으로 출력합니다.
 - 모든 항목이 완료되면 exit `0`, 아직 남은 증거가 있으면 exit `20` 입니다.
+- 시스템 수동 증거는 `ios/system-evidence.template.json` 을 `ios/system-evidence.local.json` 으로 복사해 작성합니다. local 파일은 git에 올리지 않습니다.
+- 수동 증거만 따로 확인하려면 `ios/scripts/validate_ios_system_evidence.py` 를 실행합니다.
 
 위젯/App Group 준비도 검증:
 

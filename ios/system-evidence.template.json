@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-05-28T00:00:00+09:00",
+  "device": "iPhone model/name and iOS version",
+  "tester": "person or agent recording the manual verification",
+  "home_widget_placed": false,
+  "home_widget_content_verified": false,
+  "home_widget_tap_opens_app": false,
+  "app_group_device_build_verified": false,
+  "app_group_shared_data_verified": false,
+  "notification_banner_verified": false,
+  "notification_sound_or_vibration_verified": false,
+  "notes": "Describe widget content, tap destination, App Group build/install command, notification banner/sound/vibration observation, and any artifacts such as screenshots or xcresult paths."
+}
