@@ -107,6 +107,18 @@ ios/scripts/test_widget_sim.sh
 - 앱/위젯 entitlements source와 `AppStorageConfig.appGroupSuiteName` 이 `group.com.leebyungsun.schoolhelperios` 로 맞춰져 있는지도 확인합니다.
 - 기본 출력은 짧게 유지하며, 전체 `xcodebuild` 로그가 필요하면 `VERBOSE=1 ios/scripts/test_widget_sim.sh` 로 실행합니다.
 
+로컬 iOS 통합 검증:
+
+```bash
+ios/scripts/verify_ios_local_readiness.sh
+
+# 외부 live NEIS/BFF까지 포함
+RUN_LIVE_BACKEND=1 ios/scripts/verify_ios_local_readiness.sh
+```
+
+- Python/Shell 문법, SwiftPM 코어 테스트, 위젯 패키징/App Group readiness, 목표 완료 audit을 한 번에 실행합니다.
+- 현재 외부/system blocker는 `ALLOW_INCOMPLETE_GOAL_AUDIT=1` 기본값으로 허용하고, 예상 밖 실패만 중단합니다.
+
 목표 완료 준비도 감사:
 
 ```bash

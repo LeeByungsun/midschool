@@ -36,6 +36,15 @@ ios/scripts/audit_ios_goal_readiness.py
 
 ## 1. 현재 검증 방식
 
+로컬에서 반복 가능한 기본 검증은 아래 통합 스크립트로 실행합니다.
+
+```bash
+ios/scripts/verify_ios_local_readiness.sh
+```
+
+이 스크립트는 Python/Shell 문법, SwiftPM 코어 테스트, 위젯 패키징/App Group readiness, 목표 완료 audit을 순서대로 확인합니다.
+현재 widget provisioning profile과 시스템 수동 증거 blocker는 예상 incomplete로 허용합니다.
+
 현재 iOS 앱은 아래 4단계로 검증합니다.
 
 1. SwiftPM 코어 회귀 테스트
