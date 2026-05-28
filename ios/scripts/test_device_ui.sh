@@ -98,26 +98,59 @@ echo "DerivedData: $DERIVED_DATA_PATH"
 echo "Only testing: ${ONLY_TESTING:-<all>}"
 
 XCODEBUILD_LOG="${XCODEBUILD_LOG:-$DERIVED_DATA_PATH/test_device_ui.xcodebuild.log}"
+AUTOMATION_RETRY_LIMIT="${AUTOMATION_RETRY_LIMIT:-1}"
 mkdir -p "$(dirname "$XCODEBUILD_LOG")"
 : >"$XCODEBUILD_LOG"
 
-xcodebuild "${XCODEBUILD_ARGS[@]}" > >(tee -a "$XCODEBUILD_LOG") 2>&1 &
-XCODEBUILD_PID=$!
+run_xcodebuild_attempt() {
+  local attempt="$1"
+  local attempt_log="$DERIVED_DATA_PATH/test_device_ui.attempt-$attempt.xcodebuild.log"
+  : >"$attempt_log"
 
-while kill -0 "$XCODEBUILD_PID" 2>/dev/null; do
-  if grep -Eq "Unlock .* to Continue|device is locked" "$XCODEBUILD_LOG"; then
-    echo >&2
-    echo "The iPhone is locked. Unlock the device and rerun this script." >&2
-    echo "Xcodebuild log: $XCODEBUILD_LOG" >&2
-    kill "$XCODEBUILD_PID" 2>/dev/null || true
-    wait "$XCODEBUILD_PID" 2>/dev/null || true
-    exit 5
+  echo "xcodebuild attempt: $attempt" | tee -a "$XCODEBUILD_LOG"
+  xcodebuild "${XCODEBUILD_ARGS[@]}" > >(tee -a "$XCODEBUILD_LOG" "$attempt_log") 2>&1 &
+  XCODEBUILD_PID=$!
+
+  while kill -0 "$XCODEBUILD_PID" 2>/dev/null; do
+    if grep -Eq "Unlock .* to Continue|device is locked" "$attempt_log"; then
+      echo >&2
+      echo "The iPhone is locked. Unlock the device and rerun this script." >&2
+      echo "Xcodebuild log: $XCODEBUILD_LOG" >&2
+      kill "$XCODEBUILD_PID" 2>/dev/null || true
+      wait "$XCODEBUILD_PID" 2>/dev/null || true
+      return 5
+    fi
+    sleep 2
+  done
+
+  set +e
+  wait "$XCODEBUILD_PID"
+  STATUS=$?
+  set -e
+
+  if [[ "$STATUS" -ne 0 ]] && grep -q "Timed out while enabling automation mode" "$attempt_log"; then
+    return 6
   fi
-  sleep 2
-done
 
-set +e
-wait "$XCODEBUILD_PID"
-STATUS=$?
-set -e
-exit "$STATUS"
+  return "$STATUS"
+}
+
+ATTEMPT=1
+while true; do
+  set +e
+  run_xcodebuild_attempt "$ATTEMPT"
+  STATUS=$?
+  set -e
+
+  if [[ "$STATUS" -eq 0 ]]; then
+    exit 0
+  fi
+
+  if [[ "$STATUS" -eq 6 && "$ATTEMPT" -le "$AUTOMATION_RETRY_LIMIT" ]]; then
+    echo "UI automation mode timed out. Retrying xcodebuild once more..." >&2
+    ATTEMPT=$((ATTEMPT + 1))
+    continue
+  fi
+
+  exit "$STATUS"
+done

@@ -165,11 +165,14 @@ xcodebuild \
 
 - 1차 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-3 ios/scripts/test_device_ui.sh`
 - 1차 결과: UI testing 초기화 단계에서 `Timed out while enabling automation mode.` 로 실패
+- 후속 조치: `test_device_ui.sh` 에 automation mode timeout 기본 1회 자동 재시도를 추가
 - 2차 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-3 ios/scripts/test_device_ui.sh`
 - 2차 결과: `** TEST SUCCEEDED **`
 - `SchoolHelperIOSUITests`: 9 tests, 0 failures
 - 확인 범위: 초기 설정 학교 검색/선택/저장, 홈 탭 구조, 시간표 핵심 콘텐츠, 급식 핵심 콘텐츠, 일정 핵심 콘텐츠, 설정 modal, 설정 저장, 위젯 미리보기, 타이머 modal
 - xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
+- retry wrapper smoke: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh`
+- retry wrapper smoke 결과: `** TEST SUCCEEDED **`, 1 test, 0 failures
 
 현재 검증하는 실제 상호작용:
 
@@ -290,6 +293,8 @@ REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 - 설치 결과: iPhone `00008130-0012603E3CC3001C` 에 `com.leebyungsun.schoolhelperios` 설치 성공
 - smoke 명령: `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh`
 - smoke 결과: `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
+- 2026-05-28 재확인 명령: `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=8 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh`
+- 재확인 결과: `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
 - 제한: 실제 알림 배너 도착은 iPhone 잠금/백그라운드 상태에서 사람이 확인해야 하므로 최종 UX 검증은 아직 수동 확인 대기
 
 ### 2.5 재현 스크립트
