@@ -251,16 +251,16 @@ Android 기준:
 - `HomeViewModel`
 - `NEISClientTests`
 - `FeatureViewModelTests`
-- `ios/scripts/verify_live_school_data.py` 로 live web `/api/notices` BFF item 확인
+- `ios/scripts/verify_live_school_data.py` 로 live web `/api/notices` BFF item 및 첫 notice 상세 URL HTTP 200/제목 매칭 확인
 - UI 테스트 `testLiveSchoolDataDisplaysBackendContent` 로 simulator 홈 화면 렌더링 확인
 - 2026-05-28 미사중학교 기준 sample `2026학년도미사 오케스트라 아침 맞이 콘서트일정 안내` 확인
-- UI 테스트 `testNoticeButtonOpensExternalSafariURL` 로 seeded notice의 `가정통신문 열기` 버튼이 Safari를 foreground로 전환하는지 확인
-- 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 외부 링크 전환 smoke 통과. xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
+- UI 테스트 `testNoticeButtonOpensExternalSafariURL` 로 seeded notice의 `가정통신문 열기` 버튼이 Safari를 foreground로 전환하고 URL/페이지 텍스트에 `example.com` 또는 `Example Domain` 이 노출되는지 확인
+- 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 외부 링크 전환 및 URL/페이지 텍스트 smoke 통과. xcresult: `/tmp/misschool-ios-external-link-url-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-27-48-+0900.xcresult`
 - 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 외부 링크 전환 smoke 통과. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
 
 남은 수동 확인:
 
-- 실제 운영 notice 웹페이지 콘텐츠 자체의 Safari 로드 완료 확인.
+- 실제 운영 notice 웹페이지 콘텐츠 자체의 실기기 Safari 렌더링 눈검증.
 
 ### 2.10 홈 화면 위젯
 
@@ -319,14 +319,14 @@ Android 기준:
 - `ios/scripts/test_device_ui.sh` 는 `Timed out while enabling automation mode` 실패를 기본 1회 자동 재시도한다.
 - 2026-05-28 같은 derived data로 재실행한 실제 iPhone 9개 전체 UI 테스트가 `TEST SUCCEEDED` 로 통과했다. xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh` 로 retry wrapper 기본 경로의 1개 UI 테스트 통과를 확인했다.
-- 2026-05-28 `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py` 로 미사중학교 live NEIS/BFF backend 데이터 계약을 확인했다.
+- 2026-05-28 `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py` 로 미사중학교 live NEIS/BFF backend 데이터 계약과 첫 notice 상세 URL HTTP 200/제목 매칭을 확인했다.
 - 2026-05-28 `ios/scripts/test_live_ui.sh` 로 simulator 앱 화면의 live NEIS/BFF 렌더링을 재확인했다. xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-36-53-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-initial-search-check ios/scripts/test_device_ui.sh` 로 실제 iPhone 초기 설정 학교 검색/저장 흐름을 재확인했다. xcresult: `/tmp/misschool-ios-device-initial-search-check/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-38-27-+0900.xcresult`
 - 2026-05-28 `LIVE_UI_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 앱 화면의 live NEIS/BFF 렌더링을 확인했다. xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
 - 2026-05-28 `ios/scripts/test_live_navigation_ui.sh` 로 simulator live 날짜 이동 UX를 확인했다. 시간표/급식/일정 제목이 각각 다음 날/다음 주/다음 달로 갱신됐다. xcresult: `/tmp/misschool-ios-live-navigation-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-15-26-+0900.xcresult`
 - 2026-05-28 `LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test ios/scripts/test_device_ui.sh` 는 앱/테스트 빌드와 signing 후 실제 iPhone 잠금 상태로 중단됐다. log: `/tmp/misschool-ios-device-live-navigation-ui-test/test_device_ui.xcodebuild.log`
 - 2026-05-28 같은 실기기 live 날짜 이동 테스트 재시도도 잠금 상태로 중단됐다. 다음 재시도는 `UNLOCK_WAIT_SECONDS=120` 으로 unlock 대기 가능. log: `/tmp/misschool-ios-device-live-navigation-ui-test-rerun/test_device_ui.xcodebuild.log`
-- 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
+- 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환과 URL/페이지 텍스트를 확인했다. xcresult: `/tmp/misschool-ios-external-link-url-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-27-48-+0900.xcresult`
 - 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
 - 2026-05-28 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-notification-permission-ui-test-final '-only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary' test` 로 simulator 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`
 - 2026-05-28 `ONLY_TESTING=SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-notification-permission-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-device-notification-permission-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-01-31-+0900.xcresult`
@@ -338,11 +338,11 @@ Android 기준:
 - 실제 iPhone UI 테스트(9개 자동 테스트 기준)
 - SwiftPM 코어 회귀 테스트
 - 실기기 앱 본체 설치/실행
-- live NEIS/BFF backend 데이터 smoke
+- live NEIS/BFF backend 데이터 및 첫 notice 상세 URL smoke
 - live NEIS/BFF simulator UI 렌더링 smoke
 - live NEIS/BFF simulator 날짜 이동 UX smoke
 - live NEIS/BFF 실제 iPhone UI 렌더링 smoke
-- 가정통신문 외부 링크 Safari 전환 smoke
+- 가정통신문 외부 링크 Safari 전환 및 simulator URL/페이지 텍스트 smoke
 - 알림 권한 설정 화면 안내/요청 버튼 UI smoke
 
 아직 완료라고 말할 수 없는 범위:
@@ -351,7 +351,7 @@ Android 기준:
 - App Group 기반 앱/위젯 공유 데이터 실기기 end-to-end
 - 실기기 시스템 권한 팝업/완료 알림 배너 UX
 - 실제 iPhone 화면의 live 데이터 날짜 이동 UX 눈검증 또는 자동 UI 실행
-- 실제 운영 notice 웹페이지 콘텐츠 자체의 Safari 로드 완료 눈검증
+- 실제 iPhone Safari에서 운영 notice 웹페이지 콘텐츠 렌더링 눈검증
 
 ---
 

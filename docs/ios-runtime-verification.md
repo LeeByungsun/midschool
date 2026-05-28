@@ -238,7 +238,7 @@ EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 ```
 
 `EXTERNAL_LINK_TEST=1` 은 UI test target에 `-DEXTERNAL_LINK_TEST_ENABLED` Swift flag를 주입하고,
-seeded fallback notice의 `가정통신문 열기` 버튼이 Safari를 foreground로 전환하는지만 실행합니다.
+seeded fallback notice의 `가정통신문 열기` 버튼이 Safari를 foreground로 전환하고, URL/페이지 텍스트에 `example.com` 또는 `Example Domain` 이 노출되는지 확인합니다.
 기본 UI 회귀 테스트에서는 외부 앱 전환 테스트가 skip 처리되므로 Safari 상태에 흔들리지 않습니다.
 
 2026-05-28 simulator 가정통신문 외부 링크 전용 테스트:
@@ -246,8 +246,8 @@ seeded fallback notice의 `가정통신문 열기` 버튼이 Safari를 foregroun
 - 명령: `ios/scripts/test_external_link_ui.sh`
 - 결과: `** TEST SUCCEEDED **`
 - `SchoolHelperIOSUITests/testNoticeButtonOpensExternalSafariURL`: 1 test, 0 failures
-- 확인 범위: seeded 홈 `현장학습 안내` 표시 → `가정통신문 열기` 탭 → Safari foreground 전환
-- xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
+- 확인 범위: seeded 홈 `현장학습 안내` 표시 → `가정통신문 열기` 탭 → Safari foreground 전환 → `example.com` URL/페이지 텍스트 확인
+- xcresult: `/tmp/misschool-ios-external-link-url-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-27-48-+0900.xcresult`
 
 2026-05-28 실제 iPhone 가정통신문 외부 링크 전용 테스트:
 
@@ -409,6 +409,7 @@ DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py
 - NEIS `misTimetable` 1학년 2반 시간표 row 확인
 - NEIS `SchoolSchedule` 월간 일정 row 확인
 - web `/api/notices` BFF live item 확인
+- 첫 notice 상세 URL HTTP 200 및 제목 매칭 확인
 
 2026-05-28 확인:
 
@@ -613,11 +614,11 @@ xcodebuild \
 - 주요 탭 화면이 simulator 와 실제 iPhone 9개 UI 테스트에서 직접 확인됨
 - 주요 상태 변화(타이머 감소)도 simulator 에서 직접 확인됨
 - 위젯 콘텐츠는 앱 안 미리보기로 직접 확인됨
-- live NEIS/BFF backend 데이터 계약은 `verify_live_school_data.py` 로 직접 확인됨
+- live NEIS/BFF backend 데이터 계약과 첫 notice 상세 URL HTTP 로드는 `verify_live_school_data.py` 로 직접 확인됨
 - live NEIS/BFF 데이터의 simulator 앱 화면 렌더링은 `test_live_ui.sh` 로 직접 확인됨
 - live NEIS/BFF 데이터의 simulator 날짜 이동 UX는 `test_live_navigation_ui.sh` 로 직접 확인됨
 - live NEIS/BFF 데이터의 실제 iPhone 앱 화면 렌더링은 `test_device_ui.sh` + `LIVE_UI_TEST=1` 로 직접 확인됨
-- 가정통신문 외부 링크의 Safari 전환은 simulator 및 실제 iPhone에서 `EXTERNAL_LINK_TEST=1` 로 직접 확인됨
+- 가정통신문 외부 링크의 Safari 전환은 simulator 및 실제 iPhone에서 `EXTERNAL_LINK_TEST=1` 로 직접 확인됨. simulator에서는 URL/페이지 텍스트까지 확인됨
 - 알림 권한 설정 화면의 안내/요청 버튼 상태 변화는 simulator 및 실제 iPhone에서 launch override 기반 UI 테스트로 직접 확인됨
 
 하지만 아래는 아직 미완료입니다.
@@ -626,10 +627,11 @@ xcodebuild \
 - 시스템 확인 다이얼로그 이후 최종 전환
 - 실기기 시스템 권한 팝업/완료 알림 배너 최종 UX
 - 실제 iPhone 화면에서 live 데이터 날짜 이동 UX 눈검증 또는 자동 UI 실행
+- 실제 iPhone Safari에서 운영 notice 웹페이지 콘텐츠 렌더링 눈검증
 
 즉, 현재 상태는:
 
-**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/simulator/실기기 UI smoke, simulator live 날짜 이동 UX, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/notice URL/simulator/실기기 UI smoke, simulator live 날짜 이동 UX, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
 **“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---

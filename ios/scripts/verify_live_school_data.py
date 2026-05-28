@@ -32,6 +32,7 @@ CLASSROOM = os.environ.get("CLASSROOM", "2")
 VERIFY_DATE = os.environ.get("DATE", dt.datetime.now().strftime("%Y%m%d"))
 VERIFY_MONTH = os.environ.get("MONTH", VERIFY_DATE[:6])
 NOTICE_LIMIT = int(os.environ.get("NOTICE_LIMIT", "3"))
+VERIFY_NOTICE_URL = os.environ.get("VERIFY_NOTICE_URL", "1").lower() not in {"0", "false", "no", "off"}
 TIMEOUT_SECONDS = float(os.environ.get("TIMEOUT_SECONDS", "20"))
 FETCH_RETRIES = int(os.environ.get("FETCH_RETRIES", "2"))
 
@@ -129,14 +130,37 @@ def main() -> int:
     require(notice_status in {"success", "empty"}, f"notices BFF status가 실패입니다: {notice_status}")
     notices = notices_payload.get("items") or []
     require(notices, "notices BFF live item이 없습니다.")
+    first_notice = notices[0]
     checks.append(
         {
             "check": "noticesBFF",
             "status": notice_status,
             "count": len(notices),
-            "sample": notices[0].get("title", ""),
+            "sample": first_notice.get("title", ""),
         }
     )
+
+    if VERIFY_NOTICE_URL:
+        notice_url = str(first_notice.get("url", "")).strip()
+        notice_title = str(first_notice.get("title", "")).strip()
+        require(notice_url, "notices BFF 첫 item에 url이 없습니다.")
+        loaded_notice = fetch_notice_page(notice_url)
+        normalized_body = compact_text(loaded_notice["body"])
+        normalized_title = compact_text(notice_title)
+        if normalized_title:
+            require(
+                normalized_title in normalized_body,
+                f"notice detail page에서 제목을 찾지 못했습니다: {notice_title}",
+            )
+        checks.append(
+            {
+                "check": "noticeURL",
+                "status": loaded_notice["status"],
+                "url": notice_url,
+                "finalUrl": loaded_notice["finalUrl"],
+                "titleMatched": bool(normalized_title),
+            }
+        )
 
     print(json.dumps({"status": "ok", "checks": checks}, ensure_ascii=False, indent=2))
     return 0
@@ -214,8 +238,48 @@ def fetch_json(base_url: str, params: dict[str, str]) -> dict[str, Any]:
     raise last_error
 
 
+def fetch_notice_page(url: str) -> dict[str, Any]:
+    parsed = urllib.parse.urlparse(url)
+    require(parsed.scheme in {"http", "https"} and parsed.netloc, f"notice URL 형식이 잘못되었습니다: {url}")
+
+    last_error: Exception | None = None
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "User-Agent": "Mozilla/5.0 SchoolHelperIOSVerification/1.0",
+        },
+    )
+    for attempt in range(1, FETCH_RETRIES + 2):
+        try:
+            with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+                status = getattr(response, "status", response.getcode())
+                require(200 <= status < 400, f"notice URL HTTP status가 실패입니다: {status}")
+                charset = response.headers.get_content_charset() or "utf-8"
+                body = response.read(300_000).decode(charset, "replace")
+                require(body.strip(), "notice URL 응답 본문이 비어 있습니다.")
+                return {"status": status, "finalUrl": response.geturl(), "body": body}
+        except urllib.error.HTTPError as error:
+            last_error = RuntimeError(f"HTTP {error.code} for notice URL {url}")
+            if error.code < 500 or attempt > FETCH_RETRIES:
+                break
+            time.sleep(0.5 * attempt)
+        except (TimeoutError, urllib.error.URLError) as error:
+            last_error = RuntimeError(f"Request failed for notice URL {url}: {error}")
+            if attempt > FETCH_RETRIES:
+                break
+            time.sleep(0.5 * attempt)
+
+    assert last_error is not None
+    raise last_error
+
+
 def url_join(base_url: str, path: str) -> str:
     return urllib.parse.urljoin(base_url.rstrip("/") + "/", path)
+
+
+def compact_text(raw: str) -> str:
+    return re.sub(r"\s+", "", html.unescape(raw))
 
 
 def clean_text(raw: str) -> str:

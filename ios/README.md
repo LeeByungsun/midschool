@@ -69,7 +69,7 @@ REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 live NEIS/BFF 데이터 smoke:
 
 ```bash
-# 미사중학교 기준 실제 NEIS 급식/시간표/일정과 notices BFF 응답 확인
+# 미사중학교 기준 실제 NEIS 급식/시간표/일정, notices BFF 응답, 첫 notice 상세 URL 로드 확인
 DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py
 
 # simulator에서 live 데이터가 실제 앱 화면에 렌더링되는지 확인
@@ -82,6 +82,7 @@ ios/scripts/test_live_navigation_ui.sh
 - 기본값은 `SCHOOL_NAME=미사중학교`, `OFFICE_CODE=J10`, `SCHOOL_CODE=7692129`, `GRADE=1`, `CLASSROOM=2` 입니다.
 - `NEIS_API_KEY` 는 앱에 저장하지 않고 이 스크립트에서도 환경변수로만 선택 주입합니다. 키가 없으면 iOS 앱과 동일하게 `KEY` 없이 공개 조회를 시도합니다.
 - notices는 `WEB_BASE_URL` 의 `/api/notices` BFF를 호출합니다. 기본값은 `https://midschool.vercel.app/` 입니다.
+- `verify_live_school_data.py` 는 기본적으로 첫 notice 상세 URL도 HTTP 2xx/3xx 및 제목 포함 여부로 확인합니다. 외부 학교 홈페이지 상태를 제외하려면 `VERIFY_NOTICE_URL=0` 을 지정합니다.
 - `test_live_ui.sh` 는 `SCHOOLHELPER_REFERENCE_DATE=20260528` launch override로 홈/시간표/급식/일정 화면의 live 표시를 검증합니다.
 - `test_live_navigation_ui.sh` 는 같은 기준일로 시간표 다음 날, 급식 다음 주, 일정 다음 달 제목 갱신을 검증합니다.
 

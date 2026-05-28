@@ -139,6 +139,10 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 10))
+        XCTAssertTrue(
+            waitForAnyElement(containing: "example.com", in: safari, timeout: 15)
+                || waitForAnyElement(containing: "Example Domain", in: safari, timeout: 15)
+        )
     }
 
     func testLiveSchoolDataDisplaysBackendContent() throws {
@@ -256,6 +260,15 @@ final class SchoolHelperIOSUITests: XCTestCase {
     ) -> Bool {
         let predicate = NSPredicate(format: "label CONTAINS %@", text)
         return app.staticTexts.containing(predicate).firstMatch.waitForExistence(timeout: timeout)
+    }
+
+    private func waitForAnyElement(
+        containing text: String,
+        in app: XCUIApplication,
+        timeout: TimeInterval
+    ) -> Bool {
+        let predicate = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text)
+        return app.descendants(matching: .any).containing(predicate).firstMatch.waitForExistence(timeout: timeout)
     }
 
     private func scrollToButton(
