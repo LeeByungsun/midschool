@@ -98,6 +98,11 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 ### 저장
 - UserDefaults 래퍼
 - 위젯 확장을 위한 shared suite 경계
+- NEIS 데이터 캐시
+  - 급식: 12시간
+  - 시간표: 24시간
+  - 학사 일정: 12시간
+  - 최신 요청 실패 시 fresh cache를 우선 fallback으로 사용
 
 ### 네트워크
 - URLSession 기반 client
@@ -135,10 +140,19 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 
 ---
 
-## 6. 아직 열려 있는 결정
+## 6. 아직 열려 있는 결정/검증
 
-- SwiftUI 앱을 어떤 Xcode 프로젝트 구조로 둘지
-- SwiftUI 화면용 Xcode target 검증 외에 SwiftPM 코어 테스트를 얼마나 넓힐지
-- 실제 WidgetKit target을 1차에 넣을지 2차로 미룰지
+해결됨:
 
-현재는 **기능 parity를 우선하는 iPhone 앱 골격 생성 + 코어 회귀 테스트 경로 유지 + 타이머 알림/위젯 foundation 정리**가 먼저입니다.
+- SwiftUI 앱은 `ios/SchoolHelperIOS.xcodeproj` + SwiftPM 코어 테스트 병행 구조로 둠
+- 실제 `SchoolHelperWidget` WidgetKit target/scaffold를 포함함
+- SwiftPM 코어 테스트는 Repository/ViewModel/Widget snapshot/Notification coordination까지 확장함
+
+남은 검증:
+
+- 홈 화면 위젯 실제 배치/탭 동작
+- 시스템 딥링크 확인 다이얼로그 이후 최종 전환
+- 실기기 알림/권한 UX
+- full App Group 실기기 빌드: widget provisioning profile에 App Group entitlement 반영 필요
+
+현재는 **기능 parity를 우선하는 iPhone 앱 구현 + 코어 회귀 테스트 + simulator/device-preview 검증**을 기준으로 진행합니다.

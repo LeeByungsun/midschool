@@ -105,6 +105,7 @@ struct DefaultSchoolRepository: SchoolRepository {
     private let neisService: NEISServicing
     private let noticesService: NoticesServicing
     private let fallback: SchoolRepository
+    private let cacheStore: SchoolDataCacheStore
     private let calendar: Calendar
 
     init(
@@ -112,12 +113,14 @@ struct DefaultSchoolRepository: SchoolRepository {
         neisClient: NEISClient = NEISClient(),
         noticesService: NoticesServicing = NoticesClient(),
         fallback: SchoolRepository = MockSchoolRepository(),
+        cacheStore: SchoolDataCacheStore = SchoolDataCacheStore(),
         calendar: Calendar = .current
     ) {
         self.schoolSearchService = schoolSearchService ?? neisClient
         self.neisService = neisClient
         self.noticesService = noticesService
         self.fallback = fallback
+        self.cacheStore = cacheStore
         self.calendar = calendar
     }
 
@@ -126,12 +129,14 @@ struct DefaultSchoolRepository: SchoolRepository {
         neisService: NEISServicing,
         noticesService: NoticesServicing,
         fallback: SchoolRepository = MockSchoolRepository(),
+        cacheStore: SchoolDataCacheStore = SchoolDataCacheStore(),
         calendar: Calendar = .current
     ) {
         self.schoolSearchService = schoolSearchService
         self.neisService = neisService
         self.noticesService = noticesService
         self.fallback = fallback
+        self.cacheStore = cacheStore
         self.calendar = calendar
     }
 
@@ -146,13 +151,18 @@ struct DefaultSchoolRepository: SchoolRepository {
     func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] {
         let key = formattedString(from: date, format: "yyyyMMdd")
         do {
-            return try await neisService.fetchMeals(
+            let meals = try await neisService.fetchMeals(
                 officeCode: profile.officeCode,
                 schoolCode: profile.schoolCode,
                 date: key
             )
             .filter { $0.date == key }
+            cacheStore.saveMeals(meals, officeCode: profile.officeCode, schoolCode: profile.schoolCode, date: key)
+            return meals
         } catch {
+            if let cached = cacheStore.getMeals(officeCode: profile.officeCode, schoolCode: profile.schoolCode, date: key) {
+                return cached
+            }
             return try await fallback.fetchTodayMeals(for: profile, date: date)
         }
     }
@@ -184,7 +194,7 @@ struct DefaultSchoolRepository: SchoolRepository {
     func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
         let key = formattedString(from: date, format: "yyyyMMdd")
         do {
-            return try await neisService.fetchTimetable(
+            let items = try await neisService.fetchTimetable(
                 officeCode: profile.officeCode,
                 schoolCode: profile.schoolCode,
                 schoolKind: profile.schoolKind,
@@ -192,7 +202,25 @@ struct DefaultSchoolRepository: SchoolRepository {
                 classroom: profile.classroom,
                 date: key
             )
+            cacheStore.saveTimetable(
+                items,
+                officeCode: profile.officeCode,
+                schoolCode: profile.schoolCode,
+                grade: profile.grade,
+                classroom: profile.classroom,
+                date: key
+            )
+            return items
         } catch {
+            if let cached = cacheStore.getTimetable(
+                officeCode: profile.officeCode,
+                schoolCode: profile.schoolCode,
+                grade: profile.grade,
+                classroom: profile.classroom,
+                date: key
+            ) {
+                return cached
+            }
             return try await fallback.fetchTimetable(for: profile, date: date)
         }
     }
@@ -200,12 +228,17 @@ struct DefaultSchoolRepository: SchoolRepository {
     func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
         let key = formattedString(from: month, format: "yyyyMM")
         do {
-            return try await neisService.fetchSchedule(
+            let events = try await neisService.fetchSchedule(
                 officeCode: profile.officeCode,
                 schoolCode: profile.schoolCode,
                 month: key
             )
+            cacheStore.saveSchedule(events, officeCode: profile.officeCode, schoolCode: profile.schoolCode, month: key)
+            return events
         } catch {
+            if let cached = cacheStore.getSchedule(officeCode: profile.officeCode, schoolCode: profile.schoolCode, month: key) {
+                return cached
+            }
             return try await fallback.fetchSchedule(for: profile, month: month)
         }
     }
