@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
+PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj}"
+DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/misschool-ios-device-ui-test}"
+DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+SCHEME="${SCHEME:-SchoolHelperIOSUI}"
+CONFIGURATION="${CONFIGURATION:-Debug}"
+DEVICE_ID="${DEVICE_ID:-}"
+TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"
+ENTITLEMENTS_MODE="${ENTITLEMENTS_MODE:-device-preview}"
+ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile}"
+
+export DEVELOPER_DIR
+
+if [[ -z "$TEAM_ID" ]]; then
+  cat >&2 <<'EOM'
+TEAM_ID is required for real-device UI test signing.
+
+Example:
+  TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
+
+The default ENTITLEMENTS_MODE=device-preview clears App Group entitlements so the
+app/test runner can validate the app body before full widget provisioning exists.
+EOM
+  exit 2
+fi
+
+if [[ -z "$DEVICE_ID" ]]; then
+  DESTINATIONS_FILE="$(mktemp)"
+  xcodebuild \
+    -project "$PROJECT_PATH" \
+    -scheme "$SCHEME" \
+    -showdestinations >"$DESTINATIONS_FILE" 2>/dev/null || true
+  DEVICE_ID="$(python3 - "$DESTINATIONS_FILE" <<'PY'
+import re
+import sys
+text = open(sys.argv[1], encoding="utf-8", errors="replace").read()
+for line in text.splitlines():
+    if "platform:iOS," not in line or "Simulator" in line:
+        continue
+    match = re.search(r"id:([^,} ]+)", line)
+    if match:
+        print(match.group(1))
+        break
+PY
+  )"
+  rm -f "$DESTINATIONS_FILE"
+fi
+
+if [[ -z "$DEVICE_ID" ]]; then
+  echo "No paired real iOS device destination was found." >&2
+  echo "Connect/unlock the iPhone, enable Developer Mode, and pair it in Xcode/devicectl." >&2
+  exit 3
+fi
+
+BUILD_SETTINGS=(
+  CODE_SIGNING_ALLOWED=YES
+  CODE_SIGNING_REQUIRED=YES
+  CODE_SIGN_STYLE=Automatic
+  DEVELOPMENT_TEAM="$TEAM_ID"
+)
+
+case "$ENTITLEMENTS_MODE" in
+  device-preview)
+    BUILD_SETTINGS+=(CODE_SIGN_ENTITLEMENTS=)
+    ;;
+  app-groups)
+    "$ROOT_DIR/ios/scripts/check_app_group_profiles.py"
+    ;;
+  *)
+    echo "Unknown ENTITLEMENTS_MODE: $ENTITLEMENTS_MODE" >&2
+    echo "Use 'device-preview' or 'app-groups'." >&2
+    exit 4
+    ;;
+esac
+
+XCODEBUILD_ARGS=(
+  -project "$PROJECT_PATH"
+  -scheme "$SCHEME"
+  -destination "platform=iOS,id=$DEVICE_ID"
+  -configuration "$CONFIGURATION"
+  -derivedDataPath "$DERIVED_DATA_PATH"
+  -allowProvisioningUpdates
+)
+
+if [[ -n "$ONLY_TESTING" ]]; then
+  XCODEBUILD_ARGS+=("-only-testing:$ONLY_TESTING")
+fi
+
+XCODEBUILD_ARGS+=("${BUILD_SETTINGS[@]}" test)
+
+echo "Device: $DEVICE_ID"
+echo "Team: $TEAM_ID"
+echo "Entitlements mode: $ENTITLEMENTS_MODE"
+echo "DerivedData: $DERIVED_DATA_PATH"
+echo "Only testing: ${ONLY_TESTING:-<all>}"
+
+xcodebuild "${XCODEBUILD_ARGS[@]}"

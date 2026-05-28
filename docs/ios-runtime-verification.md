@@ -111,6 +111,26 @@ xcodebuild \
 - 원인: test runner code signature verification 실패, `0xe8008018 (The identity used to sign the executable is no longer valid.)`
 - 앱 본체 설치 확인: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-selected-school-smoke LAUNCH=0 ios/scripts/install_device.sh` 는 `BUILD SUCCEEDED` 및 `App installed`
 
+2026-05-28 실제 iPhone UI 테스트 signing override 재시도:
+
+- 반복 스크립트: `ios/scripts/test_device_ui.sh`
+- 동등 명령: `xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS,id=00008130-0012603E3CC3001C' -configuration Debug -derivedDataPath /tmp/misschool-ios-real-device-setup-search-signed-test -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile DEVELOPMENT_TEAM=2TJFP5788P ENTITLEMENTS_MODE=device-preview CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES CODE_SIGN_STYLE=Automatic CODE_SIGN_ENTITLEMENTS= -allowProvisioningUpdates test`
+- 개선: test runner와 XCTest framework들이 `Apple Development: buggyani@hanmail.net (Q4Y5ZKMUHT)` 로 서명되고 기기에서 `SchoolHelperIOSUITests-Runner` 실행까지 진행됨
+- 1차 결과: UI testing 초기화 단계에서 `LocalAuthentication Code=-4 "인증이 취소되었습니다."` 로 실패
+- 2차 결과: `ios/scripts/test_device_ui.sh` 실행으로 `** TEST SUCCEEDED **`
+- 성공 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-test-script ios/scripts/test_device_ui.sh`
+- 확인 범위: 실제 iPhone에서 `미사중학교` 검색, `학교 1개를 찾았어요.` 표시, `선택된 학교` 표시, 1학년 2반 저장, 홈 화면 `미사중학교` 표시
+- xcresult: `/tmp/misschool-ios-device-ui-test-script/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-00-31-+0900.xcresult`
+- 해석: 기존 signing blocker는 `test_device_ui.sh` 의 signing override로 해소했다. 실기기 초기 설정 검색/선택/저장 자동 UI 테스트는 통과했다.
+
+2026-05-28 실제 iPhone 전체 UI 테스트:
+
+- 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-all-test ios/scripts/test_device_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests`: 6 tests, 0 failures
+- 확인 범위: 초기 설정 학교 검색/선택/저장, 홈 탭 구조, 설정 modal 열기/닫기, 설정 저장, 설정 안 위젯 미리보기, 타이머 modal 직접 실행
+- xcresult: `/tmp/misschool-ios-device-ui-all-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-05-55-+0900.xcresult`
+
 현재 검증하는 실제 상호작용:
 
 - 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾고 학년/반 저장 후 홈으로 진입함

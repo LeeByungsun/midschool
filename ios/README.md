@@ -66,6 +66,17 @@ ios/scripts/verify_device_notification.sh
 REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 ```
 
+실제 iPhone UI 테스트:
+
+```bash
+# 기본: 초기 설정 학교 검색/저장 UI 테스트만 실행
+TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
+
+# 전체 UI 테스트를 실기기에서 실행
+ONLY_TESTING= TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
+```
+
 - 기본 `ENTITLEMENTS_MODE=device-preview` 는 App Group entitlement를 제외하고 앱 본체 확인에 집중합니다.
 - 위젯/App Group까지 검증하려면 `ios/scripts/check_app_group_profiles.py` 로 앱/위젯 profile이 모두 `OK` 인지 확인한 뒤 `ENTITLEMENTS_MODE=app-groups` 로 실행합니다.
+- 실기기 UI 테스트는 `CODE_SIGNING_ALLOWED=YES` signing override가 필요하므로 `test_device_ui.sh` 를 사용합니다.
 - NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 `KEY` 없이 공개 조회를 시도합니다.
