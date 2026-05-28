@@ -20,6 +20,7 @@ final class SettingsViewModel: ObservableObject {
     private let timerSettingsStore: TimerSettingsStore
     private let widgetSettingsStore: WidgetSettingsStore
     private let notificationAuthorizationProvider: NotificationAuthorizationProviding
+    private let notificationScheduler: TimerNotificationScheduling?
     private let widgetTimelineReloader: WidgetTimelineReloading
     private var latestSearchRequestID = 0
 
@@ -29,6 +30,7 @@ final class SettingsViewModel: ObservableObject {
         timerSettingsStore: TimerSettingsStore = TimerSettingsStore(),
         widgetSettingsStore: WidgetSettingsStore = WidgetSettingsStore(),
         notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider(),
+        notificationScheduler: TimerNotificationScheduling? = nil,
         widgetTimelineReloader: WidgetTimelineReloading = WidgetTimelineReloader()
     ) {
         let timerSettings = timerSettingsStore.load()
@@ -41,6 +43,7 @@ final class SettingsViewModel: ObservableObject {
         self.timerSettingsStore = timerSettingsStore
         self.widgetSettingsStore = widgetSettingsStore
         self.notificationAuthorizationProvider = notificationAuthorizationProvider
+        self.notificationScheduler = notificationScheduler
         self.widgetTimelineReloader = widgetTimelineReloader
         self.timerDisplayMode = timerSettings.displayMode
         self.notificationEnabled = timerSettings.notificationEnabled
@@ -152,6 +155,9 @@ final class SettingsViewModel: ObservableObject {
                 vibrationEnabled: vibrationEnabled
             )
         )
+        if !notificationEnabled {
+            (notificationScheduler ?? TimerNotificationScheduler()).cancelPendingTimerCompletion()
+        }
         widgetSettingsStore.save(
             WidgetSettings(showTomorrowTimetable: showTomorrowTimetable)
         )

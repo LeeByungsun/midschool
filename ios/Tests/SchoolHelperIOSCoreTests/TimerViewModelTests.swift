@@ -88,21 +88,3 @@ final class TimerViewModelTests: XCTestCase {
         XCTAssertTrue(scheduler.scheduleCalls.isEmpty)
     }
 }
-
-private final class SpyTimerNotificationScheduler: TimerNotificationScheduling {
-    private(set) var requestAuthorizationCalls = 0
-    private(set) var cancelCalls = 0
-    private(set) var scheduleCalls: [(date: Date, presetTitle: String, vibrationEnabled: Bool)] = []
-
-    func requestAuthorizationIfNeeded() {
-        requestAuthorizationCalls += 1
-    }
-
-    func scheduleTimerCompletion(at date: Date, presetTitle: String, vibrationEnabled: Bool) {
-        scheduleCalls.append((date, presetTitle, vibrationEnabled))
-    }
-
-    func cancelPendingTimerCompletion() {
-        cancelCalls += 1
-    }
-}

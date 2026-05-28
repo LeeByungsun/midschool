@@ -72,4 +72,48 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertFalse(widgetSettingsStore.load().showTomorrowTimetable)
         XCTAssertEqual(reloader.reloadCount, 1)
     }
+
+    func testSettingsViewModelCancelsPendingTimerNotificationWhenNotificationsAreDisabled() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let timerSettingsStore = TimerSettingsStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        let scheduler = SpyTimerNotificationScheduler()
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile.fixture(),
+            repository: MockSchoolRepository(),
+            timerSettingsStore: timerSettingsStore,
+            widgetSettingsStore: widgetSettingsStore,
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider(),
+            notificationScheduler: scheduler
+        )
+
+        viewModel.notificationEnabled = false
+        viewModel.saveTimerSettings()
+
+        XCTAssertFalse(timerSettingsStore.load().notificationEnabled)
+        XCTAssertEqual(scheduler.cancelCalls, 1)
+    }
+
+    func testSettingsViewModelKeepsPendingTimerNotificationWhenNotificationsRemainEnabled() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let timerSettingsStore = TimerSettingsStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        let scheduler = SpyTimerNotificationScheduler()
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile.fixture(),
+            repository: MockSchoolRepository(),
+            timerSettingsStore: timerSettingsStore,
+            widgetSettingsStore: widgetSettingsStore,
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider(),
+            notificationScheduler: scheduler
+        )
+
+        viewModel.notificationEnabled = true
+        viewModel.saveTimerSettings()
+
+        XCTAssertTrue(timerSettingsStore.load().notificationEnabled)
+        XCTAssertEqual(scheduler.cancelCalls, 0)
+    }
 }
