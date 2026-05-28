@@ -8,11 +8,12 @@
 
 ## 1. 현재 검증 방식
 
-현재 iOS 앱은 아래 3단계로 검증합니다.
+현재 iOS 앱은 아래 4단계로 검증합니다.
 
 1. SwiftPM 코어 회귀 테스트
 2. Xcode simulator build
-3. `simctl` seeded launch + screenshot
+3. Xcode simulator UI 테스트
+4. `simctl` seeded launch + screenshot
 
 핵심 이유:
 - 이 환경에서는 일반적인 앱 빌드/실행은 가능함
@@ -77,8 +78,16 @@ xcodebuild \
   -project ios/SchoolHelperIOS.xcodeproj \
   -scheme SchoolHelperIOSUI \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
+  -derivedDataPath /tmp/misschool-ios-ui-latest \
   test
 ```
+
+2026-05-28 최신 확인:
+
+- 커밋: `ec0c3d9`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests`: 5 tests, 0 failures
+- xcresult: `/tmp/misschool-ios-ui-latest/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_12-40-03-+0900.xcresult`
 
 현재 검증하는 실제 상호작용:
 
@@ -257,8 +266,14 @@ xcodebuild \
   -project ios/SchoolHelperIOS.xcodeproj \
   -scheme SchoolHelperIOSUI \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
+  -derivedDataPath /tmp/misschool-ios-ui-latest \
   test
 ```
+
+2026-05-28 최신 결과:
+
+- `** TEST SUCCEEDED **`
+- `Executed 5 tests, with 0 failures`
 
 확인 내용:
 - 홈 탭 기본 구조
