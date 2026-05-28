@@ -33,7 +33,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 
 2026-05-28 최신 확인:
 
-- 55 tests passed
+- 56 tests passed
 - 가정통신문 BFF query/응답 매핑
 - 가정통신문 날짜 누락 시 Android와 동일하게 제목만 표시
 - 타이머 알림 OFF 시 권한 요청/완료 알림 예약 생략
@@ -182,6 +182,31 @@ INSTALL=1 TEAM_ID=YOUR_TEAM_ID SEED_PROFILE=1 ios/scripts/verify_device_parity.s
 - 명령: `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh`
 - 결과: timetable/meals/schedule/settings/timer 딥링크 launch 및 running timer launch 성공
 - 제한: 화면 내용은 사람이 직접 확인해야 하며, WidgetKit 홈 화면 배치/탭과 알림 완료 UX는 이 smoke로 증명하지 않음
+
+### 2.4.2 실기기 타이머 알림 smoke
+
+앱이 최신 코드로 설치된 상태에서 launch override 기반 타이머 완료 알림을 예약하려면 아래 스크립트를 사용합니다.
+
+```bash
+ios/scripts/verify_device_notification.sh
+```
+
+처음 실행 시 iOS 권한 팝업이 뜨면 허용한 뒤 한 번 더 실행합니다.
+
+```bash
+REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
+```
+
+이 smoke는 `SCHOOLHELPER_SCHEDULE_TIMER_NOTIFICATION=1` 테스트 전용 환경변수로 실행 중 타이머 상태를 저장하고 알림 예약을 시도합니다.
+단, 실제 알림 도착 여부는 iPhone을 잠그거나 앱을 백그라운드로 보낸 뒤 사람이 확인해야 합니다.
+
+2026-05-28 확인:
+
+- 사전 설치: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-notification-smoke LAUNCH=0 ios/scripts/install_device.sh`
+- 설치 결과: iPhone `00008130-0012603E3CC3001C` 에 `com.leebyungsun.schoolhelperios` 설치 성공
+- smoke 명령: `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh`
+- smoke 결과: `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
+- 제한: 실제 알림 배너 도착은 iPhone 잠금/백그라운드 상태에서 사람이 확인해야 하므로 최종 UX 검증은 아직 수동 확인 대기
 
 ### 2.5 재현 스크립트
 

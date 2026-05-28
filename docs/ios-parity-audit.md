@@ -272,6 +272,8 @@ Android 기준:
 - `device-preview` 모드는 App Group entitlement를 제외하므로 앱 본체 확인용이다.
 - `ios/scripts/verify_device_parity.sh` 로 설치된 실기기 앱의 초기 설정 launch, seeded home, 주요 딥링크, running timer launch smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh` 로 주요 딥링크와 running timer launch 명령 성공을 확인했다.
+- `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.
+- 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh` 로 알림 smoke launch 성공을 확인했다. 실제 알림 배너 도착은 수동 확인 대기다.
 
 제약:
 
@@ -301,4 +303,3 @@ Android 기준:
 4. 실제 iPhone 홈 화면에 위젯을 배치해 오늘/내일 시간표와 탭 라우팅을 확인한다.
 5. 타이머를 1분 이하로 시작해 실기기 알림 권한 요청과 완료 알림을 확인한다.
 6. 급식/시간표/일정/가정통신문을 실제 저장 프로필 기준으로 눈으로 확인한다.
-

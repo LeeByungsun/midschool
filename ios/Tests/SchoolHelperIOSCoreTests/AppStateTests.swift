@@ -122,4 +122,15 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(state?.targetDate, referenceNow.addingTimeInterval(123))
         XCTAssertEqual(state?.isRunning, true)
     }
+
+    func testTimerNotificationSmokeLaunchOverrideIsOptIn() {
+        XCTAssertFalse(AppLaunchOverrides.shouldScheduleTimerNotification(from: [:]))
+        XCTAssertTrue(AppLaunchOverrides.shouldScheduleTimerNotification(from: [
+            "SCHOOLHELPER_SCHEDULE_TIMER_NOTIFICATION": "1"
+        ]))
+        XCTAssertTrue(AppLaunchOverrides.shouldScheduleTimerNotification(from: [
+            "SCHOOLHELPER_SCHEDULE_TIMER_NOTIFICATION": "true"
+        ]))
+    }
+
 }

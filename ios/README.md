@@ -56,6 +56,16 @@ RUN_FRESH_SETUP=1 SEED_PROFILE=1 ios/scripts/verify_device_parity.sh
 INSTALL=1 TEAM_ID=YOUR_TEAM_ID SEED_PROFILE=1 ios/scripts/verify_device_parity.sh
 ```
 
+실제 iPhone 타이머 알림 smoke:
+
+```bash
+# 앱이 최신으로 설치된 상태에서 실행
+ios/scripts/verify_device_notification.sh
+
+# 권한 팝업이 처음 뜨면 허용 후 한 번 더 실행
+REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
+```
+
 - 기본 `ENTITLEMENTS_MODE=device-preview` 는 App Group entitlement를 제외하고 앱 본체 확인에 집중합니다.
 - 위젯/App Group까지 검증하려면 `ios/scripts/check_app_group_profiles.py` 로 앱/위젯 profile이 모두 `OK` 인지 확인한 뒤 `ENTITLEMENTS_MODE=app-groups` 로 실행합니다.
 - NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 `KEY` 없이 공개 조회를 시도합니다.

@@ -37,6 +37,13 @@ enum AppLaunchOverrides {
         return AppRoute(rawValue: rawValue)
     }
 
+
+    static func shouldScheduleTimerNotification(
+        from environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
+        truthy(environment["SCHOOLHELPER_SCHEDULE_TIMER_NOTIFICATION"])
+    }
+
     static func timerState(
         from environment: [String: String] = ProcessInfo.processInfo.environment,
         now: Date = Date()
