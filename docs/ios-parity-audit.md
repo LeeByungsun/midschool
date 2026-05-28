@@ -285,7 +285,7 @@ Android 기준:
 - `HomeWidgetSnapshotLoaderTests`
 - `HomeWidgetTimelinePlannerTests`
 - UI 테스트의 앱 내 위젯 미리보기 확인
-- `ios/scripts/test_widget_sim.sh` 로 simulator 위젯 패키징 smoke 고정
+- `ios/scripts/test_widget_sim.sh` 로 simulator 위젯 패키징/route/App Group config smoke 고정
 - 2026-05-28 `DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh` 통과
 
 남은 검증:

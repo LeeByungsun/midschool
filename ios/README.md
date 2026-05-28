@@ -103,8 +103,8 @@ ios/scripts/test_widget_sim.sh
 ```
 
 - `SchoolHelperWidget` scheme이 simulator에서 빌드되는지 확인합니다.
-- 빌드된 `SchoolHelperIOS.app/PlugIns/SchoolHelperWidget.appex` 존재, WidgetKit extension point, app/widget bundle id를 확인합니다.
-- 앱/위젯 entitlements source에 `group.com.leebyungsun.schoolhelperios` 가 들어 있는지도 확인합니다.
+- 빌드된 `SchoolHelperIOS.app/PlugIns/SchoolHelperWidget.appex` 존재, WidgetKit extension point, app/widget bundle id와 위젯 탭 deep link route를 확인합니다.
+- 앱/위젯 entitlements source와 `AppStorageConfig.appGroupSuiteName` 이 `group.com.leebyungsun.schoolhelperios` 로 맞춰져 있는지도 확인합니다.
 - 기본 출력은 짧게 유지하며, 전체 `xcodebuild` 로그가 필요하면 `VERBOSE=1 ios/scripts/test_widget_sim.sh` 로 실행합니다.
 
 실제 iPhone UI 테스트:

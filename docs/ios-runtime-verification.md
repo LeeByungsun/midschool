@@ -356,7 +356,7 @@ ios/scripts/test_widget_sim.sh
 
 - 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh`
 - 결과: `Widget simulator packaging verified`
-- 확인 범위: `SchoolHelperWidget` scheme build, embedded `SchoolHelperWidget.appex`, WidgetKit extension point, app/widget bundle id, app/widget App Group entitlement source
+- 확인 범위: `SchoolHelperWidget` scheme build, embedded `SchoolHelperWidget.appex`, WidgetKit extension point, app/widget bundle id, widget tap route, app/widget App Group entitlement/config source
 - 최신 device-preview 설치 확인:
   - 커밋: `4ed3c2f`
   - 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-latest-4ed3c2f LAUNCH=1 ios/scripts/install_device.sh`

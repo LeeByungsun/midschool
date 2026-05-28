@@ -48,6 +48,17 @@ assert_entitlement_has_group() {
   fi
 }
 
+assert_source_contains() {
+  local file="$1"
+  local expected="$2"
+  assert_file_exists "$file"
+  if ! grep -Fq "$expected" "$file"; then
+    echo "Missing expected source text in $file" >&2
+    echo "  expected: $expected" >&2
+    exit 1
+  fi
+}
+
 BUILD_SETTINGS_FILE="$(mktemp)"
 trap 'rm -f "$BUILD_SETTINGS_FILE"' EXIT
 
@@ -101,6 +112,9 @@ assert_plist_value "$WIDGET_PATH/Info.plist" ':NSExtension:NSExtensionPointIdent
 
 assert_entitlement_has_group "$ROOT_DIR/ios/SchoolHelperIOS/SchoolHelperIOS.entitlements"
 assert_entitlement_has_group "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.entitlements"
+assert_source_contains "$ROOT_DIR/ios/SchoolHelperIOS/Core/Storage/AppStorageConfig.swift" "static let appGroupSuiteName = \"$APP_GROUP\""
+assert_source_contains "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.swift" 'schoolhelper://settings'
+assert_source_contains "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.swift" 'schoolhelper://timetable'
 
 cat <<EOF_REPORT
 
@@ -108,5 +122,6 @@ Widget simulator packaging verified:
   App: $APP_PATH
   Widget: $WIDGET_PATH
   Extension point: com.apple.widgetkit-extension
-  App Group entitlement source: $APP_GROUP
+  App Group entitlement/config source: $APP_GROUP
+  Widget tap routes: schoolhelper://settings, schoolhelper://timetable
 EOF_REPORT
