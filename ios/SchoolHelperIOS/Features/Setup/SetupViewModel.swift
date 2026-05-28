@@ -11,6 +11,7 @@ final class SetupViewModel: ObservableObject {
     @Published var isSearching: Bool = false
 
     private let repository: SchoolRepository
+    private var latestSearchRequestID = 0
 
     init(
         initialProfile: StudentProfile,
@@ -23,6 +24,7 @@ final class SetupViewModel: ObservableObject {
     }
 
     func updateSchoolQuery(_ query: String) {
+        latestSearchRequestID += 1
         searchQuery = query
         searchResults = []
 
@@ -57,11 +59,16 @@ final class SetupViewModel: ObservableObject {
             return
         }
 
+        latestSearchRequestID += 1
+        let requestID = latestSearchRequestID
         isSearching = true
-        defer { isSearching = false }
 
         do {
             let schools = try await repository.searchSchools(query: trimmed)
+            guard isLatestSearch(requestID: requestID, query: trimmed) else {
+                return
+            }
+            isSearching = false
             searchResults = schools
             if schools.count == 1, let school = schools.first {
                 selectSchool(school)
@@ -72,6 +79,10 @@ final class SetupViewModel: ObservableObject {
                 message = "검색 결과에서 학교를 선택해 주세요."
             }
         } catch {
+            guard isLatestSearch(requestID: requestID, query: trimmed) else {
+                return
+            }
+            isSearching = false
             message = error.localizedDescription
         }
     }
@@ -111,5 +122,10 @@ final class SetupViewModel: ObservableObject {
         profile.schoolCode = school.schoolCode
         profile.schoolKind = school.schoolKind
         return profile
+    }
+
+    private func isLatestSearch(requestID: Int, query: String) -> Bool {
+        requestID == latestSearchRequestID &&
+            searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) == query
     }
 }
