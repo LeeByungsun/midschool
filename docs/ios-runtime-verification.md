@@ -397,11 +397,13 @@ APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/refresh_app_group_p
 
 - `com.leebyungsun.schoolhelperios`: App Group 포함
 - `com.leebyungsun.schoolhelperios.widget`: App Group 미포함
+- Xcode project의 app/widget target 모두 `SystemCapabilities = { com.apple.ApplicationGroups.iOS = { enabled = 1; }; };` metadata를 포함하도록 보강했다.
 - `ios/scripts/check_app_group_profiles.py` 재실행 결과도 동일함. 앱 profile은 `OK`, 위젯 profile은 groups `[]` 로 `FAIL`.
 - `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-attempt LAUNCH=0 ios/scripts/install_device.sh` 로 Xcode profile 갱신/빌드를 시도했지만 widget profile mismatch로 실패함
   - 오류: `Provisioning profile "iOS Team Provisioning Profile: com.leebyungsun.schoolhelperios.widget" doesn't match the entitlements file's value for the com.apple.security.application-groups entitlement.`
 - `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-check LAUNCH=0 ios/scripts/install_device.sh` 재시도 역시 같은 widget profile mismatch로 실패함.
 - `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P ios/scripts/refresh_app_group_profiles.sh` 로 local stale profile을 백업한 뒤 Xcode profile refresh를 재시도했다. 새로 내려받은 widget profile도 groups `[]` 라서, 현재 blocker는 local cache가 아니라 Apple Developer의 widget App ID App Group capability 미반영 상태로 확인됨.
+- project capability metadata 보강 후 `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-app-group-capability-metadata-refresh ios/scripts/refresh_app_group_profiles.sh` 를 재실행했지만 새 widget profile도 groups `[]` 로 동일하게 실패했다.
 
 자동화 가능한 위젯 패키징 검증은 별도 simulator smoke로 고정했습니다.
 

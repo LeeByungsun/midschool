@@ -127,6 +127,7 @@ def main() -> int:
             "ios/scripts/test_widget_sim.sh",
             "ios/scripts/verify_widget_app_group_readiness.sh",
             "ios/scripts/refresh_app_group_profiles.sh",
+            "ios/scripts/generate_xcodeproj.py",
             "ios/scripts/verify_ios_local_readiness.sh",
             "ios/scripts/validate_ios_system_evidence.py",
             "ios/system-evidence.template.json",

@@ -112,6 +112,7 @@ assert_plist_value "$WIDGET_PATH/Info.plist" ':NSExtension:NSExtensionPointIdent
 
 assert_entitlement_has_group "$ROOT_DIR/ios/SchoolHelperIOS/SchoolHelperIOS.entitlements"
 assert_entitlement_has_group "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.entitlements"
+assert_source_contains "$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj/project.pbxproj" 'SystemCapabilities = { com.apple.ApplicationGroups.iOS = { enabled = 1; }; };'
 assert_source_contains "$ROOT_DIR/ios/SchoolHelperIOS/Core/Storage/AppStorageConfig.swift" "static let appGroupSuiteName = \"$APP_GROUP\""
 assert_source_contains "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.swift" 'schoolhelper://settings'
 assert_source_contains "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.swift" 'schoolhelper://timetable'

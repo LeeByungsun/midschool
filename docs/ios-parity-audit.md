@@ -291,7 +291,9 @@ Android 기준:
 - `ios/scripts/test_widget_sim.sh` 로 simulator 위젯 패키징/route/App Group config smoke 고정
 - `ios/scripts/verify_widget_app_group_readiness.sh` 로 simulator smoke → profile check → 선택적 full App Group device build/install 경로 고정
 - `ios/scripts/refresh_app_group_profiles.sh` 로 local stale provisioning profile 백업/제거와 Xcode refresh 재시도 경로 고정
+- `ios/scripts/generate_xcodeproj.py` 와 `SchoolHelperIOS.xcodeproj` 에 app/widget target App Groups `SystemCapabilities` metadata 고정
 - 2026-05-28 `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P ios/scripts/refresh_app_group_profiles.sh` 실행 후 새 widget profile도 App Group이 비어 있어 Apple Developer widget App ID capability 미반영 상태로 확인
+- 2026-05-28 project capability metadata 보강 후에도 `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-app-group-capability-metadata-refresh ios/scripts/refresh_app_group_profiles.sh` 결과 새 widget profile이 groups `[]` 로 동일하게 실패함을 확인
 - `AppStateTests/testWidgetDeepLinksRouteToSetupOrTimetable` 로 위젯 URL(`schoolhelper://settings`, `schoolhelper://timetable`) 라우팅 고정
 - 2026-05-28 `DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh` 통과
 
