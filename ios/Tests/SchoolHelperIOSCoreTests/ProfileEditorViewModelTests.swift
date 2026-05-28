@@ -107,6 +107,57 @@ final class ProfileEditorViewModelTests: XCTestCase {
         XCTAssertNil(savedProfile)
         XCTAssertEqual(viewModel.message, "학교를 검색 후 다시 선택해 주세요.")
     }
+
+    func testSettingsViewModelIgnoresStaleSchoolSearchResults() async {
+        let repository = DelayedSearchRepository(
+            results: [
+                "미사": [
+                    SchoolInfo(
+                        officeCode: "J10",
+                        officeName: "경기도교육청",
+                        schoolCode: "7531093",
+                        schoolName: "미사중학교",
+                        schoolKind: "중학교",
+                        roadAddress: "경기도 하남시"
+                    )
+                ],
+                "하남": [
+                    SchoolInfo(
+                        officeCode: "J10",
+                        officeName: "경기도교육청",
+                        schoolCode: "7531094",
+                        schoolName: "하남중학교",
+                        schoolKind: "중학교",
+                        roadAddress: "경기도 하남시"
+                    )
+                ]
+            ],
+            delays: [
+                "미사": 120_000_000,
+                "하남": 10_000_000
+            ]
+        )
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile.fixture(),
+            repository: repository,
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        viewModel.updateSchoolQuery("미사")
+        let firstSearch = Task { await viewModel.searchSchools() }
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        viewModel.updateSchoolQuery("하남")
+        let secondSearch = Task { await viewModel.searchSchools() }
+
+        await firstSearch.value
+        await secondSearch.value
+
+        XCTAssertEqual(viewModel.searchQuery, "하남중학교")
+        XCTAssertEqual(viewModel.searchResults.map { $0.schoolName }, ["하남중학교"])
+        XCTAssertEqual(viewModel.selectedSchool?.schoolCode, "7531094")
+        XCTAssertEqual(viewModel.message, "학교 1개를 찾았어요.")
+        XCTAssertFalse(viewModel.isSearching)
+    }
 }
 
 private struct DelayedSearchRepository: SchoolRepository {

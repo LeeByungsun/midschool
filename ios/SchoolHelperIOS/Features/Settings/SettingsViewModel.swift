@@ -21,6 +21,7 @@ final class SettingsViewModel: ObservableObject {
     private let widgetSettingsStore: WidgetSettingsStore
     private let notificationAuthorizationProvider: NotificationAuthorizationProviding
     private let widgetTimelineReloader: WidgetTimelineReloading
+    private var latestSearchRequestID = 0
 
     init(
         initialProfile: StudentProfile,
@@ -47,6 +48,7 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func updateSchoolQuery(_ query: String) {
+        latestSearchRequestID += 1
         searchQuery = query
         searchResults = []
 
@@ -81,11 +83,16 @@ final class SettingsViewModel: ObservableObject {
             return
         }
 
+        latestSearchRequestID += 1
+        let requestID = latestSearchRequestID
         isSearching = true
-        defer { isSearching = false }
 
         do {
             let schools = try await repository.searchSchools(query: trimmed)
+            guard isLatestSearch(requestID: requestID, query: trimmed) else {
+                return
+            }
+            isSearching = false
             searchResults = schools
             if schools.count == 1, let school = schools.first {
                 selectSchool(school)
@@ -96,6 +103,10 @@ final class SettingsViewModel: ObservableObject {
                 message = "검색 결과에서 학교를 선택해 주세요."
             }
         } catch {
+            guard isLatestSearch(requestID: requestID, query: trimmed) else {
+                return
+            }
+            isSearching = false
             message = error.localizedDescription
         }
     }
@@ -187,5 +198,10 @@ final class SettingsViewModel: ObservableObject {
         profile.schoolCode = school.schoolCode
         profile.schoolKind = school.schoolKind
         return profile
+    }
+
+    private func isLatestSearch(requestID: Int, query: String) -> Bool {
+        requestID == latestSearchRequestID &&
+            searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) == query
     }
 }

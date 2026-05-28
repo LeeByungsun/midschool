@@ -32,11 +32,11 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 
 2026-05-28 최신 확인:
 
-- 46 tests passed
+- 47 tests passed
 - 가정통신문 BFF query/응답 매핑
 - 가정통신문 날짜 누락 시 Android와 동일하게 제목만 표시
 - 타이머 알림 OFF 시 권한 요청/완료 알림 예약 생략
-- 초기 설정 학교 검색에서 늦게 끝난 이전 검색 결과 무시
+- 초기 설정/설정 학교 검색에서 늦게 끝난 이전 검색 결과 무시
 
 ### 2.2 앱 빌드
 
