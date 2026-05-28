@@ -11,8 +11,11 @@ DEVICE_ID="${DEVICE_ID:-}"
 TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"
 ENTITLEMENTS_MODE="${ENTITLEMENTS_MODE:-device-preview}"
 LIVE_UI_TEST="${LIVE_UI_TEST:-0}"
+EXTERNAL_LINK_TEST="${EXTERNAL_LINK_TEST:-0}"
 if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent}"
+elif [[ "$EXTERNAL_LINK_TEST" == "1" || "$EXTERNAL_LINK_TEST" == "true" || "$EXTERNAL_LINK_TEST" == "yes" ]]; then
+  ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testNoticeButtonOpensExternalSafariURL}"
 else
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile}"
 fi
@@ -90,8 +93,15 @@ XCODEBUILD_ARGS=(
   -allowProvisioningUpdates
 )
 
+SWIFT_FLAGS=()
 if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
-  XCODEBUILD_ARGS+=('OTHER_SWIFT_FLAGS=$(inherited) -DLIVE_UI_TEST_ENABLED')
+  SWIFT_FLAGS+=(-DLIVE_UI_TEST_ENABLED)
+fi
+if [[ "$EXTERNAL_LINK_TEST" == "1" || "$EXTERNAL_LINK_TEST" == "true" || "$EXTERNAL_LINK_TEST" == "yes" ]]; then
+  SWIFT_FLAGS+=(-DEXTERNAL_LINK_TEST_ENABLED)
+fi
+if [[ "${#SWIFT_FLAGS[@]}" -gt 0 ]]; then
+  XCODEBUILD_ARGS+=("OTHER_SWIFT_FLAGS=\$(inherited) ${SWIFT_FLAGS[*]}")
 fi
 
 if [[ -n "$ONLY_TESTING" ]]; then
@@ -106,6 +116,7 @@ echo "Entitlements mode: $ENTITLEMENTS_MODE"
 echo "DerivedData: $DERIVED_DATA_PATH"
 echo "Only testing: ${ONLY_TESTING:-<all>}"
 echo "Live UI test: $LIVE_UI_TEST"
+echo "External link test: $EXTERNAL_LINK_TEST"
 
 XCODEBUILD_LOG="${XCODEBUILD_LOG:-$DERIVED_DATA_PATH/test_device_ui.xcodebuild.log}"
 AUTOMATION_RETRY_LIMIT="${AUTOMATION_RETRY_LIMIT:-1}"

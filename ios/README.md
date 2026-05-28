@@ -92,6 +92,9 @@ ONLY_TESTING= TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 
 # live NEIS/BFF 데이터가 실제 iPhone 앱 화면에 표시되는지 확인
 LIVE_UI_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
+
+# seeded 가정통신문 링크가 Safari로 전환되는지 확인
+EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 ```
 
 - 기본 `ENTITLEMENTS_MODE=device-preview` 는 App Group entitlement를 제외하고 앱 본체 확인에 집중합니다.
@@ -99,4 +102,5 @@ LIVE_UI_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - 실기기 UI 테스트는 `CODE_SIGNING_ALLOWED=YES` signing override가 필요하므로 `test_device_ui.sh` 를 사용합니다.
 - `test_device_ui.sh` 는 기기 잠금 상태를 감지해 종료하고, `Timed out while enabling automation mode` 는 기본 1회 자동 재시도합니다. 필요하면 `AUTOMATION_RETRY_LIMIT=0` 으로 끌 수 있습니다.
 - `LIVE_UI_TEST=1` 은 live UI 테스트 전용 Swift flag를 켜고 `testLiveSchoolDataDisplaysBackendContent` 만 실행합니다.
+- `EXTERNAL_LINK_TEST=1` 은 외부 앱 전환 테스트 전용 Swift flag를 켜고 `testNoticeButtonOpensExternalSafariURL` 만 실행합니다.
 - NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 `KEY` 없이 공개 조회를 시도합니다.

@@ -106,6 +106,26 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars.staticTexts["타이머"].exists)
     }
 
+    func testNoticeButtonOpensExternalSafariURL() throws {
+        #if !EXTERNAL_LINK_TEST_ENABLED
+        try XCTSkipUnless(
+            false,
+            "external notice link UI test is opt-in because it leaves the app and opens Safari"
+        )
+        #endif
+
+        let app = makeSeededApp()
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 5))
+        XCTAssertTrue(scrollToStaticText(containing: "현장학습 안내", in: app, maxSwipes: 5))
+        XCTAssertTrue(scrollToButton(named: "가정통신문 열기", in: app, maxSwipes: 5))
+        app.buttons["가정통신문 열기"].tap()
+
+        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+        XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 10))
+    }
+
     func testLiveSchoolDataDisplaysBackendContent() throws {
         #if !LIVE_UI_TEST_ENABLED
         try XCTSkipUnless(
@@ -191,6 +211,22 @@ final class SchoolHelperIOSUITests: XCTestCase {
     ) -> Bool {
         let predicate = NSPredicate(format: "label CONTAINS %@", text)
         return app.staticTexts.containing(predicate).firstMatch.waitForExistence(timeout: timeout)
+    }
+
+    private func scrollToButton(
+        named label: String,
+        in app: XCUIApplication,
+        maxSwipes: Int = 5
+    ) -> Bool {
+        for attempt in 0...maxSwipes {
+            if app.buttons[label].waitForExistence(timeout: 1) {
+                return true
+            }
+            if attempt < maxSwipes {
+                app.swipeUp()
+            }
+        }
+        return false
     }
 
     private func scrollToStaticText(

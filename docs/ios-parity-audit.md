@@ -228,7 +228,7 @@ Android 기준:
 
 ### 2.9 가정통신문 preview
 
-상태: 구현 및 코어 검증됨
+상태: 구현 및 simulator/실기기 전환 smoke 검증됨
 
 Android 기준:
 
@@ -247,10 +247,13 @@ Android 기준:
 - `ios/scripts/verify_live_school_data.py` 로 live web `/api/notices` BFF item 확인
 - UI 테스트 `testLiveSchoolDataDisplaysBackendContent` 로 simulator 홈 화면 렌더링 확인
 - 2026-05-28 미사중학교 기준 sample `2026학년도미사 오케스트라 아침 맞이 콘서트일정 안내` 확인
+- UI 테스트 `testNoticeButtonOpensExternalSafariURL` 로 seeded notice의 `가정통신문 열기` 버튼이 Safari를 foreground로 전환하는지 확인
+- 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 외부 링크 전환 smoke 통과. xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
+- 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 외부 링크 전환 smoke 통과. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
 
 남은 수동 확인:
 
-- 실기기 화면에서 실제 가정통신문 렌더링과 외부 링크 전환 확인.
+- 실제 운영 notice 웹페이지 콘텐츠 자체의 Safari 로드 완료 확인.
 
 ### 2.10 홈 화면 위젯
 
@@ -313,6 +316,8 @@ Android 기준:
 - 2026-05-28 `ios/scripts/test_live_ui.sh` 로 simulator 앱 화면의 live NEIS/BFF 렌더링을 재확인했다. xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-36-53-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-initial-search-check ios/scripts/test_device_ui.sh` 로 실제 iPhone 초기 설정 학교 검색/저장 흐름을 재확인했다. xcresult: `/tmp/misschool-ios-device-initial-search-check/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-38-27-+0900.xcresult`
 - 2026-05-28 `LIVE_UI_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 앱 화면의 live NEIS/BFF 렌더링을 확인했다. xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
+- 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
+- 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
 
 따라서 현재 완료라고 말할 수 있는 범위:
 
@@ -324,6 +329,7 @@ Android 기준:
 - live NEIS/BFF backend 데이터 smoke
 - live NEIS/BFF simulator UI 렌더링 smoke
 - live NEIS/BFF 실제 iPhone UI 렌더링 smoke
+- 가정통신문 외부 링크 Safari 전환 smoke
 
 아직 완료라고 말할 수 없는 범위:
 
@@ -331,7 +337,7 @@ Android 기준:
 - App Group 기반 앱/위젯 공유 데이터 실기기 end-to-end
 - 실기기 알림 권한/완료 알림 UX
 - 실제 iPhone 화면의 live 데이터 날짜 이동 UX 눈검증
-- 실제 iPhone 가정통신문 외부 링크 UX 눈검증
+- 실제 운영 notice 웹페이지 콘텐츠 자체의 Safari 로드 완료 눈검증
 
 ---
 
