@@ -1,7 +1,7 @@
 import XCTest
 
 final class SchoolHelperIOSUITests: XCTestCase {
-    func testInitialSetupSearchFindsMisaMiddleSchoolFromNEIS() {
+    func testInitialSetupSearchSelectsSchoolAndSavesProfile() {
         let app = makeFreshSetupApp()
         app.launch()
 
@@ -13,7 +13,16 @@ final class SchoolHelperIOSUITests: XCTestCase {
         app.buttons["학교 검색"].tap()
 
         XCTAssertTrue(app.staticTexts["학교 1개를 찾았어요."].waitForExistence(timeout: 20))
-        XCTAssertTrue(app.buttons["저장하고 시작하기"].exists)
+
+        app.textFields["학년"].tap()
+        app.textFields["학년"].typeText("1")
+        app.textFields["반"].tap()
+        app.textFields["반"].typeText("2")
+
+        app.buttons["저장하고 시작하기"].tap()
+
+        XCTAssertTrue(app.tabBars.buttons["홈"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["미사중학교"].waitForExistence(timeout: 5))
     }
 
     func testSeededHomeShowsCoreTabsAndNoMoreTab() {

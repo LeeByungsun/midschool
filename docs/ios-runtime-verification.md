@@ -78,20 +78,20 @@ xcodebuild \
   -project ios/SchoolHelperIOS.xcodeproj \
   -scheme SchoolHelperIOSUI \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
-  -derivedDataPath /tmp/misschool-ios-ui-setup-search \
+  -derivedDataPath /tmp/misschool-ios-ui-setup-save \
   test
 ```
 
 2026-05-28 최신 확인:
 
-- 커밋: `15751fb`
+- 커밋: `d4aa052`
 - 결과: `** TEST SUCCEEDED **`
 - `SchoolHelperIOSUITests`: 6 tests, 0 failures
-- xcresult: `/tmp/misschool-ios-ui-setup-search/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_12-54-54-+0900.xcresult`
+- xcresult: `/tmp/misschool-ios-ui-setup-save/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_13-04-43-+0900.xcresult`
 
 현재 검증하는 실제 상호작용:
 
-- 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾음
+- 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾고 학년/반 저장 후 홈으로 진입함
 - 홈 탭이 `More` 없이 표시됨
 - 홈에서 설정 modal 진입/닫기
 - 설정 modal 저장 버튼으로 홈 복귀
@@ -273,7 +273,7 @@ xcodebuild \
   -project ios/SchoolHelperIOS.xcodeproj \
   -scheme SchoolHelperIOSUI \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
-  -derivedDataPath /tmp/misschool-ios-ui-setup-search \
+  -derivedDataPath /tmp/misschool-ios-ui-setup-save \
   test
 ```
 
@@ -283,7 +283,7 @@ xcodebuild \
 - `Executed 6 tests, with 0 failures`
 
 확인 내용:
-- 초기 설정 NEIS 학교 검색
+- 초기 설정 NEIS 학교 검색/저장/홈 진입
 - 홈 탭 기본 구조
 - 설정 modal 열기/닫기
 - 설정 안 위젯 미리보기
