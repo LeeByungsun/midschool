@@ -95,7 +95,7 @@ Android 기준:
 
 ### 2.4 시간표
 
-상태: 구현 및 코어 경로 검증됨
+상태: 구현 및 자동 검증됨
 
 Android 기준:
 
@@ -110,14 +110,15 @@ Android 기준:
 - `SchoolRepository.fetchTimetable`
 - `SchoolDataCacheStore`
 - `DefaultSchoolRepositoryTests`
+- UI 테스트 `testSeededTimetableShowsCoreContent`
 
 남은 수동 확인:
 
-- 실기기에서 실제 날짜 이동 UX와 NEIS 응답 표시를 눈으로 확인.
+- 실기기에서 실제 날짜 이동 UX와 live NEIS 응답 표시를 눈으로 확인.
 
 ### 2.5 급식
 
-상태: 구현 및 코어 경로 검증됨
+상태: 구현 및 자동 검증됨
 
 Android 기준:
 
@@ -131,14 +132,15 @@ Android 기준:
 - `SchoolRepository.fetchMeals`
 - `SchoolDataCacheStore`
 - `DefaultSchoolRepositoryTests`
+- UI 테스트 `testSeededMealsShowsCoreContent`
 
 남은 수동 확인:
 
-- 실기기에서 실제 주간 리스트 스크롤/표시 확인.
+- 실기기에서 live NEIS 기준 실제 주간 리스트 스크롤/표시 확인.
 
 ### 2.6 학사 일정
 
-상태: 구현 및 코어 경로 검증됨
+상태: 구현 및 자동 검증됨
 
 Android 기준:
 
@@ -152,10 +154,11 @@ Android 기준:
 - `HomeViewModel`과 `ScheduleViewModel`의 필터링
 - `SchoolRepository.fetchSchedule`
 - `DefaultSchoolRepositoryTests`
+- UI 테스트 `testSeededScheduleShowsCoreContent`
 
 남은 수동 확인:
 
-- 실기기에서 월 이동/목록 표시 확인.
+- 실기기에서 live NEIS 기준 월 이동/목록 표시 확인.
 
 ### 2.7 타이머
 
@@ -285,12 +288,14 @@ Android 기준:
 - 실제 iPhone UI 자동 테스트는 `ios/scripts/test_device_ui.sh` 로 signing override를 적용해 실행한다.
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-test-script ios/scripts/test_device_ui.sh` 로 실제 iPhone에서 초기 설정 학교 검색/선택/저장 UI 테스트가 `TEST SUCCEEDED` 로 통과했다.
 - 2026-05-28 `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-all-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 전체 UI 테스트 6개가 모두 통과했다.
+- 2026-05-28 simulator 전체 UI 테스트는 시간표/급식/일정 콘텐츠 검증을 포함해 9개가 모두 통과했다.
+- 2026-05-28 9개 전체 UI 테스트의 실기기 재시도는 앱/테스트 러너 빌드 후 기기 잠금 상태(`Unlock buggyani to Continue`)에서 중단했다.
 
 따라서 현재 완료라고 말할 수 있는 범위:
 
 - iOS 앱 본체의 핵심 기능 구현
 - simulator UI 테스트
-- 실제 iPhone UI 테스트
+- 실제 iPhone UI 테스트(기존 6개 자동 테스트 기준)
 - SwiftPM 코어 회귀 테스트
 - 실기기 앱 본체 설치/실행
 
@@ -309,4 +314,5 @@ Android 기준:
 3. `ENTITLEMENTS_MODE=app-groups TEAM_ID=... ios/scripts/install_device.sh` 로 full App Group 빌드를 실행한다.
 4. 실제 iPhone 홈 화면에 위젯을 배치해 오늘/내일 시간표와 탭 라우팅을 확인한다.
 5. 타이머를 1분 이하로 시작해 실기기 알림 권한 요청과 완료 알림을 확인한다.
-6. 급식/시간표/일정/가정통신문을 실제 저장 프로필 기준으로 눈으로 확인한다.
+6. 기기 잠금 해제 상태에서 9개 전체 UI 테스트를 다시 실행한다.
+7. 급식/시간표/일정/가정통신문을 실제 저장 프로필 기준으로 눈으로 확인한다.

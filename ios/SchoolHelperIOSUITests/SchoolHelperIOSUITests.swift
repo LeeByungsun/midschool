@@ -37,6 +37,33 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertFalse(app.tabBars.buttons["More"].exists)
     }
 
+    func testSeededTimetableShowsCoreContent() {
+        let app = makeSeededApp(initialRoute: "timetable")
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "국어", in: app, timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 5))
+    }
+
+    func testSeededMealsShowsCoreContent() {
+        let app = makeSeededApp(initialRoute: "meals")
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 5))
+        XCTAssertTrue(scrollToStaticText(containing: "비빔밥", in: app))
+        XCTAssertTrue(scrollToStaticText(containing: "712 kcal", in: app))
+    }
+
+    func testSeededScheduleShowsCoreContent() {
+        let app = makeSeededApp(initialRoute: "schedule")
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 5))
+        XCTAssertTrue(scrollToStaticText(containing: "체육대회", in: app))
+        XCTAssertTrue(scrollToStaticText(containing: "중간고사", in: app))
+    }
+
     func testSettingsModalCanOpenAndCloseFromHome() {
         let app = makeSeededApp()
         app.launch()
@@ -81,8 +108,10 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
     private func makeSeededApp(initialRoute: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchEnvironment["SCHOOLHELPER_SEED_PROFILE"] = "fixture"
+        app.launchEnvironment["SCHOOLHELPER_SEED_PROFILE_JSON"] = seededProfileJSON()
         app.launchEnvironment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"] = "1"
+        app.launchEnvironment["NEIS_BASE_URL"] = "http://[::1"
+        app.launchEnvironment["WEB_BASE_URL"] = "http://[::1"
         if let initialRoute {
             app.launchEnvironment["SCHOOLHELPER_INITIAL_ROUTE"] = initialRoute
         }
@@ -94,5 +123,36 @@ final class SchoolHelperIOSUITests: XCTestCase {
         app.launchEnvironment["SCHOOLHELPER_RESET_PROFILE"] = "1"
         app.launchEnvironment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"] = "1"
         return app
+    }
+
+    private func seededProfileJSON() -> String {
+        """
+        {"grade":"1","classroom":"2","schoolName":"미사중학교","officeCode":"J10","schoolCode":"ui-\(UUID().uuidString)","schoolKind":"중학교"}
+        """
+    }
+
+    private func waitForStaticText(
+        containing text: String,
+        in app: XCUIApplication,
+        timeout: TimeInterval
+    ) -> Bool {
+        let predicate = NSPredicate(format: "label CONTAINS %@", text)
+        return app.staticTexts.containing(predicate).firstMatch.waitForExistence(timeout: timeout)
+    }
+
+    private func scrollToStaticText(
+        containing text: String,
+        in app: XCUIApplication,
+        maxSwipes: Int = 5
+    ) -> Bool {
+        for attempt in 0...maxSwipes {
+            if waitForStaticText(containing: text, in: app, timeout: 1) {
+                return true
+            }
+            if attempt < maxSwipes {
+                app.swipeUp()
+            }
+        }
+        return false
     }
 }

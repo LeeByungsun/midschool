@@ -84,11 +84,19 @@ xcodebuild \
 
 2026-05-28 최신 확인:
 
-- 앱 코드 커밋: `4ed3c2f` (실기기에 설치한 최신 비문서 앱 코드)
-- 이후 `191c747`은 해당 실기기 설치 결과를 문서화한 커밋
 - 결과: `** TEST SUCCEEDED **`
-- `SchoolHelperIOSUITests`: 6 tests, 0 failures
-- xcresult: `/tmp/misschool-ios-ui-parity-audit/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_13-15-35-+0900.xcresult`
+- `SchoolHelperIOSUITests`: 9 tests, 0 failures
+- 확인 범위: 초기 설정 학교 검색/선택/저장, 홈 탭 구조, 시간표 핵심 콘텐츠(`국어`, `수학`), 급식 핵심 콘텐츠(`비빔밥`, `712 kcal`), 일정 핵심 콘텐츠(`체육대회`, `중간고사`), 설정 modal, 설정 저장, 위젯 미리보기, 타이머 modal
+- seeded 콘텐츠 테스트는 고유 `SCHOOLHELPER_SEED_PROFILE_JSON` 과 invalid `NEIS_BASE_URL`/`WEB_BASE_URL` 로 mock fallback을 결정적으로 사용한다.
+- xcresult: `/tmp/misschool-ios-full-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-30-04-+0900.xcresult`
+
+2026-05-28 주요 탭 콘텐츠 UI 테스트 재확인:
+
+- 명령: `xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-feature-tabs-ui-test -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSeededTimetableShowsCoreContent -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSeededMealsShowsCoreContent -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSeededScheduleShowsCoreContent test`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests`: 3 tests, 0 failures
+- 확인 범위: 시간표/급식/일정 탭 직접 진입과 핵심 표시 콘텐츠
+- xcresult: `/tmp/misschool-ios-feature-tabs-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-28-09-+0900.xcresult`
 
 2026-05-28 초기 설정 학교 검색 재확인:
 
@@ -131,10 +139,20 @@ xcodebuild \
 - 확인 범위: 초기 설정 학교 검색/선택/저장, 홈 탭 구조, 설정 modal 열기/닫기, 설정 저장, 설정 안 위젯 미리보기, 타이머 modal 직접 실행
 - xcresult: `/tmp/misschool-ios-device-ui-all-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-05-55-+0900.xcresult`
 
+2026-05-28 실제 iPhone 전체 UI 테스트 재시도:
+
+- 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test ios/scripts/test_device_ui.sh`
+- 결과: 테스트 시작 직후 중단
+- 원인: 기기가 잠겨 있어 Xcode가 `Unlock buggyani to Continue` 상태로 대기함
+- 해석: 9개 전체 UI 테스트의 실기기 재검증은 기기 잠금 해제 후 재실행이 필요하다. 기존 6개 실기기 통과 증거는 유지한다.
+
 현재 검증하는 실제 상호작용:
 
 - 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾고 학년/반 저장 후 홈으로 진입함
 - 홈 탭이 `More` 없이 표시됨
+- 시간표 탭이 `국어`, `수학`을 표시함
+- 급식 탭이 `비빔밥`, `712 kcal`를 표시함
+- 일정 탭이 `체육대회`, `중간고사`를 표시함
 - 홈에서 설정 modal 진입/닫기
 - 설정 modal 저장 버튼으로 홈 복귀
 - 설정 modal 안 위젯 미리보기 섹션 표시
