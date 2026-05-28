@@ -51,6 +51,11 @@ ios/scripts/verify_ios_local_readiness.sh
 - 결과: 통과
 - 포함 증거: SwiftPM 62 tests 통과, 위젯 simulator packaging 통과, live `schoolInfo`/`mealServiceDietInfo`/`misTimetable`/`SchoolSchedule`/notices BFF/notice URL HTTP 200 및 제목 매칭 통과
 - 남은 예상 incomplete: `ios/system-evidence.local.json` 미작성
+- 2026-05-28 App Group profile 갱신 후 재확인:
+  - 명령: `RUN_LIVE_BACKEND=1 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-post-appgroup ios/scripts/verify_ios_local_readiness.sh`
+  - 결과: 통과
+  - 포함 증거: Python/Shell 문법, SwiftPM 62 tests, 위젯 simulator packaging, 앱/위젯 App Group profile `OK`, live NEIS/BFF/notice URL smoke 통과
+  - 남은 예상 incomplete: `ios/system-evidence.local.json` 미작성
 
 현재 iOS 앱은 아래 4단계로 검증합니다.
 

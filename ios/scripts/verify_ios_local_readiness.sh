@@ -67,7 +67,7 @@ if is_truthy "$RUN_GOAL_AUDIT"; then
   if [[ "$audit_status" == "0" ]]; then
     echo "Goal audit complete=true."
   elif [[ "$audit_status" == "20" ]] && is_truthy "$ALLOW_INCOMPLETE_GOAL_AUDIT"; then
-    echo "Goal audit is incomplete as expected for current external/system blockers."
+    echo "Goal audit is incomplete as expected until system-level manual evidence is recorded."
   else
     echo "Unexpected goal audit status: $audit_status" >&2
     exit "$audit_status"
