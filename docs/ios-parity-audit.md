@@ -319,6 +319,8 @@ Android 기준:
 - 앱/위젯 산출물은 `codesign -vvv --strict` 를 통과했고, 둘 다 `com.apple.security.application-groups=[group.com.leebyungsun.schoolhelperios]` entitlement를 포함한다.
 - 2026-05-28 `RUN_LIVE_BACKEND=1 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-post-appgroup ios/scripts/verify_ios_local_readiness.sh` 로 SwiftPM 62 tests, 위젯 simulator packaging, App Group profile precheck, live NEIS/BFF smoke를 통합 재검증했다.
 - `ios/scripts/verify_device_app_group_data.sh` 로 실제 iPhone App Group container의 `student_profile` 저장 여부를 복사/검증할 수 있게 고정했다.
+- 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 OUTPUT_DIR=/tmp/misschool-ios-device-app-group-data-resumed ios/scripts/verify_device_app_group_data.sh` 로 실제 iPhone App Group container의 `student_profile` 복사/검증을 통과했다.
+- 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-resumed SMOKE_RUN_ID=notification-resumed-1779963848 ios/scripts/verify_device_notification.sh` 로 알림 예약 상태 파일의 `authorized`/`scheduled=true`/`pending=true` 를 재확인했다.
 - `ios/scripts/verify_device_parity.sh` 로 설치된 실기기 앱의 초기 설정 launch, seeded home, 주요 딥링크, running timer launch smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh` 로 주요 딥링크와 running timer launch 명령 성공을 확인했다.
 - `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.
@@ -378,7 +380,7 @@ Android 기준:
 아직 완료라고 말할 수 없는 범위:
 
 - 홈 화면 WidgetKit 실제 배치/탭 end-to-end
-- App Group 기반 앱/위젯 공유 데이터 실기기 눈검증
+- App Group 기반 앱/위젯 공유 데이터는 자동 smoke로 통과했고, 홈 화면 WidgetKit 렌더링 눈검증은 별도 수동 확인 필요
 - 실기기 시스템 권한 팝업/완료 알림 배너 UX
 - 실제 iPhone Safari에서 운영 notice 웹페이지 콘텐츠 렌더링 눈검증
 

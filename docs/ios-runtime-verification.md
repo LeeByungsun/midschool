@@ -460,6 +460,19 @@ TEAM_ID=2TJFP5788P DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 io
 
 이 smoke는 앱을 seeded profile로 실행한 뒤 실제 iPhone의 App Group container에서 `Library/Preferences/group.com.leebyungsun.schoolhelperios.plist` 를 복사하고 `student_profile` 이 미사중학교 fixture 값으로 저장됐는지 확인합니다. 홈 화면 위젯 배치/탭 UX는 여전히 수동 확인 대상입니다.
 
+2026-05-28 재개 후 확인 결과:
+
+- 명령: `DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 OUTPUT_DIR=/tmp/misschool-ios-device-app-group-data-resumed ios/scripts/verify_device_app_group_data.sh`
+- 결과: 통과
+- 증거: `/tmp/misschool-ios-device-app-group-data-resumed/group.com.leebyungsun.schoolhelperios.plist` 에서 `student_profile` 을 복사했고 `grade=1`, `classroom=2`, `schoolName=미사중학교`, `officeCode=J10`, `schoolCode=7692129`, `schoolKind=중학교` 를 확인했다.
+
+2026-05-28 알림 예약 자동 smoke 재확인:
+
+- 명령: `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-resumed SMOKE_RUN_ID=notification-resumed-1779963848 ios/scripts/verify_device_notification.sh`
+- 결과: 통과
+- 증거: `/tmp/misschool-ios-device-notification-resumed/schoolhelper-notification-smoke.json` 에서 `authorizationStatus=authorized`, `scheduled=true`, `pending=true`, `identifier=schoolhelper.timer.complete` 를 확인했다.
+- 실제 알림 배너/소리/진동 UX는 여전히 수동 확인 대상입니다.
+
 개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
 
 1. `설정`
