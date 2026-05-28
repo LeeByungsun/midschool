@@ -55,6 +55,38 @@ final class TimerViewModelTests: XCTestCase {
         XCTAssertEqual(scheduler.cancelCalls, 3)
         XCTAssertEqual(reloader.reloadCount, 4)
     }
+
+    func testTimerViewModelDoesNotScheduleNotificationWhenNotificationsAreDisabled() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = TimerPreferencesStore(defaults: defaults)
+        let settingsStore = TimerSettingsStore(defaults: defaults)
+        let scheduler = SpyTimerNotificationScheduler()
+        let reloader = SpyWidgetTimelineReloader()
+        settingsStore.save(
+            TimerSettings(
+                displayMode: .count,
+                notificationEnabled: false,
+                vibrationEnabled: true
+            )
+        )
+
+        let viewModel = TimerViewModel(
+            store: store,
+            settingsStore: settingsStore,
+            notificationScheduler: scheduler,
+            widgetTimelineReloader: reloader,
+            now: { Date(timeIntervalSince1970: 1_700_000_000) },
+            sleep: { _ in }
+        )
+
+        viewModel.selectPreset(.focus)
+        viewModel.toggle()
+
+        XCTAssertTrue(viewModel.state.isRunning)
+        XCTAssertEqual(scheduler.requestAuthorizationCalls, 0)
+        XCTAssertTrue(scheduler.scheduleCalls.isEmpty)
+    }
 }
 
 private final class SpyTimerNotificationScheduler: TimerNotificationScheduling {
