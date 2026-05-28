@@ -90,6 +90,12 @@ xcodebuild \
 - `SchoolHelperIOSUITests`: 6 tests, 0 failures
 - xcresult: `/tmp/misschool-ios-ui-parity-audit/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_13-15-35-+0900.xcresult`
 
+2026-05-28 초기 설정 학교 검색 재확인:
+
+- 명령: `xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-setup-search-test -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile test`
+- 결과: `** TEST SUCCEEDED **`
+- 확인 범위: `미사중학교` 검색, `학교 1개를 찾았어요.` 표시, 1학년 2반 저장, 홈 화면 `미사중학교` 표시
+
 현재 검증하는 실제 상호작용:
 
 - 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾고 학년/반 저장 후 홈으로 진입함
