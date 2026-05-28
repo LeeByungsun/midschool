@@ -154,7 +154,36 @@ ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
 3. `VPN 및 기기 관리`
 4. Apple Development 프로필 신뢰
 
-### 2.3 재현 스크립트
+### 2.4.1 실기기 parity smoke
+
+이미 설치된 앱에서 주요 딥링크/런치 상태를 빠르게 확인하려면 아래 스크립트를 사용합니다. 기본값은 현재 저장된 앱 데이터를 유지합니다.
+
+```bash
+ios/scripts/verify_device_parity.sh
+```
+
+초기 설정 화면과 fixture 프로필 저장까지 포함해 결정적으로 확인하려면 다음처럼 실행합니다.
+
+```bash
+RUN_FRESH_SETUP=1 SEED_PROFILE=1 ios/scripts/verify_device_parity.sh
+```
+
+설치부터 다시 수행하려면 다음처럼 실행합니다.
+
+```bash
+INSTALL=1 TEAM_ID=YOUR_TEAM_ID SEED_PROFILE=1 ios/scripts/verify_device_parity.sh
+```
+
+이 smoke는 앱 실행과 라우팅 성공을 자동화하지만, 사람이 화면을 보며 최종 UX를 확인해야 합니다.
+홈 화면 WidgetKit 배치/탭과 타이머 완료 알림 수신은 별도 수동 검증 대상입니다.
+
+2026-05-28 확인:
+
+- 명령: `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh`
+- 결과: timetable/meals/schedule/settings/timer 딥링크 launch 및 running timer launch 성공
+- 제한: 화면 내용은 사람이 직접 확인해야 하며, WidgetKit 홈 화면 배치/탭과 알림 완료 UX는 이 smoke로 증명하지 않음
+
+### 2.5 재현 스크립트
 
 ```bash
 ios/scripts/capture_runtime_screens.sh
@@ -180,7 +209,7 @@ ios/scripts/capture_deeplink_prompt.sh
 
 기본 출력 경로는 `/tmp/deeplink-confirm.png` 입니다.
 
-### 2.3 시뮬레이터 launch override
+### 2.6 시뮬레이터 launch override
 
 공통 환경:
 

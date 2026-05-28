@@ -270,6 +270,8 @@ Android 기준:
 
 - iPhone 15 Pro 실기기에 `device-preview` 모드로 앱 설치/실행 성공.
 - `device-preview` 모드는 App Group entitlement를 제외하므로 앱 본체 확인용이다.
+- `ios/scripts/verify_device_parity.sh` 로 설치된 실기기 앱의 초기 설정 launch, seeded home, 주요 딥링크, running timer launch smoke를 반복 실행할 수 있다.
+- 2026-05-28 `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh` 로 주요 딥링크와 running timer launch 명령 성공을 확인했다.
 
 제약:
 
