@@ -138,10 +138,10 @@ ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
 - `com.leebyungsun.schoolhelperios`: App Group 포함
 - `com.leebyungsun.schoolhelperios.widget`: App Group 미포함
 - 최신 device-preview 설치 확인:
-  - 커밋: `687f15b`
-  - 명령: `TEAM_ID=2TJFP5788P LAUNCH=0 ios/scripts/install_device.sh`
+  - 커밋: `4ed3c2f`
+  - 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-latest-4ed3c2f LAUNCH=1 ios/scripts/install_device.sh`
   - 기기: `00008130-0012603E3CC3001C`
-  - 결과: `BUILD SUCCEEDED`, `App installed`
+  - 결과: `BUILD SUCCEEDED`, `App installed`, `Launched application`
   - 설치 bundle id: `com.leebyungsun.schoolhelperios`
 
 따라서 현재 full App Group 실기기 빌드는 widget provisioning profile 갱신 전까지 실패합니다.
