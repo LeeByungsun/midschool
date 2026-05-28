@@ -323,6 +323,8 @@ Android 기준:
 - 2026-05-28 `ios/scripts/test_live_ui.sh` 로 simulator 앱 화면의 live NEIS/BFF 렌더링을 재확인했다. xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-36-53-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-initial-search-check ios/scripts/test_device_ui.sh` 로 실제 iPhone 초기 설정 학교 검색/저장 흐름을 재확인했다. xcresult: `/tmp/misschool-ios-device-initial-search-check/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-38-27-+0900.xcresult`
 - 2026-05-28 `LIVE_UI_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 앱 화면의 live NEIS/BFF 렌더링을 확인했다. xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
+- 2026-05-28 `ios/scripts/test_live_navigation_ui.sh` 로 simulator live 날짜 이동 UX를 확인했다. 시간표/급식/일정 제목이 각각 다음 날/다음 주/다음 달로 갱신됐다. xcresult: `/tmp/misschool-ios-live-navigation-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-15-26-+0900.xcresult`
+- 2026-05-28 `LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test ios/scripts/test_device_ui.sh` 는 앱/테스트 빌드와 signing 후 실제 iPhone 잠금 상태로 중단됐다. log: `/tmp/misschool-ios-device-live-navigation-ui-test/test_device_ui.xcodebuild.log`
 - 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
 - 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
 - 2026-05-28 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-notification-permission-ui-test-final '-only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary' test` 로 simulator 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`
@@ -337,6 +339,7 @@ Android 기준:
 - 실기기 앱 본체 설치/실행
 - live NEIS/BFF backend 데이터 smoke
 - live NEIS/BFF simulator UI 렌더링 smoke
+- live NEIS/BFF simulator 날짜 이동 UX smoke
 - live NEIS/BFF 실제 iPhone UI 렌더링 smoke
 - 가정통신문 외부 링크 Safari 전환 smoke
 - 알림 권한 설정 화면 안내/요청 버튼 UI smoke
@@ -346,7 +349,7 @@ Android 기준:
 - 홈 화면 WidgetKit 실제 배치/탭 end-to-end
 - App Group 기반 앱/위젯 공유 데이터 실기기 end-to-end
 - 실기기 시스템 권한 팝업/완료 알림 배너 UX
-- 실제 iPhone 화면의 live 데이터 날짜 이동 UX 눈검증
+- 실제 iPhone 화면의 live 데이터 날짜 이동 UX 눈검증 또는 자동 UI 실행
 - 실제 운영 notice 웹페이지 콘텐츠 자체의 Safari 로드 완료 눈검증
 
 ---

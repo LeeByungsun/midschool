@@ -170,6 +170,36 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(scrollToStaticText(containing: "노동절", in: app, maxSwipes: 8))
     }
 
+    func testLiveDateNavigationUpdatesTitles() throws {
+        #if !LIVE_UI_TEST_ENABLED
+        try XCTSkipUnless(
+            false,
+            "live date navigation UI test is opt-in because it depends on external services"
+        )
+        #endif
+
+        let app = makeLiveApp()
+        app.launch()
+
+        app.tabBars.buttons["시간표"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 10))
+        XCTAssertTrue(waitForStaticText(containing: "5월 28일 목요일", in: app, timeout: 30))
+        app.buttons["다음"].tap()
+        XCTAssertTrue(waitForStaticText(containing: "5월 29일 금요일", in: app, timeout: 10))
+
+        app.tabBars.buttons["급식"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 10))
+        XCTAssertTrue(waitForStaticText(containing: "5월 25일 - 5월 29일", in: app, timeout: 30))
+        app.buttons["다음 주"].tap()
+        XCTAssertTrue(waitForStaticText(containing: "6월 1일 - 6월 5일", in: app, timeout: 10))
+
+        app.tabBars.buttons["일정"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 10))
+        XCTAssertTrue(waitForStaticText(containing: "2026년 5월", in: app, timeout: 30))
+        app.buttons["다음 달"].tap()
+        XCTAssertTrue(waitForStaticText(containing: "2026년 6월", in: app, timeout: 10))
+    }
+
     private func makeSeededApp(initialRoute: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["SCHOOLHELPER_SEED_PROFILE_JSON"] = seededProfileJSON()

@@ -192,6 +192,33 @@ LIVE_UI_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - 확인 범위: 홈/시간표/급식/일정 탭에서 live `수학`, `발아현미밥`, `오케스트라`, `노동절` 렌더링
 - xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
 
+live 날짜 이동 제목 갱신만 검증하려면 아래 opt-in 경로를 사용합니다.
+
+```bash
+ios/scripts/test_live_navigation_ui.sh
+LIVE_NAVIGATION_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
+```
+
+`LIVE_NAVIGATION_TEST=1` 은 UI test target에 `-DLIVE_UI_TEST_ENABLED` Swift flag를 주입하고,
+외부 서비스 의존 테스트인 `testLiveDateNavigationUpdatesTitles` 만 실행합니다.
+
+2026-05-28 simulator live 날짜 이동 UI 전용 테스트:
+
+- 명령: `ios/scripts/test_live_navigation_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests/testLiveDateNavigationUpdatesTitles`: 1 test, 0 failures
+- 확인 범위: 시간표 `5월 28일 목요일` → `5월 29일 금요일`, 급식 `5월 25일 - 5월 29일` → `6월 1일 - 6월 5일`, 일정 `2026년 5월` → `2026년 6월` 제목 갱신
+- xcresult: `/tmp/misschool-ios-live-navigation-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-15-26-+0900.xcresult`
+
+2026-05-28 실제 iPhone live 날짜 이동 UI 전용 테스트:
+
+- 명령: `LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test ios/scripts/test_device_ui.sh`
+- 결과: 기기 잠금 상태로 테스트 시작 전 중단
+- 감지 메시지: `The iPhone is locked. Unlock the device and rerun this script.`
+- xcodebuild log: `/tmp/misschool-ios-device-live-navigation-ui-test/test_device_ui.xcodebuild.log`
+- xcresult: `/tmp/misschool-ios-device-live-navigation-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-17-42-+0900.xcresult`
+- 해석: 앱/테스트 빌드와 signing은 진행됐지만, 실제 iPhone 잠금 때문에 UI 실행 증거는 아직 미확보
+
 2026-05-28 실제 iPhone 초기 설정 검색 재확인:
 
 - 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-initial-search-check ios/scripts/test_device_ui.sh`
@@ -584,6 +611,7 @@ xcodebuild \
 - 위젯 콘텐츠는 앱 안 미리보기로 직접 확인됨
 - live NEIS/BFF backend 데이터 계약은 `verify_live_school_data.py` 로 직접 확인됨
 - live NEIS/BFF 데이터의 simulator 앱 화면 렌더링은 `test_live_ui.sh` 로 직접 확인됨
+- live NEIS/BFF 데이터의 simulator 날짜 이동 UX는 `test_live_navigation_ui.sh` 로 직접 확인됨
 - live NEIS/BFF 데이터의 실제 iPhone 앱 화면 렌더링은 `test_device_ui.sh` + `LIVE_UI_TEST=1` 로 직접 확인됨
 - 가정통신문 외부 링크의 Safari 전환은 simulator 및 실제 iPhone에서 `EXTERNAL_LINK_TEST=1` 로 직접 확인됨
 - 알림 권한 설정 화면의 안내/요청 버튼 상태 변화는 simulator 및 실제 iPhone에서 launch override 기반 UI 테스트로 직접 확인됨
@@ -593,11 +621,11 @@ xcodebuild \
 - 홈 화면 위젯의 실제 배치/탭 동작
 - 시스템 확인 다이얼로그 이후 최종 전환
 - 실기기 시스템 권한 팝업/완료 알림 배너 최종 UX
-- 실제 iPhone 화면에서 live 데이터 날짜 이동 UX 눈검증
+- 실제 iPhone 화면에서 live 데이터 날짜 이동 UX 눈검증 또는 자동 UI 실행
 
 즉, 현재 상태는:
 
-**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/simulator/실기기 UI smoke, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/simulator/실기기 UI smoke, simulator live 날짜 이동 UX, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
 **“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---

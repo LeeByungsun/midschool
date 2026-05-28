@@ -12,7 +12,10 @@ TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"
 ENTITLEMENTS_MODE="${ENTITLEMENTS_MODE:-device-preview}"
 LIVE_UI_TEST="${LIVE_UI_TEST:-0}"
 EXTERNAL_LINK_TEST="${EXTERNAL_LINK_TEST:-0}"
-if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
+LIVE_NAVIGATION_TEST="${LIVE_NAVIGATION_TEST:-0}"
+if [[ "$LIVE_NAVIGATION_TEST" == "1" || "$LIVE_NAVIGATION_TEST" == "true" || "$LIVE_NAVIGATION_TEST" == "yes" ]]; then
+  ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveDateNavigationUpdatesTitles}"
+elif [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent}"
 elif [[ "$EXTERNAL_LINK_TEST" == "1" || "$EXTERNAL_LINK_TEST" == "true" || "$EXTERNAL_LINK_TEST" == "yes" ]]; then
   ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testNoticeButtonOpensExternalSafariURL}"
@@ -94,7 +97,7 @@ XCODEBUILD_ARGS=(
 )
 
 SWIFT_FLAGS=()
-if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
+if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" || "$LIVE_NAVIGATION_TEST" == "1" || "$LIVE_NAVIGATION_TEST" == "true" || "$LIVE_NAVIGATION_TEST" == "yes" ]]; then
   SWIFT_FLAGS+=(-DLIVE_UI_TEST_ENABLED)
 fi
 if [[ "$EXTERNAL_LINK_TEST" == "1" || "$EXTERNAL_LINK_TEST" == "true" || "$EXTERNAL_LINK_TEST" == "yes" ]]; then
@@ -116,6 +119,7 @@ echo "Entitlements mode: $ENTITLEMENTS_MODE"
 echo "DerivedData: $DERIVED_DATA_PATH"
 echo "Only testing: ${ONLY_TESTING:-<all>}"
 echo "Live UI test: $LIVE_UI_TEST"
+echo "Live navigation test: $LIVE_NAVIGATION_TEST"
 echo "External link test: $EXTERNAL_LINK_TEST"
 
 XCODEBUILD_LOG="${XCODEBUILD_LOG:-$DERIVED_DATA_PATH/test_device_ui.xcodebuild.log}"
