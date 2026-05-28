@@ -292,8 +292,7 @@ Android 기준:
 - `ios/scripts/verify_widget_app_group_readiness.sh` 로 simulator smoke → profile check → 선택적 full App Group device build/install 경로 고정
 - `ios/scripts/refresh_app_group_profiles.sh` 로 local stale provisioning profile 백업/제거와 Xcode refresh 재시도 경로 고정
 - `ios/scripts/generate_xcodeproj.py` 와 `SchoolHelperIOS.xcodeproj` 에 app/widget target App Groups `SystemCapabilities` metadata 고정
-- 2026-05-28 `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P ios/scripts/refresh_app_group_profiles.sh` 실행 후 새 widget profile도 App Group이 비어 있어 Apple Developer widget App ID capability 미반영 상태로 확인
-- 2026-05-28 project capability metadata 보강 후에도 `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-app-group-capability-metadata-refresh ios/scripts/refresh_app_group_profiles.sh` 결과 새 widget profile이 groups `[]` 로 동일하게 실패함을 확인
+- 2026-05-28 초기 refresh 시에는 widget profile App Group이 비어 있었으나, Xcode/Apple provisioning 갱신 후 앱/위젯 profile 모두 같은 App Group을 포함하도록 해소됨
 - `AppStateTests/testWidgetDeepLinksRouteToSetupOrTimetable` 로 위젯 URL(`schoolhelper://settings`, `schoolhelper://timetable`) 라우팅 고정
 - 2026-05-28 `DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh` 통과
 
@@ -301,7 +300,7 @@ Android 기준:
 
 - 실제 홈 화면에 위젯을 배치하고 오늘/내일 시간표가 표시되는지 확인.
 - 위젯 탭 후 `schoolhelper://timetable` 또는 `schoolhelper://settings` 라우팅 확인.
-- full App Group 실기기 빌드는 widget provisioning profile에 App Group entitlement가 필요하다.
+- full App Group 실기기 빌드/설치는 앱/위젯 profile App Group 갱신 후 통과했다.
 
 ---
 
@@ -311,11 +310,13 @@ Android 기준:
 
 - 2026-05-28 `ios/scripts/verify_ios_local_readiness.sh` 로 로컬 통합 검증 경로를 고정했다.
 - 2026-05-28 `RUN_LIVE_BACKEND=1 DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-live-final ios/scripts/verify_ios_local_readiness.sh` 로 Python/Shell 문법, SwiftPM 62 tests, 위젯 simulator packaging, live NEIS/BFF/notice URL smoke, goal audit expected incomplete를 한 번에 확인했다.
-- 2026-05-28 `ios/scripts/audit_ios_goal_readiness.py` 는 agent skill/spec/workspace/core feature/verifier artifact를 `pass` 로 확인했지만, widget profile App Group 누락과 시스템 수동 증거 대기로 `complete=false`, exit `20` 을 반환했다.
+- 2026-05-28 `ios/scripts/audit_ios_goal_readiness.py` 는 agent skill/spec/workspace/core feature/verifier artifact와 full App Group profiles를 `pass` 로 확인했지만, 시스템 수동 증거 대기로 `complete=false`, exit `20` 을 반환했다.
 - `ios/scripts/validate_ios_system_evidence.py` 는 실제 iPhone 홈 화면 위젯/App Group/알림 UX 수동 증거 JSON이 모두 채워졌는지 검증한다.
 - iPhone 15 Pro 실기기에 `device-preview` 모드로 앱 설치/실행 성공.
 - `device-preview` 모드는 App Group entitlement를 제외하므로 앱 본체 확인용이다.
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-2tj-device-preview ENTITLEMENTS_MODE=device-preview ios/scripts/install_device.sh` 로 현재 Xcode 계정의 Team ID와 signing-required 설정을 재확인했다. 결과는 `BUILD SUCCEEDED`, `App installed`; `codesign -vvv --strict` 통과. 앱 실행은 기기 잠금으로 `RequestDenied`/`Locked` 상태에서 중단됐다.
+- 2026-05-28 `RUN_DEVICE_BUILD=1 TEAM_ID=2TJFP5788P DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-app-group-readiness-now ios/scripts/verify_widget_app_group_readiness.sh` 로 simulator 위젯 smoke, App Group profile precheck, full App Group 실기기 build/install을 통과했다.
+- 앱/위젯 산출물은 `codesign -vvv --strict` 를 통과했고, 둘 다 `com.apple.security.application-groups=[group.com.leebyungsun.schoolhelperios]` entitlement를 포함한다.
 - `ios/scripts/verify_device_parity.sh` 로 설치된 실기기 앱의 초기 설정 launch, seeded home, 주요 딥링크, running timer launch smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh` 로 주요 딥링크와 running timer launch 명령 성공을 확인했다.
 - `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.
@@ -328,11 +329,9 @@ Android 기준:
 제약:
 
 - full App Group 실기기 빌드는 앱 profile과 위젯 profile이 모두 같은 App Group을 가져야 한다.
-- 현재 외부 provisioning 상태에서는 위젯 profile의 App Group entitlement가 비어 있어 full App Group 검증이 막힌다.
-- 2026-05-28 `ios/scripts/check_app_group_profiles.py` 결과 앱 profile은 `OK`, 위젯 profile은 groups `[]` 로 `FAIL` 이다.
-- 2026-05-28 `DERIVED_DATA_PATH=/tmp/misschool-ios-widget-readiness-exit10 ios/scripts/verify_widget_app_group_readiness.sh` 는 simulator 위젯 smoke 통과 후 `BLOCKED_BY_PROVISIONING_PROFILE`/exit `10` 으로 종료했다.
-- 2026-05-28 `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-attempt LAUNCH=0 ios/scripts/install_device.sh` 로 Xcode profile 갱신/빌드를 시도했지만, `com.leebyungsun.schoolhelperios.widget` profile이 App Group entitlement와 맞지 않아 실패했다.
-- 2026-05-28 `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-check LAUNCH=0 ios/scripts/install_device.sh` 재시도도 같은 signing mismatch로 실패했다.
+- 2026-05-28 `ios/scripts/check_app_group_profiles.py` 결과 앱/위젯 profile 모두 `OK` 다.
+- 이전 widget profile App Group 누락 blocker는 해소됐다.
+- 남은 제약은 실제 iPhone 홈 화면 위젯 배치/탭, App Group 공유 데이터의 눈검증, 시스템 알림 배너 UX 수동 증거다.
 - 실제 iPhone UI 자동 테스트는 `ios/scripts/test_device_ui.sh` 로 signing override를 적용해 실행한다.
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-test-script ios/scripts/test_device_ui.sh` 로 실제 iPhone에서 초기 설정 학교 검색/선택/저장 UI 테스트가 `TEST SUCCEEDED` 로 통과했다.
 - 2026-05-28 `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-all-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 전체 UI 테스트 6개가 모두 통과했다.
@@ -377,7 +376,7 @@ Android 기준:
 아직 완료라고 말할 수 없는 범위:
 
 - 홈 화면 WidgetKit 실제 배치/탭 end-to-end
-- App Group 기반 앱/위젯 공유 데이터 실기기 end-to-end
+- App Group 기반 앱/위젯 공유 데이터 실기기 눈검증
 - 실기기 시스템 권한 팝업/완료 알림 배너 UX
 - 실제 iPhone Safari에서 운영 notice 웹페이지 콘텐츠 렌더링 눈검증
 
@@ -385,9 +384,7 @@ Android 기준:
 
 ## 4. 다음 작업 우선순위
 
-1. Apple Developer / Xcode에서 위젯 extension profile에 `group.com.leebyungsun.schoolhelperios` App Group을 반영한다.
-2. `ios/scripts/check_app_group_profiles.py` 결과가 앱/위젯 모두 `OK` 인지 확인한다.
-3. `ENTITLEMENTS_MODE=app-groups TEAM_ID=... ios/scripts/install_device.sh` 로 full App Group 빌드를 실행한다.
-4. 실제 iPhone 홈 화면에 위젯을 배치해 오늘/내일 시간표와 탭 라우팅을 확인한다.
-5. 타이머를 1분 이하로 시작해 실기기 알림 권한 요청과 완료 알림을 확인한다.
-6. `verify_live_school_data.py` 로 live backend 계약을 재확인한 뒤, 실제 iPhone Safari에서 운영 notice 웹페이지 렌더링을 눈으로 확인한다.
+1. 실제 iPhone 홈 화면에 위젯을 배치해 오늘/내일 시간표와 탭 라우팅을 확인한다.
+2. 타이머를 1분 이하로 시작해 실기기 알림 권한 요청과 완료 알림을 확인한다.
+3. 확인 결과를 `ios/system-evidence.local.json` 에 기록하고 `ios/scripts/validate_ios_system_evidence.py` 를 실행한다.
+4. `verify_live_school_data.py` 로 live backend 계약을 재확인한 뒤, 실제 iPhone Safari에서 운영 notice 웹페이지 렌더링을 눈으로 확인한다.

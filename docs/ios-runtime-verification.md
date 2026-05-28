@@ -17,7 +17,7 @@ ios/scripts/audit_ios_goal_readiness.py
 2026-05-28 확인 결과:
 
 - agent skill/spec/workspace/core feature/verifier artifact는 `pass`
-- `full_app_group_profiles` 는 widget profile App Group 누락으로 `blocked_external`
+- `full_app_group_profiles` 는 앱/위젯 provisioning profile 모두 같은 App Group을 포함해 `pass`
 - `system_level_manual_evidence` 는 실제 홈 화면 위젯/App Group/알림 배너 UX 대기로 `manual_pending`
 - 전체 결과: `complete=false`, exit `20`
 
@@ -43,14 +43,14 @@ ios/scripts/verify_ios_local_readiness.sh
 ```
 
 이 스크립트는 Python/Shell 문법, SwiftPM 코어 테스트, 위젯 패키징/App Group readiness, 목표 완료 audit을 순서대로 확인합니다.
-현재 widget provisioning profile과 시스템 수동 증거 blocker는 예상 incomplete로 허용합니다.
+현재 시스템 수동 증거 blocker는 예상 incomplete로 허용합니다.
 
 2026-05-28 추가 확인:
 
 - 명령: `RUN_LIVE_BACKEND=1 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-live-final ios/scripts/verify_ios_local_readiness.sh`
 - 결과: 통과
 - 포함 증거: SwiftPM 62 tests 통과, 위젯 simulator packaging 통과, live `schoolInfo`/`mealServiceDietInfo`/`misTimetable`/`SchoolSchedule`/notices BFF/notice URL HTTP 200 및 제목 매칭 통과
-- 남은 예상 incomplete: widget provisioning profile App Group 누락, `ios/system-evidence.local.json` 미작성
+- 남은 예상 incomplete: `ios/system-evidence.local.json` 미작성
 
 현재 iOS 앱은 아래 4단계로 검증합니다.
 
@@ -393,17 +393,15 @@ ios/scripts/refresh_app_group_profiles.sh
 APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/refresh_app_group_profiles.sh
 ```
 
-2026-05-28 기준 실제 확인 결과:
+2026-05-28 최신 확인 결과:
 
+- Team 이름은 Xcode 계정 화면 기준 `Byungsun Lee (Personal Team)` 이고, 프로젝트에 넣는 내부 Team ID는 `2TJFP5788P` 이다.
 - `com.leebyungsun.schoolhelperios`: App Group 포함
-- `com.leebyungsun.schoolhelperios.widget`: App Group 미포함
-- Xcode project의 app/widget target 모두 `SystemCapabilities = { com.apple.ApplicationGroups.iOS = { enabled = 1; }; };` metadata를 포함하도록 보강했다.
-- `ios/scripts/check_app_group_profiles.py` 재실행 결과도 동일함. 앱 profile은 `OK`, 위젯 profile은 groups `[]` 로 `FAIL`.
-- `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-attempt LAUNCH=0 ios/scripts/install_device.sh` 로 Xcode profile 갱신/빌드를 시도했지만 widget profile mismatch로 실패함
-  - 오류: `Provisioning profile "iOS Team Provisioning Profile: com.leebyungsun.schoolhelperios.widget" doesn't match the entitlements file's value for the com.apple.security.application-groups entitlement.`
-- `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-check LAUNCH=0 ios/scripts/install_device.sh` 재시도 역시 같은 widget profile mismatch로 실패함.
-- `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P ios/scripts/refresh_app_group_profiles.sh` 로 local stale profile을 백업한 뒤 Xcode profile refresh를 재시도했다. 새로 내려받은 widget profile도 groups `[]` 라서, 현재 blocker는 local cache가 아니라 Apple Developer의 widget App ID App Group capability 미반영 상태로 확인됨.
-- project capability metadata 보강 후 `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-app-group-capability-metadata-refresh ios/scripts/refresh_app_group_profiles.sh` 를 재실행했지만 새 widget profile도 groups `[]` 로 동일하게 실패했다.
+- `com.leebyungsun.schoolhelperios.widget`: App Group 포함
+- 공통 App Group: `group.com.leebyungsun.schoolhelperios`
+- Xcode project의 app/widget target 모두 `SystemCapabilities = { com.apple.ApplicationGroups.iOS = { enabled = 1; }; };` metadata를 포함한다.
+- `ios/scripts/check_app_group_profiles.py` 재실행 결과 앱/위젯 profile 모두 `OK` 로 확인했다.
+- 이전에는 widget profile groups `[]` 때문에 실패했지만, Xcode/Apple provisioning profile 갱신 후 profile blocker는 해소됐다.
 
 자동화 가능한 위젯 패키징 검증은 별도 simulator smoke로 고정했습니다.
 
@@ -424,12 +422,15 @@ ios/scripts/test_widget_sim.sh
 ios/scripts/verify_widget_app_group_readiness.sh
 ```
 
-2026-05-28 확인 결과:
+2026-05-28 최신 확인 결과:
 
-- 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-readiness-exit10 ios/scripts/verify_widget_app_group_readiness.sh`
-- 결과: simulator 위젯 smoke 통과 후 `BLOCKED_BY_PROVISIONING_PROFILE`, exit `10`
-- blocker: `com.leebyungsun.schoolhelperios.widget` profile groups `[]`
-- 최신 device-preview 설치 확인:
+- 명령: `RUN_DEVICE_BUILD=1 TEAM_ID=2TJFP5788P DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-app-group-readiness-now ios/scripts/verify_widget_app_group_readiness.sh`
+- 결과: simulator 위젯 smoke 통과, 앱/위젯 App Group profile precheck 통과, full App Group 실기기 build/install 통과
+- 설치 기기: `00008130-0012603E3CC3001C`
+- 설치 bundle id: `com.leebyungsun.schoolhelperios`
+- app/widget signing: `codesign -vvv --strict` 기준 둘 다 `valid on disk` 및 `satisfies its Designated Requirement`
+- app/widget entitlements: `application-identifier` 가 `2TJFP5788P.com.leebyungsun.schoolhelperios*`, `com.apple.developer.team-identifier=2TJFP5788P`, `com.apple.security.application-groups=[group.com.leebyungsun.schoolhelperios]`
+- 이전 device-preview 설치 확인:
   - 커밋: `4ed3c2f`
   - 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-latest-4ed3c2f LAUNCH=1 ios/scripts/install_device.sh`
   - 기기: `00008130-0012603E3CC3001C`
@@ -444,7 +445,7 @@ ios/scripts/verify_widget_app_group_readiness.sh
   - entitlements: `application-identifier=2TJFP5788P.com.leebyungsun.schoolhelperios`, `com.apple.developer.team-identifier=2TJFP5788P`
   - launch 결과: iPhone 잠금 상태로 `RequestDenied` / `Locked` 발생. 앱 설치와 서명은 통과했고, 실행 확인은 기기 잠금 해제 후 재시도 필요.
 
-따라서 현재 full App Group 실기기 빌드는 widget identifier에 App Group capability가 반영된 provisioning profile 갱신 전까지 실패합니다.
+따라서 full App Group 실기기 설치/서명 blocker는 해소됐고, 남은 완료 조건은 실제 홈 화면 위젯 배치/탭과 알림 배너 UX 수동 증거입니다.
 
 개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
 
