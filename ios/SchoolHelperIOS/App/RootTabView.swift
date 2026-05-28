@@ -33,7 +33,7 @@ struct RootTabView: View {
                         selectedTab = PrimaryTab(route: appState.selectedRoute)
                     }
                 }
-                .onChange(of: appState.selectedRoute) { route in
+                .onChange(of: appState.selectedRoute) { _, route in
                     guard !isPresentedRoute(route) else { return }
                     let nextTab = PrimaryTab(route: route)
                     if selectedTab != nextTab {

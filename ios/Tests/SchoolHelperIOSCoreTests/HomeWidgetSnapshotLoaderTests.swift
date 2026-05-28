@@ -76,6 +76,33 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
         XCTAssertEqual(snapshot.tomorrowTimetable, "1교시 영어")
     }
 
+    func testSnapshotTruncatesLongSubjectsLikeAndroidWidget() async {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let profileStore = StudentPreferencesStore(defaults: defaults)
+        profileStore.save(.fixture())
+        let timerStore = TimerPreferencesStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        widgetSettingsStore.save(WidgetSettings(showTomorrowTimetable: false))
+
+        let loader = HomeWidgetSnapshotLoader(
+            profileStore: profileStore,
+            timerStore: timerStore,
+            widgetSettingsStore: widgetSettingsStore,
+            repository: WidgetTimetableRepository(
+                todayItems: [
+                    TimetableItem(date: "20260526", period: "1", subject: "창의적체험활동", grade: "1", classroom: "2"),
+                    TimetableItem(date: "20260526", period: "2", subject: "수학", grade: "1", classroom: "2"),
+                ],
+                tomorrowItems: []
+            )
+        )
+
+        let snapshot = await loader.load(now: fixtureDate(year: 2026, month: 5, day: 26))
+
+        XCTAssertEqual(snapshot.todayTimetable, "1교시 창의적체험\n2교시 수학")
+    }
+
     func testSnapshotCanHideTomorrowTimetableFromSharedSettings() async {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

@@ -95,10 +95,16 @@ struct HomeWidgetSnapshotLoader {
             .compactMap { item -> String? in
                 let subject = item.subject.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !subject.isEmpty else { return nil }
-                return "\(item.period)교시 \(subject)"
+                return "\(item.period)교시 \(subject.truncatedWidgetSubject)"
             }
 
         return lines.isEmpty ? emptyMessage : lines.joined(separator: "\n")
+    }
+}
+
+private extension String {
+    var truncatedWidgetSubject: String {
+        count > 6 ? String(prefix(5)) : self
     }
 }
 
