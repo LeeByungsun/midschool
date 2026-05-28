@@ -13,6 +13,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         app.buttons["학교 검색"].tap()
 
         XCTAssertTrue(app.staticTexts["학교 1개를 찾았어요."].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.staticTexts["선택된 학교"].waitForExistence(timeout: 5))
 
         app.textFields["학년"].tap()
         app.textFields["학년"].typeText("1")

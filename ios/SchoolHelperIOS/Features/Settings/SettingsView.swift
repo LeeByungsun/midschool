@@ -75,6 +75,24 @@ struct SettingsView: View {
                     }
                 }
 
+                if let selectedSchool = viewModel.selectedSchool {
+                    Section("선택된 학교") {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(selectedSchool.schoolName)
+                                .font(.headline)
+                            Text("\(selectedSchool.schoolKind) • \(selectedSchool.officeName)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            if !selectedSchool.roadAddress.isEmpty {
+                                Text(selectedSchool.roadAddress)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityIdentifier("settings-selected-school-summary")
+                    }
+                }
+
                 Section("학생 정보") {
                     TextField("학년", text: Binding(
                         get: { viewModel.draftProfile.grade },

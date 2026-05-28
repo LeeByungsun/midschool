@@ -62,12 +62,14 @@ Android 기준:
 - `SchoolSearchService`, `NEISClient`
 - UI 테스트 `testInitialSetupSearchSelectsSchoolAndSavesProfile`
 - 코어 테스트에서 공백/학교 코드 누락/검색 응답 경합을 검증
+- 2026-05-28 simulator UI 테스트에서 `미사중학교` 검색 후 `학교 1개를 찾았어요.` 와 `선택된 학교` 섹션 표시를 확인
 
 메모:
 
 - `NEIS_API_KEY`는 앱 번들에 저장하지 않는다.
 - 키가 없으면 `KEY` 없이 요청한다.
 - 실기기 아이콘 실행에서는 환경변수가 전달되지 않으므로 키 없이 동작 가능한 학교 검색 경로를 우선한다.
+- 정확히 1개 학교가 검색되면 자동 선택되며, iOS 초기 설정/설정 화면은 선택 상태를 `선택된 학교` 섹션으로 별도 표시한다.
 
 ### 2.3 홈 대시보드
 
@@ -274,11 +276,13 @@ Android 기준:
 - 2026-05-28 `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh` 로 주요 딥링크와 running timer launch 명령 성공을 확인했다.
 - `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh` 로 알림 smoke launch 성공을 확인했다. 실제 알림 배너 도착은 수동 확인 대기다.
+- 2026-05-28 선택된 학교 표시 개선 후 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-selected-school-smoke LAUNCH=0 ios/scripts/install_device.sh` 로 실제 iPhone 앱 본체 설치 성공을 확인했다.
 
 제약:
 
 - full App Group 실기기 빌드는 앱 profile과 위젯 profile이 모두 같은 App Group을 가져야 한다.
 - 현재 외부 provisioning 상태에서는 위젯 profile의 App Group entitlement가 비어 있어 full App Group 검증이 막힌다.
+- 실제 iPhone UI 자동 테스트는 `SchoolHelperIOSUITests-Runner` 서명 검증 실패로 테스트 실행 전 중단된다. 앱 본체 설치는 성공했으므로 앱 코드 문제가 아니라 test runner/provisioning 문제로 분리해 추적한다.
 
 따라서 현재 완료라고 말할 수 있는 범위:
 

@@ -96,6 +96,21 @@ xcodebuild \
 - 결과: `** TEST SUCCEEDED **`
 - 확인 범위: `미사중학교` 검색, `학교 1개를 찾았어요.` 표시, 1학년 2반 저장, 홈 화면 `미사중학교` 표시
 
+2026-05-28 초기 설정 선택 상태 표시 재확인:
+
+- 변경 목적: 정확히 1개 학교가 검색되면 자동 선택까지 완료되지만, 사용자가 검색 결과가 사라진 것으로 오해할 수 있어 `선택된 학교` 섹션을 명시 표시한다.
+- 명령: `xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-selected-school-ui-test -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile test`
+- 결과: `** TEST SUCCEEDED **`
+- 확인 범위: `미사중학교` 검색, `학교 1개를 찾았어요.` 표시, `선택된 학교` 섹션 표시, 1학년 2반 저장, 홈 화면 진입
+- xcresult: `/tmp/misschool-ios-selected-school-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_13-49-36-+0900.xcresult`
+
+2026-05-28 실제 iPhone 초기 설정 UI 테스트 시도:
+
+- 명령: `xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS,id=00008130-0012603E3CC3001C' -configuration Debug -derivedDataPath /tmp/misschool-ios-real-device-setup-search-test -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile DEVELOPMENT_TEAM=2TJFP5788P ENTITLEMENTS_MODE=device-preview test`
+- 결과: 테스트 실행 전 `SchoolHelperIOSUITests-Runner` 설치 단계에서 중단
+- 원인: test runner code signature verification 실패, `0xe8008018 (The identity used to sign the executable is no longer valid.)`
+- 앱 본체 설치 확인: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-selected-school-smoke LAUNCH=0 ios/scripts/install_device.sh` 는 `BUILD SUCCEEDED` 및 `App installed`
+
 현재 검증하는 실제 상호작용:
 
 - 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾고 학년/반 저장 후 홈으로 진입함
