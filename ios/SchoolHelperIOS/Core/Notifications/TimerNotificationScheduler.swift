@@ -45,6 +45,12 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
             }
 
             guard isAllowed else {
+                self.writeSmokeStatus([
+                    "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
+                    "scheduled": "false",
+                    "reason": "notification authorization is not granted",
+                    "identifier": Self.notificationIdentifier,
+                ])
                 return
             }
 
@@ -65,7 +71,28 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
             )
 
             center.removePendingNotificationRequests(withIdentifiers: [Self.notificationIdentifier])
-            center.add(request)
+            center.add(request) { [center] error in
+                if let error {
+                    self.writeSmokeStatus([
+                        "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
+                        "scheduled": "false",
+                        "error": error.localizedDescription,
+                        "identifier": Self.notificationIdentifier,
+                    ])
+                    return
+                }
+
+                center.getPendingNotificationRequests { requests in
+                    self.writeSmokeStatus([
+                        "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
+                        "scheduled": "true",
+                        "pending": requests.contains { $0.identifier == Self.notificationIdentifier } ? "true" : "false",
+                        "identifier": Self.notificationIdentifier,
+                        "remainingSeconds": String(Int(remaining.rounded())),
+                        "presetTitle": presetTitle,
+                    ])
+                }
+            }
         }
     }
 
@@ -78,5 +105,50 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
         return value == "1" || value == "true" || value == "yes"
     }
 
+    private func shouldWriteSmokeStatus() -> Bool {
+        let value = environment["SCHOOLHELPER_NOTIFICATION_SMOKE_STATUS"]?.lowercased()
+        return value == "1" || value == "true" || value == "yes"
+    }
+
+    private func writeSmokeStatus(_ fields: [String: String]) {
+        guard shouldWriteSmokeStatus() else { return }
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return
+        }
+
+        var payload = fields
+        payload["createdAt"] = ISO8601DateFormatter().string(from: Date())
+        if let runID = environment["SCHOOLHELPER_NOTIFICATION_SMOKE_RUN_ID"], !runID.isEmpty {
+            payload["runID"] = runID
+        }
+
+        do {
+            let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+            try data.write(to: documentsURL.appendingPathComponent(Self.smokeStatusFileName), options: .atomic)
+        } catch {
+            print("Failed to write notification smoke status: \(error.localizedDescription)")
+        }
+    }
+
+    private static func authorizationStatusName(_ status: UNAuthorizationStatus) -> String {
+        switch status {
+        case .notDetermined:
+            return "notDetermined"
+        case .denied:
+            return "denied"
+        case .authorized:
+            return "authorized"
+        case .provisional:
+            return "provisional"
+#if os(iOS)
+        case .ephemeral:
+            return "ephemeral"
+#endif
+        @unknown default:
+            return "unknown"
+        }
+    }
+
     private static let notificationIdentifier = "schoolhelper.timer.complete"
+    private static let smokeStatusFileName = "schoolhelper-notification-smoke.json"
 }

@@ -305,6 +305,7 @@ Android 기준:
 - `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh` 로 알림 smoke launch 성공을 확인했다. 실제 알림 배너 도착은 수동 확인 대기다.
 - 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=8 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh` 로 알림 smoke launch를 재확인했다.
+- 2026-05-28 알림 smoke에 sandbox 상태 파일 검증을 추가했다. `SMOKE_RUN_ID=notification-status-v5 UNLOCK_WAIT_SECONDS=6 DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-status-v5 ios/scripts/verify_device_notification.sh` 는 기기 잠금 상태로 launch 거절을 감지하고 대기/재시도 후 exit 5로 종료했다. 기기 잠금 해제 후 같은 경로로 `scheduled=true`/`pending=true` 상태 파일 검증 가능.
 - 2026-05-28 선택된 학교 표시 개선 후 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-selected-school-smoke LAUNCH=0 ios/scripts/install_device.sh` 로 실제 iPhone 앱 본체 설치 성공을 확인했다.
 
 제약:

@@ -383,7 +383,17 @@ REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 ```
 
 이 smoke는 `SCHOOLHELPER_SCHEDULE_TIMER_NOTIFICATION=1` 테스트 전용 환경변수로 실행 중 타이머 상태를 저장하고 알림 예약을 시도합니다.
-단, 실제 알림 도착 여부는 iPhone을 잠그거나 앱을 백그라운드로 보낸 뒤 사람이 확인해야 합니다.
+또한 `SCHOOLHELPER_NOTIFICATION_SMOKE_STATUS=1` 로 앱 sandbox의
+`Documents/schoolhelper-notification-smoke.json` 에 예약 결과를 남기고,
+스크립트가 `devicectl device copy from --domain-type appDataContainer` 로 복사해
+`scheduled=true`, `pending=true`, 현재 `runID` 일치를 확인합니다.
+단, 실제 알림 배너/소리/진동 도착 여부는 iPhone을 잠그거나 앱을 백그라운드로 보낸 뒤 사람이 확인해야 합니다.
+
+기기가 잠긴 상태에서 launch가 거절될 수 있으므로 잠금 해제를 기다리려면 아래처럼 실행합니다.
+
+```bash
+UNLOCK_WAIT_SECONDS=20 REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
+```
 
 2026-05-28 확인:
 
@@ -393,6 +403,10 @@ REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 - smoke 결과: `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
 - 2026-05-28 재확인 명령: `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=8 ROUTE_DELAY_SECONDS=1 ios/scripts/verify_device_notification.sh`
 - 재확인 결과: `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
+- 2026-05-28 상태 파일 검증 보강 후 설치 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-notification-status-install-v2 LAUNCH=0 ios/scripts/install_device.sh`
+- 설치 결과: `BUILD SUCCEEDED`, `App installed`
+- 2026-05-28 상태 파일 검증 명령: `SMOKE_RUN_ID=notification-status-v5 UNLOCK_WAIT_SECONDS=6 DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-status-v5 ios/scripts/verify_device_notification.sh`
+- 상태 파일 검증 결과: 기기 잠금 상태로 launch 거절 감지 후 `UNLOCK_WAIT_SECONDS` 대기/재시도 경로 동작 확인. 최종 알림 예약 상태 파일 검증은 기기 잠금 해제 후 재실행 필요
 - 제한: 실제 알림 배너 도착은 iPhone 잠금/백그라운드 상태에서 사람이 확인해야 하므로 최종 UX 검증은 아직 수동 확인 대기
 
 알림 권한 설정 화면의 안내/요청 버튼 상태는 시스템 권한 팝업에 의존하지 않도록

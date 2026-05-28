@@ -64,7 +64,13 @@ ios/scripts/verify_device_notification.sh
 
 # 권한 팝업이 처음 뜨면 허용 후 한 번 더 실행
 REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
+
+# 기기가 잠겨 있으면 일정 시간 잠금 해제를 기다림
+UNLOCK_WAIT_SECONDS=20 REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 ```
+
+- 알림 smoke는 앱 sandbox의 `Documents/schoolhelper-notification-smoke.json` 을 복사해 `scheduled=true`, `pending=true`, `runID` 일치를 확인합니다.
+- 실제 알림 배너/소리/진동 체감은 iPhone을 잠그거나 앱을 백그라운드로 보낸 뒤 사람이 확인해야 합니다.
 
 live NEIS/BFF 데이터 smoke:
 
