@@ -357,6 +357,18 @@ ios/scripts/test_widget_sim.sh
 - 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh`
 - 결과: `Widget simulator packaging verified`
 - 확인 범위: `SchoolHelperWidget` scheme build, embedded `SchoolHelperWidget.appex`, WidgetKit extension point, app/widget bundle id, widget tap route, app/widget App Group entitlement/config source
+
+위젯/App Group 전체 준비도는 아래 wrapper로 재현합니다.
+
+```bash
+ios/scripts/verify_widget_app_group_readiness.sh
+```
+
+2026-05-28 확인 결과:
+
+- 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-readiness-exit10 ios/scripts/verify_widget_app_group_readiness.sh`
+- 결과: simulator 위젯 smoke 통과 후 `BLOCKED_BY_PROVISIONING_PROFILE`, exit `10`
+- blocker: `com.leebyungsun.schoolhelperios.widget` profile groups `[]`
 - 최신 device-preview 설치 확인:
   - 커밋: `4ed3c2f`
   - 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-latest-4ed3c2f LAUNCH=1 ios/scripts/install_device.sh`

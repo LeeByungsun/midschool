@@ -107,6 +107,22 @@ ios/scripts/test_widget_sim.sh
 - 앱/위젯 entitlements source와 `AppStorageConfig.appGroupSuiteName` 이 `group.com.leebyungsun.schoolhelperios` 로 맞춰져 있는지도 확인합니다.
 - 기본 출력은 짧게 유지하며, 전체 `xcodebuild` 로그가 필요하면 `VERBOSE=1 ios/scripts/test_widget_sim.sh` 로 실행합니다.
 
+위젯/App Group 준비도 검증:
+
+```bash
+ios/scripts/verify_widget_app_group_readiness.sh
+
+# 현재처럼 외부 provisioning blocker를 문서화하면서 0으로 종료해야 할 때
+ALLOW_PROFILE_BLOCKED=1 ios/scripts/verify_widget_app_group_readiness.sh
+
+# profile이 준비된 뒤 실제 iPhone full App Group signing/install까지 확인
+RUN_DEVICE_BUILD=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/verify_widget_app_group_readiness.sh
+```
+
+- simulator 위젯 패키징 smoke를 먼저 실행한 뒤 앱/위젯 provisioning profile의 App Group entitlement를 확인합니다.
+- profile이 준비되지 않았으면 `BLOCKED_BY_PROVISIONING_PROFILE` 을 출력하고 exit `10` 으로 종료합니다.
+- profile이 준비되면 `RUN_DEVICE_BUILD=1` 로 `ENTITLEMENTS_MODE=app-groups` 실기기 signing/install smoke까지 이어서 실행할 수 있습니다.
+
 실제 iPhone UI 테스트:
 
 ```bash
