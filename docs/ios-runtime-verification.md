@@ -99,11 +99,25 @@ TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
 
 App Group까지 검증하려면 Apple Developer portal/provisioning profile에
 `group.com.leebyungsun.schoolhelperios` capability가 반영되어 있어야 합니다.
+먼저 로컬 profile 상태를 확인합니다.
+
+```bash
+ios/scripts/check_app_group_profiles.py
+```
+
+앱과 위젯 bundle id가 모두 `OK` 여야 합니다.
 그 후 아래처럼 실행합니다.
 
 ```bash
 ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
 ```
+
+2026-05-28 기준 실제 확인 결과:
+
+- `com.leebyungsun.schoolhelperios`: App Group 포함
+- `com.leebyungsun.schoolhelperios.widget`: App Group 미포함
+
+따라서 현재 full App Group 실기기 빌드는 widget provisioning profile 갱신 전까지 실패합니다.
 
 개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
 

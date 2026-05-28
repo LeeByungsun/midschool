@@ -72,6 +72,7 @@ case "$ENTITLEMENTS_MODE" in
     BUILD_SETTINGS+=(CODE_SIGN_ENTITLEMENTS=)
     ;;
   app-groups)
+    "$ROOT_DIR/ios/scripts/check_app_group_profiles.py"
     ;;
   *)
     echo "Unknown ENTITLEMENTS_MODE: $ENTITLEMENTS_MODE" >&2
