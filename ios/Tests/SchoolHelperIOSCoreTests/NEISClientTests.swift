@@ -30,6 +30,75 @@ final class NEISClientTests: XCTestCase {
         XCTAssertEqual(schools.first?.schoolCode, "7692129")
     }
 
+    func testFetchNoticesBuildsBFFQueryAndDecodesPreviewItems() async throws {
+        let session = URLSession(configuration: stubbedConfiguration())
+        let client = NoticesClient(
+            session: session,
+            config: NEISClient.Config(
+                baseURL: URL(string: "https://example.com/")!,
+                apiKey: "",
+                noticesBaseURL: URL(string: "https://web.example.com/")!
+            )
+        )
+        StubURLProtocol.requestHandler = { request in
+            XCTAssertEqual(request.url?.host, "web.example.com")
+            XCTAssertEqual(request.url?.path, "/api/notices")
+            let components = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "officeCode" }?.value, "J10")
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "schoolCode" }?.value, "7531093")
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "limit" }?.value, "10")
+            return (
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!,
+                Self.noticeSuccessPayload
+            )
+        }
+
+        let notices = try await client.fetchNotices(
+            officeCode: "J10",
+            schoolCode: "7531093",
+            limit: 99
+        )
+
+        XCTAssertEqual(notices, [
+            NoticePreview(
+                id: "notice-1",
+                title: "학부모 공지",
+                date: "",
+                author: "행정실",
+                url: "https://web.example.com/notices/1"
+            )
+        ])
+    }
+
+    func testFetchNoticesThrowsServerMessageForFailurePayload() async {
+        let session = URLSession(configuration: stubbedConfiguration())
+        let client = NoticesClient(
+            session: session,
+            config: NEISClient.Config(
+                baseURL: URL(string: "https://example.com/")!,
+                apiKey: "",
+                noticesBaseURL: URL(string: "https://web.example.com/")!
+            )
+        )
+        StubURLProtocol.requestHandler = { request in
+            (
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!,
+                Self.noticeFailurePayload
+            )
+        }
+
+        do {
+            _ = try await client.fetchNotices(
+                officeCode: "J10",
+                schoolCode: "7531093",
+                limit: 3
+            )
+            XCTFail("Expected server error")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, "학교 홈페이지 주소를 찾지 못했어요.")
+        }
+    }
+
     private func stubbedConfiguration() -> URLSessionConfiguration {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [StubURLProtocol.self]
@@ -50,6 +119,31 @@ final class NEISClientTests: XCTestCase {
               "ORG_RDNMA": "경기도 하남시 미사강변한강로334번길 70"
             }]}
           ]
+        }
+        """.utf8
+    )
+
+    private static let noticeSuccessPayload = Data(
+        """
+        {
+          "status": "success",
+          "items": [{
+            "id": "notice-1",
+            "title": "학부모 공지",
+            "date": "",
+            "author": "행정실",
+            "url": "https://web.example.com/notices/1"
+          }]
+        }
+        """.utf8
+    )
+
+    private static let noticeFailurePayload = Data(
+        """
+        {
+          "status": "error",
+          "items": [],
+          "message": "학교 홈페이지 주소를 찾지 못했어요."
         }
         """.utf8
     )

@@ -72,6 +72,31 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com")
     }
 
+    func testHomeViewModelOmitsBlankNoticeDateLikeAndroid() async {
+        let repository = StubSchoolRepository(
+            notices: [
+                NoticePreview(
+                    id: "1",
+                    title: "학부모 공지",
+                    date: "",
+                    author: "행정실",
+                    url: "https://example.com/notices/1"
+                )
+            ]
+        )
+        let viewModel = HomeViewModel(
+            repository: repository,
+            now: { fixtureDate(year: 2026, month: 5, day: 26) }
+        )
+
+        await viewModel.load(profile: .fixture())
+
+        XCTAssertEqual(viewModel.noticeSummary, "학부모 공지")
+        XCTAssertEqual(viewModel.noticeActionText, "가정통신문 열기")
+        XCTAssertTrue(viewModel.noticeActionEnabled)
+        XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com/notices/1")
+    }
+
     func testHomeViewModelFiltersPastAndBlockedSchedulesAndFormatsMealMenu() async {
         let repository = StubSchoolRepository(
             todayMeals: [

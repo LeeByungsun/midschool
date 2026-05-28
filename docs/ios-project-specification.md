@@ -19,10 +19,10 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 - 급식 조회
 - 학사 일정 조회
 - 스터디 타이머
+- 가정통신문 미리보기
 
 후속 목표:
 
-- 가정통신문 미리보기
 - 알림 권한/완료 알림
 - 위젯/홈 화면 확장
 
@@ -72,7 +72,14 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 - 알림음/진동 사용 여부
 - 알림 권한 상태 확인 및 요청
 
-### 2.8 Widget foundation
+### 2.8 Notices
+- Android와 동일하게 web `/api/notices` BFF 사용
+- 학교/교육청 코드와 limit query 전달
+- 최근 가정통신문 최대 3개 홈 카드 표시
+- 날짜가 없으면 Android와 동일하게 제목만 표시
+- 첫 번째 가정통신문 URL 열기
+
+### 2.9 Widget foundation
 - 앱/위젯 shared suite 저장소
 - 오늘/내일 시간표 snapshot 로더
 - 타이머 요약 snapshot
@@ -147,6 +154,7 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 - SwiftUI 앱은 `ios/SchoolHelperIOS.xcodeproj` + SwiftPM 코어 테스트 병행 구조로 둠
 - 실제 `SchoolHelperWidget` WidgetKit target/scaffold를 포함함
 - SwiftPM 코어 테스트는 Repository/ViewModel/Widget snapshot/Notification coordination까지 확장함
+- 가정통신문 BFF 호출과 홈 카드 포맷을 Android와 맞춤
 
 남은 검증:
 

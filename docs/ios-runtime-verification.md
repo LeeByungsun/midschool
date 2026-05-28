@@ -30,6 +30,13 @@ cd ios
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
+2026-05-28 최신 확인:
+
+- 45 tests passed
+- 가정통신문 BFF query/응답 매핑
+- 가정통신문 날짜 누락 시 Android와 동일하게 제목만 표시
+- 타이머 알림 OFF 시 권한 요청/완료 알림 예약 생략
+
 ### 2.2 앱 빌드
 
 ```bash
@@ -320,4 +327,3 @@ iOS 앱은 NEIS API 키를 앱 번들에 저장하지 않습니다.
 
 실기기 앱 아이콘 직접 실행 시에는 환경변수가 전달되지 않습니다.
 그래서 iOS 앱은 키가 없어도 기본 조회가 가능한 경로를 우선 사용해야 합니다.
-

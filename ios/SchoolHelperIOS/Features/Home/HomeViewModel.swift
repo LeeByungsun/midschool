@@ -81,9 +81,10 @@ final class HomeViewModel: ObservableObject {
             noticeRequiresSetup = false
             latestNoticeURL = nil
         } else {
-            noticeSummary = noticeItems.prefix(3).map { notice in
-                "\(notice.date)  \(notice.title)"
-            }.joined(separator: "\n")
+            noticeSummary = noticeItems.prefix(3)
+                .map(formatNoticePreviewLine)
+                .filter { !$0.isEmpty }
+                .joined(separator: "\n")
             latestNoticeURL = URL(string: noticeItems.first?.url ?? "")
             noticeActionText = "가정통신문 열기"
             noticeActionEnabled = latestNoticeURL != nil
@@ -167,6 +168,15 @@ final class HomeViewModel: ObservableObject {
 
         let allergy = line[allergyRange].trimmingCharacters(in: .whitespacesAndNewlines)
         return allergy.isEmpty ? name : "\(name) (\(allergy))"
+    }
+
+    private func formatNoticePreviewLine(_ notice: NoticePreview) -> String {
+        let title = notice.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let date = notice.date.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !date.isEmpty else {
+            return title
+        }
+        return "\(date)  \(title)"
     }
 
     private func isVisibleSchedule(_ event: SchoolEvent) -> Bool {
