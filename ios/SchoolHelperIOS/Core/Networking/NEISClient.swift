@@ -159,9 +159,20 @@ struct NEISClient {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 2 else { return [] }
 
+        let schools = try await fetchSchools(matching: trimmed)
+        let normalized = trimmed.components(separatedBy: .whitespacesAndNewlines).joined()
+
+        if schools.isEmpty, normalized != trimmed, normalized.count >= 2 {
+            return try await fetchSchools(matching: normalized)
+        }
+
+        return schools
+    }
+
+    private func fetchSchools(matching query: String) async throws -> [SchoolInfo] {
         let response: NeisResponse<SchoolInfoRowDto> = try await fetchNeisJSON(
             endpoint: "hub/schoolInfo",
-            params: ["SCHUL_NM": trimmed],
+            params: ["SCHUL_NM": query],
             includeSchoolContext: false
         )
 

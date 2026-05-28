@@ -97,4 +97,27 @@ echo "Entitlements mode: $ENTITLEMENTS_MODE"
 echo "DerivedData: $DERIVED_DATA_PATH"
 echo "Only testing: ${ONLY_TESTING:-<all>}"
 
-xcodebuild "${XCODEBUILD_ARGS[@]}"
+XCODEBUILD_LOG="${XCODEBUILD_LOG:-$DERIVED_DATA_PATH/test_device_ui.xcodebuild.log}"
+mkdir -p "$(dirname "$XCODEBUILD_LOG")"
+: >"$XCODEBUILD_LOG"
+
+xcodebuild "${XCODEBUILD_ARGS[@]}" > >(tee -a "$XCODEBUILD_LOG") 2>&1 &
+XCODEBUILD_PID=$!
+
+while kill -0 "$XCODEBUILD_PID" 2>/dev/null; do
+  if grep -Eq "Unlock .* to Continue|device is locked" "$XCODEBUILD_LOG"; then
+    echo >&2
+    echo "The iPhone is locked. Unlock the device and rerun this script." >&2
+    echo "Xcodebuild log: $XCODEBUILD_LOG" >&2
+    kill "$XCODEBUILD_PID" 2>/dev/null || true
+    wait "$XCODEBUILD_PID" 2>/dev/null || true
+    exit 5
+  fi
+  sleep 2
+done
+
+set +e
+wait "$XCODEBUILD_PID"
+STATUS=$?
+set -e
+exit "$STATUS"

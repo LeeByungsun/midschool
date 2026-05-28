@@ -62,6 +62,7 @@ Android 기준:
 - `SchoolSearchService`, `NEISClient`
 - UI 테스트 `testInitialSetupSearchSelectsSchoolAndSavesProfile`
 - 코어 테스트에서 공백/학교 코드 누락/검색 응답 경합을 검증
+- 2026-05-28 `NEISClientTests/testSearchSchoolsRetriesWithoutWhitespaceWhenFirstSearchIsEmpty` 로 `미사 중학교` 입력 시 공백 제거 재검색을 확인
 - 2026-05-28 simulator UI 테스트에서 `미사중학교` 검색 후 `학교 1개를 찾았어요.` 와 `선택된 학교` 섹션 표시를 확인
 
 메모:
@@ -70,6 +71,7 @@ Android 기준:
 - 키가 없으면 `KEY` 없이 요청한다.
 - 실기기 아이콘 실행에서는 환경변수가 전달되지 않으므로 키 없이 동작 가능한 학교 검색 경로를 우선한다.
 - 정확히 1개 학교가 검색되면 자동 선택되며, iOS 초기 설정/설정 화면은 선택 상태를 `선택된 학교` 섹션으로 별도 표시한다.
+- `미사 중학교`처럼 중간 공백이 들어간 입력은 0건일 때 공백 제거 검색어로 한 번 더 조회한다.
 
 ### 2.3 홈 대시보드
 
@@ -290,6 +292,7 @@ Android 기준:
 - 2026-05-28 `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-all-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 전체 UI 테스트 6개가 모두 통과했다.
 - 2026-05-28 simulator 전체 UI 테스트는 시간표/급식/일정 콘텐츠 검증을 포함해 9개가 모두 통과했다.
 - 2026-05-28 9개 전체 UI 테스트의 실기기 재시도는 앱/테스트 러너 빌드 후 기기 잠금 상태(`Unlock buggyani to Continue`)에서 중단했다.
+- `ios/scripts/test_device_ui.sh` 는 잠금 상태를 감지하면 `The iPhone is locked...` 메시지와 xcodebuild log 경로를 출력하고 exit 5로 종료한다.
 
 따라서 현재 완료라고 말할 수 있는 범위:
 

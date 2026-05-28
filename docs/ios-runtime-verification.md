@@ -112,6 +112,13 @@ xcodebuild \
 - 확인 범위: `미사중학교` 검색, `학교 1개를 찾았어요.` 표시, `선택된 학교` 섹션 표시, 1학년 2반 저장, 홈 화면 진입
 - xcresult: `/tmp/misschool-ios-selected-school-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_13-49-36-+0900.xcresult`
 
+2026-05-28 초기 설정 공백 포함 학교명 검색 재확인:
+
+- 변경 목적: 실제 입력에서 `미사 중학교`처럼 학교명 중간에 공백이 들어가면 NEIS가 0건을 반환하므로, 첫 검색이 비어 있을 때 공백 제거 검색어로 1회 재시도한다.
+- 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --package-path ios --filter NEISClientTests/testSearchSchoolsRetriesWithoutWhitespaceWhenFirstSearchIsEmpty`
+- 결과: 통과, 1 test, 0 failures
+- 확인 범위: 첫 요청 `SCHUL_NM=미사 중학교`가 비면 두 번째 요청 `SCHUL_NM=미사중학교`로 재시도하고 `미사중학교` 결과를 반환함
+
 2026-05-28 실제 iPhone 초기 설정 UI 테스트 시도:
 
 - 명령: `xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS,id=00008130-0012603E3CC3001C' -configuration Debug -derivedDataPath /tmp/misschool-ios-real-device-setup-search-test -only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile DEVELOPMENT_TEAM=2TJFP5788P ENTITLEMENTS_MODE=device-preview test`
@@ -145,6 +152,14 @@ xcodebuild \
 - 결과: 테스트 시작 직후 중단
 - 원인: 기기가 잠겨 있어 Xcode가 `Unlock buggyani to Continue` 상태로 대기함
 - 해석: 9개 전체 UI 테스트의 실기기 재검증은 기기 잠금 해제 후 재실행이 필요하다. 기존 6개 실기기 통과 증거는 유지한다.
+
+2026-05-28 실제 iPhone 전체 UI 테스트 잠금 감지 스크립트 재시도:
+
+- 명령: `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-2 ios/scripts/test_device_ui.sh`
+- 결과: 앱/테스트 러너 빌드 후 기기 잠금 감지로 exit 5
+- 감지 메시지: `The iPhone is locked. Unlock the device and rerun this script.`
+- xcodebuild log: `/tmp/misschool-ios-device-ui-tabs-test-2/test_device_ui.xcodebuild.log`
+- 해석: 실기기 9개 전체 UI 테스트는 아직 잠금 해제 상태에서 재검증이 필요하지만, 장시간 대기 대신 명확한 실패 메시지와 로그 경로를 남기도록 스크립트를 보강했다.
 
 현재 검증하는 실제 상호작용:
 
@@ -468,6 +483,7 @@ iOS 앱은 NEIS API 키를 앱 번들에 저장하지 않습니다.
   - `WEB_BASE_URL`
 - `NEIS_API_KEY` 가 있으면 `KEY` query item을 붙임
 - `NEIS_API_KEY` 가 없으면 `KEY` query item을 생략함
+- 학교 검색 결과가 없고 검색어 안에 공백이 있으면 공백 제거 검색어로 1회 재시도함
 
 학교 검색은 키 없이도 동작해야 하므로, 실기기 직접 실행에서도 `KEY` 없이 호출합니다.
 키가 필요한 운영 요청은 iOS 앱에 키를 내장하지 말고 서버/BFF에서 처리하는 방향이 안전합니다.

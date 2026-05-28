@@ -30,6 +30,31 @@ final class NEISClientTests: XCTestCase {
         XCTAssertEqual(schools.first?.schoolCode, "7692129")
     }
 
+    func testSearchSchoolsRetriesWithoutWhitespaceWhenFirstSearchIsEmpty() async throws {
+        let session = URLSession(configuration: stubbedConfiguration())
+        let client = NEISClient(
+            session: session,
+            config: NEISClient.Config(
+                baseURL: URL(string: "https://example.com/")!,
+                apiKey: "",
+                noticesBaseURL: URL(string: "https://example.com/")!
+            )
+        )
+        var requestedQueries: [String] = []
+        StubURLProtocol.requestHandler = { request in
+            let components = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)
+            let query = components?.queryItems?.first { $0.name == "SCHUL_NM" }?.value ?? ""
+            requestedQueries.append(query)
+            let payload = query == "미사중학교" ? Self.schoolInfoPayload : Self.emptySchoolInfoPayload
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!, payload)
+        }
+
+        let schools = try await client.searchSchools(query: "미사 중학교")
+
+        XCTAssertEqual(requestedQueries, ["미사 중학교", "미사중학교"])
+        XCTAssertEqual(schools.map(\.schoolName), ["미사중학교"])
+    }
+
     func testFetchNoticesBuildsBFFQueryAndDecodesPreviewItems() async throws {
         let session = URLSession(configuration: stubbedConfiguration())
         let client = NoticesClient(
@@ -119,6 +144,14 @@ final class NEISClientTests: XCTestCase {
               "ORG_RDNMA": "경기도 하남시 미사강변한강로334번길 70"
             }]}
           ]
+        }
+        """.utf8
+    )
+
+    private static let emptySchoolInfoPayload = Data(
+        """
+        {
+          "RESULT": {"CODE": "INFO-200", "MESSAGE": "해당하는 데이터가 없습니다."}
         }
         """.utf8
     )
