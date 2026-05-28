@@ -174,6 +174,31 @@ xcodebuild \
 - retry wrapper smoke: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh`
 - retry wrapper smoke 결과: `** TEST SUCCEEDED **`, 1 test, 0 failures
 
+실제 iPhone에서 live NEIS/BFF 화면 렌더링만 검증하려면 아래 전용 경로를 사용합니다.
+
+```bash
+LIVE_UI_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
+```
+
+`LIVE_UI_TEST=1` 은 UI test target에 `-DLIVE_UI_TEST_ENABLED` Swift flag를 주입하고,
+외부 서비스 의존 테스트인 `testLiveSchoolDataDisplaysBackendContent` 만 실행합니다.
+기본 전체 UI 테스트에서는 live 테스트가 skip 처리되므로 seeded 회귀 테스트가 외부 API 상태에 흔들리지 않습니다.
+
+2026-05-28 실제 iPhone live NEIS/BFF UI 전용 테스트:
+
+- 명령: `LIVE_UI_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-ui-test ios/scripts/test_device_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent`: 1 test, 0 failures
+- 확인 범위: 홈/시간표/급식/일정 탭에서 live `수학`, `발아현미밥`, `오케스트라`, `노동절` 렌더링
+- xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
+
+2026-05-28 실제 iPhone 초기 설정 검색 재확인:
+
+- 명령: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-initial-search-check ios/scripts/test_device_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- 확인 범위: `미사중학교` 검색 → `학교 1개를 찾았어요.` → `선택된 학교` 표시 → 학년/반 저장 → 홈 진입
+- xcresult: `/tmp/misschool-ios-device-initial-search-check/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-38-27-+0900.xcresult`
+
 현재 검증하는 실제 상호작용:
 
 - 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾고 학년/반 저장 후 홈으로 진입함
@@ -331,8 +356,16 @@ ios/scripts/test_live_ui.sh
 - 결과: `** TEST SUCCEEDED **`
 - `SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent`: 1 test, 0 failures
 - 확인 범위: 홈/시간표/급식/일정 화면에서 live sample `수학`, `발아현미밥`, `오케스트라`, `노동절` 렌더링
-- xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-24-15-+0900.xcresult`
-- 제한: simulator 화면 렌더링 검증이며, 실제 iPhone 화면에서 날짜 이동/외부 링크 전환 UX를 눈으로 증명하지는 않는다.
+- xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-36-53-+0900.xcresult`
+
+2026-05-28 실제 iPhone 확인:
+
+- 명령: `LIVE_UI_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-ui-test ios/scripts/test_device_ui.sh`
+- 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent`: 1 test, 0 failures
+- 확인 범위: 홈/시간표/급식/일정 화면에서 live sample `수학`, `발아현미밥`, `오케스트라`, `노동절` 렌더링
+- xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
+- 제한: 실제 iPhone live 데이터 렌더링은 자동 검증됐지만, 날짜 이동/외부 링크 전환 UX를 눈으로 증명하지는 않는다.
 
 ### 2.5 재현 스크립트
 
@@ -510,17 +543,19 @@ xcodebuild \
 - 위젯 콘텐츠는 앱 안 미리보기로 직접 확인됨
 - live NEIS/BFF backend 데이터 계약은 `verify_live_school_data.py` 로 직접 확인됨
 - live NEIS/BFF 데이터의 simulator 앱 화면 렌더링은 `test_live_ui.sh` 로 직접 확인됨
+- live NEIS/BFF 데이터의 실제 iPhone 앱 화면 렌더링은 `test_device_ui.sh` + `LIVE_UI_TEST=1` 로 직접 확인됨
 
 하지만 아래는 아직 미완료입니다.
 
 - 홈 화면 위젯의 실제 배치/탭 동작
 - 시스템 확인 다이얼로그 이후 최종 전환
 - 실기기 알림/권한 최종 UX
-- 실제 iPhone 화면에서 live 데이터 날짜 이동/외부 링크 UX 눈검증
+- 실제 iPhone 화면에서 live 데이터 날짜 이동 UX 눈검증
+- 실제 iPhone 가정통신문 외부 링크 UX 눈검증
 
 즉, 현재 상태는:
 
-**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 9개 자동 UI 검증, live NEIS/BFF backend smoke 완료”** 이지만
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/simulator/실기기 UI smoke 완료”** 이지만
 **“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---

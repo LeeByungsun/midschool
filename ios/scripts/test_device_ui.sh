@@ -10,7 +10,12 @@ CONFIGURATION="${CONFIGURATION:-Debug}"
 DEVICE_ID="${DEVICE_ID:-}"
 TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"
 ENTITLEMENTS_MODE="${ENTITLEMENTS_MODE:-device-preview}"
-ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile}"
+LIVE_UI_TEST="${LIVE_UI_TEST:-0}"
+if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
+  ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testLiveSchoolDataDisplaysBackendContent}"
+else
+  ONLY_TESTING="${ONLY_TESTING-SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile}"
+fi
 
 export DEVELOPER_DIR
 
@@ -85,6 +90,10 @@ XCODEBUILD_ARGS=(
   -allowProvisioningUpdates
 )
 
+if [[ "$LIVE_UI_TEST" == "1" || "$LIVE_UI_TEST" == "true" || "$LIVE_UI_TEST" == "yes" ]]; then
+  XCODEBUILD_ARGS+=('OTHER_SWIFT_FLAGS=$(inherited) -DLIVE_UI_TEST_ENABLED')
+fi
+
 if [[ -n "$ONLY_TESTING" ]]; then
   XCODEBUILD_ARGS+=("-only-testing:$ONLY_TESTING")
 fi
@@ -96,6 +105,7 @@ echo "Team: $TEAM_ID"
 echo "Entitlements mode: $ENTITLEMENTS_MODE"
 echo "DerivedData: $DERIVED_DATA_PATH"
 echo "Only testing: ${ONLY_TESTING:-<all>}"
+echo "Live UI test: $LIVE_UI_TEST"
 
 XCODEBUILD_LOG="${XCODEBUILD_LOG:-$DERIVED_DATA_PATH/test_device_ui.xcodebuild.log}"
 AUTOMATION_RETRY_LIMIT="${AUTOMATION_RETRY_LIMIT:-1}"

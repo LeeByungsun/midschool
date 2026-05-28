@@ -107,10 +107,12 @@ final class SchoolHelperIOSUITests: XCTestCase {
     }
 
     func testLiveSchoolDataDisplaysBackendContent() throws {
+        #if !LIVE_UI_TEST_ENABLED
         try XCTSkipUnless(
-            FileManager.default.fileExists(atPath: "/tmp/misschool-ios-enable-live-ui-test"),
+            false,
             "live NEIS/BFF UI test is opt-in because it depends on external services"
         )
+        #endif
 
         let app = makeLiveApp()
         app.launch()
