@@ -218,6 +218,10 @@ xcodebuild \
 - xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 - retry wrapper smoke: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh`
 - retry wrapper smoke 결과: `** TEST SUCCEEDED **`, 1 test, 0 failures
+- 초기 설정 검색 재확인: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-setup-search-test UNLOCK_WAIT_SECONDS=120 ios/scripts/test_device_ui.sh`
+- 초기 설정 검색 재확인 결과: `** TEST SUCCEEDED **`, `SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile` 1 test, 0 failures
+- device-preview 설치/실행: `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-preview-install ios/scripts/install_device.sh`
+- device-preview 설치/실행 결과: `** BUILD SUCCEEDED **`, `App installed`, `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
 
 실제 iPhone에서 live NEIS/BFF 화면 렌더링만 검증하려면 아래 전용 경로를 사용합니다.
 
@@ -397,6 +401,7 @@ APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/refresh_app_group_p
 - `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-attempt LAUNCH=0 ios/scripts/install_device.sh` 로 Xcode profile 갱신/빌드를 시도했지만 widget profile mismatch로 실패함
   - 오류: `Provisioning profile "iOS Team Provisioning Profile: com.leebyungsun.schoolhelperios.widget" doesn't match the entitlements file's value for the com.apple.security.application-groups entitlement.`
 - `APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-app-groups-refresh-check LAUNCH=0 ios/scripts/install_device.sh` 재시도 역시 같은 widget profile mismatch로 실패함.
+- `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P ios/scripts/refresh_app_group_profiles.sh` 로 local stale profile을 백업한 뒤 Xcode profile refresh를 재시도했다. 새로 내려받은 widget profile도 groups `[]` 라서, 현재 blocker는 local cache가 아니라 Apple Developer의 widget App ID App Group capability 미반영 상태로 확인됨.
 
 자동화 가능한 위젯 패키징 검증은 별도 simulator smoke로 고정했습니다.
 

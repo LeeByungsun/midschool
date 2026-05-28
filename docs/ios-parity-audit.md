@@ -291,6 +291,7 @@ Android 기준:
 - `ios/scripts/test_widget_sim.sh` 로 simulator 위젯 패키징/route/App Group config smoke 고정
 - `ios/scripts/verify_widget_app_group_readiness.sh` 로 simulator smoke → profile check → 선택적 full App Group device build/install 경로 고정
 - `ios/scripts/refresh_app_group_profiles.sh` 로 local stale provisioning profile 백업/제거와 Xcode refresh 재시도 경로 고정
+- 2026-05-28 `APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=2TJFP5788P ios/scripts/refresh_app_group_profiles.sh` 실행 후 새 widget profile도 App Group이 비어 있어 Apple Developer widget App ID capability 미반영 상태로 확인
 - `AppStateTests/testWidgetDeepLinksRouteToSetupOrTimetable` 로 위젯 URL(`schoolhelper://settings`, `schoolhelper://timetable`) 라우팅 고정
 - 2026-05-28 `DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh` 통과
 
@@ -338,6 +339,8 @@ Android 기준:
 - `ios/scripts/test_device_ui.sh` 는 `Timed out while enabling automation mode` 실패를 기본 1회 자동 재시도한다.
 - 2026-05-28 같은 derived data로 재실행한 실제 iPhone 9개 전체 UI 테스트가 `TEST SUCCEEDED` 로 통과했다. xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh` 로 retry wrapper 기본 경로의 1개 UI 테스트 통과를 확인했다.
+- 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-setup-search-test UNLOCK_WAIT_SECONDS=120 ios/scripts/test_device_ui.sh` 로 실제 iPhone 초기 설정 학교 검색/선택/저장 흐름을 다시 확인했다. xcresult: `/tmp/misschool-ios-device-setup-search-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_17-56-15-+0900.xcresult`
+- 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-preview-install ios/scripts/install_device.sh` 로 실제 iPhone에 device-preview 앱을 설치/실행했다.
 - 2026-05-28 `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py` 로 미사중학교 live NEIS/BFF backend 데이터 계약과 첫 notice 상세 URL HTTP 200/제목 매칭을 확인했다.
 - 2026-05-28 `ios/scripts/test_live_ui.sh` 로 simulator 앱 화면의 live NEIS/BFF 렌더링을 재확인했다. xcresult: `/tmp/misschool-ios-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-36-53-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-initial-search-check ios/scripts/test_device_ui.sh` 로 실제 iPhone 초기 설정 학교 검색/저장 흐름을 재확인했다. xcresult: `/tmp/misschool-ios-device-initial-search-check/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-38-27-+0900.xcresult`
