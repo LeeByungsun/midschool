@@ -222,6 +222,11 @@ LIVE_NAVIGATION_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - 재시도 결과: 동일하게 기기 잠금 상태로 테스트 시작 전 중단
 - 재시도 log: `/tmp/misschool-ios-device-live-navigation-ui-test-rerun/test_device_ui.xcodebuild.log`
 - 해석: 앱/테스트 빌드와 signing은 진행됐지만, 실제 iPhone 잠금 때문에 UI 실행 증거는 아직 미확보. 다음 재시도는 `UNLOCK_WAIT_SECONDS=120` 을 함께 지정해 unlock 대기 가능.
+- unlock 대기 후 통과 명령: `UNLOCK_WAIT_SECONDS=20 LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test-ready ios/scripts/test_device_ui.sh`
+- unlock 대기 후 결과: `** TEST SUCCEEDED **`
+- `SchoolHelperIOSUITests/testLiveDateNavigationUpdatesTitles`: 1 test, 0 failures
+- 통과 확인 범위: 실제 iPhone에서 시간표 `5월 28일 목요일` → `5월 29일 금요일`, 급식 `5월 25일 - 5월 29일` → `6월 1일 - 6월 5일`, 일정 `2026년 5월` → `2026년 6월` 제목 갱신
+- 통과 xcresult: `/tmp/misschool-ios-device-live-navigation-ui-test-ready/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-34-27-+0900.xcresult`
 
 2026-05-28 실제 iPhone 초기 설정 검색 재확인:
 
@@ -618,6 +623,7 @@ xcodebuild \
 - live NEIS/BFF 데이터의 simulator 앱 화면 렌더링은 `test_live_ui.sh` 로 직접 확인됨
 - live NEIS/BFF 데이터의 simulator 날짜 이동 UX는 `test_live_navigation_ui.sh` 로 직접 확인됨
 - live NEIS/BFF 데이터의 실제 iPhone 앱 화면 렌더링은 `test_device_ui.sh` + `LIVE_UI_TEST=1` 로 직접 확인됨
+- live NEIS/BFF 데이터의 실제 iPhone 날짜 이동 UX는 `test_device_ui.sh` + `LIVE_NAVIGATION_TEST=1` 로 직접 확인됨
 - 가정통신문 외부 링크의 Safari 전환은 simulator 및 실제 iPhone에서 `EXTERNAL_LINK_TEST=1` 로 직접 확인됨. simulator에서는 URL/페이지 텍스트까지 확인됨
 - 알림 권한 설정 화면의 안내/요청 버튼 상태 변화는 simulator 및 실제 iPhone에서 launch override 기반 UI 테스트로 직접 확인됨
 
@@ -626,12 +632,11 @@ xcodebuild \
 - 홈 화면 위젯의 실제 배치/탭 동작
 - 시스템 확인 다이얼로그 이후 최종 전환
 - 실기기 시스템 권한 팝업/완료 알림 배너 최종 UX
-- 실제 iPhone 화면에서 live 데이터 날짜 이동 UX 눈검증 또는 자동 UI 실행
 - 실제 iPhone Safari에서 운영 notice 웹페이지 콘텐츠 렌더링 눈검증
 
 즉, 현재 상태는:
 
-**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/notice URL/simulator/실기기 UI smoke, simulator live 날짜 이동 UX, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/notice URL/simulator/실기기 UI smoke, simulator/실기기 live 날짜 이동 UX, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
 **“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---
@@ -650,6 +655,7 @@ iOS 앱은 NEIS API 키를 앱 번들에 저장하지 않습니다.
 - `NEIS_API_KEY` 가 있으면 `KEY` query item을 붙임
 - `NEIS_API_KEY` 가 없으면 `KEY` query item을 생략함
 - 학교 검색 결과가 없고 검색어 안에 공백이 있으면 공백 제거 검색어로 1회 재시도함
+- 네트워크 오류 등으로 mock fallback을 사용할 때도 학교명 공백을 제거해 `미사 중학교` → `미사중학교` 검색을 허용함
 
 학교 검색은 키 없이도 동작해야 하므로, 실기기 직접 실행에서도 `KEY` 없이 호출합니다.
 키가 필요한 운영 요청은 iOS 앱에 키를 내장하지 말고 서버/BFF에서 처리하는 방향이 안전합니다.

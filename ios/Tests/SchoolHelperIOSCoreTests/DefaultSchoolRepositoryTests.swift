@@ -2,6 +2,19 @@ import XCTest
 @testable import SchoolHelperIOSCore
 
 final class DefaultSchoolRepositoryTests: XCTestCase {
+    func testSearchSchoolsFallsBackToWhitespaceInsensitiveMockWhenRemoteFails() async throws {
+        let repository = DefaultSchoolRepository(
+            schoolSearchService: StubSchoolSearchService(result: .failure(TestError.expected)),
+            neisService: SpyNEISService(),
+            noticesService: StubNoticesService(result: []),
+            fallback: MockSchoolRepository()
+        )
+
+        let schools = try await repository.searchSchools(query: "미사 중학교")
+
+        XCTAssertEqual(schools.map(\.schoolName), ["미사중학교"])
+    }
+
     func testFetchTodayMealsFormatsDateForRemoteService() async throws {
         let searchService = StubSchoolSearchService(result: .success([]))
         let neisService = SpyNEISService()

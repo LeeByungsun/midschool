@@ -72,6 +72,7 @@ Android 기준:
 - 실기기 아이콘 실행에서는 환경변수가 전달되지 않으므로 키 없이 동작 가능한 학교 검색 경로를 우선한다.
 - 정확히 1개 학교가 검색되면 자동 선택되며, iOS 초기 설정/설정 화면은 선택 상태를 `선택된 학교` 섹션으로 별도 표시한다.
 - `미사 중학교`처럼 중간 공백이 들어간 입력은 0건일 때 공백 제거 검색어로 한 번 더 조회한다.
+- 네트워크 오류 등으로 mock fallback을 사용할 때도 학교명 공백을 제거해 `미사 중학교` 입력을 처리한다.
 
 ### 2.3 홈 대시보드
 
@@ -326,6 +327,7 @@ Android 기준:
 - 2026-05-28 `ios/scripts/test_live_navigation_ui.sh` 로 simulator live 날짜 이동 UX를 확인했다. 시간표/급식/일정 제목이 각각 다음 날/다음 주/다음 달로 갱신됐다. xcresult: `/tmp/misschool-ios-live-navigation-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-15-26-+0900.xcresult`
 - 2026-05-28 `LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test ios/scripts/test_device_ui.sh` 는 앱/테스트 빌드와 signing 후 실제 iPhone 잠금 상태로 중단됐다. log: `/tmp/misschool-ios-device-live-navigation-ui-test/test_device_ui.xcodebuild.log`
 - 2026-05-28 같은 실기기 live 날짜 이동 테스트 재시도도 잠금 상태로 중단됐다. 다음 재시도는 `UNLOCK_WAIT_SECONDS=120` 으로 unlock 대기 가능. log: `/tmp/misschool-ios-device-live-navigation-ui-test-rerun/test_device_ui.xcodebuild.log`
+- 2026-05-28 `UNLOCK_WAIT_SECONDS=20 LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test-ready ios/scripts/test_device_ui.sh` 로 실제 iPhone live 날짜 이동 UX를 확인했다. 시간표/급식/일정 제목이 각각 다음 날/다음 주/다음 달로 갱신됐다. xcresult: `/tmp/misschool-ios-device-live-navigation-ui-test-ready/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-34-27-+0900.xcresult`
 - 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환과 URL/페이지 텍스트를 확인했다. xcresult: `/tmp/misschool-ios-external-link-url-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-27-48-+0900.xcresult`
 - 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
 - 2026-05-28 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-notification-permission-ui-test-final '-only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary' test` 로 simulator 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`
@@ -342,6 +344,7 @@ Android 기준:
 - live NEIS/BFF simulator UI 렌더링 smoke
 - live NEIS/BFF simulator 날짜 이동 UX smoke
 - live NEIS/BFF 실제 iPhone UI 렌더링 smoke
+- live NEIS/BFF 실제 iPhone 날짜 이동 UX smoke
 - 가정통신문 외부 링크 Safari 전환 및 simulator URL/페이지 텍스트 smoke
 - 알림 권한 설정 화면 안내/요청 버튼 UI smoke
 
@@ -350,7 +353,6 @@ Android 기준:
 - 홈 화면 WidgetKit 실제 배치/탭 end-to-end
 - App Group 기반 앱/위젯 공유 데이터 실기기 end-to-end
 - 실기기 시스템 권한 팝업/완료 알림 배너 UX
-- 실제 iPhone 화면의 live 데이터 날짜 이동 UX 눈검증 또는 자동 UI 실행
 - 실제 iPhone Safari에서 운영 notice 웹페이지 콘텐츠 렌더링 눈검증
 
 ---
@@ -362,4 +364,4 @@ Android 기준:
 3. `ENTITLEMENTS_MODE=app-groups TEAM_ID=... ios/scripts/install_device.sh` 로 full App Group 빌드를 실행한다.
 4. 실제 iPhone 홈 화면에 위젯을 배치해 오늘/내일 시간표와 탭 라우팅을 확인한다.
 5. 타이머를 1분 이하로 시작해 실기기 알림 권한 요청과 완료 알림을 확인한다.
-6. `verify_live_school_data.py` 로 live backend 계약을 재확인한 뒤, 실제 iPhone 화면에서 날짜 이동/주간 스크롤/외부 링크 UX를 눈으로 확인한다.
+6. `verify_live_school_data.py` 로 live backend 계약을 재확인한 뒤, 실제 iPhone Safari에서 운영 notice 웹페이지 렌더링을 눈으로 확인한다.

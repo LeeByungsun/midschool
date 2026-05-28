@@ -114,3 +114,4 @@ EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - `LIVE_NAVIGATION_TEST=1` 은 live UI 테스트 전용 Swift flag를 켜고 `testLiveDateNavigationUpdatesTitles` 만 실행합니다.
 - `EXTERNAL_LINK_TEST=1` 은 외부 앱 전환 테스트 전용 Swift flag를 켜고 `testNoticeButtonOpensExternalSafariURL` 만 실행합니다.
 - NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 `KEY` 없이 공개 조회를 시도합니다.
+- 학교 검색 fallback도 학교명 공백을 제거해 `미사 중학교` 같은 입력을 처리합니다.

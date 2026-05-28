@@ -41,6 +41,16 @@ final class ProfileEditorViewModelTests: XCTestCase {
         XCTAssertEqual(savedProfile?.classroom, "2")
     }
 
+    func testSetupViewModelFindsMockSchoolWhenQueryContainsWhitespace() async {
+        let viewModel = SetupViewModel(initialProfile: StudentProfile(), repository: MockSchoolRepository())
+        viewModel.searchQuery = "미사 중학교"
+
+        await viewModel.searchSchools()
+
+        XCTAssertEqual(viewModel.selectedSchool?.schoolName, "미사중학교")
+        XCTAssertEqual(viewModel.message, "학교 1개를 찾았어요.")
+    }
+
     func testSetupViewModelRequiresReselectWhenStoredSchoolCodeIsMissing() {
         let viewModel = SetupViewModel(
             initialProfile: .schoolNameOnly(),
