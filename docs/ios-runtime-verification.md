@@ -381,6 +381,14 @@ Apple Developer portal에서 capability를 반영했지만 로컬 profile만 오
 APP_GROUP_PROFILE_CHECK=warn ENTITLEMENTS_MODE=app-groups TEAM_ID=YOUR_TEAM_ID ios/scripts/install_device.sh
 ```
 
+로컬 stale profile을 먼저 백업/제거한 뒤 Xcode refresh를 유도하려면 아래 helper를 사용합니다.
+기본 실행은 dry-run입니다.
+
+```bash
+ios/scripts/refresh_app_group_profiles.sh
+APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/refresh_app_group_profiles.sh
+```
+
 2026-05-28 기준 실제 확인 결과:
 
 - `com.leebyungsun.schoolhelperios`: App Group 포함

@@ -130,6 +130,22 @@ ios/scripts/audit_ios_goal_readiness.py
 - 시스템 수동 증거는 `ios/system-evidence.template.json` 을 `ios/system-evidence.local.json` 으로 복사해 작성합니다. local 파일은 git에 올리지 않습니다.
 - 수동 증거만 따로 확인하려면 `ios/scripts/validate_ios_system_evidence.py` 를 실행합니다.
 
+App Group profile 새로고침 보조:
+
+```bash
+# 기본은 dry-run: 현재 app/widget bundle id의 local profile만 나열
+ios/scripts/refresh_app_group_profiles.sh
+
+# matching local profiles를 backup dir로 옮김
+APPLY=1 ios/scripts/refresh_app_group_profiles.sh
+
+# Apple Developer/Xcode capability 반영 후 Xcode profile 재생성까지 요청
+APPLY=1 RUN_XCODE_REFRESH=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/refresh_app_group_profiles.sh
+```
+
+- backup은 `ios/profile-backups.local/` 아래에 만들며 git에 올리지 않습니다.
+- Apple Developer 쪽 App Group capability가 먼저 켜져 있어야 새 profile도 App Group을 포함합니다.
+
 위젯/App Group 준비도 검증:
 
 ```bash

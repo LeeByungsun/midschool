@@ -290,6 +290,7 @@ Android 기준:
 - UI 테스트의 앱 내 위젯 미리보기 확인
 - `ios/scripts/test_widget_sim.sh` 로 simulator 위젯 패키징/route/App Group config smoke 고정
 - `ios/scripts/verify_widget_app_group_readiness.sh` 로 simulator smoke → profile check → 선택적 full App Group device build/install 경로 고정
+- `ios/scripts/refresh_app_group_profiles.sh` 로 local stale provisioning profile 백업/제거와 Xcode refresh 재시도 경로 고정
 - `AppStateTests/testWidgetDeepLinksRouteToSetupOrTimetable` 로 위젯 URL(`schoolhelper://settings`, `schoolhelper://timetable`) 라우팅 고정
 - 2026-05-28 `DERIVED_DATA_PATH=/tmp/misschool-ios-widget-sim-test-quiet ios/scripts/test_widget_sim.sh` 통과
 

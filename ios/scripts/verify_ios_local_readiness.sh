@@ -34,6 +34,7 @@ section "Shell syntax checks"
 bash -n \
   "$ROOT_DIR/ios/scripts/test_widget_sim.sh" \
   "$ROOT_DIR/ios/scripts/verify_widget_app_group_readiness.sh" \
+  "$ROOT_DIR/ios/scripts/refresh_app_group_profiles.sh" \
   "$ROOT_DIR/ios/scripts/verify_ios_local_readiness.sh" \
   "$ROOT_DIR/ios/scripts/install_device.sh" \
   "$ROOT_DIR/ios/scripts/test_device_ui.sh" \
