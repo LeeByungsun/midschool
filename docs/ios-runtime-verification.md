@@ -160,6 +160,7 @@ xcodebuild \
 - 감지 메시지: `The iPhone is locked. Unlock the device and rerun this script.`
 - xcodebuild log: `/tmp/misschool-ios-device-ui-tabs-test-2/test_device_ui.xcodebuild.log`
 - 해석: 장시간 대기 대신 명확한 실패 메시지와 로그 경로를 남기도록 스크립트를 보강했다.
+- 후속 보강: `UNLOCK_WAIT_SECONDS=120` 처럼 설정하면 잠금 감지 직후 종료하지 않고 지정 시간 동안 unlock을 기다린다.
 
 2026-05-28 실제 iPhone 9개 전체 UI 테스트 최종 재시도:
 
@@ -217,7 +218,10 @@ LIVE_NAVIGATION_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - 감지 메시지: `The iPhone is locked. Unlock the device and rerun this script.`
 - xcodebuild log: `/tmp/misschool-ios-device-live-navigation-ui-test/test_device_ui.xcodebuild.log`
 - xcresult: `/tmp/misschool-ios-device-live-navigation-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-17-42-+0900.xcresult`
-- 해석: 앱/테스트 빌드와 signing은 진행됐지만, 실제 iPhone 잠금 때문에 UI 실행 증거는 아직 미확보
+- 재시도 명령: `LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test-rerun ios/scripts/test_device_ui.sh`
+- 재시도 결과: 동일하게 기기 잠금 상태로 테스트 시작 전 중단
+- 재시도 log: `/tmp/misschool-ios-device-live-navigation-ui-test-rerun/test_device_ui.xcodebuild.log`
+- 해석: 앱/테스트 빌드와 signing은 진행됐지만, 실제 iPhone 잠금 때문에 UI 실행 증거는 아직 미확보. 다음 재시도는 `UNLOCK_WAIT_SECONDS=120` 을 함께 지정해 unlock 대기 가능.
 
 2026-05-28 실제 iPhone 초기 설정 검색 재확인:
 

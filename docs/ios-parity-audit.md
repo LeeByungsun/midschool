@@ -315,7 +315,7 @@ Android 기준:
 - 2026-05-28 `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-all-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 전체 UI 테스트 6개가 모두 통과했다.
 - 2026-05-28 simulator 전체 UI 테스트는 시간표/급식/일정 콘텐츠 검증을 포함해 9개가 모두 통과했다.
 - 2026-05-28 9개 전체 UI 테스트의 실기기 재시도는 한 번 `Unlock buggyani to Continue`, 한 번 `Timed out while enabling automation mode.` 로 실패했다.
-- `ios/scripts/test_device_ui.sh` 는 잠금 상태를 감지하면 `The iPhone is locked...` 메시지와 xcodebuild log 경로를 출력하고 exit 5로 종료한다.
+- `ios/scripts/test_device_ui.sh` 는 잠금 상태를 감지하면 `The iPhone is locked...` 메시지와 xcodebuild log 경로를 출력하고 exit 5로 종료한다. `UNLOCK_WAIT_SECONDS` 를 지정하면 잠금 해제를 일정 시간 기다릴 수 있다.
 - `ios/scripts/test_device_ui.sh` 는 `Timed out while enabling automation mode` 실패를 기본 1회 자동 재시도한다.
 - 2026-05-28 같은 derived data로 재실행한 실제 iPhone 9개 전체 UI 테스트가 `TEST SUCCEEDED` 로 통과했다. xcresult: `/tmp/misschool-ios-device-ui-tabs-test-3/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_14-55-49-+0900.xcresult`
 - 2026-05-28 `TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-script-retry-smoke ios/scripts/test_device_ui.sh` 로 retry wrapper 기본 경로의 1개 UI 테스트 통과를 확인했다.
@@ -325,6 +325,7 @@ Android 기준:
 - 2026-05-28 `LIVE_UI_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 앱 화면의 live NEIS/BFF 렌더링을 확인했다. xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
 - 2026-05-28 `ios/scripts/test_live_navigation_ui.sh` 로 simulator live 날짜 이동 UX를 확인했다. 시간표/급식/일정 제목이 각각 다음 날/다음 주/다음 달로 갱신됐다. xcresult: `/tmp/misschool-ios-live-navigation-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-15-26-+0900.xcresult`
 - 2026-05-28 `LIVE_NAVIGATION_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-navigation-ui-test ios/scripts/test_device_ui.sh` 는 앱/테스트 빌드와 signing 후 실제 iPhone 잠금 상태로 중단됐다. log: `/tmp/misschool-ios-device-live-navigation-ui-test/test_device_ui.xcodebuild.log`
+- 2026-05-28 같은 실기기 live 날짜 이동 테스트 재시도도 잠금 상태로 중단됐다. 다음 재시도는 `UNLOCK_WAIT_SECONDS=120` 으로 unlock 대기 가능. log: `/tmp/misschool-ios-device-live-navigation-ui-test-rerun/test_device_ui.xcodebuild.log`
 - 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
 - 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
 - 2026-05-28 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-notification-permission-ui-test-final '-only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary' test` 로 simulator 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`

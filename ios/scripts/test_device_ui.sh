@@ -124,6 +124,7 @@ echo "External link test: $EXTERNAL_LINK_TEST"
 
 XCODEBUILD_LOG="${XCODEBUILD_LOG:-$DERIVED_DATA_PATH/test_device_ui.xcodebuild.log}"
 AUTOMATION_RETRY_LIMIT="${AUTOMATION_RETRY_LIMIT:-1}"
+UNLOCK_WAIT_SECONDS="${UNLOCK_WAIT_SECONDS:-0}"
 mkdir -p "$(dirname "$XCODEBUILD_LOG")"
 : >"$XCODEBUILD_LOG"
 
@@ -135,9 +136,26 @@ run_xcodebuild_attempt() {
   echo "xcodebuild attempt: $attempt" | tee -a "$XCODEBUILD_LOG"
   xcodebuild "${XCODEBUILD_ARGS[@]}" > >(tee -a "$XCODEBUILD_LOG" "$attempt_log") 2>&1 &
   XCODEBUILD_PID=$!
+  local locked_detected_at=""
 
   while kill -0 "$XCODEBUILD_PID" 2>/dev/null; do
     if grep -Eq "Unlock .* to Continue|device is locked" "$attempt_log"; then
+      if [[ "$UNLOCK_WAIT_SECONDS" =~ ^[0-9]+$ && "$UNLOCK_WAIT_SECONDS" -gt 0 ]]; then
+        if [[ -z "$locked_detected_at" ]]; then
+          locked_detected_at="$(date +%s)"
+          echo >&2
+          echo "The iPhone is locked. Waiting up to ${UNLOCK_WAIT_SECONDS}s for unlock..." >&2
+          echo "Xcodebuild log: $XCODEBUILD_LOG" >&2
+        fi
+
+        local now
+        now="$(date +%s)"
+        if (( now - locked_detected_at < UNLOCK_WAIT_SECONDS )); then
+          sleep 2
+          continue
+        fi
+      fi
+
       echo >&2
       echo "The iPhone is locked. Unlock the device and rerun this script." >&2
       echo "Xcodebuild log: $XCODEBUILD_LOG" >&2
