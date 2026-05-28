@@ -192,15 +192,22 @@ Android 기준:
 - `TimerViewModelTests`
 - `NotificationPermissionCoordinatorTests`
 - UI 테스트 `testTimerModalShowsCloseButtonWhenLaunchedDirectly`
+- UI 테스트 `testSettingsNotificationPermissionRequestUpdatesSummary`
 
 플랫폼 차이:
 
 - Android의 `TimerBootReceiver`와 같은 재부팅 브로드캐스트는 iOS에 동일 개념이 없다.
 - iOS는 저장된 target date 기반 복구와 `UNUserNotificationCenter` 예약으로 대응한다.
 
+2026-05-28 추가 검증:
+
+- `SCHOOLHELPER_NOTIFICATION_AUTHORIZATION_STATUS` launch override로 설정 화면의 알림 권한 안내/요청 버튼 상태를 deterministic하게 검증한다.
+- simulator `testSettingsNotificationPermissionRequestUpdatesSummary` 통과. xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`
+- 실제 iPhone `testSettingsNotificationPermissionRequestUpdatesSummary` 통과. xcresult: `/tmp/misschool-ios-device-notification-permission-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-01-31-+0900.xcresult`
+
 남은 수동 확인:
 
-- 실제 iPhone에서 알림 권한 요청 UI, 완료 알림, 소리/진동 체감 확인.
+- 실제 iOS 시스템 권한 팝업, 완료 알림 배너, 소리/진동 체감 확인.
 
 ### 2.8 설정
 
@@ -318,6 +325,8 @@ Android 기준:
 - 2026-05-28 `LIVE_UI_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-live-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 앱 화면의 live NEIS/BFF 렌더링을 확인했다. xcresult: `/tmp/misschool-ios-device-live-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-40-03-+0900.xcresult`
 - 2026-05-28 `ios/scripts/test_external_link_ui.sh` 로 simulator 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-external-link-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-50-31-+0900.xcresult`
 - 2026-05-28 `EXTERNAL_LINK_TEST=1 TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-external-link-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 가정통신문 외부 링크 전환을 확인했다. xcresult: `/tmp/misschool-ios-device-external-link-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_15-52-21-+0900.xcresult`
+- 2026-05-28 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-notification-permission-ui-test-final '-only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary' test` 로 simulator 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`
+- 2026-05-28 `ONLY_TESTING=SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-notification-permission-ui-test ios/scripts/test_device_ui.sh` 로 실제 iPhone 알림 권한 설정 UI를 확인했다. xcresult: `/tmp/misschool-ios-device-notification-permission-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-01-31-+0900.xcresult`
 
 따라서 현재 완료라고 말할 수 있는 범위:
 
@@ -330,12 +339,13 @@ Android 기준:
 - live NEIS/BFF simulator UI 렌더링 smoke
 - live NEIS/BFF 실제 iPhone UI 렌더링 smoke
 - 가정통신문 외부 링크 Safari 전환 smoke
+- 알림 권한 설정 화면 안내/요청 버튼 UI smoke
 
 아직 완료라고 말할 수 없는 범위:
 
 - 홈 화면 WidgetKit 실제 배치/탭 end-to-end
 - App Group 기반 앱/위젯 공유 데이터 실기기 end-to-end
-- 실기기 알림 권한/완료 알림 UX
+- 실기기 시스템 권한 팝업/완료 알림 배너 UX
 - 실제 iPhone 화면의 live 데이터 날짜 이동 UX 눈검증
 - 실제 운영 notice 웹페이지 콘텐츠 자체의 Safari 로드 완료 눈검증
 

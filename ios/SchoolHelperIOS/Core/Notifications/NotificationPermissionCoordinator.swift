@@ -7,7 +7,7 @@ final class NotificationPermissionCoordinator: ObservableObject {
 
     init(
         timerSettingsStore: TimerSettingsStore = TimerSettingsStore(),
-        authorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider()
+        authorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider.fromEnvironment()
     ) {
         self.timerSettingsStore = timerSettingsStore
         self.authorizationProvider = authorizationProvider

@@ -98,6 +98,21 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["내일"].exists)
     }
 
+    func testSettingsNotificationPermissionRequestUpdatesSummary() {
+        let app = makeSeededApp(initialRoute: "settings")
+        app.launchEnvironment["SCHOOLHELPER_NOTIFICATION_AUTHORIZATION_STATUS"] = "not_determined"
+        app.launchEnvironment["SCHOOLHELPER_NOTIFICATION_AUTHORIZATION_REQUEST_GRANTED"] = "true"
+        app.launch()
+
+        XCTAssertTrue(scrollToStaticText(containing: "타이머 완료 알림을 받으려면 권한이 필요해요.", in: app))
+        XCTAssertTrue(scrollToButton(named: "알림 권한 요청", in: app))
+
+        app.buttons["알림 권한 요청"].tap()
+
+        XCTAssertTrue(waitForStaticText(containing: "알림 권한이 허용되어 있어요.", in: app, timeout: 5))
+        XCTAssertFalse(app.buttons["알림 권한 요청"].exists)
+    }
+
     func testTimerModalShowsCloseButtonWhenLaunchedDirectly() {
         let app = makeSeededApp(initialRoute: "timer")
         app.launch()

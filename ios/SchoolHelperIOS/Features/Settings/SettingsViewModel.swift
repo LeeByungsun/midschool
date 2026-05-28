@@ -29,7 +29,7 @@ final class SettingsViewModel: ObservableObject {
         repository: SchoolRepository = DefaultSchoolRepository(),
         timerSettingsStore: TimerSettingsStore = TimerSettingsStore(),
         widgetSettingsStore: WidgetSettingsStore = WidgetSettingsStore(),
-        notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider(),
+        notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider.fromEnvironment(),
         notificationScheduler: TimerNotificationScheduling? = nil,
         widgetTimelineReloader: WidgetTimelineReloading = WidgetTimelineReloader()
     ) {

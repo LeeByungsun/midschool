@@ -349,6 +349,20 @@ REMAINING_SECONDS=20 ios/scripts/verify_device_notification.sh
 - 재확인 결과: `Launched application with com.leebyungsun.schoolhelperios bundle identifier.`
 - 제한: 실제 알림 배너 도착은 iPhone 잠금/백그라운드 상태에서 사람이 확인해야 하므로 최종 UX 검증은 아직 수동 확인 대기
 
+알림 권한 설정 화면의 안내/요청 버튼 상태는 시스템 권한 팝업에 의존하지 않도록
+`SCHOOLHELPER_NOTIFICATION_AUTHORIZATION_STATUS` launch override로 검증합니다.
+
+2026-05-28 알림 권한 설정 UI 자동 검증:
+
+- simulator 명령: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project ios/SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOSUI -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' -configuration Debug -derivedDataPath /tmp/misschool-ios-notification-permission-ui-test-final '-only-testing:SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary' test`
+- simulator 결과: `** TEST SUCCEEDED **`
+- simulator xcresult: `/tmp/misschool-ios-notification-permission-ui-test-final/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-04-02-+0900.xcresult`
+- 실제 iPhone 명령: `ONLY_TESTING=SchoolHelperIOSUITests/SchoolHelperIOSUITests/testSettingsNotificationPermissionRequestUpdatesSummary TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-notification-permission-ui-test ios/scripts/test_device_ui.sh`
+- 실제 iPhone 결과: `** TEST SUCCEEDED **`
+- 실제 iPhone xcresult: `/tmp/misschool-ios-device-notification-permission-ui-test/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_16-01-31-+0900.xcresult`
+- 확인 범위: 설정 화면의 `타이머 완료 알림을 받으려면 권한이 필요해요.` 안내 → `알림 권한 요청` 버튼 표시 → 탭 후 `알림 권한이 허용되어 있어요.` 안내로 갱신
+- 제한: 실제 iOS 시스템 권한 팝업과 완료 알림 배너 도착은 여전히 별도 수동 확인 대상
+
 ### 2.4.3 live NEIS/BFF 데이터 smoke
 
 iOS 앱이 사용하는 live 데이터 계약을 앱 외부에서 반복 검증하려면 아래 스크립트를 사용합니다.
@@ -548,12 +562,12 @@ xcodebuild \
 
 1. 홈 화면에 실제 위젯 배치
 2. 시스템 딥링크 확인 다이얼로그의 `열기` 승인 이후 최종 화면 전환
-3. 실기기 알림/권한 UX
+3. 실기기 시스템 권한 팝업/완료 알림 배너 UX
 
 이유:
 - `simctl` 기본 도구에는 홈 화면 위젯 배치 전용 명령이 확인되지 않음
 - macOS 보조 접근/시스템 UI 자동화 권한 제약으로 시스템 확인 다이얼로그 승인 자동화가 제한됨
-- 실기기 권한 팝업/로컬 알림은 simulator 증거만으로 충분히 대체되지 않음
+- 실기기 권한 팝업/로컬 알림 배너는 launch override 기반 앱 내부 UI 테스트만으로 충분히 대체되지 않음
 
 ---
 
@@ -572,17 +586,18 @@ xcodebuild \
 - live NEIS/BFF 데이터의 simulator 앱 화면 렌더링은 `test_live_ui.sh` 로 직접 확인됨
 - live NEIS/BFF 데이터의 실제 iPhone 앱 화면 렌더링은 `test_device_ui.sh` + `LIVE_UI_TEST=1` 로 직접 확인됨
 - 가정통신문 외부 링크의 Safari 전환은 simulator 및 실제 iPhone에서 `EXTERNAL_LINK_TEST=1` 로 직접 확인됨
+- 알림 권한 설정 화면의 안내/요청 버튼 상태 변화는 simulator 및 실제 iPhone에서 launch override 기반 UI 테스트로 직접 확인됨
 
 하지만 아래는 아직 미완료입니다.
 
 - 홈 화면 위젯의 실제 배치/탭 동작
 - 시스템 확인 다이얼로그 이후 최종 전환
-- 실기기 알림/권한 최종 UX
+- 실기기 시스템 권한 팝업/완료 알림 배너 최종 UX
 - 실제 iPhone 화면에서 live 데이터 날짜 이동 UX 눈검증
 
 즉, 현재 상태는:
 
-**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/simulator/실기기 UI smoke, 가정통신문 외부 링크 전환 smoke 완료”** 이지만
+**“앱 본체 핵심 기능 parity 구현 및 simulator/실제 iPhone 자동 UI 검증, live NEIS/BFF backend/simulator/실기기 UI smoke, 가정통신문 외부 링크 전환 smoke, 알림 권한 설정 UI smoke 완료”** 이지만
 **“시스템 UI/홈 화면 위젯/App Group/알림 권한 UX까지 끝난 최종 완료”** 는 아님.
 
 ---
