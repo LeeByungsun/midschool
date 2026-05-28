@@ -22,4 +22,8 @@ final class StudentPreferencesStore {
         guard let data = try? JSONEncoder().encode(profile) else { return }
         defaults.set(data, forKey: key)
     }
+
+    func removeProfile() {
+        defaults.removeObject(forKey: key)
+    }
 }

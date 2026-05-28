@@ -22,6 +22,9 @@ final class AppState: ObservableObject {
     ) {
         self.store = store
         self.widgetTimelineReloader = widgetTimelineReloader
+        if AppLaunchOverrides.shouldResetProfile() {
+            store.removeProfile()
+        }
         self.profile = store.load()
     }
 
@@ -30,6 +33,9 @@ final class AppState: ObservableObject {
     }
 
     func refresh() {
+        if AppLaunchOverrides.shouldResetProfile() {
+            store.removeProfile()
+        }
         if let seededProfile = AppLaunchOverrides.seededProfile() {
             saveProfile(seededProfile)
             applyInitialRouteOverride()

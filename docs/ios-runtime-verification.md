@@ -78,19 +78,20 @@ xcodebuild \
   -project ios/SchoolHelperIOS.xcodeproj \
   -scheme SchoolHelperIOSUI \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
-  -derivedDataPath /tmp/misschool-ios-ui-latest \
+  -derivedDataPath /tmp/misschool-ios-ui-setup-search \
   test
 ```
 
 2026-05-28 최신 확인:
 
-- 커밋: `ec0c3d9`
+- 커밋: `15751fb`
 - 결과: `** TEST SUCCEEDED **`
-- `SchoolHelperIOSUITests`: 5 tests, 0 failures
-- xcresult: `/tmp/misschool-ios-ui-latest/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_12-40-03-+0900.xcresult`
+- `SchoolHelperIOSUITests`: 6 tests, 0 failures
+- xcresult: `/tmp/misschool-ios-ui-setup-search/Logs/Test/Test-SchoolHelperIOSUI-2026.05.28_12-54-54-+0900.xcresult`
 
 현재 검증하는 실제 상호작용:
 
+- 초기 설정에서 `미사중학교`를 입력해 NEIS 공개 학교 검색 결과를 찾음
 - 홈 탭이 `More` 없이 표시됨
 - 홈에서 설정 modal 진입/닫기
 - 설정 modal 저장 버튼으로 홈 복귀
@@ -187,6 +188,12 @@ SIMCTL_CHILD_SCHOOLHELPER_SEED_PROFILE=fixture
 SIMCTL_CHILD_SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST=1
 ```
 
+초기 설정을 강제로 다시 열기:
+
+```bash
+SIMCTL_CHILD_SCHOOLHELPER_RESET_PROFILE=1
+```
+
 탭 직접 검증:
 
 ```bash
@@ -266,16 +273,17 @@ xcodebuild \
   -project ios/SchoolHelperIOS.xcodeproj \
   -scheme SchoolHelperIOSUI \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
-  -derivedDataPath /tmp/misschool-ios-ui-latest \
+  -derivedDataPath /tmp/misschool-ios-ui-setup-search \
   test
 ```
 
 2026-05-28 최신 결과:
 
 - `** TEST SUCCEEDED **`
-- `Executed 5 tests, with 0 failures`
+- `Executed 6 tests, with 0 failures`
 
 확인 내용:
+- 초기 설정 NEIS 학교 검색
 - 홈 탭 기본 구조
 - 설정 modal 열기/닫기
 - 설정 안 위젯 미리보기

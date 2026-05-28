@@ -50,6 +50,25 @@ final class AppStateTests: XCTestCase {
         XCTAssertTrue(appState.isSetupComplete)
     }
 
+    func testResetProfileLaunchOverrideClearsStoredProfileBeforeInitialLoad() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = StudentPreferencesStore(defaults: defaults)
+        store.save(.fixture())
+
+        let appState = withEnvironment([
+            "SCHOOLHELPER_RESET_PROFILE": "1"
+        ]) {
+            AppState(
+                store: store,
+                widgetTimelineReloader: SpyWidgetTimelineReloader()
+            )
+        }
+
+        XCTAssertFalse(appState.isSetupComplete)
+        XCTAssertEqual(appState.profile.schoolName, "")
+    }
+
     func testRefreshAppliesInitialRouteOverrideWhenSetupIsComplete() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

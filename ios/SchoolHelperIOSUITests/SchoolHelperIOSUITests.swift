@@ -1,6 +1,21 @@
 import XCTest
 
 final class SchoolHelperIOSUITests: XCTestCase {
+    func testInitialSetupSearchFindsMisaMiddleSchoolFromNEIS() {
+        let app = makeFreshSetupApp()
+        app.launch()
+
+        let schoolField = app.textFields["학교 이름"]
+        XCTAssertTrue(schoolField.waitForExistence(timeout: 5))
+        schoolField.tap()
+        schoolField.typeText("미사중학교")
+
+        app.buttons["학교 검색"].tap()
+
+        XCTAssertTrue(app.staticTexts["학교 1개를 찾았어요."].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.buttons["저장하고 시작하기"].exists)
+    }
+
     func testSeededHomeShowsCoreTabsAndNoMoreTab() {
         let app = makeSeededApp()
         app.launch()
@@ -61,6 +76,13 @@ final class SchoolHelperIOSUITests: XCTestCase {
         if let initialRoute {
             app.launchEnvironment["SCHOOLHELPER_INITIAL_ROUTE"] = initialRoute
         }
+        return app
+    }
+
+    private func makeFreshSetupApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchEnvironment["SCHOOLHELPER_RESET_PROFILE"] = "1"
+        app.launchEnvironment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"] = "1"
         return app
     }
 }

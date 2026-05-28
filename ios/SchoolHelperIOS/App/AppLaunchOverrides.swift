@@ -26,6 +26,10 @@ enum AppLaunchOverrides {
         return value == "1" || value == "true" || value == "yes"
     }
 
+    static func shouldResetProfile(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        truthy(environment["SCHOOLHELPER_RESET_PROFILE"])
+    }
+
     static func initialRoute(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> AppRoute? {
         guard let rawValue = environment["SCHOOLHELPER_INITIAL_ROUTE"]?.lowercased() else {
             return nil
