@@ -30,6 +30,7 @@ struct TimetableView: View {
                             Task { await viewModel.showNextDay() }
                         }
                     }
+                    .buttonStyle(.borderless)
                 }
 
                 ForEach(viewModel.items) { item in

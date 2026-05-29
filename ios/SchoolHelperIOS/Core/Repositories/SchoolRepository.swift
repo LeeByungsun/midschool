@@ -78,10 +78,14 @@ struct MockSchoolRepository: SchoolRepository {
     func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd"
+        let dateKey = formatter.string(from: date)
+        let subjectSuffix = ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_DATE_MARKED_TIMETABLE"] == "1"
+            ? " \(dateKey)"
+            : ""
         return [
-            TimetableItem(date: formatter.string(from: date), period: "1", subject: "국어", grade: profile.grade, classroom: profile.classroom),
-            TimetableItem(date: formatter.string(from: date), period: "2", subject: "수학", grade: profile.grade, classroom: profile.classroom),
-            TimetableItem(date: formatter.string(from: date), period: "3", subject: "영어", grade: profile.grade, classroom: profile.classroom)
+            TimetableItem(date: dateKey, period: "1", subject: "국어\(subjectSuffix)", grade: profile.grade, classroom: profile.classroom),
+            TimetableItem(date: dateKey, period: "2", subject: "수학\(subjectSuffix)", grade: profile.grade, classroom: profile.classroom),
+            TimetableItem(date: dateKey, period: "3", subject: "영어\(subjectSuffix)", grade: profile.grade, classroom: profile.classroom)
         ]
     }
 

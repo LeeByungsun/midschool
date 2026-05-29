@@ -46,6 +46,31 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 5))
     }
 
+    func testSeededTimetableNavigationUpdatesDisplayedDateData() {
+        let app = makeSeededApp(initialRoute: "timetable")
+        app.launchEnvironment["SCHOOLHELPER_REFERENCE_DATE"] = "20260526"
+        app.launchEnvironment["SCHOOLHELPER_DEBUG_DATE_MARKED_TIMETABLE"] = "1"
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "5월 26일 화요일", in: app, timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "국어 20260526", in: app, timeout: 5))
+
+        app.buttons["이전"].tap()
+        XCTAssertTrue(waitForStaticText(containing: "5월 25일 월요일", in: app, timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "국어 20260525", in: app, timeout: 5))
+        XCTAssertFalse(app.staticTexts["국어 20260526"].exists)
+
+        app.buttons["오늘"].tap()
+        XCTAssertTrue(waitForStaticText(containing: "5월 26일 화요일", in: app, timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "국어 20260526", in: app, timeout: 5))
+
+        app.buttons["다음"].tap()
+        XCTAssertTrue(waitForStaticText(containing: "5월 27일 수요일", in: app, timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "국어 20260527", in: app, timeout: 5))
+        XCTAssertFalse(app.staticTexts["국어 20260526"].exists)
+    }
+
     func testSeededMealsShowsCoreContent() {
         let app = makeSeededApp(initialRoute: "meals")
         app.launch()
