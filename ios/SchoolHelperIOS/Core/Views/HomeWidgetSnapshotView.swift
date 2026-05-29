@@ -50,7 +50,7 @@ struct HomeWidgetSnapshotView: View {
             if let tomorrow = snapshot.tomorrowTimetable {
                 HStack(alignment: .top, spacing: 8) {
                     timetableCard(title: "오늘", text: snapshot.todayTimetable, lineLimit: nil)
-                    timetableCard(title: "내일", text: tomorrow, lineLimit: 5)
+                    timetableCard(title: "내일", text: tomorrow, lineLimit: nil)
                 }
             } else {
                 timetableCard(title: "오늘", text: snapshot.todayTimetable, lineLimit: nil)

@@ -46,6 +46,19 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 5))
     }
 
+
+    func testSeededTimetableShowsPeriodsAfterFifthPeriod() {
+        let app = makeSeededApp(initialRoute: "timetable")
+        app.launchEnvironment["SCHOOLHELPER_DEBUG_TIMETABLE_PERIODS"] = "7"
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "5교시", in: app, timeout: 5))
+        XCTAssertTrue(scrollToStaticText(containing: "6교시", in: app, maxSwipes: 4))
+        XCTAssertTrue(scrollToStaticText(containing: "7교시", in: app, maxSwipes: 4))
+        XCTAssertTrue(waitForStaticText(containing: "수업7", in: app, timeout: 5))
+    }
+
     func testSeededTimetableNavigationUpdatesDisplayedDateData() {
         let app = makeSeededApp(initialRoute: "timetable")
         app.launchEnvironment["SCHOOLHELPER_REFERENCE_DATE"] = "20260526"

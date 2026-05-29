@@ -82,11 +82,22 @@ struct MockSchoolRepository: SchoolRepository {
         let subjectSuffix = ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_DATE_MARKED_TIMETABLE"] == "1"
             ? " \(dateKey)"
             : ""
-        return [
-            TimetableItem(date: dateKey, period: "1", subject: "국어\(subjectSuffix)", grade: profile.grade, classroom: profile.classroom),
-            TimetableItem(date: dateKey, period: "2", subject: "수학\(subjectSuffix)", grade: profile.grade, classroom: profile.classroom),
-            TimetableItem(date: dateKey, period: "3", subject: "영어\(subjectSuffix)", grade: profile.grade, classroom: profile.classroom)
-        ]
+        let requestedPeriodCount = Int(ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_TIMETABLE_PERIODS"] ?? "") ?? 3
+        let periodCount = max(1, requestedPeriodCount)
+        let defaultSubjects = ["국어", "수학", "영어"]
+
+        return (1...periodCount).map { period in
+            let subject = defaultSubjects.indices.contains(period - 1)
+                ? defaultSubjects[period - 1]
+                : "수업\(period)"
+            return TimetableItem(
+                date: dateKey,
+                period: "\(period)",
+                subject: "\(subject)\(subjectSuffix)",
+                grade: profile.grade,
+                classroom: profile.classroom
+            )
+        }
     }
 
     func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
