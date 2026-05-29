@@ -103,6 +103,49 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
         XCTAssertEqual(snapshot.todayTimetable, "1교시 창의적체험\n2교시 수학")
     }
 
+    func testSnapshotKeepsPeriodsAfterFifthPeriod() async {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let profileStore = StudentPreferencesStore(defaults: defaults)
+        profileStore.save(.fixture())
+        let timerStore = TimerPreferencesStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        widgetSettingsStore.save(WidgetSettings(showTomorrowTimetable: false))
+
+        let loader = HomeWidgetSnapshotLoader(
+            profileStore: profileStore,
+            timerStore: timerStore,
+            widgetSettingsStore: widgetSettingsStore,
+            repository: WidgetTimetableRepository(
+                todayItems: (1...7).map { period in
+                    TimetableItem(
+                        date: "20260526",
+                        period: "\(period)",
+                        subject: "수업\(period)",
+                        grade: "1",
+                        classroom: "2"
+                    )
+                },
+                tomorrowItems: []
+            )
+        )
+
+        let snapshot = await loader.load(now: fixtureDate(year: 2026, month: 5, day: 26))
+
+        XCTAssertEqual(
+            snapshot.todayTimetable,
+            """
+            1교시 수업1
+            2교시 수업2
+            3교시 수업3
+            4교시 수업4
+            5교시 수업5
+            6교시 수업6
+            7교시 수업7
+            """
+        )
+    }
+
     func testSnapshotCanHideTomorrowTimetableFromSharedSettings() async {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

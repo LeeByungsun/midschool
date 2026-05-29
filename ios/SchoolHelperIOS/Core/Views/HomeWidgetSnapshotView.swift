@@ -28,11 +28,9 @@ struct HomeWidgetSnapshotView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
-            timetableBlock(
+            compactTimetableBlock(
                 title: "오늘",
-                text: snapshot.todayTimetable,
-                lineLimit: nil,
-                compact: true
+                text: snapshot.todayTimetable
             )
 
             Spacer(minLength: 0)
@@ -88,6 +86,40 @@ struct HomeWidgetSnapshotView: View {
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
+    private func compactTimetableBlock(title: String, text: String) -> some View {
+        let lines = timetableLines(from: text)
+        let splitIndex = compactSplitIndex(for: lines)
+
+        return VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            if lines.count > 5 {
+                HStack(alignment: .top, spacing: 8) {
+                    compactTimetableColumn(Array(lines.prefix(splitIndex)))
+                    compactTimetableColumn(Array(lines.dropFirst(splitIndex)))
+                }
+            } else {
+                compactTimetableColumn(lines)
+            }
+        }
+    }
+
+    private func compactTimetableColumn(_ lines: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                Text(line)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.68)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func timetableBlock(title: String, text: String, lineLimit: Int?, compact: Bool) -> some View {
         VStack(alignment: .leading, spacing: compact ? 3 : 5) {
             Text(title)
@@ -102,5 +134,17 @@ struct HomeWidgetSnapshotView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .minimumScaleFactor(compact ? 0.78 : 0.86)
         }
+    }
+
+    private func timetableLines(from text: String) -> [String] {
+        let lines = text
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return lines.isEmpty ? [text] : lines
+    }
+
+    private func compactSplitIndex(for lines: [String]) -> Int {
+        max(1, Int(ceil(Double(lines.count) / 2.0)))
     }
 }
