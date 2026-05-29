@@ -13,6 +13,7 @@
 - **서비스 목표**: 학생들이 매일 확인해야 하는 시간표, 급식, 학사 일정 정보와 자기주도학습용 타이머를 하나의 서비스로 쉽게 이용할 수 있게 돕는 것
 - **플랫폼 전략**
   - **Android**: 현재 구현/운영의 기준 플랫폼
+  - **iOS**: Swift/SwiftUI 기반의 iOS 클라이언트 플랫폼
   - **Web**: 같은 도메인 기능을 브라우저에서도 사용할 수 있도록 확장 및 구현 중
 
 ---
@@ -260,9 +261,55 @@
 
 ---
 
-## 5. 공통 개선 과제 및 플랫폼별 확장 포인트
+## 5. iOS 전용 명세 (Current iOS Scope)
 
-### 5.1 공통 개선 과제
+이 섹션은 **현재 구현되어 있거나 iOS 플랫폼에 특화된 요소**입니다.
+
+### 5.1 iOS 화면 구성
+
+- **초기 설정 (`SetupView`, `SetupViewModel`)**
+  - 학교 검색/선택 및 학년/반 기본 설정 완료.
+- **메인 탭 뷰 (`RootTabView`)**
+  - 앱의 주요 탭들을 관리하는 하단 탭 바 인터페이스.
+- **홈 대시보드 (`HomeView`, `HomeViewModel`)**
+  - 오늘 날짜, 오늘 급식 요약, 오늘 시간표 요약, 다가오는 일정 요약, 가정통신문 미리보기, 타이머 카드 표시.
+- **시간표 화면 (`TimetableView`, `TimetableViewModel`)**
+  - 날짜 이동이 가능한 일간 시간표 조회 및 표시.
+- **급식 화면 (`MealsView`, `MealsViewModel`)**
+  - 주간 급식 목록 조회 및 알레르기/칼로리 상세 정보 표시.
+- **학사 일정 화면 (`ScheduleView`, `ScheduleViewModel`)**
+  - 월 단위 학사 일정 캘린더/리스트 조회.
+- **설정 화면 (`SettingsView`, `SettingsViewModel`)**
+  - 학년/반 정보 변경, 학교 다시 검색, 타이머 상세 옵션(진동, 알림 표시) 및 위젯 설정 제어.
+- **스터디 타이머 (`TimerView`, `TimerViewModel`)**
+  - 집중/휴식 등 프리셋 관리 및 커스텀 링 형태의 그래픽 타이머 제공.
+
+### 5.2 iOS 전용 UX/기능
+
+- **홈 화면 위젯 (`SchoolHelperWidget`)**
+  - WidgetKit 프레임워크 기반의 오늘/내일 시간표 및 타이머 상태 요약 위젯.
+  - 위젯 설정(AppIntentConfiguration)을 통해 '내일 시간표 표시' 제어 가능.
+  - 위젯 본문 탭 시 딥링크(`schoolhelper://`)를 통해 시간표 또는 설정 화면으로 즉시 진입.
+  - iOS 17 이상의 `.containerBackground` 대응 필요.
+- **iOS 로컬 알림 (`TimerNotificationScheduler`)**
+  - `UNUserNotificationCenter`를 사용하여 타이머 만료 시 로컬 알림(Notification) 및 진동 알람 전송.
+  - 스레드 안전성을 위해 메인 스레드에서 권한 요청 얼럿이 동작하도록 설계.
+
+### 5.3 iOS 기술 스택
+
+- **언어/런타임**: Swift 5.9 이상, SwiftUI
+- **최소 지원 버전**: iOS 16 이상
+- **의존성 및 빌드 관리**: Swift Package Manager (SPM) 및 Xcode Project (`SchoolHelperIOS.xcodeproj`)
+- **아키텍처**: MVVM (SwiftUI View + ObservableObject ViewModel)
+- **비동기 처리**: Swift Concurrency (`async`/`await`, `Task`, `MainActor`) 및 Combine
+- **네트워킹**: `URLSession` 기반 API 통신 (`NEISClient`)
+- **로컬 저장소**: `UserDefaults` 기반 직렬화 저장 (`StudentPreferencesStore`, `TimerPreferencesStore` 등)
+
+---
+
+## 6. 공통 개선 과제 및 플랫폼별 확장 포인트
+
+### 6.1 공통 개선 과제
 
 - **학교 코드 하드코딩 해제**
   - 현재 특정 교육청/학교 코드가 고정되어 있으므로, 여러 학교를 지원하려면 학교 검색 및 동적 저장 구조가 필요합니다.
@@ -273,13 +320,13 @@
 - **다크모드/테마 지원 강화**
   - 플랫폼별 테마 시스템에 맞춰 일관된 다크모드 경험 필요
 
-### 5.2 Android 확장 포인트
+### 6.2 Android 확장 포인트
 
 - 위젯 옵션 확대
 - 화면 크기별 레이아웃 분기 고도화
 - 알림/백그라운드 동작 세밀화
 
-### 5.3 Web 확장 포인트
+### 6.3 Web 확장 포인트
 
 - 반응형 네비게이션 구조 설계
 - PWA 적용 여부 검토
@@ -287,13 +334,21 @@
 - 모바일 웹에서의 빠른 진입 UX 개선
 - 공통 도메인 기준을 Android와 다시 맞추기
 
+### 6.4 iOS 확장 포인트
+
+- Swift Concurrency 병렬성 활용 최적화 (주간 식단 및 위젯 시간표 비동기 병렬 Fetch 등)
+- 타이머 Task 순환 참조(Memory Leak) 방지 코드 안정성 강화
+- iOS 17 이상 전용 WidgetKit API (.containerBackground 등) 완벽 대응
+- 알림 권한 팝업 호출 스레드(Main Actor) 안전성 확보
+
 ---
 
-## 6. 현재 저장소 구조 기준 역할 분리
+## 7. 현재 저장소 구조 기준 역할 분리
 
 - `android/`: Android 앱 구현
+- `ios/`: Swift/SwiftUI 기반 iOS 앱 및 위젯 구현
 - `web/`: Web 구현 시작 위치
 - `docs/`: 공통 기획/구조 문서
 - `.codex/`: 자동화 스킬 및 에이전트 자산
 
-이 기준을 유지하면 이후 Android와 Web을 병행 개발할 때 공통 요구사항과 플랫폼 전용 요구사항을 더 명확하게 관리할 수 있습니다.
+이 기준을 유지하면 이후 Android, iOS, Web을 병행 개발할 때 공통 요구사항과 플랫폼 전용 요구사항을 더 명확하게 관리할 수 있습니다.
