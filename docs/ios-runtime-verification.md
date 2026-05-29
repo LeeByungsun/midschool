@@ -496,6 +496,14 @@ TEAM_ID=2TJFP5788P DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 io
 - 증거: `/tmp/misschool-ios-device-notification-resumed/schoolhelper-notification-smoke.json` 에서 `authorizationStatus=authorized`, `scheduled=true`, `pending=true`, `identifier=schoolhelper.timer.complete` 를 확인했다.
 - 실제 알림 배너/소리/진동 UX는 여전히 수동 확인 대상입니다.
 
+2026-05-29 실기기 자동 smoke 재확인:
+
+- App Group 데이터 명령: `DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 OUTPUT_DIR=/tmp/misschool-ios-device-app-group-data-20260529 ios/scripts/verify_device_app_group_data.sh`
+- App Group 데이터 결과: 통과, `/tmp/misschool-ios-device-app-group-data-20260529/group.com.leebyungsun.schoolhelperios.plist` 에서 seeded `미사중학교` profile 확인
+- 알림 예약 명령: `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-20260529 SMOKE_RUN_ID=notification-20260529-1780019434 ios/scripts/verify_device_notification.sh`
+- 알림 예약 결과: 통과, `/tmp/misschool-ios-device-notification-20260529/schoolhelper-notification-smoke.json` 에서 `authorizationStatus=authorized`, `scheduled=true`, `pending=true` 확인
+- 남은 항목: 홈 화면 위젯 배치/내용/탭, 실제 알림 배너/소리/진동 UX 수동 확인
+
 개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
 
 1. `설정`
