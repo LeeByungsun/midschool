@@ -31,6 +31,8 @@ GRADE = os.environ.get("GRADE", "1")
 CLASSROOM = os.environ.get("CLASSROOM", "2")
 VERIFY_DATE = os.environ.get("DATE", dt.datetime.now().strftime("%Y%m%d"))
 VERIFY_MONTH = os.environ.get("MONTH", VERIFY_DATE[:6])
+ALLOW_DATE_FALLBACK = os.environ.get("ALLOW_DATE_FALLBACK", "1").lower() not in {"0", "false", "no", "off"}
+DATE_FALLBACK_DAYS = int(os.environ.get("DATE_FALLBACK_DAYS", "14"))
 NOTICE_LIMIT = int(os.environ.get("NOTICE_LIMIT", "3"))
 VERIFY_NOTICE_URL = os.environ.get("VERIFY_NOTICE_URL", "1").lower() not in {"0", "false", "no", "off"}
 TIMEOUT_SECONDS = float(os.environ.get("TIMEOUT_SECONDS", "20"))
@@ -65,38 +67,40 @@ def main() -> int:
         }
     )
 
-    meal_rows = neis_rows(
-        "hub/mealServiceDietInfo",
-        {"MLSV_YMD": VERIFY_DATE},
+    meal_date, meal_rows = rows_for_first_available_date(
+        requested_date=VERIFY_DATE,
+        endpoint="hub/mealServiceDietInfo",
         section="mealServiceDietInfo",
         label="급식",
+        params_for_date=lambda ymd: {"MLSV_YMD": ymd},
     )
-    require(meal_rows, f"{VERIFY_DATE} 급식 live row가 없습니다.")
     checks.append(
         {
             "check": "mealServiceDietInfo",
-            "date": VERIFY_DATE,
+            "requestedDate": VERIFY_DATE,
+            "date": meal_date,
             "count": len(meal_rows),
             "sample": clean_text(meal_rows[0].get("DDISH_NM", ""))[:80],
         }
     )
 
     timetable_section = timetable_endpoint(SCHOOL_KIND)
-    timetable_rows = neis_rows(
-        f"hub/{timetable_section}",
-        {
+    timetable_date, timetable_rows = rows_for_first_available_date(
+        requested_date=VERIFY_DATE,
+        endpoint=f"hub/{timetable_section}",
+        section=timetable_section,
+        label=f"{GRADE}학년 {CLASSROOM}반 시간표",
+        params_for_date=lambda ymd: {
             "GRADE": GRADE,
             "CLASS_NM": CLASSROOM,
-            "ALL_TI_YMD": VERIFY_DATE,
+            "ALL_TI_YMD": ymd,
         },
-        section=timetable_section,
-        label="시간표",
     )
-    require(timetable_rows, f"{VERIFY_DATE} {GRADE}학년 {CLASSROOM}반 시간표 live row가 없습니다.")
     checks.append(
         {
             "check": timetable_section,
-            "date": VERIFY_DATE,
+            "requestedDate": VERIFY_DATE,
+            "date": timetable_date,
             "count": len(timetable_rows),
             "sample": timetable_rows[0].get("ITRT_CNTNT", ""),
         }
@@ -164,6 +168,50 @@ def main() -> int:
 
     print(json.dumps({"status": "ok", "checks": checks}, ensure_ascii=False, indent=2))
     return 0
+
+
+def rows_for_first_available_date(
+    *,
+    requested_date: str,
+    endpoint: str,
+    section: str,
+    label: str,
+    params_for_date,
+) -> tuple[str, list[dict[str, Any]]]:
+    candidate_dates = [requested_date]
+    if ALLOW_DATE_FALLBACK:
+        candidate_dates.extend(nearby_dates(requested_date, DATE_FALLBACK_DAYS))
+
+    checked: list[str] = []
+    for candidate in candidate_dates:
+        if candidate in checked:
+            continue
+        checked.append(candidate)
+        rows = neis_rows(
+            endpoint,
+            params_for_date(candidate),
+            section=section,
+            label=label,
+        )
+        if rows:
+            return candidate, rows
+
+    if ALLOW_DATE_FALLBACK and len(checked) > 1:
+        raise RuntimeError(
+            f"{requested_date} 및 주변 {DATE_FALLBACK_DAYS}일 범위에서 {label} live row가 없습니다. "
+            f"checked={','.join(checked)}"
+        )
+    raise RuntimeError(f"{requested_date} {label} live row가 없습니다.")
+
+
+def nearby_dates(yyyymmdd: str, window_days: int) -> list[str]:
+    base = dt.datetime.strptime(yyyymmdd, "%Y%m%d").date()
+    dates: list[str] = []
+    for offset in range(1, window_days + 1):
+        dates.append((base + dt.timedelta(days=offset)).strftime("%Y%m%d"))
+    for offset in range(1, window_days + 1):
+        dates.append((base - dt.timedelta(days=offset)).strftime("%Y%m%d"))
+    return dates
 
 
 def timetable_endpoint(school_kind: str) -> str:

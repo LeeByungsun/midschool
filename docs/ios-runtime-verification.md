@@ -73,6 +73,12 @@ ios/scripts/verify_ios_local_readiness.sh
   - 결과: 통과
   - 포함 증거: Python/Shell 문법, SwiftPM 62 tests, 위젯 simulator packaging, 앱/위젯 App Group profile `OK`, live NEIS/BFF/notice URL smoke 통과
   - 남은 예상 incomplete: `ios/system-evidence.local.json` 미작성
+- 2026-05-29 live NEIS 재확인:
+  - 명령: `RUN_LIVE_BACKEND=1 RUN_SWIFT_TESTS=0 RUN_WIDGET_READINESS=1 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-local-readiness-20260529-fixed ios/scripts/verify_ios_local_readiness.sh`
+  - 결과: 통과
+  - 포함 증거: Python/Shell 문법, 위젯 simulator packaging, 앱/위젯 App Group profile `OK`, live `schoolInfo`/`mealServiceDietInfo`/`misTimetable`/`SchoolSchedule`/notices BFF/notice URL smoke 통과
+  - 비고: `20260529` 급식 row가 없어 live smoke가 주변 날짜 fallback으로 `20260528` 급식 row를 확인했고, `20260529` 시간표 row는 `현장체험학습`으로 확인했다.
+  - 남은 예상 incomplete: 홈 화면 위젯/알림 배너 수동 UX 증거
 
 현재 iOS 앱은 아래 4단계로 검증합니다.
 
@@ -842,6 +848,8 @@ iOS 앱은 NEIS API 키를 앱 번들에 저장하지 않습니다.
 - 네트워크 오류 등으로 mock fallback을 사용할 때도 학교명 공백을 제거해 `미사 중학교` → `미사중학교` 검색을 허용함
 
 학교 검색은 키 없이도 동작해야 하므로, 실기기 직접 실행에서도 `KEY` 없이 호출합니다.
+
+`ios/scripts/verify_live_school_data.py` 는 기본적으로 오늘 날짜를 확인하되, 급식/시간표가 없는 휴업일/현장학습일에는 주변 날짜 fallback으로 live 계약을 검증합니다. 엄격히 특정 날짜만 확인하려면 `ALLOW_DATE_FALLBACK=0 DATE=YYYYMMDD` 를 지정합니다.
 키가 필요한 운영 요청은 iOS 앱에 키를 내장하지 말고 서버/BFF에서 처리하는 방향이 안전합니다.
 
 실기기 앱 아이콘 직접 실행 시에는 환경변수가 전달되지 않습니다.
