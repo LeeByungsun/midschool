@@ -51,25 +51,34 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
-    func testSettingsViewModelSavesWidgetSettings() {
+    func testSettingsViewModelSavesTimerAndWidgetSettingsThenReloadsWidget() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)
         let timerSettingsStore = TimerSettingsStore(defaults: defaults)
         let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
         let reloader = SpyWidgetTimelineReloader()
+        let scheduler = SpyTimerNotificationScheduler()
         let viewModel = SettingsViewModel(
             initialProfile: StudentProfile.fixture(),
             repository: MockSchoolRepository(),
             timerSettingsStore: timerSettingsStore,
             widgetSettingsStore: widgetSettingsStore,
             notificationAuthorizationProvider: StubNotificationAuthorizationProvider(),
+            notificationScheduler: scheduler,
             widgetTimelineReloader: reloader
         )
 
         viewModel.showTomorrowTimetable = false
+        viewModel.timerDisplayMode = .ring
+        viewModel.notificationEnabled = false
+        viewModel.vibrationEnabled = false
         viewModel.saveTimerSettings()
 
+        XCTAssertEqual(timerSettingsStore.load().displayMode, .ring)
+        XCTAssertFalse(timerSettingsStore.load().notificationEnabled)
+        XCTAssertFalse(timerSettingsStore.load().vibrationEnabled)
         XCTAssertFalse(widgetSettingsStore.load().showTomorrowTimetable)
+        XCTAssertEqual(scheduler.cancelCalls, 1)
         XCTAssertEqual(reloader.reloadCount, 1)
     }
 

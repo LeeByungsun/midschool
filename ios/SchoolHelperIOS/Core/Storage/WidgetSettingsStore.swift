@@ -25,5 +25,6 @@ final class WidgetSettingsStore {
     func save(_ settings: WidgetSettings) {
         guard let data = try? JSONEncoder().encode(settings) else { return }
         defaults.set(data, forKey: key)
+        defaults.synchronize()
     }
 }

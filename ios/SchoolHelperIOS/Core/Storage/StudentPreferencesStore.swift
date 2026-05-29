@@ -21,9 +21,11 @@ final class StudentPreferencesStore {
     func save(_ profile: StudentProfile) {
         guard let data = try? JSONEncoder().encode(profile) else { return }
         defaults.set(data, forKey: key)
+        defaults.synchronize()
     }
 
     func removeProfile() {
         defaults.removeObject(forKey: key)
+        defaults.synchronize()
     }
 }

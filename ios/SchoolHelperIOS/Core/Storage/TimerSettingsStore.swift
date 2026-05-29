@@ -39,5 +39,6 @@ final class TimerSettingsStore {
     func save(_ settings: TimerSettings) {
         guard let data = try? JSONEncoder().encode(settings) else { return }
         defaults.set(data, forKey: key)
+        defaults.synchronize()
     }
 }

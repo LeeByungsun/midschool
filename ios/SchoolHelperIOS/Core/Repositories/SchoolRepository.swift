@@ -157,13 +157,15 @@ struct DefaultSchoolRepository: SchoolRepository {
                 date: key
             )
             .filter { $0.date == key }
+            .map { $0.withDisplayMenu() }
             cacheStore.saveMeals(meals, officeCode: profile.officeCode, schoolCode: profile.schoolCode, date: key)
             return meals
         } catch {
             if let cached = cacheStore.getMeals(officeCode: profile.officeCode, schoolCode: profile.schoolCode, date: key) {
-                return cached
+                return cached.map { $0.withDisplayMenu() }
             }
-            return try await fallback.fetchTodayMeals(for: profile, date: date)
+            let fallbackMeals = try await fallback.fetchTodayMeals(for: profile, date: date)
+            return fallbackMeals.map { $0.withDisplayMenu() }
         }
     }
 

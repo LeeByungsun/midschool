@@ -116,24 +116,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func formatMealMenu(_ meal: MealInfo) -> String {
-        let formatted = meal.menu
-            .replacingOccurrences(
-                of: "<br\\s*/?>",
-                with: "\n",
-                options: .regularExpression
-            )
-            .replacingOccurrences(
-                of: "[ \\t]+",
-                with: " ",
-                options: .regularExpression
-            )
-            .components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .map(formatMealLine)
-            .joined(separator: "\n")
-
-        return formatted.isEmpty ? "오늘 급식이 없어요." : formatted
+        MealMenuFormatter.displayMenu(from: meal.menu, emptyFallback: "오늘 급식이 없어요.")
     }
 
     private func formatMealMeta(_ meal: MealInfo) -> String {
@@ -143,31 +126,6 @@ final class HomeViewModel: ObservableObject {
         ]
         .filter { !$0.isEmpty }
         .joined(separator: " • ")
-    }
-
-    private func formatMealLine(_ line: String) -> String {
-        let pattern = #"^(.*?)(\(([^)]*)\))?$"#
-        guard
-            let regex = try? NSRegularExpression(pattern: pattern),
-            let match = regex.firstMatch(
-                in: line,
-                range: NSRange(location: 0, length: line.utf16.count)
-            ),
-            let nameRange = Range(match.range(at: 1), in: line)
-        else {
-            return line.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        let name = line[nameRange].trimmingCharacters(in: .whitespacesAndNewlines)
-        guard
-            match.numberOfRanges > 3,
-            let allergyRange = Range(match.range(at: 3), in: line)
-        else {
-            return name
-        }
-
-        let allergy = line[allergyRange].trimmingCharacters(in: .whitespacesAndNewlines)
-        return allergy.isEmpty ? name : "\(name) (\(allergy))"
     }
 
     private func formatNoticePreviewLine(_ notice: NoticePreview) -> String {

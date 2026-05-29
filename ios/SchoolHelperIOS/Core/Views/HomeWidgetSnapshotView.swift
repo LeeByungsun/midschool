@@ -20,18 +20,18 @@ struct HomeWidgetSnapshotView: View {
     }
 
     private var compactBody: some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: 5) {
             header
 
             Text(snapshot.schoolLabel)
-                .font(.subheadline.weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
             timetableBlock(
                 title: "오늘",
                 text: snapshot.todayTimetable,
-                lineLimit: 3,
+                lineLimit: nil,
                 compact: true
             )
 
@@ -51,11 +51,11 @@ struct HomeWidgetSnapshotView: View {
 
             if let tomorrow = snapshot.tomorrowTimetable {
                 HStack(alignment: .top, spacing: 8) {
-                    timetableCard(title: "오늘", text: snapshot.todayTimetable, lineLimit: 6)
+                    timetableCard(title: "오늘", text: snapshot.todayTimetable, lineLimit: nil)
                     timetableCard(title: "내일", text: tomorrow, lineLimit: 5)
                 }
             } else {
-                timetableCard(title: "오늘", text: snapshot.todayTimetable, lineLimit: 8)
+                timetableCard(title: "오늘", text: snapshot.todayTimetable, lineLimit: nil)
             }
 
             Spacer(minLength: 0)
@@ -81,14 +81,14 @@ struct HomeWidgetSnapshotView: View {
         }
     }
 
-    private func timetableCard(title: String, text: String, lineLimit: Int) -> some View {
+    private func timetableCard(title: String, text: String, lineLimit: Int?) -> some View {
         timetableBlock(title: title, text: text, lineLimit: lineLimit, compact: false)
             .padding(8)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
-    private func timetableBlock(title: String, text: String, lineLimit: Int, compact: Bool) -> some View {
+    private func timetableBlock(title: String, text: String, lineLimit: Int?, compact: Bool) -> some View {
         VStack(alignment: .leading, spacing: compact ? 3 : 5) {
             Text(title)
                 .font(.caption2.weight(.bold))
@@ -96,11 +96,11 @@ struct HomeWidgetSnapshotView: View {
                 .lineLimit(1)
 
             Text(text)
-                .font(compact ? .caption : .caption.weight(.medium))
+                .font(compact ? .caption2.weight(.medium) : .caption.weight(.medium))
                 .foregroundStyle(.primary)
                 .lineLimit(lineLimit)
                 .fixedSize(horizontal: false, vertical: true)
-                .minimumScaleFactor(0.86)
+                .minimumScaleFactor(compact ? 0.78 : 0.86)
         }
     }
 }

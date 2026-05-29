@@ -94,6 +94,45 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
         XCTAssertEqual(meals.map(\.date), ["20260526"])
     }
 
+    func testFetchTodayMealsNormalizesNeisHtmlMenuBeforeReturningAndCaching() async throws {
+        let defaults = makeIsolatedDefaults()
+        let cacheStore = SchoolDataCacheStore(defaults: defaults, now: { fixtureDate(year: 2026, month: 5, day: 26) })
+        let searchService = StubSchoolSearchService(result: .success([]))
+        let neisService = SpyNEISService()
+        await neisService.setMealsHandler { _, _, date in
+            [
+                MealInfo(
+                    date: date,
+                    mealType: "점심",
+                    menu: "비빔밥(1.5)<br/>미역국",
+                    calorieInfo: "700 kcal"
+                )
+            ]
+        }
+        let repository = DefaultSchoolRepository(
+            schoolSearchService: searchService,
+            neisService: neisService,
+            noticesService: StubNoticesService(result: []),
+            fallback: StubSchoolRepository(),
+            cacheStore: cacheStore
+        )
+
+        let meals = try await repository.fetchTodayMeals(
+            for: .fixture(),
+            date: fixtureDate(year: 2026, month: 5, day: 26)
+        )
+
+        XCTAssertEqual(meals.first?.menu, "비빔밥 (1.5)\n미역국")
+        XCTAssertEqual(
+            cacheStore.getMeals(
+                officeCode: StudentProfile.fixture().officeCode,
+                schoolCode: StudentProfile.fixture().schoolCode,
+                date: "20260526"
+            )?.first?.menu,
+            "비빔밥 (1.5)\n미역국"
+        )
+    }
+
     func testFetchScheduleFallsBackWhenRemoteServiceFails() async throws {
         let fallbackEvents = [
             SchoolEvent(date: "202605", title: "체육대회", description: "운동장")

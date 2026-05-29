@@ -34,7 +34,8 @@ final class MealsViewModel: ObservableObject {
         }
         let weekStart = Self.startOfSchoolWeek(containing: effectiveReferenceDate)
         weekTitle = formatWeekTitle(start: weekStart)
-        items = (try? await repository.fetchWeekMeals(for: profile, weekStart: weekStart)) ?? []
+        items = ((try? await repository.fetchWeekMeals(for: profile, weekStart: weekStart)) ?? [])
+            .map { $0.withDisplayMenu() }
         statusText = items.isEmpty ? "선택한 주 급식이 없어요." : ""
     }
 

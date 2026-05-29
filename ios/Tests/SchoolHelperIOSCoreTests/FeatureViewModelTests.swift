@@ -156,10 +156,10 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertTrue(timetableViewModel.items.isEmpty)
         XCTAssertTrue(scheduleViewModel.items.isEmpty)
 
-        await mealsViewModel.load(profile: .fixture(), referenceDate: fixtureDate(year: 2026, month: 5, day: 26))
+        await mealsViewModel.load(profile: StudentProfile.fixture(), referenceDate: fixtureDate(year: 2026, month: 5, day: 26))
         timetableViewModel.date = fixtureDate(year: 2026, month: 5, day: 26)
-        await timetableViewModel.load(profile: .fixture())
-        await scheduleViewModel.load(profile: .fixture(), month: fixtureDate(year: 2026, month: 5, day: 1))
+        await timetableViewModel.load(profile: StudentProfile.fixture())
+        await scheduleViewModel.load(profile: StudentProfile.fixture(), month: fixtureDate(year: 2026, month: 5, day: 1))
 
         XCTAssertEqual(mealsViewModel.items.count, 1)
         XCTAssertEqual(timetableViewModel.items.count, 1)
@@ -175,8 +175,12 @@ final class FeatureViewModelTests: XCTestCase {
         let profile = StudentProfile.fixture()
         let referenceDate = fixtureDate(year: 2026, month: 5, day: 26)
 
-        let mealsViewModel = MealsViewModel(repository: repository)
+        let mealsViewModel = MealsViewModel(repository: repository, todayProvider: { referenceDate })
         await mealsViewModel.load(profile: profile, referenceDate: referenceDate)
+        XCTAssertEqual(mealsViewModel.weekTitle, "5월 25일 - 5월 29일")
+        await mealsViewModel.showPreviousWeek()
+        XCTAssertEqual(mealsViewModel.weekTitle, "5월 18일 - 5월 22일")
+        await mealsViewModel.showCurrentWeek()
         XCTAssertEqual(mealsViewModel.weekTitle, "5월 25일 - 5월 29일")
         await mealsViewModel.showNextWeek()
         XCTAssertEqual(mealsViewModel.weekTitle, "6월 1일 - 6월 5일")
@@ -187,12 +191,37 @@ final class FeatureViewModelTests: XCTestCase {
         await scheduleViewModel.showNextMonth()
         XCTAssertEqual(scheduleViewModel.monthTitle, "2026년 6월")
 
-        let timetableViewModel = TimetableViewModel(repository: repository)
+        let timetableViewModel = TimetableViewModel(repository: repository, todayProvider: { referenceDate })
         timetableViewModel.date = referenceDate
         await timetableViewModel.load(profile: profile)
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 26일 화요일")
+        await timetableViewModel.showPreviousDay()
+        XCTAssertEqual(timetableViewModel.dateTitle, "5월 25일 월요일")
+        await timetableViewModel.showToday()
+        XCTAssertEqual(timetableViewModel.dateTitle, "5월 26일 화요일")
         await timetableViewModel.showNextDay()
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 27일 수요일")
+    }
+
+    func testMealsViewModelFormatsHtmlMenuForMealScreen() async {
+        let repository = StubSchoolRepository(
+            weekMeals: [
+                MealInfo(
+                    date: "20260526",
+                    mealType: "점심",
+                    menu: "비빔밥(1.5)<br />미역국<br>김치&nbsp;&amp;&nbsp;요거트",
+                    calorieInfo: "650 kcal"
+                )
+            ]
+        )
+        let viewModel = MealsViewModel(
+            repository: repository,
+            todayProvider: { fixtureDate(year: 2026, month: 5, day: 26) }
+        )
+
+        await viewModel.load(profile: .fixture())
+
+        XCTAssertEqual(viewModel.items.first?.menu, "비빔밥 (1.5)\n미역국\n김치 & 요거트")
     }
 
     func testScheduleViewModelFiltersBlockedEventsAndSortsByDate() async {

@@ -21,9 +21,11 @@ final class TimerPreferencesStore {
     func save(_ state: TimerSessionState) {
         guard let data = try? JSONEncoder().encode(state) else { return }
         defaults.set(data, forKey: key)
+        defaults.synchronize()
     }
 
     func clear() {
         defaults.removeObject(forKey: key)
+        defaults.synchronize()
     }
 }
