@@ -504,6 +504,15 @@ TEAM_ID=2TJFP5788P DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 io
 - 알림 예약 결과: 통과, `/tmp/misschool-ios-device-notification-20260529/schoolhelper-notification-smoke.json` 에서 `authorizationStatus=authorized`, `scheduled=true`, `pending=true` 확인
 - 남은 항목: 홈 화면 위젯 배치/내용/탭, 실제 알림 배너/소리/진동 UX 수동 확인
 
+2026-05-29 사용자 수동 확인 및 위젯 레이아웃 수정:
+
+- 사용자 확인: 홈 화면 위젯 추가는 정상, 위젯 탭 시 시간표 화면으로 이동함
+- 사용자 확인: 위젯 정보 UI 배치가 맞지 않아 수정 필요
+- 수정: medium 위젯은 compact 레이아웃으로 오늘 시간표 중심 표시, large/preview는 오늘·내일 카드를 나란히 표시하도록 `HomeWidgetSnapshotView` 를 분리
+- 검증: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-layout-fix ios/scripts/test_widget_sim.sh` 통과
+- 실기기 설치: `TEAM_ID=2TJFP5788P DEVICE_ID=00008130-0012603E3CC3001C DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-layout-device LAUNCH=0 ENTITLEMENTS_MODE=app-groups ios/scripts/install_device.sh` 통과
+- 남은 항목: 수정된 홈 화면 위젯 내용 재확인, 실제 알림 배너/소리/진동 UX 수동 확인
+
 개발자 프로필 신뢰 오류가 나오면 iPhone에서 다음을 확인합니다.
 
 1. `설정`

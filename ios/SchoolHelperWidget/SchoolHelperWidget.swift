@@ -52,17 +52,22 @@ struct SchoolHelperWidgetProvider: AppIntentTimelineProvider {
 }
 
 struct SchoolHelperWidgetEntryView: View {
+    @Environment(\.widgetFamily) private var family
     var entry: SchoolHelperWidgetEntry
 
     var body: some View {
-        HomeWidgetSnapshotView(snapshot: entry.snapshot)
-        .padding()
-        .containerBackground(for: .widget) {
-            Color(.secondarySystemBackground)
-        }
-        .widgetURL(entry.snapshot.requiresSetup
-            ? URL(string: "schoolhelper://settings")
-            : URL(string: "schoolhelper://timetable"))
+        HomeWidgetSnapshotView(snapshot: entry.snapshot, mode: viewMode)
+            .padding(family == .systemMedium ? 12 : 14)
+            .containerBackground(for: .widget) {
+                Color(.secondarySystemBackground)
+            }
+            .widgetURL(entry.snapshot.requiresSetup
+                ? URL(string: "schoolhelper://settings")
+                : URL(string: "schoolhelper://timetable"))
+    }
+
+    private var viewMode: HomeWidgetSnapshotViewMode {
+        family == .systemMedium ? .compact : .detailed
     }
 }
 

@@ -325,6 +325,9 @@ Android 기준:
 - 2026-05-28 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-resumed SMOKE_RUN_ID=notification-resumed-1779963848 ios/scripts/verify_device_notification.sh` 로 알림 예약 상태 파일의 `authorized`/`scheduled=true`/`pending=true` 를 재확인했다.
 - 2026-05-29 `DEVICE_ID=00008130-0012603E3CC3001C UNLOCK_WAIT_SECONDS=30 OUTPUT_DIR=/tmp/misschool-ios-device-app-group-data-20260529 ios/scripts/verify_device_app_group_data.sh` 로 실제 iPhone App Group `student_profile` 복사/검증을 재통과했다.
 - 2026-05-29 `DEVICE_ID=00008130-0012603E3CC3001C REMAINING_SECONDS=20 ROUTE_DELAY_SECONDS=1 STATUS_WAIT_SECONDS=3 STATUS_OUTPUT_DIR=/tmp/misschool-ios-device-notification-20260529 SMOKE_RUN_ID=notification-20260529-1780019434 ios/scripts/verify_device_notification.sh` 로 알림 예약 상태 파일의 `authorized`/`scheduled=true`/`pending=true` 를 재확인했다.
+- 2026-05-29 사용자 확인: 홈 화면 위젯 추가와 위젯 탭 → 시간표 화면 이동은 정상, 위젯 정보 UI 배치가 맞지 않아 compact/detailed 위젯 레이아웃을 분리 수정했다.
+- 2026-05-29 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-layout-fix ios/scripts/test_widget_sim.sh` 로 수정된 위젯 simulator packaging을 확인했다.
+- 2026-05-29 `TEAM_ID=2TJFP5788P DEVICE_ID=00008130-0012603E3CC3001C DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer DERIVED_DATA_PATH=/tmp/misschool-ios-widget-layout-device LAUNCH=0 ENTITLEMENTS_MODE=app-groups ios/scripts/install_device.sh` 로 수정 빌드를 실제 iPhone에 설치했다.
 - `ios/scripts/verify_device_parity.sh` 로 설치된 실기기 앱의 초기 설정 launch, seeded home, 주요 딥링크, running timer launch smoke를 반복 실행할 수 있다.
 - 2026-05-28 `DEVICE_ID=buggyani ROUTE_DELAY_SECONDS=0 ios/scripts/verify_device_parity.sh` 로 주요 딥링크와 running timer launch 명령 성공을 확인했다.
 - `ios/scripts/verify_device_notification.sh` 로 최신 설치 앱의 타이머 완료 알림 예약 smoke를 반복 실행할 수 있다.
