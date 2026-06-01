@@ -55,6 +55,45 @@ final class NEISClientTests: XCTestCase {
         XCTAssertEqual(schools.map(\.schoolName), ["미사중학교"])
     }
 
+    func testFetchTimetableWithoutApiKeyUsesBFFAndKeepsSixthPeriod() async throws {
+        let session = URLSession(configuration: stubbedConfiguration())
+        let client = NEISClient(
+            session: session,
+            config: NEISClient.Config(
+                baseURL: URL(string: "https://neis.example.com/")!,
+                apiKey: "",
+                noticesBaseURL: URL(string: "https://web.example.com/")!
+            )
+        )
+        StubURLProtocol.requestHandler = { request in
+            XCTAssertEqual(request.url?.host, "web.example.com")
+            XCTAssertEqual(request.url?.path, "/api/timetable")
+            let components = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "officeCode" }?.value, "J10")
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "schoolCode" }?.value, "7679399")
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "schoolKind" }?.value, "중학교")
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "grade" }?.value, "1")
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "classroom" }?.value, "4")
+            XCTAssertEqual(components?.queryItems?.first { $0.name == "date" }?.value, "20260601")
+            return (
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!,
+                Self.timetableBFFPayload
+            )
+        }
+
+        let items = try await client.fetchTimetable(
+            officeCode: "J10",
+            schoolCode: "7679399",
+            schoolKind: "중학교",
+            grade: "1",
+            classroom: "4",
+            date: "20260601"
+        )
+
+        XCTAssertEqual(items.map(\.period), ["1", "2", "3", "4", "5", "6"])
+        XCTAssertEqual(items.last?.subject, "도덕")
+    }
+
     func testFetchNoticesBuildsBFFQueryAndDecodesPreviewItems() async throws {
         let session = URLSession(configuration: stubbedConfiguration())
         let client = NoticesClient(
@@ -152,6 +191,21 @@ final class NEISClientTests: XCTestCase {
         """
         {
           "RESULT": {"CODE": "INFO-200", "MESSAGE": "해당하는 데이터가 없습니다."}
+        }
+        """.utf8
+    )
+
+    private static let timetableBFFPayload = Data(
+        """
+        {
+          "items": [
+            {"date": "20260601", "period": "1", "subject": "미술", "grade": "1", "classroom": "4"},
+            {"date": "20260601", "period": "2", "subject": "사회", "grade": "1", "classroom": "4"},
+            {"date": "20260601", "period": "3", "subject": "국어", "grade": "1", "classroom": "4"},
+            {"date": "20260601", "period": "4", "subject": "과학", "grade": "1", "classroom": "4"},
+            {"date": "20260601", "period": "5", "subject": "(창)동아리활동", "grade": "1", "classroom": "4"},
+            {"date": "20260601", "period": "6", "subject": "도덕", "grade": "1", "classroom": "4"}
+          ]
         }
         """.utf8
     )

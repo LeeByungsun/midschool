@@ -118,6 +118,17 @@ struct NEISClient {
         classroom: String,
         date: String
     ) async throws -> [TimetableItem] {
+        if config?.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+            return try await fetchTimetableFromBFF(
+                officeCode: officeCode,
+                schoolCode: schoolCode,
+                schoolKind: schoolKind,
+                grade: grade,
+                classroom: classroom,
+                date: date
+            )
+        }
+
         let endpoint = timetableEndpoint(for: schoolKind)
         let response: NeisResponse<TimetableRowDto> = try await fetchNeisJSON(
             endpoint: endpoint,
@@ -152,6 +163,51 @@ struct NEISClient {
                 grade: $0.grade ?? "",
                 classroom: $0.classroom ?? ""
             )
+        }
+    }
+
+    private func fetchTimetableFromBFF(
+        officeCode: String,
+        schoolCode: String,
+        schoolKind: String,
+        grade: String,
+        classroom: String,
+        date: String
+    ) async throws -> [TimetableItem] {
+        guard let config else { throw ClientError.invalidConfiguration }
+        guard var components = URLComponents(
+            url: config.noticesBaseURL.appendingPathComponent("api/timetable"),
+            resolvingAgainstBaseURL: false
+        ) else {
+            throw ClientError.invalidRequest("api/timetable")
+        }
+
+        components.queryItems = [
+            URLQueryItem(name: "officeCode", value: officeCode),
+            URLQueryItem(name: "schoolCode", value: schoolCode),
+            URLQueryItem(name: "schoolKind", value: schoolKind),
+            URLQueryItem(name: "grade", value: grade),
+            URLQueryItem(name: "classroom", value: classroom),
+            URLQueryItem(name: "date", value: date),
+        ]
+
+        guard let requestURL = components.url else {
+            throw ClientError.invalidRequest("api/timetable")
+        }
+
+        let (data, response) = try await session.data(from: requestURL)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ClientError.invalidResponse
+        }
+        guard 200..<300 ~= httpResponse.statusCode else {
+            throw ClientError.network(httpResponse.statusCode)
+        }
+
+        do {
+            let payload = try JSONDecoder().decode(ApiListResponse<TimetableItem>.self, from: data)
+            return payload.items
+        } catch {
+            throw ClientError.invalidResponse
         }
     }
 
@@ -406,6 +462,10 @@ private struct NeisResponse<Row: Decodable>: Decodable {
         case hisTimetable
         case schoolInfo
     }
+}
+
+private struct ApiListResponse<Item: Decodable>: Decodable {
+    let items: [Item]
 }
 
 private struct NeisSection<Row: Decodable>: Decodable {
