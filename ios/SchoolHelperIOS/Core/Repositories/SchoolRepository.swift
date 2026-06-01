@@ -50,11 +50,15 @@ struct MockSchoolRepository: SchoolRepository {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd"
         formatter.locale = Locale(identifier: "ko_KR")
+        let dateKey = formatter.string(from: date)
+        let menu = ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_DATE_MARKED_MEALS"] == "1"
+            ? "샘플 급식 \(dateKey)"
+            : "비빔밥\n미역국"
         return [
             MealInfo(
-                date: formatter.string(from: date),
+                date: dateKey,
                 mealType: "점심",
-                menu: "비빔밥\n미역국",
+                menu: menu,
                 calorieInfo: "712 kcal"
             )
         ]
@@ -64,12 +68,14 @@ struct MockSchoolRepository: SchoolRepository {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd"
         formatter.locale = Locale(identifier: "ko_KR")
+        let menuIncludesDate = ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_DATE_MARKED_MEALS"] == "1"
         return (0..<5).map { offset in
             let day = Calendar.current.date(byAdding: .day, value: offset, to: weekStart) ?? weekStart
+            let dateKey = formatter.string(from: day)
             return MealInfo(
-                date: formatter.string(from: day),
+                date: dateKey,
                 mealType: "점심",
-                menu: "샘플 급식 \(offset + 1)",
+                menu: menuIncludesDate ? "샘플 급식 \(dateKey)" : "샘플 급식 \(offset + 1)",
                 calorieInfo: "\(680 + offset * 10) kcal"
             )
         }

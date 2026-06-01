@@ -30,6 +30,7 @@ struct MealsView: View {
                             Task { await viewModel.showNextWeek() }
                         }
                     }
+                    .buttonStyle(.borderless)
                 }
 
                 ForEach(viewModel.items) { item in
