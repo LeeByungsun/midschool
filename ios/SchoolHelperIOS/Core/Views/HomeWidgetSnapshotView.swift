@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum HomeWidgetSnapshotViewMode {
+    case small
     case compact
     case detailed
     case preview
@@ -12,11 +13,30 @@ struct HomeWidgetSnapshotView: View {
 
     var body: some View {
         switch mode {
+        case .small:
+            smallBody
         case .compact:
             compactBody
         case .detailed, .preview:
             detailedBody
         }
+    }
+
+    private var smallBody: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            header
+
+            Text(compactSchoolLabel(from: snapshot.schoolLabel))
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            smallTodayTimetableGrid(text: snapshot.todayTimetable)
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private var compactBody: some View {
@@ -118,6 +138,40 @@ struct HomeWidgetSnapshotView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func smallTodayTimetableGrid(text: String) -> some View {
+        let subjects = timetableSubjectMap(from: text)
+
+        return Group {
+            if subjects.isEmpty {
+                Text(timetableLines(from: text).first ?? text)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(4)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            } else {
+                VStack(alignment: .leading, spacing: 1) {
+                    ForEach(1...7, id: \.self) { period in
+                        HStack(alignment: .firstTextBaseline, spacing: 3) {
+                            Text("\(period)")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                                .frame(width: 10, alignment: .trailing)
+
+                            Text(compactSubjectLabel(subjects[period]))
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(subjects[period] == nil ? .secondary : .primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.68)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func compactTwoDayTimetableGrid(todayText: String, tomorrowText: String) -> some View {

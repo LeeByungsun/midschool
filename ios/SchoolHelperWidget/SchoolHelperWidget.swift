@@ -57,7 +57,7 @@ struct SchoolHelperWidgetEntryView: View {
 
     var body: some View {
         HomeWidgetSnapshotView(snapshot: entry.snapshot, mode: viewMode)
-            .padding(family == .systemMedium ? 8 : 14)
+            .padding(contentPadding)
             .containerBackground(for: .widget) {
                 Color(.secondarySystemBackground)
             }
@@ -67,7 +67,25 @@ struct SchoolHelperWidgetEntryView: View {
     }
 
     private var viewMode: HomeWidgetSnapshotViewMode {
-        family == .systemMedium ? .compact : .detailed
+        switch family {
+        case .systemSmall:
+            return .small
+        case .systemMedium:
+            return .compact
+        default:
+            return .detailed
+        }
+    }
+
+    private var contentPadding: CGFloat {
+        switch family {
+        case .systemSmall:
+            return 8
+        case .systemMedium:
+            return 8
+        default:
+            return 14
+        }
     }
 }
 
@@ -84,7 +102,7 @@ struct SchoolHelperWidget: Widget {
             SchoolHelperWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("학교도우미")
-        .description("오늘/내일 시간표와 타이머 요약을 보여줍니다.")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .description("작은 위젯은 오늘 시간표, 중간/큰 위젯은 오늘/내일 시간표를 보여줍니다.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
