@@ -28,10 +28,17 @@ struct HomeWidgetSnapshotView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
-            compactTimetableBlock(
-                title: "오늘",
-                text: snapshot.todayTimetable
-            )
+            if let tomorrow = snapshot.tomorrowTimetable {
+                HStack(alignment: .top, spacing: 6) {
+                    compactDayCard(title: "오늘", text: snapshot.todayTimetable)
+                    compactDayCard(title: "내일", text: tomorrow)
+                }
+            } else {
+                compactTimetableBlock(
+                    title: "오늘",
+                    text: snapshot.todayTimetable
+                )
+            }
 
             Spacer(minLength: 0)
         }
@@ -84,6 +91,37 @@ struct HomeWidgetSnapshotView: View {
             .padding(8)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func compactDayCard(title: String, text: String) -> some View {
+        let lines = timetableLines(from: text)
+        let visibleLines = Array(lines.prefix(3))
+        let remainingCount = max(0, lines.count - visibleLines.count)
+
+        return VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            ForEach(Array(visibleLines.enumerated()), id: \.offset) { _, line in
+                Text(line)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.74)
+            }
+
+            if remainingCount > 0 {
+                Text("외 \(remainingCount)개")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(6)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func compactTimetableBlock(title: String, text: String) -> some View {
