@@ -69,21 +69,11 @@ struct HomeWidgetSnapshotView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text(snapshot.headerDate)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-
-            Spacer(minLength: 4)
-
-            Text(snapshot.timerSummary)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.blue)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
+        Text(snapshot.headerDate)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
     }
 
     private func timetableCard(title: String, text: String, lineLimit: Int?) -> some View {
