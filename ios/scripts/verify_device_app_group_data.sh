@@ -3,10 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj}"
+PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelper.xcodeproj}"
 SCHEME="${SCHEME:-SchoolHelperIOS}"
-BUNDLE_ID="${BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
-GROUP_ID="${GROUP_ID:-group.com.leebyungsun.schoolhelperios}"
+BUNDLE_ID="${BUNDLE_ID:-com.lbs.shcoolhelper}"
+GROUP_ID="${GROUP_ID:-group.com.lbs.shcoolhelper}"
 DEVICE_ID="${DEVICE_ID:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-/tmp/misschool-ios-device-app-group-data}"
 UNLOCK_WAIT_SECONDS="${UNLOCK_WAIT_SECONDS:-0}"

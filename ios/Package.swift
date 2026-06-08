@@ -15,7 +15,7 @@ let package = Package(
     targets: [
         .target(
             name: "SchoolHelperIOSCore",
-            path: "SchoolHelperIOS",
+            path: "SchoolHelper",
             exclude: [
                 "App/RootTabView.swift",
                 "App/SchoolHelperIOSApp.swift",

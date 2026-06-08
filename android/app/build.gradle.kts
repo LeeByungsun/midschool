@@ -19,11 +19,11 @@ val neisApiKey = localProperties.getProperty("NEIS_API_KEY", "")
 val webBaseUrl = localProperties.getProperty("WEB_BASE_URL", "https://midschool.vercel.app/")
 
 android {
-    namespace = "com.bsbarron.midschoolapp"
+    namespace = "com.lbs.schoolhelper"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.bsbarron.midschoolapp"
+        applicationId = "com.lbs.schoolhelper"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

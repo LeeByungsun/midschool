@@ -2,11 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
-PROJECT_PATH="$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj"
+PROJECT_PATH="$ROOT_DIR/ios/SchoolHelper.xcodeproj"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/misschool-ios-run}"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 SCHEME="${SCHEME:-SchoolHelperIOS}"
-BUNDLE_ID="${BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
+BUNDLE_ID="${BUNDLE_ID:-com.lbs.shcoolhelper}"
 SIMULATOR_NAME="${SIMULATOR_NAME:-iPhone 16 Pro}"
 SIMULATOR_OS="${SIMULATOR_OS:-18.3.1}"
 OUTPUT_FILE="${OUTPUT_FILE:-/tmp/deeplink-confirm.png}"
@@ -14,7 +14,7 @@ DEEPLINK_URL="${DEEPLINK_URL:-schoolhelper://timetable}"
 
 export DEVELOPER_DIR
 
-APP_PATH="$DERIVED_DATA_PATH/Build/Products/Debug-iphonesimulator/SchoolHelperIOS.app"
+APP_PATH="$DERIVED_DATA_PATH/Build/Products/Debug-iphonesimulator/SchoolHelper.app"
 DEVICE_ID="$(
   python3 - "$SIMULATOR_NAME" <<'PY'
 import re

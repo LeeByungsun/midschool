@@ -6,8 +6,8 @@ from pathlib import Path
 
 PROFILE_DIR = Path.home() / "Library/Developer/Xcode/UserData/Provisioning Profiles"
 DEFAULT_TARGETS = [
-    ("com.leebyungsun.schoolhelperios", "group.com.leebyungsun.schoolhelperios"),
-    ("com.leebyungsun.schoolhelperios.widget", "group.com.leebyungsun.schoolhelperios"),
+    ("com.lbs.shcoolhelper", "group.com.lbs.shcoolhelper"),
+    ("com.lbs.shcoolhelper.widget", "group.com.lbs.shcoolhelper"),
 ]
 
 

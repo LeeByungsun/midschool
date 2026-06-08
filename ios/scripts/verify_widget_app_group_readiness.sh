@@ -42,7 +42,7 @@ The iOS app target profile includes the App Group, but at least one checked
 profile is missing it. For the current bundle ids this usually means the widget
 extension profile must be regenerated after enabling:
 
-  group.com.leebyungsun.schoolhelperios
+  group.com.lbs.shcoolhelper
 
 Required next steps:
   1. Enable the App Group for both app and widget identifiers in Apple Developer/Xcode.

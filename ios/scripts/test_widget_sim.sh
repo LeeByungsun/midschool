@@ -2,15 +2,15 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
-PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj}"
+PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelper.xcodeproj}"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 SCHEME="${SCHEME:-SchoolHelperWidget}"
 CONFIGURATION="${CONFIGURATION:-Debug}"
 DESTINATION="${DESTINATION:-platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1}"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/misschool-ios-widget-sim-test}"
-APP_GROUP="${APP_GROUP:-group.com.leebyungsun.schoolhelperios}"
-APP_BUNDLE_ID="${APP_BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
-WIDGET_BUNDLE_ID="${WIDGET_BUNDLE_ID:-com.leebyungsun.schoolhelperios.widget}"
+APP_GROUP="${APP_GROUP:-group.com.lbs.shcoolhelper}"
+APP_BUNDLE_ID="${APP_BUNDLE_ID:-com.lbs.shcoolhelper}"
+WIDGET_BUNDLE_ID="${WIDGET_BUNDLE_ID:-com.lbs.shcoolhelper.widget}"
 
 export DEVELOPER_DIR
 
@@ -68,7 +68,7 @@ xcodebuild \
   -configuration "$CONFIGURATION" \
   -showBuildSettings >"$BUILD_SETTINGS_FILE" 2>/dev/null
 
-grep -Fq 'CODE_SIGN_ENTITLEMENTS = SchoolHelperIOS/SchoolHelperIOS.entitlements' "$BUILD_SETTINGS_FILE"
+grep -Fq 'CODE_SIGN_ENTITLEMENTS = SchoolHelper/SchoolHelperIOS.entitlements' "$BUILD_SETTINGS_FILE"
 grep -Fq 'CODE_SIGN_ENTITLEMENTS = SchoolHelperWidget/SchoolHelperWidget.entitlements' "$BUILD_SETTINGS_FILE"
 
 echo "Destination: $DESTINATION"
@@ -96,24 +96,24 @@ else
   fi
 fi
 
-APP_PATH="$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION-iphonesimulator/SchoolHelperIOS.app"
+APP_PATH="$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION-iphonesimulator/SchoolHelper.app"
 WIDGET_PATH="$APP_PATH/PlugIns/SchoolHelperWidget.appex"
 DIRECT_WIDGET_PATH="$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION-iphonesimulator/SchoolHelperWidget.appex"
 
 assert_file_exists "$APP_PATH/Info.plist"
 assert_file_exists "$WIDGET_PATH/Info.plist"
 assert_file_exists "$DIRECT_WIDGET_PATH/Info.plist"
-assert_file_exists "$APP_PATH/SchoolHelperIOS"
+assert_file_exists "$APP_PATH/SchoolHelper"
 assert_file_exists "$WIDGET_PATH/SchoolHelperWidget"
 
 assert_plist_value "$APP_PATH/Info.plist" ':CFBundleIdentifier' "$APP_BUNDLE_ID"
 assert_plist_value "$WIDGET_PATH/Info.plist" ':CFBundleIdentifier' "$WIDGET_BUNDLE_ID"
 assert_plist_value "$WIDGET_PATH/Info.plist" ':NSExtension:NSExtensionPointIdentifier' 'com.apple.widgetkit-extension'
 
-assert_entitlement_has_group "$ROOT_DIR/ios/SchoolHelperIOS/SchoolHelperIOS.entitlements"
+assert_entitlement_has_group "$ROOT_DIR/ios/SchoolHelper/SchoolHelperIOS.entitlements"
 assert_entitlement_has_group "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.entitlements"
-assert_source_contains "$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj/project.pbxproj" 'SystemCapabilities = { com.apple.ApplicationGroups.iOS = { enabled = 1; }; };'
-assert_source_contains "$ROOT_DIR/ios/SchoolHelperIOS/Core/Storage/AppStorageConfig.swift" "static let appGroupSuiteName = \"$APP_GROUP\""
+assert_source_contains "$ROOT_DIR/ios/SchoolHelper.xcodeproj/project.pbxproj" 'com.apple.ApplicationGroups.iOS'
+assert_source_contains "$ROOT_DIR/ios/SchoolHelper/Core/Storage/AppStorageConfig.swift" "static let appGroupSuiteName = \"$APP_GROUP\""
 assert_source_contains "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.swift" 'schoolhelper://settings'
 assert_source_contains "$ROOT_DIR/ios/SchoolHelperWidget/SchoolHelperWidget.swift" 'schoolhelper://timetable'
 

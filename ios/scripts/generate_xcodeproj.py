@@ -8,7 +8,7 @@ src_root = ios_root / 'SchoolHelperIOS'
 widget_root = ios_root / 'SchoolHelperWidget'
 tests_root = ios_root / 'SchoolHelperIOSTests'
 ui_tests_root = ios_root / 'SchoolHelperIOSUITests'
-proj_dir = ios_root / 'SchoolHelperIOS.xcodeproj'
+proj_dir = ios_root / 'SchoolHelper.xcodeproj'
 workspace_dir = proj_dir / 'project.xcworkspace'
 scheme_dir = proj_dir / 'xcshareddata' / 'xcschemes'
 resources_dir = src_root / 'Resources' / 'Assets.xcassets'
@@ -117,7 +117,7 @@ for rel, fid in widget_ref_ids.items():
     add(f'\t\t{fid} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{Path(rel).name}"; sourceTree = "<group>"; }};')
 for rel, fid in resource_ref_ids.items():
     add(f'\t\t{fid} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "{Path(rel).name}"; sourceTree = "<group>"; }};')
-add(f'\t\t{ids["product_ref"]} /* SchoolHelperIOS.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; path = SchoolHelperIOS.app; sourceTree = BUILT_PRODUCTS_DIR; }};')
+add(f'\t\t{ids["product_ref"]} /* SchoolHelper.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; path = SchoolHelper.app; sourceTree = BUILT_PRODUCTS_DIR; }};')
 add(f'\t\t{ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = SchoolHelperIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};')
 add(f'\t\t{ids["ui_tests_product_ref"]} /* SchoolHelperIOSUITests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = SchoolHelperIOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};')
 add(f'\t\t{ids["widget_product_ref"]} /* SchoolHelperWidget.appex */ = {{isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = SchoolHelperWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; }};')
@@ -138,7 +138,7 @@ add(f'\t\t{ids["root_group"]} = {{isa = PBXGroup; children = ({ids["source_root_
 add(f'\t\t{ids["source_root_group"]} /* SchoolHelperIOS */ = {{isa = PBXGroup; children = ({ids["app_group"]} /* App */, {ids["core_group"]} /* Core */, {ids["features_group"]} /* Features */, {ids["resources_group"]} /* Resources */); path = SchoolHelperIOS; sourceTree = "<group>"; }};')
 widget_children = ', '.join(widget_ref_ids[r] + f' /* {Path(r).name} */' for r in widget_ref_ids)
 add(f'\t\t{ids["widget_root_group"]} /* SchoolHelperWidget */ = {{isa = PBXGroup; children = ({widget_children}); path = SchoolHelperWidget; sourceTree = "<group>"; }};')
-add(f'\t\t{ids["products_group"]} /* Products */ = {{isa = PBXGroup; children = ({ids["product_ref"]} /* SchoolHelperIOS.app */, {ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */, {ids["ui_tests_product_ref"]} /* SchoolHelperIOSUITests.xctest */, {ids["widget_product_ref"]} /* SchoolHelperWidget.appex */); name = Products; sourceTree = "<group>"; }};')
+add(f'\t\t{ids["products_group"]} /* Products */ = {{isa = PBXGroup; children = ({ids["product_ref"]} /* SchoolHelper.app */, {ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */, {ids["ui_tests_product_ref"]} /* SchoolHelperIOSUITests.xctest */, {ids["widget_product_ref"]} /* SchoolHelperWidget.appex */); name = Products; sourceTree = "<group>"; }};')
 app_children = ', '.join(file_ref_ids[r] + f' /* {Path(r).name} */' for r in app_files)
 add(f'\t\t{ids["app_group"]} /* App */ = {{isa = PBXGroup; children = ({app_children}); path = App; sourceTree = "<group>"; }};')
 add(f'\t\t{ids["core_group"]} /* Core */ = {{isa = PBXGroup; children = ({", ".join(core_subgroups[k] + f" /* {k} */" for k in core_subgroups)}); path = Core; sourceTree = "<group>"; }};')
@@ -184,11 +184,11 @@ add(f'\t\t{ids["project_debug"]} /* Debug */ = {{isa = XCBuildConfiguration; bui
 add(f'\t\t{ids["project_release"]} /* Release */ = {{isa = XCBuildConfiguration; buildSettings = {project_settings}; name = Release; }};')
 app_target_settings = {
     'ASSETCATALOG_COMPILER_APPICON_NAME': '""', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'YES', 'CODE_SIGNING_REQUIRED': 'YES',
-    'CODE_SIGN_ENTITLEMENTS': 'SchoolHelperIOS/SchoolHelperIOS.entitlements',
+    'CODE_SIGN_ENTITLEMENTS': 'SchoolHelper/SchoolHelperIOS.entitlements',
     'CURRENT_PROJECT_VERSION': '1', 'DEVELOPMENT_TEAM': '2TJFP5788P', 'ENABLE_TESTABILITY': 'YES', 'GENERATE_INFOPLIST_FILE': 'NO',
-    'INFOPLIST_FILE': 'SchoolHelperIOS/Info.plist',
+    'INFOPLIST_FILE': 'SchoolHelper/Info.plist',
     'IPHONEOS_DEPLOYMENT_TARGET': '17.0', 'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks")',
-    'MARKETING_VERSION': '1.0', 'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
+    'MARKETING_VERSION': '1.0', 'PRODUCT_BUNDLE_IDENTIFIER': 'com.lbs.shcoolhelper', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
     'SUPPORTED_PLATFORMS': '"iphoneos iphonesimulator"', 'SWIFT_EMIT_LOC_STRINGS': 'NO', 'SWIFT_OPTIMIZATION_LEVEL': '"-Onone"', 'SWIFT_VERSION': '5.0', 'TARGETED_DEVICE_FAMILY': '1'
 }
 app_settings = '{ ' + ' '.join(f'{k} = {v};' for k,v in app_target_settings.items()) + ' }'
@@ -201,8 +201,8 @@ test_target_settings = {
     'BUNDLE_LOADER': '"$(TEST_HOST)"', 'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'YES', 'CODE_SIGNING_REQUIRED': 'YES',
     'ENABLE_TESTABILITY': 'YES',
     'GENERATE_INFOPLIST_FILE': 'YES', 'IPHONEOS_DEPLOYMENT_TARGET': '17.0', 'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks")',
-    'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios.tests', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
-    'SUPPORTED_PLATFORMS': '"iphoneos iphonesimulator"', 'SWIFT_OPTIMIZATION_LEVEL': '"-Onone"', 'SWIFT_VERSION': '5.0', 'TARGETED_DEVICE_FAMILY': '1', 'TEST_HOST': '"$(BUILT_PRODUCTS_DIR)/SchoolHelperIOS.app/SchoolHelperIOS"'
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.lbs.shcoolhelper.tests', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
+    'SUPPORTED_PLATFORMS': '"iphoneos iphonesimulator"', 'SWIFT_OPTIMIZATION_LEVEL': '"-Onone"', 'SWIFT_VERSION': '5.0', 'TARGETED_DEVICE_FAMILY': '1', 'TEST_HOST': '"$(BUILT_PRODUCTS_DIR)/SchoolHelper.app/SchoolHelper"'
 }
 test_settings = '{ ' + ' '.join(f'{k} = {v};' for k,v in test_target_settings.items()) + ' }'
 add(f'\t\t{ids["tests_debug"]} /* Debug */ = {{isa = XCBuildConfiguration; buildSettings = {test_settings}; name = Debug; }};')
@@ -216,7 +216,7 @@ widget_target_settings = {
     'INFOPLIST_FILE': 'SchoolHelperWidget/Info.plist',
     'IPHONEOS_DEPLOYMENT_TARGET': '17.0',
     'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks")',
-    'MARKETING_VERSION': '1.0', 'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios.widget', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
+    'MARKETING_VERSION': '1.0', 'PRODUCT_BUNDLE_IDENTIFIER': 'com.lbs.shcoolhelper.widget', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
     'SKIP_INSTALL': 'YES', 'SUPPORTED_PLATFORMS': '"iphoneos iphonesimulator"', 'SWIFT_VERSION': '5.0', 'TARGETED_DEVICE_FAMILY': '1'
 }
 widget_settings = '{ ' + ' '.join(f'{k} = {v};' for k,v in widget_target_settings.items()) + ' }'
@@ -229,7 +229,7 @@ ui_test_target_settings = {
     'CODE_SIGN_STYLE': 'Automatic', 'CODE_SIGNING_ALLOWED': 'YES', 'CODE_SIGNING_REQUIRED': 'YES',
     'GENERATE_INFOPLIST_FILE': 'YES', 'IPHONEOS_DEPLOYMENT_TARGET': '17.0',
     'LD_RUNPATH_SEARCH_PATHS': '("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks")',
-    'PRODUCT_BUNDLE_IDENTIFIER': 'com.leebyungsun.schoolhelperios.uitests', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.lbs.shcoolhelper.uitests', 'PRODUCT_NAME': '"$(TARGET_NAME)"',
     'SUPPORTED_PLATFORMS': '"iphoneos iphonesimulator"', 'SWIFT_OPTIMIZATION_LEVEL': '"-Onone"', 'SWIFT_VERSION': '5.0',
     'TARGETED_DEVICE_FAMILY': '1', 'TEST_TARGET_NAME': 'SchoolHelperIOS'
 }
@@ -244,7 +244,7 @@ add(f'\t\t{ids["widget_target_proxy"]} /* PBXContainerItemProxy */ = {{isa = PBX
 add(f'\t\t{ids["widget_target_dependency"]} /* PBXTargetDependency */ = {{isa = PBXTargetDependency; target = {ids["widget_target"]} /* SchoolHelperWidget */; targetProxy = {ids["widget_target_proxy"]} /* PBXContainerItemProxy */; }};')
 add(f'\t\t{ids["ui_tests_target_proxy"]} /* PBXContainerItemProxy */ = {{isa = PBXContainerItemProxy; containerPortal = {ids["project"]} /* Project object */; proxyType = 1; remoteGlobalIDString = {ids["app_target"]}; remoteInfo = SchoolHelperIOS; }};')
 add(f'\t\t{ids["ui_tests_target_dependency"]} /* PBXTargetDependency */ = {{isa = PBXTargetDependency; target = {ids["app_target"]} /* SchoolHelperIOS */; targetProxy = {ids["ui_tests_target_proxy"]} /* PBXContainerItemProxy */; }};')
-add(f'\t\t{ids["app_target"]} /* SchoolHelperIOS */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["app_config_list"]}; buildPhases = ({ids["sources_phase"]} /* Sources */, {ids["frameworks_phase"]} /* Frameworks */, {ids["resources_phase"]} /* Resources */, {ids["embed_appex_phase"]} /* Embed App Extensions */); buildRules = (); dependencies = ({ids["widget_target_dependency"]} /* PBXTargetDependency */); name = SchoolHelperIOS; productName = SchoolHelperIOS; productReference = {ids["product_ref"]} /* SchoolHelperIOS.app */; productType = "com.apple.product-type.application"; }};')
+add(f'\t\t{ids["app_target"]} /* SchoolHelperIOS */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["app_config_list"]}; buildPhases = ({ids["sources_phase"]} /* Sources */, {ids["frameworks_phase"]} /* Frameworks */, {ids["resources_phase"]} /* Resources */, {ids["embed_appex_phase"]} /* Embed App Extensions */); buildRules = (); dependencies = ({ids["widget_target_dependency"]} /* PBXTargetDependency */); name = SchoolHelperIOS; productName = SchoolHelper; productReference = {ids["product_ref"]} /* SchoolHelper.app */; productType = "com.apple.product-type.application"; }};')
 add(f'\t\t{ids["tests_target"]} /* SchoolHelperIOSTests */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["tests_config_list"]}; buildPhases = ({ids["tests_sources_phase"]} /* Sources */, {ids["tests_frameworks_phase"]} /* Frameworks */, {ids["tests_resources_phase"]} /* Resources */); buildRules = (); dependencies = (); name = SchoolHelperIOSTests; productName = SchoolHelperIOSTests; productReference = {ids["tests_product_ref"]} /* SchoolHelperIOSTests.xctest */; productType = "com.apple.product-type.bundle.unit-test"; }};')
 add(f'\t\t{ids["ui_tests_target"]} /* SchoolHelperIOSUITests */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["ui_tests_config_list"]}; buildPhases = ({ids["ui_tests_sources_phase"]} /* Sources */, {ids["ui_tests_frameworks_phase"]} /* Frameworks */, {ids["ui_tests_resources_phase"]} /* Resources */); buildRules = (); dependencies = ({ids["ui_tests_target_dependency"]} /* PBXTargetDependency */); name = SchoolHelperIOSUITests; productName = SchoolHelperIOSUITests; productReference = {ids["ui_tests_product_ref"]} /* SchoolHelperIOSUITests.xctest */; productType = "com.apple.product-type.bundle.ui-testing"; }};')
 add(f'\t\t{ids["widget_target"]} /* SchoolHelperWidget */ = {{isa = PBXNativeTarget; buildConfigurationList = {ids["widget_config_list"]}; buildPhases = ({ids["widget_sources_phase"]} /* Sources */, {ids["widget_frameworks_phase"]} /* Frameworks */, {ids["widget_resources_phase"]} /* Resources */); buildRules = (); dependencies = (); name = SchoolHelperWidget; productName = SchoolHelperWidget; productReference = {ids["widget_product_ref"]} /* SchoolHelperWidget.appex */; productType = "com.apple.product-type.app-extension"; }};')
@@ -261,19 +261,19 @@ scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
     <BuildActionEntries>
       <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
       </BuildActionEntry>
       <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["tests_target"]}" BuildableName="SchoolHelperIOSTests.xctest" BlueprintName="SchoolHelperIOSTests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["tests_target"]}" BuildableName="SchoolHelperIOSTests.xctest" BlueprintName="SchoolHelperIOSTests" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
       </BuildActionEntry>
       <BuildActionEntry buildForTesting="NO" buildForRunning="NO" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
       </BuildActionEntry>
     </BuildActionEntries>
   </BuildAction>
-  <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"><Testables><TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["tests_target"]}" BuildableName="SchoolHelperIOSTests.xctest" BlueprintName="SchoolHelperIOSTests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/></TestableReference></Testables></TestAction>
-  <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES"><BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/></BuildableProductRunnable></LaunchAction>
-  <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/></BuildableProductRunnable></ProfileAction>
+  <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"><Testables><TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["tests_target"]}" BuildableName="SchoolHelperIOSTests.xctest" BlueprintName="SchoolHelperIOSTests" ReferencedContainer="container:SchoolHelper.xcodeproj"/></TestableReference></Testables></TestAction>
+  <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES"><BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/></BuildableProductRunnable></LaunchAction>
+  <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/></BuildableProductRunnable></ProfileAction>
   <AnalyzeAction buildConfiguration="Debug"/>
   <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
 </Scheme>
@@ -285,31 +285,31 @@ ui_scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
     <BuildActionEntries>
       <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="NO" buildForAnalyzing="YES">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
       </BuildActionEntry>
       <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["ui_tests_target"]}" BuildableName="SchoolHelperIOSUITests.xctest" BlueprintName="SchoolHelperIOSUITests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["ui_tests_target"]}" BuildableName="SchoolHelperIOSUITests.xctest" BlueprintName="SchoolHelperIOSUITests" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
       </BuildActionEntry>
     </BuildActionEntries>
   </BuildAction>
   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
     <Testables>
       <TestableReference skipped="NO">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["ui_tests_target"]}" BuildableName="SchoolHelperIOSUITests.xctest" BlueprintName="SchoolHelperIOSUITests" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["ui_tests_target"]}" BuildableName="SchoolHelperIOSUITests.xctest" BlueprintName="SchoolHelperIOSUITests" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
         <MacroExpansion>
-          <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+          <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
         </MacroExpansion>
       </TestableReference>
     </Testables>
   </TestAction>
   <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES">
     <BuildableProductRunnable runnableDebuggingMode="0">
-      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
     </BuildableProductRunnable>
   </LaunchAction>
   <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES">
     <BuildableProductRunnable runnableDebuggingMode="0">
-      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
     </BuildableProductRunnable>
   </ProfileAction>
   <AnalyzeAction buildConfiguration="Debug"/>
@@ -323,17 +323,17 @@ widget_scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
     <BuildActionEntries>
       <BuildActionEntry buildForTesting="NO" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
       </BuildActionEntry>
       <BuildActionEntry buildForTesting="NO" buildForRunning="YES" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">
-        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelperIOS.app" BlueprintName="SchoolHelperIOS" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["app_target"]}" BuildableName="SchoolHelper.app" BlueprintName="SchoolHelper" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
       </BuildActionEntry>
     </BuildActionEntries>
   </BuildAction>
   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"/>
   <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES">
     <BuildableProductRunnable runnableDebuggingMode="0">
-      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
     </BuildableProductRunnable>
     <EnvironmentVariables>
       <EnvironmentVariable key="_XCWidgetKind" value="SchoolHelperWidget" isEnabled="YES"/>
@@ -343,7 +343,7 @@ widget_scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
   </LaunchAction>
   <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES">
     <BuildableProductRunnable runnableDebuggingMode="0">
-      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelperIOS.xcodeproj"/>
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ids["widget_target"]}" BuildableName="SchoolHelperWidget.appex" BlueprintName="SchoolHelperWidget" ReferencedContainer="container:SchoolHelper.xcodeproj"/>
     </BuildableProductRunnable>
   </ProfileAction>
   <AnalyzeAction buildConfiguration="Debug"/>

@@ -309,7 +309,7 @@
                         android:textSize="42sp"
                         android:textStyle="bold" />
 
-                    <com.bsbarron.midschoolapp.widget.TimerRingView
+                    <com.lbs.schoolhelper.widget.TimerRingView
                         android:id="@+id/timerRingView"
                         android:layout_width="220dp"
                         android:layout_height="220dp"

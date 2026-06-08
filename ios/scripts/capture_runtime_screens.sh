@@ -2,12 +2,12 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
-PROJECT_PATH="$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj"
+PROJECT_PATH="$ROOT_DIR/ios/SchoolHelper.xcodeproj"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/misschool-ios-run}"
 OUTPUT_DIR="${OUTPUT_DIR:-/tmp/misschool-ios-captures}"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 SCHEME="${SCHEME:-SchoolHelperIOS}"
-BUNDLE_ID="${BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
+BUNDLE_ID="${BUNDLE_ID:-com.lbs.shcoolhelper}"
 SIMULATOR_NAME="${SIMULATOR_NAME:-iPhone 16 Pro}"
 SIMULATOR_OS="${SIMULATOR_OS:-18.3.1}"
 
@@ -15,7 +15,7 @@ export DEVELOPER_DIR
 
 mkdir -p "$OUTPUT_DIR"
 
-APP_PATH="$DERIVED_DATA_PATH/Build/Products/Debug-iphonesimulator/SchoolHelperIOS.app"
+APP_PATH="$DERIVED_DATA_PATH/Build/Products/Debug-iphonesimulator/SchoolHelper.app"
 DEVICE_ID="$(
   python3 - "$SIMULATOR_NAME" <<'PY'
 import re

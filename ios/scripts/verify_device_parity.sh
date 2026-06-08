@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj}"
+PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelper.xcodeproj}"
 SCHEME="${SCHEME:-SchoolHelperIOS}"
-BUNDLE_ID="${BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
+BUNDLE_ID="${BUNDLE_ID:-com.lbs.shcoolhelper}"
 DEVICE_ID="${DEVICE_ID:-}"
 INSTALL="${INSTALL:-0}"
 TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"

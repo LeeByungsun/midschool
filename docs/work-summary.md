@@ -152,6 +152,70 @@
   - `.omx/context/android-notices-implementation-20260522T021700Z.md`
   - `.omx/reports/team-commit-hygiene/android-notices-discovery-andr.md`
 
+
+### 2026-06-08 · 멀티플랫폼 미비점/TODO 정리
+
+#### 10) Web / Android / iOS 현재 미비점과 추가 할 일 정리
+- 목표
+  - 세 플랫폼의 현재 완료 상태, 남은 미비점, 추가 작업을 한 문서에서 볼 수 있게 정리하는 것
+- 요약
+  - `docs/platform-gap-todo.md`를 추가해 Web, Android, iOS별 구현 상태와 후속 작업을 정리했다.
+  - Web은 접근성, 반응형, PWA, 알림 fallback, 가정통신문 provider coverage를 주요 후속 작업으로 정리했다.
+  - Android는 production 가정통신문 실기기 검증, SSO 학교 조사, lint warning cleanup, release 전 smoke test를 주요 후속 작업으로 정리했다.
+  - iOS는 readiness audit 기준 complete이나, local-only evidence 의존성과 오래된 문서 상태 문구 갱신이 남은 작업임을 분리했다.
+- 검증 메모
+  - `cd web && npm run lint && npm run typecheck && npm test` 통과, 테스트 48개 통과
+  - `cd android && ./gradlew testDebugUnitTest lintDebug` 통과, lint warning 62개 확인
+  - `ios/scripts/audit_ios_goal_readiness.py` complete 반환 확인
+- 상태
+  - 문서화 완료
+- 근거 문서
+  - `docs/platform-gap-todo.md`
+
+
+### 2026-06-08 · 필요 기능 백로그 정리
+
+#### 11) 프로젝트 전체 필요 기능 리스트업
+- 목표
+  - 현재 구현 상태 이후 필요한 기능을 Web, Android, iOS, 공통 도메인 관점에서 우선순위별로 정리하는 것
+- 요약
+  - `docs/feature-backlog.md`를 추가해 P0~P3 백로그를 정리했다.
+  - 사용자 앱 중심 후속 기능으로 재정리했다.
+  - Android production notices와 학교 선택 저장/복원 검증, Web 접근성/PWA/반응형/Node ESM 경고, Android lint warning, iOS 문서 정합성, 공통 fallback/domain 정렬을 후속 기능으로 포함했다.
+- 검증 메모
+  - 기존 `TODO.md`, `docs/project_specification.md`, `docs/platform-gap-todo.md`, 플랫폼 README/TODO 문서를 근거로 정리했다.
+  - 문서 readback과 diff 확인을 완료했다.
+  - read-only architect 검증에서 승인 verdict를 받았고, 지적된 경미한 누락도 문서에 반영했다.
+- 상태
+  - 문서화 완료
+- 근거 문서
+  - `docs/feature-backlog.md`
+
+
+### 2026-06-08 · Android/iOS 패키지 식별자 변경
+
+#### 12) Android applicationId와 iOS bundle id/App Group 변경
+- 목표
+  - Android 패키지명을 `com.lbs.schoolhelper`로, iOS bundle id 계열을 `com.lbs.shcoolhelper`로 변경하는 것
+- 요약
+  - Android `namespace` / `applicationId`와 Kotlin package/import 경로를 `com.lbs.schoolhelper`로 변경했다.
+  - Android main/test/androidTest 소스 디렉터리를 `com/lbs/schoolhelper`로 이동했다.
+  - iOS app/widget/test bundle id와 App Group 기본값을 `com.lbs.shcoolhelper` / `group.com.lbs.shcoolhelper` 계열로 변경했다.
+  - 누락됐던 `SchoolHelperWidget.entitlements`의 App Group 설정을 추가했다.
+  - 현재 구조 기준으로 `SchoolHelper.xcodeproj`, `SchoolHelper` source path, widget 검증 scripts, app 산출물 경로를 함께 갱신했다.
+- 검증 메모
+  - `cd android && ./gradlew clean testDebugUnitTest lintDebug` 통과
+  - `ios/scripts/verify_widget_app_group_readiness.sh` 통과
+  - `ios/scripts/verify_ios_local_readiness.sh` 통과
+  - 소스/설정 범위에서 이전 Android/iOS 식별자 참조가 남지 않았는지 grep으로 확인했다.
+- 상태
+  - 구현/검증 완료
+- 근거 문서
+  - `android/app/build.gradle.kts`
+  - `ios/SchoolHelper.xcodeproj/project.pbxproj`
+  - `ios/SchoolHelper/Core/Storage/AppStorageConfig.swift`
+  - `ios/SchoolHelperWidget/SchoolHelperWidget.entitlements`
+
 ## 참고 문서
 
 - `docs/project_specification.md`

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
-PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj}"
+PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelper.xcodeproj}"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 SCHEME="${SCHEME:-SchoolHelperIOS}"
 CONFIGURATION="${CONFIGURATION:-Debug}"
@@ -12,9 +12,9 @@ PROFILE_DIR="${PROFILE_DIR:-$HOME/Library/Developer/Xcode/UserData/Provisioning 
 PROFILE_BACKUP_DIR="${PROFILE_BACKUP_DIR:-$ROOT_DIR/ios/profile-backups.local/$(date +%Y%m%d-%H%M%S)}"
 APPLY="${APPLY:-0}"
 RUN_XCODE_REFRESH="${RUN_XCODE_REFRESH:-0}"
-APP_BUNDLE_ID="${APP_BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
-WIDGET_BUNDLE_ID="${WIDGET_BUNDLE_ID:-com.leebyungsun.schoolhelperios.widget}"
-APP_GROUP="${APP_GROUP:-group.com.leebyungsun.schoolhelperios}"
+APP_BUNDLE_ID="${APP_BUNDLE_ID:-com.lbs.shcoolhelper}"
+WIDGET_BUNDLE_ID="${WIDGET_BUNDLE_ID:-com.lbs.shcoolhelper.widget}"
+APP_GROUP="${APP_GROUP:-group.com.lbs.shcoolhelper}"
 
 export DEVELOPER_DIR
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-BUNDLE_ID="${BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
+BUNDLE_ID="${BUNDLE_ID:-com.lbs.shcoolhelper}"
 DEVICE_ID="${DEVICE_ID:-}"
 REMAINING_SECONDS="${REMAINING_SECONDS:-20}"
 PRESET="${PRESET:-shortBreak}"
@@ -23,7 +23,7 @@ resolve_device_id() {
   local destinations_file
   destinations_file="$(mktemp)"
   xcodebuild \
-    -project "$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj" \
+    -project "$ROOT_DIR/ios/SchoolHelper.xcodeproj" \
     -scheme SchoolHelperIOS \
     -showdestinations >"$destinations_file" 2>/dev/null || true
   python3 - "$destinations_file" <<'PY'

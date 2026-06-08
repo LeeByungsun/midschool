@@ -2,11 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
-PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelperIOS.xcodeproj}"
+PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/ios/SchoolHelper.xcodeproj}"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/misschool-ios-device}"
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 SCHEME="${SCHEME:-SchoolHelperIOS}"
-BUNDLE_ID="${BUNDLE_ID:-com.leebyungsun.schoolhelperios}"
+BUNDLE_ID="${BUNDLE_ID:-com.lbs.shcoolhelper}"
 CONFIGURATION="${CONFIGURATION:-Debug}"
 DEVICE_ID="${DEVICE_ID:-}"
 TEAM_ID="${TEAM_ID:-${DEVELOPMENT_TEAM:-}}"
@@ -100,7 +100,7 @@ case "$ENTITLEMENTS_MODE" in
     ;;
 esac
 
-APP_PATH="$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION-iphoneos/SchoolHelperIOS.app"
+APP_PATH="$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION-iphoneos/SchoolHelper.app"
 
 echo "Device: $DEVICE_ID"
 echo "Team: $TEAM_ID"
