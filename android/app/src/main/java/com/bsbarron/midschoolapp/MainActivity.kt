@@ -1,6 +1,8 @@
 package com.bsbarron.midschoolapp
 
 import android.Manifest
+import android.animation.ArgbEvaluator
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -28,6 +30,7 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private var timerCompletionAnimator: ValueAnimator? = null
     private val homeViewModel: HomeViewModel by viewModels()
     private val timerViewModel: TimerViewModel by viewModels()
 
@@ -57,6 +60,11 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         homeViewModel.loadHomeData()
         timerViewModel.refreshDisplayMode()
+    }
+
+    override fun onDestroy() {
+        stopTimerCompletionBlink()
+        super.onDestroy()
     }
 
     private fun bindClicks() {
@@ -155,8 +163,42 @@ class MainActivity : AppCompatActivity() {
                     binding.timerCountText.visibility = if (state.isCountMode) View.VISIBLE else View.GONE
                     binding.timerRingView.visibility = if (state.isCountMode) View.GONE else View.VISIBLE
                     updatePresetSelection(state.selectedPreset)
+                    updateTimerCompletionBlink(state.isCompleted)
                 }
             }
+        }
+    }
+
+    private fun updateTimerCompletionBlink(isCompleted: Boolean) {
+        if (!isCompleted) {
+            stopTimerCompletionBlink()
+            return
+        }
+
+        if (timerCompletionAnimator?.isStarted == true) return
+
+        val defaultColor = getColor(R.color.surface_card)
+        val alertColor = getColor(R.color.brand_yellow_soft)
+        timerCompletionAnimator = ValueAnimator.ofObject(
+            ArgbEvaluator(),
+            defaultColor,
+            alertColor
+        ).apply {
+            duration = 550L
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
+            addUpdateListener { animator ->
+                binding.timerCard.setCardBackgroundColor(animator.animatedValue as Int)
+            }
+            start()
+        }
+    }
+
+    private fun stopTimerCompletionBlink() {
+        timerCompletionAnimator?.cancel()
+        timerCompletionAnimator = null
+        if (::binding.isInitialized) {
+            binding.timerCard.setCardBackgroundColor(getColor(R.color.surface_card))
         }
     }
 

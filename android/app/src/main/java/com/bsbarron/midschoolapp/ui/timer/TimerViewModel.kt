@@ -42,6 +42,7 @@ class TimerViewModel @Inject constructor(
             subtitle = appContext.getString(preset.subtitleRes),
             buttonTextRes = R.string.home_timer_start,
             isRunning = false,
+            isCompleted = false,
             isCountMode = isCountMode(),
             progressFraction = 1f
         )
@@ -61,6 +62,7 @@ class TimerViewModel @Inject constructor(
                 displayTimeText = formatTimerText(it.totalMillis),
                 buttonTextRes = R.string.home_timer_start,
                 isRunning = false,
+                isCompleted = false,
                 progressFraction = 1f,
                 isCountMode = isCountMode()
             )
@@ -79,12 +81,24 @@ class TimerViewModel @Inject constructor(
 
     private fun startTimer() {
         val currentState = _uiState.value
-        val targetAtMillis = System.currentTimeMillis() + currentState.remainingMillis
+        val millisToRun = if (currentState.remainingMillis > 0L) {
+            currentState.remainingMillis
+        } else {
+            currentState.totalMillis
+        }
+        val targetAtMillis = System.currentTimeMillis() + millisToRun
+        _uiState.update {
+            it.copy(
+                remainingMillis = millisToRun,
+                displayTimeText = formatTimerText(millisToRun),
+                isCompleted = false
+            )
+        }
         saveTimerState(isRunning = true, targetAtMillis = targetAtMillis)
         TimerAlarmScheduler.schedule(appContext, targetAtMillis)
 
         countDownTimer?.cancel()
-        countDownTimer = object : CountDownTimer(currentState.remainingMillis, 1000L) {
+        countDownTimer = object : CountDownTimer(millisToRun, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
                 _uiState.update {
                     it.copy(
@@ -92,6 +106,7 @@ class TimerViewModel @Inject constructor(
                         displayTimeText = formatTimerText(millisUntilFinished),
                         buttonTextRes = R.string.home_timer_pause,
                         isRunning = true,
+                        isCompleted = false,
                         progressFraction = calculateProgress(millisUntilFinished, it.totalMillis)
                     )
                 }
@@ -106,19 +121,32 @@ class TimerViewModel @Inject constructor(
                         displayTimeText = formatTimerText(0L),
                         buttonTextRes = R.string.home_timer_restart,
                         isRunning = false,
+                        isCompleted = true,
                         progressFraction = 0f
                     )
                 }
             }
         }.start()
 
-        _uiState.update { it.copy(isRunning = true, buttonTextRes = R.string.home_timer_pause) }
+        _uiState.update {
+            it.copy(
+                isRunning = true,
+                isCompleted = false,
+                buttonTextRes = R.string.home_timer_pause
+            )
+        }
     }
 
     private fun pauseTimer() {
         countDownTimer?.cancel()
         TimerAlarmScheduler.cancel(appContext)
-        _uiState.update { it.copy(isRunning = false, buttonTextRes = R.string.home_timer_resume) }
+        _uiState.update {
+            it.copy(
+                isRunning = false,
+                isCompleted = false,
+                buttonTextRes = R.string.home_timer_resume
+            )
+        }
         saveTimerState(isRunning = false, targetAtMillis = 0L)
     }
 
@@ -144,6 +172,7 @@ class TimerViewModel @Inject constructor(
                 else -> R.string.home_timer_start
             },
             isRunning = false,
+            isCompleted = savedState.isRunning && remainingMillis == 0L,
             isCountMode = isCountMode(),
             progressFraction = calculateProgress(remainingMillis, savedState.totalMillis)
         )

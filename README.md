@@ -2,7 +2,7 @@
 
 학교도우미는 학생들이 자주 확인하는 정보를 한곳에서 쉽게 볼 수 있도록 돕는 멀티플랫폼 프로젝트입니다.
 
-현재 푸시 기준 저장소는 Android 앱과 Web 클라이언트를 함께 관리합니다.
+현재 푸시 기준 저장소는 Android 앱, iOS 앱/위젯, Web 클라이언트를 함께 관리합니다.
 
 ## 핵심 기능
 
@@ -18,9 +18,17 @@
 
 - Kotlin + XML + DataBinding + Hilt + MVVM 구조
 - NEIS 기반 시간표 / 급식 / 학사 일정 조회
-- 타이머 및 앱 위젯 기능 유지
-- 현재 Android는 학년/반만 저장하며, 학교 검색/선택과 동적 학교 코드 저장은 아직 미구현
+- 학교 검색/선택과 동적 학교 코드 저장
+- 타이머 완료 알림/진동, 완료 시 홈 타이머 카드 배경 깜박임
+- 오늘/내일 시간표 앱 위젯
 - `android/README.md`와 `docs/android-studio-setup.md` 기준으로 개발
+
+### iOS
+
+- SwiftUI + MVVM 기반 iPhone 앱
+- 학교 검색/설정, 홈, 시간표, 급식, 일정, 가정통신문, 타이머 화면
+- 타이머 완료 알림/진동, 완료 시 홈/상세 화면 배경 깜박임
+- WidgetKit 기반 작은/중간/큰 시간표 위젯
 
 ### Web
 
@@ -68,6 +76,12 @@ misSchoolApp/
 │   ├── android-school-selection-review.md
 │   ├── project-structure.md
 │   └── project_specification.md
+├── ios/
+│   ├── Package.swift
+│   ├── SchoolHelperIOS.xcodeproj/
+│   ├── SchoolHelperIOS/
+│   ├── SchoolHelperWidget/
+│   └── Tests/
 └── web/
     ├── AGENTS.md
     ├── README.md
@@ -116,6 +130,15 @@ cd android
 ./gradlew assembleDebug
 ```
 
+### iOS
+
+```bash
+cd ios
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOS \
+  -destination 'platform=iOS Simulator,name=iPhone 16' build
+```
+
 ### Web
 
 ```bash
@@ -141,6 +164,7 @@ npm run build
 - Android 앞으로 할 일: `docs/android-app-todo.md`
 - 현재 저장소 구조 문서: `docs/project-structure.md`
 - Android Studio 열기 안내: `docs/android-studio-setup.md`
+- iOS 전용 스펙: `docs/ios-project-specification.md`
 - 웹 전용 안내: `web/README.md`
 - Android 전용 안내: `android/README.md`
 

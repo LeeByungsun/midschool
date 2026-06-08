@@ -3,6 +3,7 @@ import SwiftUI
 struct TimerView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = TimerViewModel()
+    @State private var completionBlinkOn = false
     private let showsDismissButton: Bool
 
     init(showsDismissButton: Bool = false) {
@@ -52,6 +53,13 @@ struct TimerView: View {
                     }
                 }
             }
+            .padding(24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(timerCompletionBackground)
+            .animation(.easeInOut(duration: 0.35), value: completionBlinkOn)
+            .task(id: isTimerCompleted) {
+                await updateCompletionBlink()
+            }
             .navigationTitle("타이머")
             .navigationBarTitleDisplayMode(showsDismissButton ? .inline : .automatic)
             .toolbar {
@@ -66,6 +74,31 @@ struct TimerView: View {
             .task {
                 viewModel.refreshRunningState()
             }
+        }
+    }
+
+    private var isTimerCompleted: Bool {
+        !viewModel.state.isRunning && viewModel.state.remainingSeconds == 0
+    }
+
+    private var timerCompletionBackground: Color {
+        if isTimerCompleted && completionBlinkOn {
+            return Color.orange.opacity(0.22)
+        }
+        return Color(.systemBackground)
+    }
+
+    private func updateCompletionBlink() async {
+        guard isTimerCompleted else {
+            completionBlinkOn = false
+            return
+        }
+
+        completionBlinkOn = true
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 550_000_000)
+            if Task.isCancelled { break }
+            completionBlinkOn.toggle()
         }
     }
 

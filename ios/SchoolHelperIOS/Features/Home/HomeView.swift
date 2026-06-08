@@ -5,6 +5,7 @@ struct HomeView: View {
     @Environment(\.openURL) private var openURL
     @StateObject private var viewModel = HomeViewModel()
     @StateObject private var timerViewModel = TimerViewModel()
+    @State private var completionBlinkOn = false
 
     var body: some View {
         NavigationStack {
@@ -53,6 +54,7 @@ struct HomeView: View {
                             }
                         }
                     }
+                    .listRowBackground(timerCompletionRowBackground)
                 }
 
                 Section("오늘 시간표") {
@@ -118,6 +120,9 @@ struct HomeView: View {
             .onAppear {
                 timerViewModel.refreshRunningState()
             }
+            .task(id: isTimerCompleted) {
+                await updateCompletionBlink()
+            }
         }
     }
 
@@ -156,6 +161,31 @@ struct HomeView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+
+    private var isTimerCompleted: Bool {
+        !timerViewModel.state.isRunning && timerViewModel.state.remainingSeconds == 0
+    }
+
+    private var timerCompletionRowBackground: Color {
+        if isTimerCompleted && completionBlinkOn {
+            return Color.orange.opacity(0.22)
+        }
+        return Color(.secondarySystemGroupedBackground)
+    }
+
+    private func updateCompletionBlink() async {
+        guard isTimerCompleted else {
+            completionBlinkOn = false
+            return
+        }
+
+        completionBlinkOn = true
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 550_000_000)
+            if Task.isCancelled { break }
+            completionBlinkOn.toggle()
         }
     }
 

@@ -67,6 +67,30 @@ class TimerViewModelTest {
         assertEquals(remainingBeforePause, pausedState.remainingMillis)
     }
 
+
+    @Test
+    fun timerFinishMarksCompletionForVisualBlink() {
+        val repository = FakePreferencesRepository(
+            timerState = TimerPreferenceState(
+                presetName = TimerPreset.FOCUS.name,
+                totalMillis = 2_000L,
+                remainingMillis = 2_000L,
+                targetAtMillis = 0L,
+                isRunning = false
+            )
+        )
+        val viewModel = TimerViewModel(application, repository)
+
+        viewModel.toggleTimer()
+        invokeOnFinish(viewModel)
+
+        val finishedState = viewModel.uiState.value
+        assertEquals(0L, finishedState.remainingMillis)
+        assertEquals(false, finishedState.isRunning)
+        assertTrue(finishedState.isCompleted)
+        assertEquals(com.bsbarron.midschoolapp.R.string.home_timer_restart, finishedState.buttonTextRes)
+    }
+
     private fun invokeOnTick(viewModel: TimerViewModel, millisUntilFinished: Long) {
         val timerField = TimerViewModel::class.java.getDeclaredField("countDownTimer")
         timerField.isAccessible = true
@@ -74,5 +98,14 @@ class TimerViewModelTest {
         val onTick = timer.javaClass.getDeclaredMethod("onTick", Long::class.javaPrimitiveType)
         onTick.isAccessible = true
         onTick.invoke(timer, millisUntilFinished)
+    }
+
+    private fun invokeOnFinish(viewModel: TimerViewModel) {
+        val timerField = TimerViewModel::class.java.getDeclaredField("countDownTimer")
+        timerField.isAccessible = true
+        val timer = timerField.get(viewModel) ?: error("countDownTimer missing")
+        val onFinish = timer.javaClass.getDeclaredMethod("onFinish")
+        onFinish.isAccessible = true
+        onFinish.invoke(timer)
     }
 }

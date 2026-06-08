@@ -23,10 +23,11 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 - 스터디 타이머
 - 가정통신문 미리보기
 
-후속 목표:
+최근 반영된 확장:
 
 - 알림 권한/완료 알림
 - 위젯/홈 화면 확장
+- 타이머 종료 시 홈/상세 화면 배경 깜박임
 
 ---
 
@@ -67,6 +68,7 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 - 상태 복구 가능한 저장 구조
 - 실행 중 countdown 갱신
 - 타이머 완료 알림 예약/취소
+- 타이머 종료 시 홈 타이머 영역과 상세 화면 배경 깜박임
 
 ### 2.7 Settings
 - 학교 재검색/재선택
@@ -87,7 +89,7 @@ iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사�
 ### 2.9 Widget foundation
 - 앱/위젯 shared suite 저장소
 - 오늘/내일 시간표 snapshot 로더
-- 타이머 요약 snapshot
+- 작은/중간/큰 위젯 크기별 오늘/내일 시간표 표시
 - `SchoolHelperWidget` WidgetKit source/target scaffold
 - app group entitlement scaffold
 - 위젯용 `내일 시간표 표시` 설정 저장
@@ -160,13 +162,13 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 - 실제 `SchoolHelperWidget` WidgetKit target/scaffold를 포함함
 - SwiftPM 코어 테스트는 Repository/ViewModel/Widget snapshot/Notification coordination까지 확장함
 - 가정통신문 BFF 호출과 홈 카드 포맷을 Android와 맞춤
+- 홈 화면 위젯 실제 배치와 위젯 탭 후 시간표 진입을 실기기에서 확인함
+- 실기기 타이머 완료 알림/진동 수신을 확인함
+- full App Group 실기기 빌드와 위젯 데이터 공유를 확인함
 
 남은 검증:
 
-- 홈 화면 위젯 실제 배치/탭 동작
-- 시스템 딥링크 확인 다이얼로그 이후 최종 전환
-- 실기기 알림/권한 UX
-- full App Group 실기기 빌드: widget provisioning profile에 App Group entitlement 반영 필요
+- 시스템 딥링크 확인 다이얼로그 이후 최종 전환 케이스 추가 확인
 
 최근 검증:
 

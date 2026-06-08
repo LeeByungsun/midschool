@@ -10,6 +10,7 @@ data class TimerUiState(
     val subtitle: String = "",
     val buttonTextRes: Int = R.string.home_timer_start,
     val isRunning: Boolean = false,
+    val isCompleted: Boolean = false,
     val isCountMode: Boolean = true,
     val progressFraction: Float = 1f
 )
