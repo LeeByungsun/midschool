@@ -20,13 +20,16 @@ struct HomeWidgetSnapshotView: View {
     }
 
     private var compactBody: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            header
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                header
 
-            Text(snapshot.schoolLabel)
-                .font(.caption.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
+                Text(compactSchoolLabel(from: snapshot.schoolLabel))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.74)
+            }
 
             if let tomorrow = snapshot.tomorrowTimetable {
                 compactTwoDayTimetableGrid(
@@ -121,31 +124,31 @@ struct HomeWidgetSnapshotView: View {
         let todaySubjects = timetableSubjectMap(from: todayText)
         let tomorrowSubjects = timetableSubjectMap(from: tomorrowText)
 
-        return VStack(alignment: .leading, spacing: 1) {
-            HStack(spacing: 4) {
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 3) {
                 Text("")
-                    .frame(width: 13)
+                    .frame(width: 11)
                 compactGridHeader("오늘")
                 compactGridHeader("내일")
             }
 
             ForEach(1...7, id: \.self) { period in
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text("\(period)")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
-                        .frame(width: 13, alignment: .trailing)
+                        .frame(width: 11, alignment: .trailing)
 
                     compactGridSubject(todaySubjects[period])
                     compactGridSubject(tomorrowSubjects[period])
                 }
             }
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 3)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func compactGridHeader(_ title: String) -> some View {
@@ -158,10 +161,10 @@ struct HomeWidgetSnapshotView: View {
 
     private func compactGridSubject(_ subject: String?) -> some View {
         Text(compactSubjectLabel(subject))
-            .font(.caption2.weight(.semibold))
+            .font(.caption.weight(.semibold))
             .foregroundStyle(subject == nil ? .secondary : .primary)
             .lineLimit(1)
-            .minimumScaleFactor(0.7)
+            .minimumScaleFactor(0.68)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -191,6 +194,15 @@ struct HomeWidgetSnapshotView: View {
 
     private func compactSplitIndex(for lines: [String]) -> Int {
         max(1, Int(ceil(Double(lines.count) / 2.0)))
+    }
+
+    private func compactSchoolLabel(from label: String) -> String {
+        label
+            .replacingOccurrences(of: "중학교", with: "중")
+            .replacingOccurrences(of: "초등학교", with: "초")
+            .replacingOccurrences(of: "고등학교", with: "고")
+            .replacingOccurrences(of: "학년", with: "-")
+            .replacingOccurrences(of: "반", with: "")
     }
 
     private func timetableSubjectMap(from text: String) -> [Int: String] {

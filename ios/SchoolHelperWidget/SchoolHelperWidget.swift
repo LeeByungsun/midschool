@@ -57,7 +57,7 @@ struct SchoolHelperWidgetEntryView: View {
 
     var body: some View {
         HomeWidgetSnapshotView(snapshot: entry.snapshot, mode: viewMode)
-            .padding(family == .systemMedium ? 12 : 14)
+            .padding(family == .systemMedium ? 8 : 14)
             .containerBackground(for: .widget) {
                 Color(.secondarySystemBackground)
             }
