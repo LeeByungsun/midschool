@@ -3,6 +3,7 @@ package com.bsbarron.midschoolapp.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.view.View
@@ -20,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.atomic.AtomicInteger
 
 class MisSchoolWidgetProvider : AppWidgetProvider() {
 
@@ -28,32 +30,81 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
-        }
+        WidgetMidnightScheduler.scheduleNext(context)
+        updateWidgets(context, appWidgetManager, appWidgetIds)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
         val appWidgetManager = AppWidgetManager.getInstance(context)
         when (intent.action) {
+            AppWidgetManager.ACTION_APPWIDGET_UPDATE -> {
+                WidgetMidnightScheduler.scheduleNext(context)
+                val pendingResult = goAsync()
+                updateWidgets(
+                    context = context,
+                    appWidgetManager = appWidgetManager,
+                    appWidgetIds = appWidgetIdsFromIntent(context, appWidgetManager, intent),
+                    onComplete = pendingResult::finish
+                )
+            }
+
             ACTION_REFRESH -> {
                 val appWidgetId = intent.getIntExtra(
                     AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID
                 )
+                val pendingResult = goAsync()
                 if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                    updateAppWidget(
+                        context = context,
+                        appWidgetManager = appWidgetManager,
+                        appWidgetId = appWidgetId,
+                        onComplete = pendingResult::finish
+                    )
+                } else {
+                    pendingResult.finish()
                 }
+            }
+
+            WidgetMidnightScheduler.ACTION_MIDNIGHT_REFRESH -> {
+                val pendingResult = goAsync()
+                updateAllWidgets(
+                    context = context,
+                    appWidgetManager = appWidgetManager,
+                    onComplete = {
+                        WidgetMidnightScheduler.scheduleNext(context)
+                        pendingResult.finish()
+                    }
+                )
             }
 
             Intent.ACTION_DATE_CHANGED,
             Intent.ACTION_TIME_CHANGED,
             Intent.ACTION_TIMEZONE_CHANGED,
             Intent.ACTION_BOOT_COMPLETED -> {
-                updateAllWidgets(context, appWidgetManager)
+                WidgetMidnightScheduler.scheduleNext(context)
+                val pendingResult = goAsync()
+                updateAllWidgets(
+                    context = context,
+                    appWidgetManager = appWidgetManager,
+                    onComplete = pendingResult::finish
+                )
+            }
+
+            else -> {
+                super.onReceive(context, intent)
             }
         }
+    }
+
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        WidgetMidnightScheduler.scheduleNext(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        WidgetMidnightScheduler.cancel(context)
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
@@ -68,6 +119,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         private const val OPEN_APP_REQUEST_CODE_OFFSET = 20_000
 
         fun requestWidgetUpdate(context: Context, appWidgetId: Int) {
+            WidgetMidnightScheduler.scheduleNext(context)
             val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
                 action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
@@ -75,22 +127,47 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             context.sendBroadcast(intent)
         }
 
-        fun updateAllWidgets(context: Context, appWidgetManager: AppWidgetManager) {
-            val componentName = android.content.ComponentName(context, MisSchoolWidgetProvider::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            if (appWidgetIds.isNotEmpty()) {
-                val dependencies = dependencies(context)
-                val schoolRepository = dependencies.schoolRepository()
-                val preferencesRepository = dependencies.preferencesRepository()
-                appWidgetIds.forEach { appWidgetId ->
-                    updateAppWidget(
-                        context = context,
-                        appWidgetManager = appWidgetManager,
-                        appWidgetId = appWidgetId,
-                        schoolRepository = schoolRepository,
-                        preferencesRepository = preferencesRepository
-                    )
-                }
+        fun updateAllWidgets(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            onComplete: (() -> Unit)? = null
+        ) {
+            updateWidgets(
+                context = context,
+                appWidgetManager = appWidgetManager,
+                appWidgetIds = appWidgetManager.getAppWidgetIds(widgetComponentName(context)),
+                onComplete = onComplete
+            )
+        }
+
+        private fun updateWidgets(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetIds: IntArray,
+            onComplete: (() -> Unit)? = null
+        ) {
+            if (appWidgetIds.isEmpty()) {
+                onComplete?.invoke()
+                return
+            }
+
+            val dependencies = dependencies(context)
+            val schoolRepository = dependencies.schoolRepository()
+            val preferencesRepository = dependencies.preferencesRepository()
+            val remainingUpdates = AtomicInteger(appWidgetIds.size)
+            appWidgetIds.forEach { appWidgetId ->
+                updateAppWidget(
+                    context = context,
+                    appWidgetManager = appWidgetManager,
+                    appWidgetId = appWidgetId,
+                    schoolRepository = schoolRepository,
+                    preferencesRepository = preferencesRepository,
+                    onComplete = {
+                        if (remainingUpdates.decrementAndGet() == 0) {
+                            onComplete?.invoke()
+                        }
+                    }
+                )
             }
         }
 
@@ -99,7 +176,8 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
             schoolRepository: SchoolRepository = dependencies(context).schoolRepository(),
-            preferencesRepository: PreferencesRepository = dependencies(context).preferencesRepository()
+            preferencesRepository: PreferencesRepository = dependencies(context).preferencesRepository(),
+            onComplete: (() -> Unit)? = null
         ) {
             fun createBaseViews(): RemoteViews {
                 return RemoteViews(context.packageName, R.layout.widget_home).apply {
@@ -221,6 +299,8 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                         e.message ?: context.getString(R.string.widget_retry_hint)
                     )
                     appWidgetManager.updateAppWidget(appWidgetId, errViews)
+                } finally {
+                    onComplete?.invoke()
                 }
             }
         }
@@ -255,6 +335,20 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                 context.applicationContext,
                 WidgetProviderEntryPoint::class.java
             )
+        }
+
+        private fun appWidgetIdsFromIntent(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            intent: Intent
+        ): IntArray {
+            return intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+                ?.takeIf { it.isNotEmpty() }
+                ?: appWidgetManager.getAppWidgetIds(widgetComponentName(context))
+        }
+
+        private fun widgetComponentName(context: Context): ComponentName {
+            return ComponentName(context, MisSchoolWidgetProvider::class.java)
         }
     }
 }
