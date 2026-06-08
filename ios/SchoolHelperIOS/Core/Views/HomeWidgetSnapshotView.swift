@@ -32,7 +32,14 @@ struct HomeWidgetSnapshotView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
-            smallTodayTimetableGrid(text: snapshot.todayTimetable)
+            if let tomorrow = snapshot.tomorrowTimetable {
+                smallTwoDayTimetableGrid(
+                    todayText: snapshot.todayTimetable,
+                    tomorrowText: tomorrow
+                )
+            } else {
+                smallTodayTimetableGrid(text: snapshot.todayTimetable)
+            }
 
             Spacer(minLength: 0)
         }
@@ -172,6 +179,51 @@ struct HomeWidgetSnapshotView: View {
                 }
             }
         }
+    }
+
+    private func smallTwoDayTimetableGrid(todayText: String, tomorrowText: String) -> some View {
+        let todaySubjects = timetableSubjectMap(from: todayText)
+        let tomorrowSubjects = timetableSubjectMap(from: tomorrowText)
+
+        return VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 2) {
+                Text("")
+                    .frame(width: 9)
+                smallGridHeader("오늘")
+                smallGridHeader("내일")
+            }
+
+            ForEach(1...7, id: \.self) { period in
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("\(period)")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .frame(width: 9, alignment: .trailing)
+
+                    smallGridSubject(todaySubjects[period])
+                    smallGridSubject(tomorrowSubjects[period])
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    private func smallGridHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func smallGridSubject(_ subject: String?) -> some View {
+        Text(compactSubjectLabel(subject))
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(subject == nil ? .secondary : .primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.62)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func compactTwoDayTimetableGrid(todayText: String, tomorrowText: String) -> some View {
