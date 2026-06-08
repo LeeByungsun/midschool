@@ -20,7 +20,7 @@ struct HomeWidgetSnapshotView: View {
     }
 
     private var compactBody: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 3) {
             header
 
             Text(snapshot.schoolLabel)
@@ -29,10 +29,10 @@ struct HomeWidgetSnapshotView: View {
                 .minimumScaleFactor(0.78)
 
             if let tomorrow = snapshot.tomorrowTimetable {
-                HStack(alignment: .top, spacing: 6) {
-                    compactDayCard(title: "오늘", text: snapshot.todayTimetable)
-                    compactDayCard(title: "내일", text: tomorrow)
-                }
+                compactTwoDayTimetableGrid(
+                    todayText: snapshot.todayTimetable,
+                    tomorrowText: tomorrow
+                )
             } else {
                 compactTimetableBlock(
                     title: "오늘",
@@ -93,37 +93,6 @@ struct HomeWidgetSnapshotView: View {
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
-    private func compactDayCard(title: String, text: String) -> some View {
-        let lines = timetableLines(from: text)
-        let visibleLines = Array(lines.prefix(3))
-        let remainingCount = max(0, lines.count - visibleLines.count)
-
-        return VStack(alignment: .leading, spacing: 3) {
-            Text(title)
-                .font(.caption2.weight(.bold))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-
-            ForEach(Array(visibleLines.enumerated()), id: \.offset) { _, line in
-                Text(line)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.74)
-            }
-
-            if remainingCount > 0 {
-                Text("외 \(remainingCount)개")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-        }
-        .padding(6)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-    }
-
     private func compactTimetableBlock(title: String, text: String) -> some View {
         let lines = timetableLines(from: text)
         let splitIndex = compactSplitIndex(for: lines)
@@ -158,6 +127,54 @@ struct HomeWidgetSnapshotView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private func compactTwoDayTimetableGrid(todayText: String, tomorrowText: String) -> some View {
+        let todaySubjects = timetableSubjectMap(from: todayText)
+        let tomorrowSubjects = timetableSubjectMap(from: tomorrowText)
+
+        return VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 4) {
+                Text("")
+                    .frame(width: 13)
+                compactGridHeader("오늘")
+                compactGridHeader("내일")
+            }
+
+            ForEach(1...7, id: \.self) { period in
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("\(period)")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .frame(width: 13, alignment: .trailing)
+
+                    compactGridSubject(todaySubjects[period])
+                    compactGridSubject(tomorrowSubjects[period])
+                }
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 5)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func compactGridHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func compactGridSubject(_ subject: String?) -> some View {
+        Text(compactSubjectLabel(subject))
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(subject == nil ? .secondary : .primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func timetableBlock(title: String, text: String, lineLimit: Int?, compact: Bool) -> some View {
         VStack(alignment: .leading, spacing: compact ? 3 : 5) {
             Text(title)
@@ -184,5 +201,47 @@ struct HomeWidgetSnapshotView: View {
 
     private func compactSplitIndex(for lines: [String]) -> Int {
         max(1, Int(ceil(Double(lines.count) / 2.0)))
+    }
+
+    private func timetableSubjectMap(from text: String) -> [Int: String] {
+        Dictionary(
+            timetableLines(from: text).compactMap { line in
+                guard let lesson = parseTimetableLine(line) else { return nil }
+                return (lesson.period, lesson.subject)
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+    }
+
+    private func parseTimetableLine(_ line: String) -> (period: Int, subject: String)? {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let range = trimmed.range(of: "교시") else { return nil }
+
+        let periodText = trimmed[..<range.lowerBound]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let subject = trimmed[range.upperBound...]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let period = Int(periodText), !subject.isEmpty else { return nil }
+        return (period, subject)
+    }
+
+    private func compactSubjectLabel(_ subject: String?) -> String {
+        guard let subject = subject?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !subject.isEmpty
+        else {
+            return "—"
+        }
+
+        let normalized = subject
+            .replacingOccurrences(of: "(창)", with: "")
+            .replacingOccurrences(of: "활동", with: "")
+
+        if normalized.contains("창의적체험") { return "창체" }
+        if normalized.contains("동아리") { return "동아리" }
+        if normalized.contains("현장체험") { return "체험" }
+        if normalized.contains("스포츠") { return "스포츠" }
+
+        return normalized.count > 4 ? String(normalized.prefix(4)) : normalized
     }
 }

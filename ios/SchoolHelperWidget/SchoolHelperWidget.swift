@@ -27,8 +27,8 @@ struct SchoolHelperWidgetProvider: AppIntentTimelineProvider {
                 headerDate: "📅 5월 26일 (화)",
                 schoolLabel: "미사중학교 1학년 2반",
                 timerSummary: "집중 • 25:00",
-                todayTimetable: "1교시 국어\n2교시 수학\n3교시 영어\n4교시 과학\n5교시 도덕\n6교시 체육",
-                tomorrowTimetable: "1교시 미술\n2교시 사회\n3교시 국어\n4교시 과학\n5교시 동아리\n6교시 도덕",
+                todayTimetable: "1교시 국어\n2교시 수학\n3교시 영어\n4교시 과학\n5교시 도덕\n6교시 체육\n7교시 창체",
+                tomorrowTimetable: "1교시 미술\n2교시 사회\n3교시 국어\n4교시 과학\n5교시 동아리\n6교시 도덕\n7교시 체육",
                 requiresSetup: false
             )
         )
