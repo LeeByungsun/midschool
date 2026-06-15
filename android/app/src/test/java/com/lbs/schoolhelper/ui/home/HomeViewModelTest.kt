@@ -1,7 +1,7 @@
 package com.lbs.schoolhelper.ui.home
 
 import com.lbs.schoolhelper.MainActivity
-import com.lbs.schoolhelper.MisSchoolApplication
+import com.lbs.schoolhelper.SchoolHelperApplication
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.model.HomeContentStatus
 import com.lbs.schoolhelper.data.model.MealInfo
@@ -30,7 +30,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = MisSchoolApplication::class, sdk = [34])
+@Config(application = SchoolHelperApplication::class, sdk = [34])
 class HomeViewModelTest {
 
     @Test

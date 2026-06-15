@@ -1,7 +1,7 @@
 package com.lbs.schoolhelper.util
 
 import android.content.Intent
-import com.lbs.schoolhelper.MisSchoolApplication
+import com.lbs.schoolhelper.SchoolHelperApplication
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = MisSchoolApplication::class, sdk = [34])
+@Config(application = SchoolHelperApplication::class, sdk = [34])
 class ExternalUrlOpenerTest {
     @Test
     fun buildIntent_createsBrowsableViewIntent() {

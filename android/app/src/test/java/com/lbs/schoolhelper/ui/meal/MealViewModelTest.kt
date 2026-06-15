@@ -1,7 +1,7 @@
 package com.lbs.schoolhelper.ui.meal
 
 import com.lbs.schoolhelper.MainActivity
-import com.lbs.schoolhelper.MisSchoolApplication
+import com.lbs.schoolhelper.SchoolHelperApplication
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.model.MealInfo
 import com.lbs.schoolhelper.data.repository.StudentInfo
@@ -26,7 +26,7 @@ import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = MisSchoolApplication::class, sdk = [34])
+@Config(application = SchoolHelperApplication::class, sdk = [34])
 class MealViewModelTest {
 
     @Test

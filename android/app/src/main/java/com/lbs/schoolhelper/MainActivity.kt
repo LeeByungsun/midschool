@@ -12,8 +12,6 @@ import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -26,6 +24,7 @@ import com.lbs.schoolhelper.ui.timer.TimerViewModel
 import com.lbs.schoolhelper.util.ExternalUrlOpener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.lbs.schoolhelper.util.applySystemBarPadding
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -41,11 +40,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.lifecycleOwner = this
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        binding.main.applySystemBarPadding()
 
         bindClicks()
         bindHomeState()

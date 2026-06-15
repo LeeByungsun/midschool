@@ -2,22 +2,21 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-<ScrollView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/bg_page">
-
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="match_parent"
+        android:background="@color/bg_page"
         android:padding="24dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/timetableHeaderRow"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:layout_width="0dp"
@@ -40,12 +39,16 @@
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
+            android:id="@+id/timetableSummaryCard"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             app:cardBackgroundColor="@color/brand_blue_soft"
             app:cardCornerRadius="28dp"
             app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/timetableHeaderRow"
             app:strokeColor="@color/brand_blue_soft"
             app:strokeWidth="0dp">
 
@@ -88,11 +91,15 @@
         </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/timetableDayNavigationRow"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/timetableSummaryCard">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/previousDayButton"
@@ -139,44 +146,54 @@
             android:textColor="@color/brand_yellow_text"
             app:backgroundTint="@color/brand_yellow_soft"
             app:cornerRadius="18dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/timetableDayNavigationRow"
             app:strokeWidth="0dp" />
 
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:id="@+id/timetableListCard"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:layout_marginTop="16dp"
             app:cardBackgroundColor="@color/surface_card"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/todayButton"
             app:strokeColor="@color/divider_soft"
             app:strokeWidth="1dp">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_height="match_parent"
                 android:padding="20dp">
 
                 <TextView
                     android:id="@+id/timetableStatusText"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:lineSpacingExtra="2dp"
                     android:text="@string/timetable_loading"
                     android:textColor="@color/text_secondary"
                     android:textSize="15sp"
-                    android:lineSpacingExtra="2dp" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/timetableRecyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
                     android:layout_marginTop="10dp"
-                    android:nestedScrollingEnabled="false" />
-            </LinearLayout>
+                    android:clipToPadding="false"
+                    android:overScrollMode="ifContentScrolls"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/timetableStatusText" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
-
-    </LinearLayout>
-
-</ScrollView>
-
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

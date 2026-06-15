@@ -4,8 +4,6 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -13,6 +11,7 @@ import com.lbs.schoolhelper.databinding.ActivityScheduleBinding
 import com.lbs.schoolhelper.ui.schedule.ScheduleViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.lbs.schoolhelper.util.applySystemBarPadding
 
 @AndroidEntryPoint
 class ScheduleActivity : AppCompatActivity() {
@@ -26,18 +25,7 @@ class ScheduleActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.lifecycleOwner = this
 
-        val rootView = binding.root
-        val initialTopPadding = rootView.paddingTop
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(
-                view.paddingLeft,
-                initialTopPadding + systemBars.top,
-                view.paddingRight,
-                view.paddingBottom
-            )
-            insets
-        }
+        binding.root.applySystemBarPadding()
 
         binding.scheduleBackButton.setOnClickListener { finish() }
         binding.previousMonthButton.setOnClickListener { viewModel.showPreviousMonth() }

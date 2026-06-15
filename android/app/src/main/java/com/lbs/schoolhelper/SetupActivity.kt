@@ -18,6 +18,7 @@ import com.lbs.schoolhelper.ui.setup.SetupUiState
 import com.lbs.schoolhelper.ui.setup.SetupViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.lbs.schoolhelper.util.applySystemBarPadding
 
 @AndroidEntryPoint
 class SetupActivity : AppCompatActivity() {
@@ -30,6 +31,7 @@ class SetupActivity : AppCompatActivity() {
         binding = ActivitySetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.lifecycleOwner = this
+        binding.root.applySystemBarPadding()
 
         bindClicks()
         bindState()

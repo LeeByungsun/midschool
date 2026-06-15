@@ -11,8 +11,6 @@ import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +21,7 @@ import com.lbs.schoolhelper.ui.settings.SettingsUiState
 import com.lbs.schoolhelper.ui.settings.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.lbs.schoolhelper.util.applySystemBarPadding
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
@@ -37,18 +36,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.lifecycleOwner = this
 
-        val rootView = binding.root
-        val initialTopPadding = rootView.paddingTop
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(
-                view.paddingLeft,
-                initialTopPadding + systemBars.top,
-                view.paddingRight,
-                view.paddingBottom
-            )
-            insets
-        }
+        binding.root.applySystemBarPadding()
 
         binding.backButton.setOnClickListener { finish() }
         binding.searchSchoolButton.setOnClickListener {

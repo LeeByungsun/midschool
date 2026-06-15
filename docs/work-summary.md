@@ -216,6 +216,45 @@
   - `ios/SchoolHelper/Core/Storage/AppStorageConfig.swift`
   - `ios/SchoolHelperWidget/SchoolHelperWidget.entitlements`
 
+
+### 2026-06-15 · Android 스크롤 화면 하단 inset 수정
+
+#### 13) 스크롤/목록 화면이 소프트키와 겹치는 레이아웃 오류 수정
+- 목표
+  - Android 전체 Activity 중 스크롤/목록 화면의 마지막 콘텐츠가 소프트 내비게이션 키 위에서 끝나게 만드는 것
+- 요약
+  - `ScrollView` 안에 `RecyclerView`를 `wrap_content`로 넣던 중첩 스크롤 구조를 제거했다.
+  - 시간표/급식 화면은 전체를 `ConstraintLayout`으로 바꾸고, 목록 카드는 남은 화면 높이를 차지하게 했다.
+  - 카드 내부 `RecyclerView`가 직접 스크롤하도록 `0dp` 제약 높이로 고정해 긴 목록이 잘리지 않게 했다.
+  - 급식 상세 화면에도 같은 구조 수정을 적용했다.
+  - `applySystemBarPadding()` 공통 유틸을 추가해 XML 기본 padding을 보존하면서 top/bottom system bar inset을 적용하게 했다.
+  - Main, Setup, Settings, Schedule, WidgetConfig, Meal, Timetable Activity에 하단 inset 처리를 적용했다.
+  - ScrollView 기반 화면은 `clipToPadding=false`와 `fillViewport=true`를 명시해 마지막 콘텐츠가 하단 inset 위까지 스크롤되게 했다.
+  - 패키지명 변경 후 테스트에 남아 있던 `MisSchoolApplication` 참조를 `SchoolHelperApplication`으로 정리했다.
+- 검증 메모
+  - `cd android && ./gradlew testDebugUnitTest --tests com.lbs.schoolhelper.MainActivityNavigationTest --tests com.lbs.schoolhelper.ui.home.HomeViewModelTest --tests com.lbs.schoolhelper.ui.meal.MealViewModelTest --tests com.lbs.schoolhelper.util.ExternalUrlOpenerTest` 통과
+  - `cd android && ./gradlew testDebugUnitTest --tests com.lbs.schoolhelper.ui.meal.MealViewModelTest --tests com.lbs.schoolhelper.MainActivityNavigationTest` 통과
+  - `enableEdgeToEdge` Activity와 `applySystemBarPadding` 적용 범위를 grep으로 확인
+  - ScrollView/NestedScrollView 및 목록 화면의 하단 padding/clip 설정 grep 확인
+  - `cd android && ./gradlew testDebugUnitTest` 통과
+  - `cd android && ./gradlew lintDebug` 통과
+  - `adb devices`는 현재 환경에 `adb`가 없어 실기기/에뮬레이터 스모크 미실행
+- 상태
+  - 구현/검증 완료
+- 근거 문서
+  - `android/app/src/main/java/com/lbs/schoolhelper/util/SystemBarInsets.kt`
+  - `android/app/src/main/res/layout/activity_timetable.xml`
+  - `android/app/src/main/res/layout/activity_meal.xml`
+  - `android/app/src/main/res/layout/activity_schedule.xml`
+  - `android/app/src/main/res/layout/activity_settings.xml`
+  - `android/app/src/main/res/layout/activity_setup.xml`
+  - `android/app/src/main/res/layout/activity_widget_config.xml`
+  - `docs/project_specification.md`
+  - `android/app/src/test/java/com/lbs/schoolhelper/MainActivityNavigationTest.kt`
+  - `android/app/src/test/java/com/lbs/schoolhelper/ui/home/HomeViewModelTest.kt`
+  - `android/app/src/test/java/com/lbs/schoolhelper/ui/meal/MealViewModelTest.kt`
+  - `android/app/src/test/java/com/lbs/schoolhelper/util/ExternalUrlOpenerTest.kt`
+
 ## 참고 문서
 
 - `docs/project_specification.md`

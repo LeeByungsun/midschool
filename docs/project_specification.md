@@ -131,6 +131,7 @@
   - 숫자형 타이머와 `TimerRingView` 커스텀 링 뷰 지원
   - 타이머 종료 시 홈 타이머 카드 배경을 깜박여 무음/무진동 상황에서도 완료 상태를 전달
   - Activity + XML 레이아웃 기반 화면 구성
+  - edge-to-edge Activity는 XML 기본 padding을 보존한 상태에서 system bar inset을 반영해 스크롤/목록 화면의 마지막 콘텐츠가 소프트 내비게이션 키 위에서 끝나도록 구성
 
 - **Android 가정통신문 preview**
   - 홈 대시보드에 최근 가정통신문 preview card를 둡니다.
