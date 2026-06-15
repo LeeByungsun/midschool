@@ -19,6 +19,7 @@ import com.lbs.schoolhelper.data.remote.dto.NoticeSummaryDto
 import com.lbs.schoolhelper.data.remote.dto.ScheduleRowDto
 import com.lbs.schoolhelper.data.remote.dto.SchoolInfoRowDto
 import com.lbs.schoolhelper.data.remote.dto.TimetableRowDto
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -114,6 +115,58 @@ class SchoolRepositoryImplTest {
         assertEquals("나이스 인증키를 다시 확인해 주세요.", result.exceptionOrNull()?.message)
         assertTrue(result.exceptionOrNull() is NeisApiException)
         assertNull(preferencesRepository.savedMealCacheArgs)
+    }
+
+    @Test
+    fun `observeMeals emits cached meals first and then changed network meals`() = runBlocking {
+        val cachedMeals = listOf(
+            MealInfo(
+                date = "20260519",
+                mealType = "중식",
+                menu = "캐시 메뉴",
+                calorieInfo = "600kcal"
+            )
+        )
+        val networkMeals = listOf(
+            MealInfo(
+                date = "20260519",
+                mealType = "중식",
+                menu = "최신 메뉴",
+                calorieInfo = "700kcal"
+            )
+        )
+        val apiService = FakeNeisApiService().apply {
+            mealsResponse = successResponse(
+                listOf(
+                    MealRowDto(
+                        mealDate = "20260519",
+                        mealTypeName = "중식",
+                        menu = "최신 메뉴",
+                        calorieInfo = "700kcal"
+                    )
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        ).apply {
+            mealCache[MealCacheKey("J10", "1234567", "20260519")] = cachedMeals
+        }
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+
+        val emissions = repository.observeMeals("20260519").toList()
+
+        assertEquals(2, emissions.size)
+        assertEquals(cachedMeals, emissions[0].getOrThrow())
+        assertEquals(networkMeals, emissions[1].getOrThrow())
+        assertEquals(networkMeals, preferencesRepository.savedMealCacheArgs?.meals)
     }
 
     @Test
@@ -241,6 +294,43 @@ class SchoolRepositoryImplTest {
 
         assertTrue(result.isSuccess)
         assertEquals(emptyList<SchoolEvent>(), result.getOrThrow())
+    }
+
+    @Test
+    fun `observeSchedules emits cached schedule first and skips identical network schedule`() = runBlocking {
+        val cachedEvents = listOf(
+            SchoolEvent(date = "20260519", title = "체육대회", description = "운동장")
+        )
+        val apiService = FakeNeisApiService().apply {
+            schedulesResponse = successResponse(
+                listOf(
+                    ScheduleRowDto(
+                        date = "20260519",
+                        title = "체육대회",
+                        description = "운동장"
+                    )
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        ).apply {
+            scheduleCache[ScheduleCacheKey("J10", "1234567", "202605")] = cachedEvents
+        }
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+
+        val emissions = repository.observeSchedules("202605").toList()
+
+        assertEquals(1, emissions.size)
+        assertEquals(cachedEvents, emissions[0].getOrThrow())
+        assertEquals(cachedEvents, preferencesRepository.savedScheduleCacheEvents)
     }
 
     @Test
@@ -394,7 +484,7 @@ class SchoolRepositoryImplTest {
     }
 
     @Test
-    fun `getTimetable keeps cached timetable when network returns empty rows`() = runBlocking {
+    fun `getTimetable replaces cached timetable when network returns empty rows`() = runBlocking {
         val apiService = FakeNeisApiService().apply {
             middleTimetableResponse = successResponse(emptyList())
         }
@@ -424,8 +514,63 @@ class SchoolRepositoryImplTest {
         val result = repository.getTimetable("3", "2", "20260519")
 
         assertTrue(result.isSuccess)
-        assertEquals(cachedItems, result.getOrThrow())
-        assertNull(preferencesRepository.savedTimetableCacheArgs)
+        assertEquals(emptyList<TimetableItem>(), result.getOrThrow())
+        assertEquals(emptyList<TimetableItem>(), preferencesRepository.savedTimetableCacheArgs?.items)
+    }
+
+    @Test
+    fun `observeTimetable emits cached timetable first and then changed network timetable`() = runBlocking {
+        val cachedItems = listOf(
+            TimetableItem(
+                date = "20260519",
+                period = "1",
+                subject = "과학",
+                grade = "3",
+                classroom = "2"
+            )
+        )
+        val networkItems = listOf(
+            TimetableItem(
+                date = "20260519",
+                period = "1",
+                subject = "영어",
+                grade = "3",
+                classroom = "2"
+            )
+        )
+        val apiService = FakeNeisApiService().apply {
+            middleTimetableResponse = successResponse(
+                listOf(
+                    TimetableRowDto(
+                        date = "20260519",
+                        period = "1",
+                        subject = "영어",
+                        grade = "3",
+                        classroom = "2"
+                    )
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "3",
+                classroom = "2",
+                schoolName = "미사중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        ).apply {
+            timetableCache[TimetableCacheKey("J10", "1234567", "3", "2", "20260519")] = cachedItems
+        }
+        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+
+        val emissions = repository.observeTimetable("3", "2", "20260519").toList()
+
+        assertEquals(2, emissions.size)
+        assertEquals(cachedItems, emissions[0].getOrThrow())
+        assertEquals(networkItems, emissions[1].getOrThrow())
+        assertEquals(networkItems, preferencesRepository.savedTimetableCacheArgs?.items)
     }
 
     @Test
@@ -703,6 +848,7 @@ class SchoolRepositoryImplTest {
         var savedMealCacheArgs: MealCacheArgs? = null
         var savedScheduleCacheEvents: List<SchoolEvent>? = null
         var savedTimetableCacheArgs: TimetableCacheArgs? = null
+        val mealCache = mutableMapOf<MealCacheKey, List<MealInfo>>()
         val scheduleCache = mutableMapOf<ScheduleCacheKey, List<SchoolEvent>>()
         val timetableCache = mutableMapOf<TimetableCacheKey, List<TimetableItem>>()
 
@@ -747,13 +893,14 @@ class SchoolRepositoryImplTest {
             meals: List<MealInfo>
         ) {
             savedMealCacheArgs = MealCacheArgs(officeCode, schoolCode, date, meals)
+            mealCache[MealCacheKey(officeCode, schoolCode, date)] = meals
         }
 
         override fun getMealCache(
             officeCode: String,
             schoolCode: String,
             date: String
-        ): List<MealInfo>? = null
+        ): List<MealInfo>? = mealCache[MealCacheKey(officeCode, schoolCode, date)]
 
         override fun saveScheduleCache(
             officeCode: String,
@@ -807,6 +954,12 @@ class SchoolRepositoryImplTest {
         val schoolCode: String,
         val date: String,
         val meals: List<MealInfo>
+    )
+
+    private data class MealCacheKey(
+        val officeCode: String,
+        val schoolCode: String,
+        val date: String
     )
 
     private data class ScheduleCacheKey(

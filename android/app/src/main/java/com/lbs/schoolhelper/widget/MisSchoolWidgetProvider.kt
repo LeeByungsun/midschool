@@ -18,7 +18,11 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicInteger
@@ -269,24 +273,42 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     val tomorrow = today.plusDays(1)
                     val tomorrowStr = tomorrow.format(DateTimeFormatter.BASIC_ISO_DATE)
 
-                    val timetableResultToday = schoolRepository.getTimetable(grade, classroom, todayStr)
-                    val timetableResultTomorrow = schoolRepository.getTimetable(grade, classroom, tomorrowStr)
+                    var timetableTextToday = context.getString(R.string.widget_loading)
+                    var timetableTextTomorrow = context.getString(R.string.widget_loading)
+                    val publishMutex = Mutex()
 
-                    val timetableTextToday = formatTimetableText(
-                        result = timetableResultToday,
-                        context = context
-                    )
-                    val timetableTextTomorrow = formatTimetableText(
-                        result = timetableResultTomorrow,
-                        context = context
-                    )
-
-                    val finalViews = createBaseViews()
-                    finalViews.setTextViewText(R.id.widgetTimetableText, timetableTextToday)
-                    if (widgetSettings.showTomorrowTimetable) {
-                        finalViews.setTextViewText(R.id.widgetTomorrowTimetableText, timetableTextTomorrow)
+                    suspend fun publishTimetableTexts() {
+                        publishMutex.withLock {
+                            val finalViews = createBaseViews()
+                            finalViews.setTextViewText(R.id.widgetTimetableText, timetableTextToday)
+                            if (widgetSettings.showTomorrowTimetable) {
+                                finalViews.setTextViewText(R.id.widgetTomorrowTimetableText, timetableTextTomorrow)
+                            }
+                            appWidgetManager.updateAppWidget(appWidgetId, finalViews)
+                        }
                     }
-                    appWidgetManager.updateAppWidget(appWidgetId, finalViews)
+
+                    coroutineScope {
+                        val jobs = mutableListOf(
+                            launch {
+                                schoolRepository.observeTimetable(grade, classroom, todayStr).collect { result ->
+                                    timetableTextToday = formatTimetableText(result = result, context = context)
+                                    publishTimetableTexts()
+                                }
+                            }
+                        )
+
+                        if (widgetSettings.showTomorrowTimetable) {
+                            jobs += launch {
+                                schoolRepository.observeTimetable(grade, classroom, tomorrowStr).collect { result ->
+                                    timetableTextTomorrow = formatTimetableText(result = result, context = context)
+                                    publishTimetableTexts()
+                                }
+                            }
+                        }
+
+                        jobs.joinAll()
+                    }
 
                 } catch (e: Exception) {
                     val errViews = createBaseViews()

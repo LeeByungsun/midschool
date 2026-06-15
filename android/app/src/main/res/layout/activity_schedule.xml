@@ -48,16 +48,19 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/previousMonthButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/brand_blue_soft"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="@string/schedule_previous_month"
                 android:textColor="@color/brand_navy"
-                android:textStyle="bold" />
+                app:backgroundTint="@color/brand_blue_soft"
+                app:cornerRadius="18dp"
+                app:icon="@drawable/ic_back_simple"
+                app:iconTint="@color/brand_navy"
+                app:strokeWidth="0dp" />
 
             <TextView
                 android:id="@+id/scheduleMonthTitleText"
@@ -71,16 +74,19 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/nextMonthButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/brand_blue_soft"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="@string/schedule_next_month"
                 android:textColor="@color/brand_navy"
-                android:textStyle="bold" />
+                app:backgroundTint="@color/brand_blue_soft"
+                app:cornerRadius="18dp"
+                app:iconGravity="textEnd"
+                app:iconPadding="6dp"
+                app:strokeWidth="0dp" />
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView

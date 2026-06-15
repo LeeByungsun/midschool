@@ -8,6 +8,10 @@ struct SchoolHelperIOSApp: App {
     private let timerSettingsStore = TimerSettingsStore()
     private let timerNotificationScheduler = TimerNotificationScheduler()
 
+    init() {
+        FirebaseCrashReporting.configureIfAvailable()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootTabView()

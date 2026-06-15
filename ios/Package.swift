@@ -19,6 +19,7 @@ let package = Package(
             exclude: [
                 "App/RootTabView.swift",
                 "App/SchoolHelperIOSApp.swift",
+                "App/FirebaseCrashReporting.swift",
                 "Info.plist",
                 "SchoolHelperIOS.entitlements",
                 "Features/Home/HomeView.swift",

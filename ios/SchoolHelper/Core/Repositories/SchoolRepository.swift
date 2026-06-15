@@ -115,8 +115,8 @@ struct MockSchoolRepository: SchoolRepository {
 
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] {
         Array([
-            NoticePreview(id: "1", title: "현장학습 안내", date: "2026-05-26", author: "교무실", url: "https://example.com/notices/1"),
-            NoticePreview(id: "2", title: "학부모 공지", date: "2026-05-25", author: "행정실", url: "https://example.com/notices/2")
+            NoticePreview(id: "1", title: "현장학습 안내", date: "2026-05-26", author: "교무실", url: "https://example.com/notices/1", sourceUrl: "https://example.com/notices"),
+            NoticePreview(id: "2", title: "학부모 공지", date: "2026-05-25", author: "행정실", url: "https://example.com/notices/2", sourceUrl: "https://example.com/notices")
         ].prefix(limit))
     }
 }

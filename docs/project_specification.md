@@ -72,7 +72,7 @@
 - **오류 대응 기본 원칙**
   - 네트워크 오류, 응답 없음, 데이터 없음, 사용자 설정 누락을 구분해서 보여줄 것
   - 마지막 성공 데이터가 있으면 가능한 범위에서 재사용할 것
-  - 웹에서는 시간표/급식/학사 일정의 로컬 캐시를 먼저 표시한 뒤 최신 요청을 수행하고, 응답 데이터가 다를 때만 화면을 갱신해야 함
+  - Android와 웹에서는 시간표/급식/학사 일정의 로컬 캐시를 먼저 표시한 뒤 최신 요청을 수행하고, 응답 데이터가 다를 때만 화면을 갱신해야 함
   - 최신 요청 실패 시 마지막 성공 데이터를 fallback으로 표시할 수 있어야 함
 
 ### 2.3 공통 도메인/아키텍처 원칙
@@ -97,8 +97,10 @@
 
 - **스플래시 화면 (`SplashActivity`)**
   - 앱 진입 시 초기 데이터 세팅 및 권한 체크 담당
+  - 초기 판단이 지연될 때 사용자가 대기 상태를 인지할 수 있도록 로딩 인디케이터를 표시
 - **초기 설정 (`SetupActivity`)**
   - 학교 검색/선택 및 학교/학년/반 설정 완료
+  - 학교 검색 실행 시 키보드를 숨기고, 학년/반 입력 키보드 액션은 다음 입력/완료 저장 흐름으로 연결
 - **설정 (`SettingsActivity`)**
   - 현재 구현은 학년/반, 타이머 관련 상세 옵션 관리 중심
   - 학교 검색/변경 기능으로 조회 기준 학교를 업데이트 가능
@@ -112,6 +114,9 @@
   - 날짜 이동형 일간 시간표 조회
 - **학사 일정 화면 (`ScheduleActivity`)**
   - 월간 일정 목록 확인
+- **타이머 상세 화면 (`TimerActivity`)**
+  - 메인 대시보드의 `타이머 전체 보기` 버튼 탭 시 진입
+  - 홈 타이머와 같은 프리셋/시작/일시정지/초기화 흐름 및 완료 깜박임 UX를 제공
 
 ### 3.2 Android 전용 UX/기능
 
@@ -137,9 +142,16 @@
   - 홈 대시보드에 최근 가정통신문 preview card를 둡니다.
   - 카드 위치는 학사 일정 아래, 타이머 위를 기본으로 유지합니다.
   - 학교 미설정 상태에서는 Setup 유도 문구를 보여 주고, 최근 notice URL이 있을 때만 외부 링크 열기 버튼을 활성화합니다.
+  - 가정통신문 열기 동작은 최신 글 상세 URL보다 게시판 목록 URL(`sourceUrl`)을 우선 열어 사용자가 전체 목록을 볼 수 있게 합니다.
   - phase 1에서는 별도 상세 화면보다 preview + 외부 링크 열기 흐름을 우선합니다.
 
 ### 3.3 Android 기술 스택
+
+- **Firebase Crashlytics**
+  - Android 앱은 Firebase BoM 기반 `firebase-crashlytics`와 `firebase-analytics` SDK를 포함합니다.
+  - `android/app/google-services.json`이 존재하면 Google Services Gradle Plugin과 Crashlytics Gradle Plugin을 적용해 런타임 초기화 및 릴리즈 심볼/매핑 업로드 흐름을 활성화합니다.
+  - Firebase 설정 파일이 없는 로컬 환경에서는 빌드가 깨지지 않도록 SDK 의존성만 유지하고 플러그인 적용은 건너뜁니다.
+
 
 - **언어/런타임**: Kotlin, Android SDK
 - **최소/대상 SDK**: minSdk 26, targetSdk 36
@@ -163,11 +175,14 @@
   - 급식 12시간
   - 시간표 24시간
   - 학사 일정 12시간
-- Android는 최신 요청이 실패했을 때 **같은 조회 키의 신선한 캐시가 남아 있으면 재사용**하고, 신선한 캐시가 없으면 Repository 오류를 그대로 전달합니다.
+- Android는 급식/시간표/학사 일정 조회 시 `SchoolRepository.observe*` Flow로 **로컬 캐시를 먼저 emit**하고, 이후 NEIS 최신 요청을 수행해 결과가 다를 때만 두 번째 상태를 emit합니다.
+- Android 홈, 주간 급식, 시간표, 학사 일정 화면은 이 로컬 우선 Flow를 수집해 기존 데이터를 즉시 보여 주고, 최신 응답이 바뀐 경우에만 화면을 갱신합니다.
+- Android는 최신 요청이 실패했을 때 **같은 조회 키의 신선한 캐시가 남아 있으면 기존 화면을 유지**하고, 신선한 캐시가 없으면 Repository 오류를 그대로 전달합니다.
 - 학사 일정은 `PreferencesRepositoryImpl`이 월 단위(`yyyyMM`) `SchoolEvent` 목록을 `SharedPreferences`에 직렬화해 저장하며, **빈 월 결과도 유효한 캐시**로 유지해 네트워크 실패 시 같은 월의 "일정 없음" 상태를 안정적으로 복구합니다.
 - 가정통신문 조회용 Android 원격 경계는 `NoticeApiService` 와 `SchoolRepository.getNotices()` 로 분리합니다.
 - Android build config 의 `WEB_BASE_URL` 은 로컬 설정이 없을 때도 production(`https://midschool.vercel.app/`) 을 기본값으로 사용합니다.
 - Android notices 응답은 web notices 계약의 `items` / `message` 를 우선 소비하며, web 쪽은 machine-readable `status` / `errorCode` 보강을 포함해 Android 소비 안정성을 높입니다.
+- Android/iOS 홈의 가정통신문 CTA는 각 item의 `sourceUrl`을 목록 URL로 우선 사용하고, 누락 시 상세 `url`로 fallback합니다.
 
 ---
 
@@ -304,6 +319,13 @@
   - 스레드 안전성을 위해 메인 스레드에서 권한 요청 얼럿이 동작하도록 설계.
 
 ### 5.3 iOS 기술 스택
+
+- **iOS Firebase Crashlytics**
+  - 앱 타깃은 Swift Package Manager로 `FirebaseCore`와 `FirebaseCrashlytics`를 연결합니다.
+  - `ios/SchoolHelper/Resources/GoogleService-Info.plist`가 있을 때만 `FirebaseApp.configure()`를 실행합니다.
+  - Xcode 빌드에서는 Firebase 설정 파일이 있으면 앱 번들로 복사하고, Crashlytics dSYM 업로드 Run Script를 실행합니다.
+  - Firebase 설정 파일이 없는 로컬 환경에서는 Firebase 초기화를 건너뜁니다.
+
 
 - **언어/런타임**: Swift 5.9 이상, SwiftUI
 - **최소 지원 버전**: iOS 16 이상

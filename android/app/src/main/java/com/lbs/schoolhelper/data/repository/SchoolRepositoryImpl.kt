@@ -17,6 +17,8 @@ import com.lbs.schoolhelper.data.remote.dto.NeisSection
 import com.lbs.schoolhelper.data.remote.dto.TimetableRowDto
 import java.io.IOException
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 
 class SchoolRepositoryImpl @Inject constructor(
@@ -62,26 +64,7 @@ class SchoolRepositoryImpl @Inject constructor(
     override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
         val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
         val cacheKey = date
-        val networkResult = runCatching {
-            val response = apiService.getMeals(
-                officeCode = studentInfo.officeCode,
-                schoolCode = studentInfo.schoolCode,
-                date = date
-            )
-            extractRows(
-                rootResult = response.result,
-                sections = response.mealServiceDietInfo,
-                dataLabel = "급식"
-            )
-                .map { row ->
-                    MealInfo(
-                        date = row.mealDate,
-                        mealType = row.mealTypeName.orEmpty(),
-                        menu = row.menu.orEmpty(),
-                        calorieInfo = row.calorieInfo.orEmpty()
-                    )
-                }
-        }
+        val networkResult = runCatching { fetchMealsFromNetwork(studentInfo, date) }
 
         networkResult.getOrNull()?.let { meals ->
             if (!cacheKey.isNullOrBlank()) {
@@ -100,28 +83,43 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun observeMeals(date: String?): Flow<Result<List<MealInfo>>> = flow {
+        val studentInfo = selectedStudentInfo().getOrElse {
+            emit(Result.failure(it))
+            return@flow
+        }
+        val cachedMeals = date?.let {
+            preferencesRepository.getMealCache(studentInfo.officeCode, studentInfo.schoolCode, it)
+        }
+
+        if (cachedMeals != null) {
+            emit(Result.success(cachedMeals))
+        }
+
+        val networkResult = runCatching { fetchMealsFromNetwork(studentInfo, date) }
+        val networkMeals = networkResult.getOrNull()
+
+        if (networkMeals != null) {
+            if (!date.isNullOrBlank()) {
+                preferencesRepository.saveMealCache(
+                    studentInfo.officeCode,
+                    studentInfo.schoolCode,
+                    date,
+                    networkMeals
+                )
+            }
+            if (cachedMeals != networkMeals) {
+                emit(Result.success(networkMeals))
+            }
+        } else if (cachedMeals == null) {
+            emit(Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("급식 정보를 불러오지 못했어요.")))
+        }
+    }
+
     override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
         val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
         val cacheKey = date
-        val networkResult = runCatching {
-            val response = apiService.getSchedules(
-                officeCode = studentInfo.officeCode,
-                schoolCode = studentInfo.schoolCode,
-                date = date
-            )
-            extractRows(
-                rootResult = response.result,
-                sections = response.schoolSchedule,
-                dataLabel = "학사 일정"
-            )
-                .map { row ->
-                    SchoolEvent(
-                        date = row.date,
-                        title = row.title.orEmpty(),
-                        description = row.description.orEmpty()
-                    )
-                }
-        }
+        val networkResult = runCatching { fetchSchedulesFromNetwork(studentInfo, date) }
 
         networkResult.getOrNull()?.let { schedules ->
             if (!cacheKey.isNullOrBlank()) {
@@ -142,6 +140,39 @@ class SchoolRepositoryImpl @Inject constructor(
             Result.success(cachedSchedules)
         } else {
             Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("학사 일정을 불러오지 못했어요."))
+        }
+    }
+
+    override fun observeSchedules(date: String?): Flow<Result<List<SchoolEvent>>> = flow {
+        val studentInfo = selectedStudentInfo().getOrElse {
+            emit(Result.failure(it))
+            return@flow
+        }
+        val cachedSchedules = date?.let {
+            preferencesRepository.getScheduleCache(studentInfo.officeCode, studentInfo.schoolCode, it)
+        }
+
+        if (cachedSchedules != null) {
+            emit(Result.success(cachedSchedules))
+        }
+
+        val networkResult = runCatching { fetchSchedulesFromNetwork(studentInfo, date) }
+        val networkSchedules = networkResult.getOrNull()
+
+        if (networkSchedules != null) {
+            if (!date.isNullOrBlank()) {
+                preferencesRepository.saveScheduleCache(
+                    studentInfo.officeCode,
+                    studentInfo.schoolCode,
+                    date,
+                    networkSchedules
+                )
+            }
+            if (cachedSchedules != networkSchedules) {
+                emit(Result.success(networkSchedules))
+            }
+        } else if (cachedSchedules == null) {
+            emit(Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("학사 일정을 불러오지 못했어요.")))
         }
     }
 
@@ -184,61 +215,7 @@ class SchoolRepositoryImpl @Inject constructor(
     ): Result<List<TimetableItem>> {
         val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
         val cacheKey = date
-        val networkResult = runCatching {
-            val response: NeisResponse<TimetableRowDto> = when (studentInfo.schoolKind) {
-                ELEMENTARY_SCHOOL_KIND -> apiService.getElementaryTimetable(
-                    officeCode = studentInfo.officeCode,
-                    schoolCode = studentInfo.schoolCode,
-                    grade = grade,
-                    classroom = classroom,
-                    date = date
-                )
-
-                MIDDLE_SCHOOL_KIND -> apiService.getMiddleTimetable(
-                    officeCode = studentInfo.officeCode,
-                    schoolCode = studentInfo.schoolCode,
-                    grade = grade,
-                    classroom = classroom,
-                    date = date
-                )
-
-                HIGH_SCHOOL_KIND -> apiService.getHighTimetable(
-                    officeCode = studentInfo.officeCode,
-                    schoolCode = studentInfo.schoolCode,
-                    grade = grade,
-                    classroom = classroom,
-                    date = date
-                )
-
-                else -> apiService.getMiddleTimetable(
-                    officeCode = studentInfo.officeCode,
-                    schoolCode = studentInfo.schoolCode,
-                    grade = grade,
-                    classroom = classroom,
-                    date = date
-                )
-            }
-
-            extractRows(
-                rootResult = response.result,
-                sections = when (studentInfo.schoolKind) {
-                    ELEMENTARY_SCHOOL_KIND -> response.elsTimetable
-                    MIDDLE_SCHOOL_KIND -> response.misTimetable
-                    HIGH_SCHOOL_KIND -> response.hisTimetable
-                    else -> response.misTimetable
-                },
-                dataLabel = "시간표"
-            )
-                .map { row ->
-                    TimetableItem(
-                        date = row.date,
-                        period = row.period.orEmpty(),
-                        subject = row.subject.orEmpty(),
-                        grade = row.grade.orEmpty(),
-                        classroom = row.classroom.orEmpty()
-                    )
-                }
-        }
+        val networkResult = runCatching { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
 
         val cachedItems = cacheKey?.let {
             preferencesRepository.getTimetableCache(
@@ -251,24 +228,6 @@ class SchoolRepositoryImpl @Inject constructor(
         }
 
         networkResult.getOrNull()?.let { items ->
-            if (items.isNotEmpty()) {
-                if (!cacheKey.isNullOrBlank()) {
-                    preferencesRepository.saveTimetableCache(
-                        officeCode = studentInfo.officeCode,
-                        schoolCode = studentInfo.schoolCode,
-                        grade = grade,
-                        classroom = classroom,
-                        date = cacheKey,
-                        items = items
-                    )
-                }
-                return Result.success(items)
-            }
-
-            if (!cachedItems.isNullOrEmpty()) {
-                return Result.success(cachedItems)
-            }
-
             if (!cacheKey.isNullOrBlank()) {
                 preferencesRepository.saveTimetableCache(
                     officeCode = studentInfo.officeCode,
@@ -287,6 +246,159 @@ class SchoolRepositoryImpl @Inject constructor(
         } else {
             Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("시간표 정보를 불러오지 못했어요."))
         }
+    }
+
+    override fun observeTimetable(
+        grade: String,
+        classroom: String,
+        date: String?
+    ): Flow<Result<List<TimetableItem>>> = flow {
+        val studentInfo = selectedStudentInfo().getOrElse {
+            emit(Result.failure(it))
+            return@flow
+        }
+        val cachedItems = date?.let {
+            preferencesRepository.getTimetableCache(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                grade = grade,
+                classroom = classroom,
+                date = it
+            )
+        }
+
+        if (cachedItems != null) {
+            emit(Result.success(cachedItems))
+        }
+
+        val networkResult = runCatching { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
+        val networkItems = networkResult.getOrNull()
+
+        if (networkItems != null) {
+            if (!date.isNullOrBlank()) {
+                preferencesRepository.saveTimetableCache(
+                    officeCode = studentInfo.officeCode,
+                    schoolCode = studentInfo.schoolCode,
+                    grade = grade,
+                    classroom = classroom,
+                    date = date,
+                    items = networkItems
+                )
+            }
+            if (cachedItems != networkItems) {
+                emit(Result.success(networkItems))
+            }
+        } else if (cachedItems == null) {
+            emit(Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("시간표 정보를 불러오지 못했어요.")))
+        }
+    }
+
+    private suspend fun fetchMealsFromNetwork(
+        studentInfo: StudentInfo,
+        date: String?
+    ): List<MealInfo> {
+        val response = apiService.getMeals(
+            officeCode = studentInfo.officeCode,
+            schoolCode = studentInfo.schoolCode,
+            date = date
+        )
+        return extractRows(
+            rootResult = response.result,
+            sections = response.mealServiceDietInfo,
+            dataLabel = "급식"
+        )
+            .map { row ->
+                MealInfo(
+                    date = row.mealDate,
+                    mealType = row.mealTypeName.orEmpty(),
+                    menu = row.menu.orEmpty(),
+                    calorieInfo = row.calorieInfo.orEmpty()
+                )
+            }
+    }
+
+    private suspend fun fetchSchedulesFromNetwork(
+        studentInfo: StudentInfo,
+        date: String?
+    ): List<SchoolEvent> {
+        val response = apiService.getSchedules(
+            officeCode = studentInfo.officeCode,
+            schoolCode = studentInfo.schoolCode,
+            date = date
+        )
+        return extractRows(
+            rootResult = response.result,
+            sections = response.schoolSchedule,
+            dataLabel = "학사 일정"
+        )
+            .map { row ->
+                SchoolEvent(
+                    date = row.date,
+                    title = row.title.orEmpty(),
+                    description = row.description.orEmpty()
+                )
+            }
+    }
+
+    private suspend fun fetchTimetableFromNetwork(
+        studentInfo: StudentInfo,
+        grade: String,
+        classroom: String,
+        date: String?
+    ): List<TimetableItem> {
+        val response: NeisResponse<TimetableRowDto> = when (studentInfo.schoolKind) {
+            ELEMENTARY_SCHOOL_KIND -> apiService.getElementaryTimetable(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                grade = grade,
+                classroom = classroom,
+                date = date
+            )
+
+            MIDDLE_SCHOOL_KIND -> apiService.getMiddleTimetable(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                grade = grade,
+                classroom = classroom,
+                date = date
+            )
+
+            HIGH_SCHOOL_KIND -> apiService.getHighTimetable(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                grade = grade,
+                classroom = classroom,
+                date = date
+            )
+
+            else -> apiService.getMiddleTimetable(
+                officeCode = studentInfo.officeCode,
+                schoolCode = studentInfo.schoolCode,
+                grade = grade,
+                classroom = classroom,
+                date = date
+            )
+        }
+
+        return extractRows(
+            rootResult = response.result,
+            sections = when (studentInfo.schoolKind) {
+                ELEMENTARY_SCHOOL_KIND -> response.elsTimetable
+                MIDDLE_SCHOOL_KIND -> response.misTimetable
+                HIGH_SCHOOL_KIND -> response.hisTimetable
+                else -> response.misTimetable
+            },
+            dataLabel = "시간표"
+        )
+            .map { row ->
+                TimetableItem(
+                    date = row.date,
+                    period = row.period.orEmpty(),
+                    subject = row.subject.orEmpty(),
+                    grade = row.grade.orEmpty(),
+                    classroom = row.classroom.orEmpty()
+                )
+            }
     }
 
     private fun selectedStudentInfo(): Result<StudentInfo> {

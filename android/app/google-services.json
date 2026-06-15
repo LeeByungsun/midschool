@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "234700196853",
+    "project_id": "schoolhelper-3c115",
+    "storage_bucket": "schoolhelper-3c115.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234700196853:android:307353b6c0f6485db9aebc",
+        "android_client_info": {
+          "package_name": "com.lbs.schoolhelper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCl2mIRrC9G6DHxtNlru63AmtFZ91ZIsQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.ui.splash.SplashDestination
 import com.lbs.schoolhelper.ui.splash.SplashViewModel
 import dagger.hilt.android.AndroidEntryPoint

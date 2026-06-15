@@ -26,3 +26,9 @@ TODO.md
 !.codex/prompts/**
 ios/system-evidence.local.json
 ios/profile-backups.local/
+
+# Local editor/agent state
+.obsidian/
+.antigravitycli/
+*.xcuserdata/
+xcuserdata/

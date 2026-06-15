@@ -17,6 +17,12 @@ val localProperties = Properties().apply {
 
 val neisApiKey = localProperties.getProperty("NEIS_API_KEY", "")
 val webBaseUrl = localProperties.getProperty("WEB_BASE_URL", "https://midschool.vercel.app/")
+val googleServicesFile = file("google-services.json")
+
+if (googleServicesFile.exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
 
 android {
     namespace = "com.lbs.schoolhelper"
@@ -74,6 +80,9 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.gson)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

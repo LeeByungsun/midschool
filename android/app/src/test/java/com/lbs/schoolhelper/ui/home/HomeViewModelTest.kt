@@ -27,7 +27,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.Duration
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = SchoolHelperApplication::class, sdk = [34])
@@ -266,7 +268,7 @@ class HomeViewModelTest {
 
         viewModel.loadHomeData()
         val state = withTimeout(1_000L) {
-            viewModel.uiState.first { it.notices.latestNoticeUrl == "https://example.com/notices/1" }
+            viewModel.uiState.first { it.notices.latestNoticeUrl == "https://example.com/notices" }
         }
 
         assertEquals(
@@ -279,7 +281,7 @@ class HomeViewModelTest {
         assertEquals(application.getString(R.string.home_notice_open_button), state.notices.actionText)
         assertTrue(state.notices.actionEnabled)
         assertFalse(state.notices.requiresSetup)
-        assertEquals("https://example.com/notices/1", state.notices.latestNoticeUrl)
+        assertEquals("https://example.com/notices", state.notices.latestNoticeUrl)
         assertEquals(3, schoolRepository.lastNoticeLimit)
 
         val noticeActionDeferred = async(start = CoroutineStart.UNDISPATCHED) {
@@ -288,9 +290,70 @@ class HomeViewModelTest {
 
         viewModel.onNoticeActionClicked()
         assertEquals(
-            HomeNoticeAction.OpenUrl("https://example.com/notices/1"),
+            HomeNoticeAction.OpenUrl("https://example.com/notices"),
             noticeActionDeferred.await()
         )
+    }
+
+    @Test
+    fun loadHomeDataShowsCachedMealBeforeChangedNetworkMeal() = runBlocking {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val today = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "2",
+                schoolName = "구미중학교",
+                officeCode = "J10",
+                schoolCode = "1111111",
+                schoolKind = "중학교"
+            )
+        )
+        val schoolRepository = FakeSchoolRepository().apply {
+            mealFlowResultsByDate[today] = listOf(
+                Result.success(
+                    listOf(
+                        MealInfo(
+                            date = today,
+                            mealType = "점심",
+                            menu = "캐시밥",
+                            calorieInfo = "600 kcal"
+                        )
+                    )
+                ),
+                Result.success(
+                    listOf(
+                        MealInfo(
+                            date = today,
+                            mealType = "점심",
+                            menu = "최신밥",
+                            calorieInfo = "700 kcal"
+                        )
+                    )
+                )
+            )
+            mealFlowEmissionDelayMillisByDate[today] = 200L
+            scheduleFlowResultsByDate[today.take(6)] = listOf(Result.success(emptyList()))
+        }
+        val viewModel = HomeViewModel(application, schoolRepository, repository)
+
+        viewModel.loadHomeData()
+        val cachedState = withTimeout(1_000L) {
+            viewModel.uiState.first { it.mealSummary.contains("캐시밥") }
+        }
+
+        assertEquals(HomeContentStatus.SUCCESS, cachedState.mealStatus)
+        assertTrue(cachedState.mealSummary.contains("캐시밥"))
+        assertFalse(cachedState.mealSummary.contains("최신밥"))
+
+        shadowOf(android.os.Looper.getMainLooper()).idleFor(Duration.ofMillis(250))
+
+        val networkState = withTimeout(1_000L) {
+            viewModel.uiState.first { it.mealSummary.contains("최신밥") }
+        }
+
+        assertEquals(HomeContentStatus.SUCCESS, networkState.mealStatus)
+        assertTrue(networkState.mealSummary.contains("최신밥"))
     }
 
     @Test
@@ -411,7 +474,7 @@ class HomeViewModelTest {
 
         viewModel.loadHomeData()
         val successState = withTimeout(1_000L) {
-            viewModel.uiState.first { it.notices.latestNoticeUrl == "https://example.com/notices/1" }
+            viewModel.uiState.first { it.notices.latestNoticeUrl == "https://example.com/notices" }
         }
         assertEquals(
             application.getString(R.string.home_notice_preview_format, "2026-05-22", "가정통신문 1"),
@@ -492,6 +555,7 @@ class HomeViewModelTest {
             )
         )
         val noticeUrl = "https://example.com/notices/2"
+        val noticeListUrl = "https://example.com/notices"
         val configuredViewModel = HomeViewModel(
             application,
             FakeSchoolRepository(
@@ -504,7 +568,7 @@ class HomeViewModelTest {
                                 date = "2026-05-23",
                                 author = "학교",
                                 url = noticeUrl,
-                                sourceUrl = "https://example.com/notices"
+                                sourceUrl = noticeListUrl
                             )
                         )
                     )
@@ -514,12 +578,12 @@ class HomeViewModelTest {
         )
         configuredViewModel.loadHomeData()
         withTimeout(1_000L) {
-            configuredViewModel.uiState.first { it.notices.latestNoticeUrl == noticeUrl }
+            configuredViewModel.uiState.first { it.notices.latestNoticeUrl == noticeListUrl }
         }
         val urlEventDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { configuredViewModel.noticeActionEvent.first() }
         }
         configuredViewModel.onNoticeActionClicked()
-        assertEquals(HomeNoticeAction.OpenUrl(noticeUrl), urlEventDeferred.await())
+        assertEquals(HomeNoticeAction.OpenUrl(noticeListUrl), urlEventDeferred.await())
     }
 }

@@ -78,6 +78,73 @@ class MealViewModelTest {
     }
 
     @Test
+    fun loadWeekMealsShowsCachedMealBeforeChangedNetworkMeal() = runBlocking {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val weekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val weekDates = (0L..4L).map { offset ->
+            weekStart.plusDays(offset).format(DateTimeFormatter.BASIC_ISO_DATE)
+        }
+        val schoolRepository = FakeSchoolRepository().apply {
+            weekDates.forEach { date ->
+                mealFlowResultsByDate[date] = listOf(Result.success(emptyList()))
+            }
+            mealFlowResultsByDate[weekDates.first()] = listOf(
+                Result.success(
+                    listOf(
+                        MealInfo(
+                            date = weekDates.first(),
+                            mealType = "점심",
+                            menu = "캐시밥",
+                            calorieInfo = "600 kcal"
+                        )
+                    )
+                ),
+                Result.success(
+                    listOf(
+                        MealInfo(
+                            date = weekDates.first(),
+                            mealType = "점심",
+                            menu = "최신밥",
+                            calorieInfo = "700 kcal"
+                        )
+                    )
+                )
+            )
+            mealFlowEmissionDelayMillisByDate[weekDates.first()] = 200L
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "3",
+                schoolName = "구미중학교",
+                officeCode = "J10",
+                schoolCode = "1234567",
+                schoolKind = "중학교"
+            )
+        )
+
+        val viewModel = MealViewModel(application, schoolRepository, preferencesRepository)
+        val cachedState = withTimeout(1_000L) {
+            viewModel.uiState.first { state ->
+                state.items.firstOrNull()?.detailText?.contains("캐시밥") == true
+            }
+        }
+
+        assertTrue(cachedState.items.first().detailText.contains("캐시밥"))
+        assertTrue(!cachedState.items.first().detailText.contains("최신밥"))
+
+        shadowOf(android.os.Looper.getMainLooper()).idleFor(Duration.ofMillis(250))
+
+        val networkState = withTimeout(1_000L) {
+            viewModel.uiState.first { state ->
+                state.items.firstOrNull()?.detailText?.contains("최신밥") == true
+            }
+        }
+
+        assertTrue(networkState.items.first().detailText.contains("최신밥"))
+    }
+
+    @Test
     fun loadWeekMealsShowsMissingSchoolMessageWhenStudentInfoIsIncomplete() = runBlocking {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val schoolRepository = FakeSchoolRepository()

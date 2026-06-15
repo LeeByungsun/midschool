@@ -7,6 +7,7 @@ import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -25,6 +26,7 @@ class TimetableViewModel @Inject constructor(
 
     private val appContext = application.applicationContext
     private var currentDate: LocalDate = LocalDate.now()
+    private var loadJob: Job? = null
 
     private val _uiState = MutableStateFlow(TimetableUiState())
     val uiState = _uiState.asStateFlow()
@@ -49,6 +51,8 @@ class TimetableViewModel @Inject constructor(
     }
 
     private fun loadTimetable() {
+        loadJob?.cancel()
+
         val studentInfo = preferencesRepository.getStudentInfo()
         val grade = studentInfo.grade
         val classroom = studentInfo.classroom
@@ -77,39 +81,39 @@ class TimetableViewModel @Inject constructor(
 
         if (!hasRequiredInfo) return
 
-        viewModelScope.launch {
-            val result = schoolRepository.getTimetable(
+        loadJob = viewModelScope.launch {
+            schoolRepository.observeTimetable(
                 grade = grade,
                 classroom = classroom,
                 date = currentDate.format(DateTimeFormatter.BASIC_ISO_DATE)
-            )
-
-            val items = result.getOrDefault(emptyList())
-                .sortedWith(
-                    compareBy(
-                        { item -> item.period.toIntOrNull() ?: Int.MAX_VALUE },
-                        { item -> item.period }
-                    )
-                )
-
-            _uiState.update {
-                it.copy(
-                    lessonCountText = if (items.isEmpty()) {
-                        appContext.getString(R.string.timetable_lesson_count_empty)
-                    } else {
-                        appContext.resources.getQuantityString(
-                            R.plurals.timetable_lesson_count,
-                            items.size,
-                            items.size
+            ).collect { result ->
+                val items = result.getOrDefault(emptyList())
+                    .sortedWith(
+                        compareBy(
+                            { item -> item.period.toIntOrNull() ?: Int.MAX_VALUE },
+                            { item -> item.period }
                         )
-                    },
-                    statusText = when {
-                        result.isFailure -> appContext.getString(R.string.timetable_error)
-                        items.isEmpty() -> appContext.getString(R.string.timetable_empty)
-                        else -> ""
-                    },
-                    items = items
-                )
+                    )
+
+                _uiState.update {
+                    it.copy(
+                        lessonCountText = if (items.isEmpty()) {
+                            appContext.getString(R.string.timetable_lesson_count_empty)
+                        } else {
+                            appContext.resources.getQuantityString(
+                                R.plurals.timetable_lesson_count,
+                                items.size,
+                                items.size
+                            )
+                        },
+                        statusText = when {
+                            result.isFailure -> appContext.getString(R.string.timetable_error)
+                            items.isEmpty() -> appContext.getString(R.string.timetable_empty)
+                            else -> ""
+                        },
+                        items = items
+                    )
+                }
             }
         }
     }

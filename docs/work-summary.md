@@ -255,6 +255,146 @@
   - `android/app/src/test/java/com/lbs/schoolhelper/ui/meal/MealViewModelTest.kt`
   - `android/app/src/test/java/com/lbs/schoolhelper/util/ExternalUrlOpenerTest.kt`
 
+
+### 2026-06-15 · iOS/AOS 가정통신문 목록 열기 수정
+
+#### 14) 홈 가정통신문 CTA를 최신 상세 대신 목록으로 연결
+- 목표
+  - iOS와 Android 홈의 가정통신문 열기 버튼이 최신 글 상세가 아니라 학교 가정통신문 목록을 열게 만드는 것
+- 요약
+  - Android HomeViewModel이 `NoticePreview.sourceUrl`을 우선 사용하고, 비어 있으면 기존 상세 `url`로 fallback하도록 수정했다.
+  - Android 버튼 문구를 `가정통신문 목록 열기`로 변경했다.
+  - iOS `NoticePreview`에 `sourceUrl`을 추가하고 notices API 매핑에서 값을 전달하도록 수정했다.
+  - iOS HomeViewModel도 `sourceUrl` 우선, 상세 `url` fallback으로 목록 URL을 열게 변경했다.
+  - Android/iOS 테스트 fixture와 기대값을 목록 URL 기준으로 갱신했다.
+- 검증 메모
+  - `cd android && ./gradlew testDebugUnitTest --tests com.lbs.schoolhelper.ui.home.HomeViewModelTest --tests com.lbs.schoolhelper.MainActivityNavigationTest` 통과
+  - `cd android && ./gradlew lintDebug` 통과
+  - `cd android && ./gradlew testDebugUnitTest lintDebug`는 전체 단위 테스트 중 기존 캐시 관찰 흐름 관련 2개 테스트 timeout으로 실패했고, lint는 별도 실행으로 통과했다.
+  - `cd ios && swift build` 통과
+  - `cd ios && swift test`는 현재 CLI 환경에서 `XCTest` 모듈을 찾지 못해 실패했지만, 라이브러리 빌드는 통과했다.
+  - XcodeBuildMCP `list_schemes`는 현재 환경에서 `xcodebuild`를 찾지 못해 실행 불가했다.
+- 상태
+  - 구현/검증 완료
+- 근거 문서
+  - `android/app/src/main/java/com/lbs/schoolhelper/ui/home/HomeViewModel.kt`
+  - `android/app/src/main/res/values/strings.xml`
+  - `android/app/src/test/java/com/lbs/schoolhelper/ui/home/HomeViewModelTest.kt`
+  - `ios/SchoolHelper/Core/Models/NoticePreview.swift`
+  - `ios/SchoolHelper/Core/Networking/NEISClient.swift`
+  - `ios/SchoolHelper/Features/Home/HomeViewModel.swift`
+  - `ios/Tests/SchoolHelperIOSCoreTests/FeatureViewModelTests.swift`
+  - `docs/project_specification.md`
+
+
+### 2026-06-15 · Android 초기 설정 입력 UX와 스플래시 로딩 표시 개선
+
+#### 15) 학교 검색 키보드 닫기, 학년/반 완료 입력 반영, 스플래시 로딩 애니메이션 추가
+- 목표
+  - Android 초기 설정 화면에서 학교 검색 시 키보드를 숨기고, 학년/반 입력 후 키보드 완료 동작으로 저장 흐름이 정상 동작하게 만드는 것
+  - 최초 실행 스플래시 화면 대기 시간이 길어질 때 사용자에게 로딩 중임을 보여주는 것
+- 요약
+  - `SetupActivity`에 검색/저장 입력 처리 함수를 분리했다.
+  - 학교 검색 버튼과 키보드 검색 액션에서 키보드를 숨기고 현재 학교명 입력값을 ViewModel에 반영한 뒤 검색하도록 수정했다.
+  - 학년 입력은 키보드 다음 액션으로 반 입력칸에 포커스를 넘기고, 반 입력은 완료 액션으로 현재 학년/반 값을 반영한 뒤 저장을 시도하도록 수정했다.
+  - 초기 설정 XML에 `imeOptions`와 단일 라인 설정을 추가해 키보드 액션이 명확하게 표시되도록 했다.
+  - 스플래시 화면에 indeterminate `ProgressBar`와 로딩 문구를 추가했다.
+- 검증 메모
+  - `cd android && ./gradlew clean testDebugUnitTest --tests com.lbs.schoolhelper.ui.setup.SetupViewModelTest --tests com.lbs.schoolhelper.MainActivityNavigationTest` 통과
+  - `cd android && ./gradlew lintDebug` 통과
+- 상태
+  - 구현/검증 완료
+- 근거 문서
+  - `android/app/src/main/java/com/lbs/schoolhelper/SetupActivity.kt`
+  - `android/app/src/main/java/com/lbs/schoolhelper/SplashActivity.kt`
+  - `android/app/src/main/res/layout/activity_setup.xml`
+  - `android/app/src/main/res/layout/activity_splash.xml`
+  - `android/app/src/main/res/values/strings.xml`
+
+
+### 2026-06-15 · Android 학사일정 월 이동 버튼 스타일 통일
+
+#### 16) 학사일정 상세 이전/다음달 버튼을 Material 버튼으로 변경
+- 목표
+  - Android 학사일정 상세 화면의 `이전 달` / `다음 달` 버튼을 다른 이동 버튼과 같은 스타일로 통일하는 것
+- 요약
+  - 기존 `TextView` 기반 월 이동 컨트롤을 `MaterialButton`으로 교체했다.
+  - 시간표 이전/다음 이동 버튼과 동일한 soft blue 배경, 18dp corner, navy 텍스트 톤을 적용했다.
+  - 이전 달 버튼에는 기존 back 아이콘과 tint를 맞춰 적용했다.
+- 검증 메모
+  - `cd android && ./gradlew testDebugUnitTest --tests com.lbs.schoolhelper.ui.schedule.ScheduleViewModelTest --tests com.lbs.schoolhelper.MainActivityNavigationTest` 통과
+  - `cd android && ./gradlew lintDebug` 통과
+- 상태
+  - 구현/검증 완료
+- 근거 문서
+  - `android/app/src/main/res/layout/activity_schedule.xml`
+
+### 2026-06-15 · Android 타이머 상세 화면 복구
+
+#### 17) Android 홈 타이머에서 상세 화면 진입 재노출
+- 목표
+  - Android 홈 화면의 타이머 카드에서 타이머 상세 화면을 다시 열 수 있게 만드는 것
+  - iOS도 같은 상세 화면 누락이 있는지 확인하는 것
+- 요약
+  - Android에 `TimerActivity`와 `activity_timer.xml` 상세 화면을 추가했다.
+  - 홈 타이머 카드에 `타이머 전체 보기` 버튼을 추가하고 `TimerActivity`로 이동하도록 연결했다.
+  - 상세 화면은 기존 `TimerViewModel`, 프리셋 선택, 시작/일시정지/초기화, 링 표시, 완료 깜박임 UX를 재사용한다.
+  - iOS는 `HomeView`의 `NavigationLink`와 `RootTabView`의 sheet route가 이미 `TimerView`로 연결되어 있어 별도 수정이 필요 없음을 확인했다.
+- 검증 메모
+  - `cd android && ./gradlew testDebugUnitTest --tests com.lbs.schoolhelper.MainActivityNavigationTest` 통과
+  - `cd android && ./gradlew lintDebug` 통과
+- 상태
+  - 구현/검증 완료
+- 근거 문서
+  - `android/app/src/main/java/com/lbs/schoolhelper/TimerActivity.kt`
+  - `android/app/src/main/res/layout/activity_timer.xml`
+  - `android/app/src/main/java/com/lbs/schoolhelper/MainActivity.kt`
+  - `android/app/src/main/res/layout/activity_main.xml`
+  - `android/app/src/test/java/com/lbs/schoolhelper/MainActivityNavigationTest.kt`
+  - `ios/SchoolHelper/Features/Home/HomeView.swift`
+  - `ios/SchoolHelper/App/RootTabView.swift`
+
+
+### 2026-06-15 · Android/iOS Firebase Crashlytics 적용 준비
+
+#### 18) 양 플랫폼 Crashlytics SDK 및 빌드 설정 추가
+- 목표
+  - Android와 iOS 앱에 Firebase Crashlytics를 추가하는 것
+- 요약
+  - Android Gradle 버전 카탈로그에 Firebase BoM, Google Services Plugin, Crashlytics Plugin, Crashlytics/Analytics SDK를 추가했다.
+  - Android는 `android/app/google-services.json`이 있을 때만 Google Services/Crashlytics 플러그인을 적용해 로컬 빌드가 설정 파일 부재로 깨지지 않게 했다.
+  - iOS 앱 타깃에 SwiftPM `firebase-ios-sdk` 패키지의 `FirebaseCore`, `FirebaseCrashlytics` 제품을 연결했다.
+  - iOS 앱 시작 시 `GoogleService-Info.plist`가 번들에 있을 때만 Firebase를 초기화하는 `FirebaseCrashReporting`을 추가했다.
+  - iOS Xcode 프로젝트에 Firebase 설정 파일 복사 스크립트와 Crashlytics dSYM 업로드 스크립트를 추가했다.
+  - 양 플랫폼 Crashlytics 정적 설정을 점검하는 `scripts/check_firebase_crashlytics.sh`를 추가했다.
+  - 실제 Firebase 콘솔에서 받은 설정 파일은 아직 저장소에 없으므로 다음 파일을 추가해야 실서비스 전송이 활성화된다.
+    - Android: `android/app/google-services.json`
+    - iOS: `ios/SchoolHelper/Resources/GoogleService-Info.plist`
+- 검증 메모
+  - `cd android && ./gradlew :app:compileDebugKotlin` 통과
+  - `cd android && ./gradlew :app:compileDebugKotlin` 통과, `processDebugGoogleServices`와 `injectCrashlytics` 태스크 실행 확인
+  - `cd android && ./gradlew lintDebug` 통과
+  - `plutil -lint ios/SchoolHelper.xcodeproj/project.pbxproj` 통과
+  - `plutil -lint ios/SchoolHelper/Resources/GoogleService-Info.plist` 통과
+  - `cd ios && swift build` 통과
+  - `scripts/check_firebase_crashlytics.sh` 통과, 설정 파일 포함 필수 점검 통과
+  - `cd ios && xcodebuild -list -project SchoolHelper.xcodeproj`는 현재 active developer directory가 CommandLineTools라 Xcode가 없어 실행 불가
+- 상태
+  - SDK/빌드 설정 추가 완료
+  - Android/iOS 설정 파일 추가 및 정적 설정 검증 완료. 실제 Crashlytics 대시보드 수신은 배포/실행 후 확인 필요
+- 근거 문서
+  - `android/gradle/libs.versions.toml`
+  - `android/build.gradle.kts`
+  - `android/app/build.gradle.kts`
+  - `ios/SchoolHelper/App/FirebaseCrashReporting.swift`
+  - `ios/SchoolHelper/App/SchoolHelperIOSApp.swift`
+  - `ios/SchoolHelper.xcodeproj/project.pbxproj`
+  - `ios/Package.swift`
+  - `docs/project_specification.md`
+  - `docs/firebase-crashlytics-setup.md`
+  - `scripts/check_firebase_crashlytics.sh`
+
+
 ## 참고 문서
 
 - `docs/project_specification.md`
@@ -269,3 +409,91 @@
 ## 운영 메모
 
 앞으로 이 저장소에서 작업을 완료하면, 이전 작업 이력 요약은 이 파일(`docs/work-summary.md`)에 계속 누적 업데이트합니다.
+
+### 2026-06-15 · 웹 파비콘 후보 적용
+
+#### 19) A-1 학교/체크 아이콘을 웹 파비콘 자산으로 반영
+- 목표
+  - 선택한 A-1 앱 대표 아이콘을 웹 파비콘으로 사용할 수 있게 배치하는 것
+- 요약
+  - `checkimage/app-icon-a1-final.png`를 원본으로 사용했다.
+  - `web/app/favicon.ico`를 16/32/48/64/128/256 크기 PNG 엔트리를 포함한 ICO로 재생성했다.
+  - `web/public/favicon-192.png`, `favicon-256.png`, `favicon-512.png`를 같은 이미지 기반으로 교체했다.
+- 검증 메모
+  - `file web/app/favicon.ico web/public/favicon-192.png web/public/favicon-256.png web/public/favicon-512.png`로 포맷/크기 확인
+  - `web/public/favicon-192.png` 시각 확인
+- 상태
+  - 적용 완료
+- 근거 문서
+  - `checkimage/app-icon-a1-final.png`
+  - `web/app/favicon.ico`
+  - `web/public/favicon-192.png`
+  - `web/public/favicon-256.png`
+  - `web/public/favicon-512.png`
+
+### 2026-06-15 · iOS 앱 아이콘 적용
+
+#### 20) A-1 학교/체크 아이콘을 iOS AppIcon 에셋으로 반영
+- 목표
+  - 선택한 A-1 앱 대표 아이콘을 iOS 앱 아이콘으로 사용할 수 있게 배치하는 것
+- 요약
+  - `checkimage/app-icon-a1-final.png`를 원본으로 사용했다.
+  - `ios/SchoolHelper/Resources/Assets.xcassets/AppIcon.appiconset`을 생성했다.
+  - iPhone/iPad/ios-marketing에 필요한 18개 PNG 크기와 `Contents.json`을 추가했다.
+  - Xcode 앱 타깃 설정을 `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`으로 수정해 생성한 에셋을 사용하게 했다.
+- 검증 메모
+  - `python3 -m json.tool ios/SchoolHelper/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json` 통과
+  - `file ios/SchoolHelper/Resources/Assets.xcassets/AppIcon.appiconset/*.png`로 PNG 크기 확인
+  - `grep ASSETCATALOG_COMPILER_APPICON_NAME ios/SchoolHelper.xcodeproj/project.pbxproj`로 AppIcon 연결 확인
+  - `plutil -lint ios/SchoolHelper.xcodeproj/project.pbxproj` 통과
+  - `cd ios && swift build` 통과
+- 상태
+  - 적용 완료
+- 근거 문서
+  - `ios/SchoolHelper/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json`
+  - `ios/SchoolHelper/Resources/Assets.xcassets/AppIcon.appiconset/*.png`
+  - `ios/SchoolHelper.xcodeproj/project.pbxproj`
+  - `checkimage/app-icon-a1-final.png`
+
+### 2026-06-15 · iOS Firebase 설정 복사 스크립트 수정
+
+#### 21) Xcode Run Script 환경변수 문법 수정
+- 목표
+  - iOS 빌드의 `PhaseScriptExecution Copy Firebase config if present` 실패를 해결하는 것
+- 요약
+  - Run Script 내부의 `$(TARGET_BUILD_DIR)` / `$(UNLOCALIZED_RESOURCES_FOLDER_PATH)` 사용을 제거했다.
+  - 쉘에서 명령 치환으로 해석되지 않도록 `${TARGET_BUILD_DIR}` / `${UNLOCALIZED_RESOURCES_FOLDER_PATH}` 환경변수 문법으로 변경했다.
+  - Crashlytics dSYM 업로드 스크립트도 같은 방식으로 `GOOGLE_SERVICE_INFO` 경로를 계산하게 정리했다.
+- 검증 메모
+  - `plutil -lint ios/SchoolHelper.xcodeproj/project.pbxproj` 통과
+  - `/bin/sh -n`으로 Copy/Upload 스크립트 문법 확인
+  - 임시 디렉터리에서 `GoogleService-Info.plist` 복사 동작 시뮬레이션 통과
+  - Crashlytics run tool 부재 시 upload script no-op 통과
+  - `cd ios && swift build` 통과
+  - `git diff --check` 통과
+- 상태
+  - 수정/검증 완료
+- 근거 문서
+  - `ios/SchoolHelper.xcodeproj/project.pbxproj`
+
+### 2026-06-15 · iOS Firebase 설정 복사 phase 제거
+
+#### 22) GoogleService-Info.plist를 Resource로 직접 등록
+- 목표
+  - Xcode가 stale `Copy Firebase config if present` Run Script를 실행해 실패하는 문제를 제거하는 것
+- 요약
+  - `Copy Firebase config if present` Run Script phase를 앱 타깃에서 제거했다.
+  - `ios/SchoolHelper/Resources/GoogleService-Info.plist`를 Xcode Resources group과 앱 `Resources` build phase에 직접 등록했다.
+  - Crashlytics dSYM 업로드 phase는 유지하되, 앱 번들에 포함된 plist를 기준으로 실행 조건을 판단하게 했다.
+- 검증 메모
+  - `grep`으로 `Copy Firebase config if present` phase 제거 확인
+  - `plutil -lint ios/SchoolHelper.xcodeproj/project.pbxproj` 통과
+  - `plutil -lint ios/SchoolHelper/Resources/GoogleService-Info.plist` 통과
+  - `python3 -m json.tool ios/SchoolHelper/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json` 통과
+  - `cd ios && swift build` 통과
+  - `git diff --check` 통과
+- 상태
+  - 수정/검증 완료
+- 근거 문서
+  - `ios/SchoolHelper.xcodeproj/project.pbxproj`
+  - `ios/SchoolHelper/Resources/GoogleService-Info.plist`

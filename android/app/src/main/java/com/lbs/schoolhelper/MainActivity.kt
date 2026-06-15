@@ -75,6 +75,9 @@ class MainActivity : AppCompatActivity() {
         binding.focusPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.FOCUS) }
         binding.breakPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.BREAK) }
         binding.deepPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.DEEP_FOCUS) }
+        binding.openTimerDetailButton.setOnClickListener {
+            startActivity(Intent(this, TimerActivity::class.java))
+        }
         binding.timerPrimaryButton.setOnClickListener { timerViewModel.toggleTimer() }
         binding.timerResetButton.setOnClickListener { timerViewModel.resetTimer() }
     }

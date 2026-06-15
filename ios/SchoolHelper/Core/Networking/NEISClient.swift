@@ -434,7 +434,8 @@ struct NoticesClient {
                     title: $0.title,
                     date: $0.date,
                     author: $0.author,
-                    url: $0.url
+                    url: $0.url,
+                    sourceUrl: $0.sourceUrl
                 )
             }
         default:
@@ -563,4 +564,5 @@ private struct NoticeItem: Decodable {
     let date: String
     let author: String
     let url: String
+    let sourceUrl: String?
 }

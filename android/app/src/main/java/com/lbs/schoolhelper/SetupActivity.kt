@@ -1,8 +1,11 @@
 package com.lbs.schoolhelper
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -38,19 +41,61 @@ class SetupActivity : AppCompatActivity() {
     }
 
     private fun bindClicks() {
+        binding.schoolQueryInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                searchSchoolsFromInput()
+                true
+            } else {
+                false
+            }
+        }
+        binding.gradeInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                viewModel.updateGrade(binding.gradeInput.text.toString().trim())
+                binding.classInput.requestFocus()
+                true
+            } else {
+                false
+            }
+        }
+        binding.classInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                saveStudentInfoFromInput()
+                true
+            } else {
+                false
+            }
+        }
+
         binding.searchSchoolButton.setOnClickListener {
-            viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
-            viewModel.searchSchools()
+            searchSchoolsFromInput()
         }
 
         binding.saveStudentInfoButton.setOnClickListener {
-            viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
-            viewModel.updateGrade(binding.gradeInput.text.toString().trim())
-            viewModel.updateClassroom(binding.classInput.text.toString().trim())
-            lifecycleScope.launch {
-                viewModel.saveStudentInfo()
-            }
+            saveStudentInfoFromInput()
         }
+    }
+
+    private fun searchSchoolsFromInput() {
+        hideKeyboard(binding.schoolQueryInput)
+        viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
+        viewModel.searchSchools()
+    }
+
+    private fun saveStudentInfoFromInput() {
+        hideKeyboard(binding.classInput)
+        viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
+        viewModel.updateGrade(binding.gradeInput.text.toString().trim())
+        viewModel.updateClassroom(binding.classInput.text.toString().trim())
+        lifecycleScope.launch {
+            viewModel.saveStudentInfo()
+        }
+    }
+
+    private fun hideKeyboard(focusedView: View) {
+        focusedView.clearFocus()
+        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        inputMethodManager?.hideSoftInputFromWindow(focusedView.windowToken, 0)
     }
 
     private fun bindState() {

@@ -9,7 +9,7 @@ final class HomeViewModel: ObservableObject {
     @Published var mealMeta: String = ""
     @Published var eventSummary: String = "일정을 불러오는 중…"
     @Published var noticeSummary: String = "가정통신문을 불러오는 중…"
-    @Published var noticeActionText: String = "가정통신문 열기"
+    @Published var noticeActionText: String = "가정통신문 목록 열기"
     @Published var noticeActionEnabled: Bool = false
     @Published var noticeRequiresSetup: Bool = false
     @Published var timerSummary: String = ""
@@ -85,8 +85,11 @@ final class HomeViewModel: ObservableObject {
                 .map(formatNoticePreviewLine)
                 .filter { !$0.isEmpty }
                 .joined(separator: "\n")
-            latestNoticeURL = URL(string: noticeItems.first?.url ?? "")
-            noticeActionText = "가정통신문 열기"
+            latestNoticeURL = noticeItems.first.flatMap { notice in
+                let destination = notice.sourceUrl?.isEmpty == false ? notice.sourceUrl : notice.url
+                return URL(string: destination ?? notice.url)
+            }
+            noticeActionText = "가정통신문 목록 열기"
             noticeActionEnabled = latestNoticeURL != nil
             noticeRequiresSetup = false
         }

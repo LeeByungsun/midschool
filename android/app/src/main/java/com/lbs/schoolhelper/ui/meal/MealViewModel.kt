@@ -8,8 +8,7 @@ import com.lbs.schoolhelper.data.model.MealInfo
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -29,6 +28,7 @@ class MealViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     private val appContext = application.applicationContext
+    private var loadJob: Job? = null
     private val _uiState = MutableStateFlow(MealUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -37,14 +37,19 @@ class MealViewModel @Inject constructor(
     }
 
     fun loadWeekMeals(referenceDate: LocalDate = LocalDate.now()) {
+        loadJob?.cancel()
+
         val weekStart = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val weekEnd = weekStart.plusDays(4)
+        val weekdays = (0L..4L).map { offset -> weekStart.plusDays(offset) }
+        val dayStates = weekdays.map(::buildLoadingDayUiModel).toMutableList()
+
         _uiState.update {
             it.copy(
                 weekTitle = formatWeekTitle(weekStart, weekEnd),
                 statusText = appContext.getString(R.string.meal_loading),
                 isLoading = true,
-                items = emptyList()
+                items = dayStates.map { dayState -> dayState.item }
             )
         }
 
@@ -59,32 +64,52 @@ class MealViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
-            val dayStates = (0L..4L)
-                .map { offset ->
-                    async {
-                        val day = weekStart.plusDays(offset)
-                        val result = schoolRepository.getMeals(day.format(DateTimeFormatter.BASIC_ISO_DATE))
-                        buildDayUiModel(day = day, result = result)
+        loadJob = viewModelScope.launch {
+            weekdays.forEachIndexed { index, day ->
+                launch {
+                    val date = day.format(DateTimeFormatter.BASIC_ISO_DATE)
+                    schoolRepository.observeMeals(date).collect { result ->
+                        dayStates[index] = buildDayUiModel(day = day, result = result)
+                        publishWeekMealState(dayStates)
                     }
                 }
-                .awaitAll()
-
-            val hasAnyMeals = dayStates.any { it.hasMealData }
-            val hasErrors = dayStates.any { it.hasError }
-
-            _uiState.update {
-                it.copy(
-                    statusText = when {
-                        hasAnyMeals && hasErrors -> appContext.getString(R.string.meal_partial_error)
-                        hasAnyMeals -> ""
-                        hasErrors -> appContext.getString(R.string.meal_error_day)
-                        else -> appContext.getString(R.string.meal_empty_week)
-                    },
-                    isLoading = false,
-                    items = dayStates.map { dayState -> dayState.item }
-                )
             }
+        }
+    }
+
+
+    private fun buildLoadingDayUiModel(day: LocalDate): DayMealState {
+        return DayMealState(
+            item = MealDayUiModel(
+                dateLabel = day.format(
+                    DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
+                ),
+                detailText = appContext.getString(R.string.meal_loading),
+                isToday = day == LocalDate.now()
+            ),
+            hasMealData = false,
+            hasError = false,
+            isLoaded = false
+        )
+    }
+
+    private fun publishWeekMealState(dayStates: List<DayMealState>) {
+        val hasAnyMeals = dayStates.any { it.hasMealData }
+        val hasErrors = dayStates.any { it.hasError }
+        val isLoading = dayStates.any { !it.isLoaded }
+
+        _uiState.update {
+            it.copy(
+                statusText = when {
+                    isLoading -> appContext.getString(R.string.meal_loading)
+                    hasAnyMeals && hasErrors -> appContext.getString(R.string.meal_partial_error)
+                    hasAnyMeals -> ""
+                    hasErrors -> appContext.getString(R.string.meal_error_day)
+                    else -> appContext.getString(R.string.meal_empty_week)
+                },
+                isLoading = isLoading,
+                items = dayStates.map { dayState -> dayState.item }
+            )
         }
     }
 
@@ -108,7 +133,8 @@ class MealViewModel @Inject constructor(
                 isToday = day == LocalDate.now()
             ),
             hasMealData = meals.isNotEmpty(),
-            hasError = result.isFailure
+            hasError = result.isFailure,
+            isLoaded = true
         )
     }
 
@@ -163,6 +189,7 @@ class MealViewModel @Inject constructor(
     private data class DayMealState(
         val item: MealDayUiModel,
         val hasMealData: Boolean,
-        val hasError: Boolean
+        val hasError: Boolean,
+        val isLoaded: Boolean
     )
 }

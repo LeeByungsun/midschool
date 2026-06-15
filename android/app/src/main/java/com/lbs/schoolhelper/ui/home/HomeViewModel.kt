@@ -16,7 +16,7 @@ import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.util.isVisibleSchedule
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -38,6 +38,7 @@ class HomeViewModel private constructor(
     private val textResolver: (Int, Array<out Any?>) -> String
 ) : AndroidViewModel(application) {
 
+    private var loadHomeJob: Job? = null
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val _noticeActionEvent = MutableSharedFlow<HomeNoticeAction>(extraBufferCapacity = 1)
@@ -115,7 +116,8 @@ class HomeViewModel private constructor(
     }
 
     fun loadHomeData() {
-        viewModelScope.launch {
+        loadHomeJob?.cancel()
+        loadHomeJob = viewModelScope.launch {
             val today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
             refreshHeader()
 
@@ -149,41 +151,81 @@ class HomeViewModel private constructor(
                 return@launch
             }
 
-            val mealsDeferred = async { schoolRepository.getMeals(today) }
-            val schedulesDeferred = async { schoolRepository.getSchedules(today.take(6)) }
-            val noticesDeferred = async { schoolRepository.getNotices(limit = 3) }
-
-            val mealsResult = mealsDeferred.await()
-            val schedulesResult = schedulesDeferred.await()
-            val noticesResult = noticesDeferred.await()
-
-            val mealUi = buildMealUi(mealsResult.getOrNull()?.firstOrNull(), mealsResult.exceptionOrNull())
-            val scheduleUi = buildScheduleUi(schedulesResult.getOrNull().orEmpty(), schedulesResult.exceptionOrNull())
-            val todayStatus = when {
-                mealUi.status == HomeContentStatus.ERROR ||
-                    scheduleUi.status == HomeContentStatus.ERROR -> HomeContentStatus.ERROR
-                mealUi.status == HomeContentStatus.EMPTY &&
-                    scheduleUi.status == HomeContentStatus.EMPTY -> HomeContentStatus.EMPTY
-                else -> HomeContentStatus.SUCCESS
+            launch {
+                val noticesResult = schoolRepository.getNotices(limit = 3)
+                _uiState.update { current ->
+                    current.copy(notices = buildNoticeCardState(noticesResult))
+                }
             }
 
-            _uiState.update {
-                it.copy(
-                    isSchoolConfigured = true,
-                    todaySummaryText = when (todayStatus) {
-                        HomeContentStatus.ERROR -> resolveString(R.string.home_today_summary_error)
-                        HomeContentStatus.EMPTY -> resolveString(R.string.home_today_summary_empty)
-                        else -> resolveString(R.string.home_today_summary_body)
-                    },
-                    todayStatus = todayStatus,
-                    mealSummary = mealUi.summary,
-                    mealMeta = mealUi.meta,
-                    mealStatus = mealUi.status,
-                    eventSummary = scheduleUi.summary,
-                    scheduleStatus = scheduleUi.status,
-                    notices = buildNoticeCardState(noticesResult)
-                )
+            launch {
+                schoolRepository.observeMeals(today).collect { result ->
+                    updateHomeSections(
+                        mealUi = buildMealUi(
+                            meal = result.getOrNull()?.firstOrNull(),
+                            error = result.exceptionOrNull()
+                        )
+                    )
+                }
             }
+
+            launch {
+                schoolRepository.observeSchedules(today.take(6)).collect { result ->
+                    updateHomeSections(
+                        scheduleUi = buildScheduleUi(
+                            events = result.getOrNull().orEmpty(),
+                            error = result.exceptionOrNull()
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun updateHomeSections(
+        mealUi: HomeSectionUi? = null,
+        scheduleUi: HomeSectionUi? = null
+    ) {
+        _uiState.update { current ->
+            val mealStatus = mealUi?.status ?: current.mealStatus
+            val scheduleStatus = scheduleUi?.status ?: current.scheduleStatus
+            val todayStatus = resolveTodayStatus(mealStatus, scheduleStatus)
+
+            current.copy(
+                isSchoolConfigured = true,
+                todaySummaryText = resolveTodaySummary(todayStatus),
+                todayStatus = todayStatus,
+                mealSummary = mealUi?.summary ?: current.mealSummary,
+                mealMeta = mealUi?.meta ?: current.mealMeta,
+                mealStatus = mealStatus,
+                eventSummary = scheduleUi?.summary ?: current.eventSummary,
+                scheduleStatus = scheduleStatus
+            )
+        }
+    }
+
+    private fun resolveTodayStatus(
+        mealStatus: HomeContentStatus,
+        scheduleStatus: HomeContentStatus
+    ): HomeContentStatus {
+        return when {
+            mealStatus == HomeContentStatus.ERROR ||
+                scheduleStatus == HomeContentStatus.ERROR -> HomeContentStatus.ERROR
+            mealStatus == HomeContentStatus.LOADING ||
+                scheduleStatus == HomeContentStatus.LOADING -> HomeContentStatus.LOADING
+            mealStatus == HomeContentStatus.EMPTY &&
+                scheduleStatus == HomeContentStatus.EMPTY -> HomeContentStatus.EMPTY
+            else -> HomeContentStatus.SUCCESS
+        }
+    }
+
+    private fun resolveTodaySummary(status: HomeContentStatus): String {
+        return when (status) {
+            HomeContentStatus.NOT_CONFIGURED -> resolveString(R.string.home_school_not_set_summary)
+            HomeContentStatus.LOADING -> resolveString(R.string.home_today_summary_loading)
+            HomeContentStatus.ERROR -> resolveString(R.string.home_today_summary_error)
+            HomeContentStatus.EMPTY -> resolveString(R.string.home_today_summary_empty)
+            HomeContentStatus.SUCCESS -> resolveString(R.string.home_today_summary_body)
         }
     }
 
@@ -339,7 +381,9 @@ class HomeViewModel private constructor(
                         summary = previewLines.joinToString("\n"),
                         actionText = resolveString(R.string.home_notice_open_button),
                         actionEnabled = true,
-                        latestNoticeUrl = noticeFeed.items.firstOrNull()?.url,
+                        latestNoticeUrl = noticeFeed.items.firstOrNull()?.let { notice ->
+                            notice.sourceUrl.ifBlank { notice.url }
+                        },
                         requiresSetup = false
                     )
 

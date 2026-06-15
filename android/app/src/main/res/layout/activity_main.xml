@@ -326,6 +326,18 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="15sp" />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/openTimerDetailButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:minWidth="0dp"
+                        android:text="@string/home_timer_detail_button"
+                        android:textAllCaps="false"
+                        app:cornerRadius="16dp"
+                        app:strokeColor="@color/divider_soft" />
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

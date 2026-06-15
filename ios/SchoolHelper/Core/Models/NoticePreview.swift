@@ -6,4 +6,5 @@ struct NoticePreview: Codable, Equatable, Identifiable {
     var date: String
     var author: String
     var url: String
+    var sourceUrl: String? = nil
 }

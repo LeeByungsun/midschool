@@ -41,7 +41,7 @@ final class FeatureViewModelTests: XCTestCase {
                 TimetableItem(date: "20260526", period: "2", subject: "수학", grade: "1", classroom: "2")
             ],
             schedule: [SchoolEvent(date: "20260526", title: "체육대회", description: "운동장")],
-            notices: [NoticePreview(id: "1", title: "현장학습 안내", date: "2026-05-26", author: "교무실", url: "https://example.com")]
+            notices: [NoticePreview(id: "1", title: "현장학습 안내", date: "2026-05-26", author: "교무실", url: "https://example.com/notices/1", sourceUrl: "https://example.com/notices")]
         )
         let viewModel = HomeViewModel(
             repository: repository,
@@ -66,10 +66,10 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.mealMeta, "점심 • 700 kcal")
         XCTAssertEqual(viewModel.eventSummary, "5월 26일  체육대회\n운동장")
         XCTAssertEqual(viewModel.noticeSummary, "2026-05-26  현장학습 안내")
-        XCTAssertEqual(viewModel.noticeActionText, "가정통신문 열기")
+        XCTAssertEqual(viewModel.noticeActionText, "가정통신문 목록 열기")
         XCTAssertTrue(viewModel.noticeActionEnabled)
         XCTAssertFalse(viewModel.noticeRequiresSetup)
-        XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com")
+        XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com/notices")
     }
 
     func testHomeViewModelOmitsBlankNoticeDateLikeAndroid() async {
@@ -80,7 +80,8 @@ final class FeatureViewModelTests: XCTestCase {
                     title: "학부모 공지",
                     date: "",
                     author: "행정실",
-                    url: "https://example.com/notices/1"
+                    url: "https://example.com/notices/1",
+                    sourceUrl: "https://example.com/notices"
                 )
             ]
         )
@@ -92,9 +93,9 @@ final class FeatureViewModelTests: XCTestCase {
         await viewModel.load(profile: .fixture())
 
         XCTAssertEqual(viewModel.noticeSummary, "학부모 공지")
-        XCTAssertEqual(viewModel.noticeActionText, "가정통신문 열기")
+        XCTAssertEqual(viewModel.noticeActionText, "가정통신문 목록 열기")
         XCTAssertTrue(viewModel.noticeActionEnabled)
-        XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com/notices/1")
+        XCTAssertEqual(viewModel.latestNoticeDestination()?.absoluteString, "https://example.com/notices")
     }
 
     func testHomeViewModelFiltersPastAndBlockedSchedulesAndFormatsMealMenu() async {
