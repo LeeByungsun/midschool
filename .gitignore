@@ -32,3 +32,6 @@ ios/profile-backups.local/
 .antigravitycli/
 *.xcuserdata/
 xcuserdata/
+
+# Generated/check images
+checkimage/
