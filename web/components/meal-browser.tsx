@@ -24,6 +24,8 @@ import {
   type CacheStatus,
   fetchMeals,
   formatCacheStatusMessage,
+  readCachedMeals,
+  shouldUpdateListFromNetwork,
 } from "@/lib/school-api";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 
@@ -212,14 +214,37 @@ export function MealBrowser() {
       return;
     }
 
-    fetchMeals({
+    const params = {
       officeCode: studentInfo.officeCode,
       schoolCode: studentInfo.schoolCode,
       date: weekStartKey,
       endDate: weekEndKey,
-    })
+    };
+    const cached = readCachedMeals(params);
+
+    if (cached) {
+      queueMicrotask(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setState({
+          requestToken,
+          items: cached.items,
+          error: null,
+          cacheStatus: cached.cacheStatus,
+          cachedAt: cached.cachedAt,
+        });
+      });
+    }
+
+    fetchMeals(params, { skipFreshCache: true })
       .then((result) => {
         if (isCancelled) {
+          return;
+        }
+
+        if (cached && !shouldUpdateListFromNetwork(cached.items, result.items)) {
           return;
         }
 

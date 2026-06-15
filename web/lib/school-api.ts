@@ -72,10 +72,43 @@ type CacheOptions = {
   cacheEmptyItems?: boolean;
 };
 
-async function fetchList<T>(path: string, cacheOptions?: CacheOptions) {
+type FetchListOptions = {
+  skipFreshCache?: boolean;
+};
+
+function readCachedList<T>(cacheOptions: Pick<CacheOptions, "key">) {
+  const cached = readCache<T[]>(cacheOptions.key);
+
+  if (!cached) {
+    return null;
+  }
+
+  return {
+    items: cached.items,
+    cacheStatus: cached.isExpired ? "stale-fallback" : "cache",
+    cachedAt: cached.savedAt,
+  } satisfies CachedListResult<T>;
+}
+
+export function shouldUpdateListFromNetwork<T>(
+  currentItems: T[] | null,
+  networkItems: T[],
+) {
+  if (!currentItems) {
+    return true;
+  }
+
+  return JSON.stringify(currentItems) !== JSON.stringify(networkItems);
+}
+
+async function fetchList<T>(
+  path: string,
+  cacheOptions?: CacheOptions,
+  fetchOptions: FetchListOptions = {},
+) {
   const cached = cacheOptions ? readCache<T[]>(cacheOptions.key) : null;
 
-  if (cached && !cached.isExpired) {
+  if (cached && !cached.isExpired && !fetchOptions.skipFreshCache) {
     return {
       items: cached.items,
       cacheStatus: "cache",
@@ -145,7 +178,7 @@ function buildScheduleCacheKey(params: {
   return `schedule:${params.officeCode}:${params.schoolCode}:${params.date}`;
 }
 
-export function fetchTimetable(params: {
+export function readCachedTimetable(params: {
   officeCode: string;
   schoolCode: string;
   schoolKind?: string;
@@ -153,6 +186,19 @@ export function fetchTimetable(params: {
   classroom: string;
   date: string;
 }) {
+  return readCachedList<TimetableItem>({
+    key: buildTimetableCacheKey(params),
+  });
+}
+
+export function fetchTimetable(params: {
+  officeCode: string;
+  schoolCode: string;
+  schoolKind?: string;
+  grade: string;
+  classroom: string;
+  date: string;
+}, options?: FetchListOptions) {
   const search = new URLSearchParams({
     officeCode: params.officeCode,
     schoolCode: params.schoolCode,
@@ -166,6 +212,17 @@ export function fetchTimetable(params: {
     key: buildTimetableCacheKey(params),
     ttlMs: 24 * 60 * 60 * 1000,
     fallbackTtlMs: 48 * 60 * 60 * 1000,
+  }, options);
+}
+
+export function readCachedMeals(params: {
+  officeCode: string;
+  schoolCode: string;
+  date: string;
+  endDate?: string;
+}) {
+  return readCachedList<MealInfo>({
+    key: buildMealCacheKey(params),
   });
 }
 
@@ -174,7 +231,7 @@ export function fetchMeals(params: {
   schoolCode: string;
   date: string;
   endDate?: string;
-}) {
+}, options?: FetchListOptions) {
   const search = new URLSearchParams({
     officeCode: params.officeCode,
     schoolCode: params.schoolCode,
@@ -189,6 +246,16 @@ export function fetchMeals(params: {
     key: buildMealCacheKey(params),
     ttlMs: 12 * 60 * 60 * 1000,
     fallbackTtlMs: 36 * 60 * 60 * 1000,
+  }, options);
+}
+
+export function readCachedSchedules(params: {
+  officeCode: string;
+  schoolCode: string;
+  date: string;
+}) {
+  return readCachedList<SchoolEvent>({
+    key: buildScheduleCacheKey(params),
   });
 }
 
@@ -196,7 +263,7 @@ export function fetchSchedules(params: {
   officeCode: string;
   schoolCode: string;
   date: string;
-}) {
+}, options?: FetchListOptions) {
   const search = new URLSearchParams({
     officeCode: params.officeCode,
     schoolCode: params.schoolCode,
@@ -207,7 +274,7 @@ export function fetchSchedules(params: {
     key: buildScheduleCacheKey(params),
     ttlMs: 12 * 60 * 60 * 1000,
     fallbackTtlMs: 36 * 60 * 60 * 1000,
-  });
+  }, options);
 }
 
 export function fetchSchools(params: { query: string }) {

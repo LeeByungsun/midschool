@@ -20,6 +20,8 @@ import {
   type CacheStatus,
   fetchTimetable,
   formatCacheStatusMessage,
+  readCachedTimetable,
+  shouldUpdateListFromNetwork,
 } from "@/lib/school-api";
 
 type TimetableState = {
@@ -62,16 +64,39 @@ export function TimetableBrowser() {
       return;
     }
 
-    fetchTimetable({
+    const params = {
       officeCode: studentInfo.officeCode,
       schoolCode: studentInfo.schoolCode,
       schoolKind: studentInfo.schoolKind,
       grade: studentInfo.grade,
       classroom: studentInfo.classroom,
       date: dateKey,
-    })
+    };
+    const cached = readCachedTimetable(params);
+
+    if (cached) {
+      queueMicrotask(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setState({
+          requestToken,
+          items: cached.items,
+          error: null,
+          cacheStatus: cached.cacheStatus,
+          cachedAt: cached.cachedAt,
+        });
+      });
+    }
+
+    fetchTimetable(params, { skipFreshCache: true })
       .then((result) => {
         if (isCancelled) {
+          return;
+        }
+
+        if (cached && !shouldUpdateListFromNetwork(cached.items, result.items)) {
           return;
         }
 

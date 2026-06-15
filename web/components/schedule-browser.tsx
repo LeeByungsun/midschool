@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   EmptyState,
   ErrorState,
+  InfoState,
   LoadingState,
   SetupRequiredState,
 } from "@/components/data-state";
@@ -19,6 +20,9 @@ import { isVisibleSchedule } from "@/lib/schedule";
 import {
   type CacheStatus,
   fetchSchedules,
+  formatCacheStatusMessage,
+  readCachedSchedules,
+  shouldUpdateListFromNetwork,
 } from "@/lib/school-api";
 
 type ScheduleState = {
@@ -63,13 +67,36 @@ export function ScheduleBrowser() {
       };
     }
 
-    fetchSchedules({
+    const params = {
       officeCode: studentInfo.officeCode,
       schoolCode: studentInfo.schoolCode,
       date: monthKey,
-    })
+    };
+    const cached = readCachedSchedules(params);
+
+    if (cached) {
+      queueMicrotask(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setState({
+          requestToken,
+          items: cached.items,
+          error: null,
+          cacheStatus: cached.cacheStatus,
+          cachedAt: cached.cachedAt,
+        });
+      });
+    }
+
+    fetchSchedules(params, { skipFreshCache: true })
       .then((result) => {
         if (isCancelled) {
+          return;
+        }
+
+        if (cached && !shouldUpdateListFromNetwork(cached.items, result.items)) {
           return;
         }
 
@@ -120,6 +147,11 @@ export function ScheduleBrowser() {
   };
   const isLoading =
     hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
+  const cacheNotice = formatCacheStatusMessage(
+    state.cacheStatus,
+    state.cachedAt,
+    "학사 일정",
+  );
   return (
     <DashboardCard
       title="월간 학사 일정"
@@ -160,6 +192,7 @@ export function ScheduleBrowser() {
         />
       ) : (
         <div className="grid gap-4">
+          {cacheNotice ? <InfoState message={cacheNotice} /> : null}
           <ul className="space-y-3">
             {visibleItems.map((event) => (
               <li

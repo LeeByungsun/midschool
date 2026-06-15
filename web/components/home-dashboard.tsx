@@ -21,14 +21,21 @@ import { resolveNoticeCardState, type NoticeLoadState } from "@/lib/notices/view
 import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
 import { isVisibleSchedule } from "@/lib/schedule";
 import {
+  type CachedListResult,
   type CacheStatus,
   fetchMeals,
   fetchNotices,
   fetchSchedules,
   fetchTimetable,
   formatCacheStatusMessage,
+  readCachedMeals,
+  readCachedSchedules,
+  readCachedTimetable,
+  shouldUpdateListFromNetwork,
 } from "@/lib/school-api";
 import { resolveDashboardData } from "@/lib/dashboard-load";
+
+type LoadStatus = "idle" | "loading" | "ready";
 
 type DashboardState = {
   requestToken: string;
@@ -44,6 +51,9 @@ type DashboardState = {
   mealCachedAt: number | null;
   scheduleCacheStatus: CacheStatus;
   scheduleCachedAt: number | null;
+  timetableLoadStatus: LoadStatus;
+  mealLoadStatus: LoadStatus;
+  scheduleLoadStatus: LoadStatus;
 };
 
 type NoticeRequestState = {
@@ -65,6 +75,9 @@ const initialState: DashboardState = {
   mealCachedAt: null,
   scheduleCacheStatus: "network",
   scheduleCachedAt: null,
+  timetableLoadStatus: "idle",
+  mealLoadStatus: "idle",
+  scheduleLoadStatus: "idle",
 };
 
 const initialNoticeLoadState: NoticeLoadState = {
@@ -85,6 +98,24 @@ const DGE_NOTICE_UNSUPPORTED_MESSAGE =
 
 function getNextMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 1);
+}
+
+function fulfilledList<T>(value: CachedListResult<T>) {
+  return {
+    status: "fulfilled",
+    value,
+  } satisfies PromiseFulfilledResult<CachedListResult<T>>;
+}
+
+function rejectedList(reason: Error) {
+  return {
+    status: "rejected",
+    reason,
+  } satisfies PromiseRejectedResult;
+}
+
+function cachedItemsOrNull<T>(cached: CachedListResult<T> | null) {
+  return cached?.items ?? null;
 }
 
 export function HomeDashboard() {
@@ -118,30 +149,83 @@ export function HomeDashboard() {
       return;
     }
 
+    const timetableParams = {
+      officeCode: studentInfo.officeCode,
+      schoolCode: studentInfo.schoolCode,
+      schoolKind: studentInfo.schoolKind,
+      grade: studentInfo.grade,
+      classroom: studentInfo.classroom,
+      date: todayKey,
+    };
+    const mealParams = {
+      officeCode: studentInfo.officeCode,
+      schoolCode: studentInfo.schoolCode,
+      date: todayKey,
+    };
+    const currentScheduleParams = {
+      officeCode: studentInfo.officeCode,
+      schoolCode: studentInfo.schoolCode,
+      date: monthKey,
+    };
+    const nextScheduleParams = {
+      officeCode: studentInfo.officeCode,
+      schoolCode: studentInfo.schoolCode,
+      date: nextMonthKey,
+    };
+    const cachedTimetable = readCachedTimetable(timetableParams);
+    const cachedMeals = readCachedMeals(mealParams);
+    const cachedCurrentMonthSchedule = readCachedSchedules(currentScheduleParams);
+    const cachedNextMonthSchedule = readCachedSchedules(nextScheduleParams);
+    const hasCachedSchedule =
+      Boolean(cachedCurrentMonthSchedule) || Boolean(cachedNextMonthSchedule);
+
+    if (cachedTimetable || cachedMeals || hasCachedSchedule) {
+      const cachedDashboardData = resolveDashboardData({
+        timetableResult: cachedTimetable
+          ? fulfilledList(cachedTimetable)
+          : rejectedList(new Error("시간표 로컬 캐시가 없어요.")),
+        mealResult: cachedMeals
+          ? fulfilledList(cachedMeals)
+          : rejectedList(new Error("급식 로컬 캐시가 없어요.")),
+        currentMonthScheduleResult: cachedCurrentMonthSchedule
+          ? fulfilledList(cachedCurrentMonthSchedule)
+          : rejectedList(new Error("이번 달 일정 로컬 캐시가 없어요.")),
+        nextMonthScheduleResult: cachedNextMonthSchedule
+          ? fulfilledList(cachedNextMonthSchedule)
+          : rejectedList(new Error("다음 달 일정 로컬 캐시가 없어요.")),
+      });
+
+      queueMicrotask(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setState({
+          requestToken,
+          timetable: cachedDashboardData.timetable.items,
+          meals: cachedDashboardData.meals.items,
+          schedules: cachedDashboardData.schedules.items,
+          timetableError: cachedTimetable ? null : initialState.timetableError,
+          mealError: cachedMeals ? null : initialState.mealError,
+          scheduleError: hasCachedSchedule ? null : initialState.scheduleError,
+          timetableCacheStatus: cachedDashboardData.timetable.cacheStatus,
+          timetableCachedAt: cachedDashboardData.timetable.cachedAt,
+          mealCacheStatus: cachedDashboardData.meals.cacheStatus,
+          mealCachedAt: cachedDashboardData.meals.cachedAt,
+          scheduleCacheStatus: cachedDashboardData.schedules.cacheStatus,
+          scheduleCachedAt: cachedDashboardData.schedules.cachedAt,
+          timetableLoadStatus: cachedTimetable ? "ready" : "loading",
+          mealLoadStatus: cachedMeals ? "ready" : "loading",
+          scheduleLoadStatus: hasCachedSchedule ? "ready" : "loading",
+        });
+      });
+    }
+
     Promise.allSettled([
-      fetchTimetable({
-        officeCode: studentInfo.officeCode,
-        schoolCode: studentInfo.schoolCode,
-        schoolKind: studentInfo.schoolKind,
-        grade: studentInfo.grade,
-        classroom: studentInfo.classroom,
-        date: todayKey,
-      }),
-      fetchMeals({
-        officeCode: studentInfo.officeCode,
-        schoolCode: studentInfo.schoolCode,
-        date: todayKey,
-      }),
-      fetchSchedules({
-        officeCode: studentInfo.officeCode,
-        schoolCode: studentInfo.schoolCode,
-        date: monthKey,
-      }),
-      fetchSchedules({
-        officeCode: studentInfo.officeCode,
-        schoolCode: studentInfo.schoolCode,
-        date: nextMonthKey,
-      }),
+      fetchTimetable(timetableParams, { skipFreshCache: true }),
+      fetchMeals(mealParams, { skipFreshCache: true }),
+      fetchSchedules(currentScheduleParams, { skipFreshCache: true }),
+      fetchSchedules(nextScheduleParams, { skipFreshCache: true }),
     ])
       .then(([timetableResult, mealResult, currentMonthScheduleResult, nextMonthScheduleResult]) => {
         if (isCancelled) {
@@ -154,6 +238,45 @@ export function HomeDashboard() {
           currentMonthScheduleResult,
           nextMonthScheduleResult,
         });
+        const shouldUpdateTimetable =
+          !cachedTimetable ||
+          Boolean(resolvedData.timetable.error) ||
+          shouldUpdateListFromNetwork(
+            cachedItemsOrNull(cachedTimetable),
+            resolvedData.timetable.items,
+          );
+        const shouldUpdateMeals =
+          !cachedMeals ||
+          Boolean(resolvedData.meals.error) ||
+          shouldUpdateListFromNetwork(
+            cachedItemsOrNull(cachedMeals),
+            resolvedData.meals.items,
+          );
+        const cachedScheduleItems =
+          cachedCurrentMonthSchedule || cachedNextMonthSchedule
+            ? resolveDashboardData({
+                timetableResult: rejectedList(new Error("unused")),
+                mealResult: rejectedList(new Error("unused")),
+                currentMonthScheduleResult: cachedCurrentMonthSchedule
+                  ? fulfilledList(cachedCurrentMonthSchedule)
+                  : rejectedList(new Error("이번 달 일정 로컬 캐시가 없어요.")),
+                nextMonthScheduleResult: cachedNextMonthSchedule
+                  ? fulfilledList(cachedNextMonthSchedule)
+                  : rejectedList(new Error("다음 달 일정 로컬 캐시가 없어요.")),
+              }).schedules.items
+            : null;
+        const shouldUpdateSchedules =
+          !cachedCurrentMonthSchedule ||
+          !cachedNextMonthSchedule ||
+          Boolean(resolvedData.schedules.error && !hasCachedSchedule) ||
+          shouldUpdateListFromNetwork(
+            cachedScheduleItems,
+            resolvedData.schedules.items,
+          );
+
+        if (!shouldUpdateTimetable && !shouldUpdateMeals && !shouldUpdateSchedules) {
+          return;
+        }
 
         setState({
           requestToken,
@@ -169,6 +292,9 @@ export function HomeDashboard() {
           mealCachedAt: resolvedData.meals.cachedAt,
           scheduleCacheStatus: resolvedData.schedules.cacheStatus,
           scheduleCachedAt: resolvedData.schedules.cachedAt,
+          timetableLoadStatus: "ready",
+          mealLoadStatus: "ready",
+          scheduleLoadStatus: "ready",
         });
       });
 
@@ -246,7 +372,16 @@ export function HomeDashboard() {
   const retryNoticeFetch = () => {
     setNoticeReloadCount((prev) => prev + 1);
   };
-  const isLoading = hydrated && Boolean(studentInfo) && state.requestToken !== requestToken;
+  const hasActiveRequest = hydrated && Boolean(studentInfo);
+  const isStaleRequest = hasActiveRequest && state.requestToken !== requestToken;
+  const isTimetableLoading =
+    hasActiveRequest &&
+    (isStaleRequest || state.timetableLoadStatus === "loading");
+  const isMealLoading =
+    hasActiveRequest && (isStaleRequest || state.mealLoadStatus === "loading");
+  const isScheduleLoading =
+    hasActiveRequest &&
+    (isStaleRequest || state.scheduleLoadStatus === "loading");
   const noticeLoadState =
     !hydrated || !studentInfo
       ? initialNoticeLoadState
@@ -288,7 +423,7 @@ export function HomeDashboard() {
             <LoadingState message="브라우저 설정과 오늘 날짜를 맞추는 중..." />
           ) : !studentInfo ? (
             <SetupRequiredState message="먼저 초기 설정에서 학교 이름과 학년/반을 저장해 주세요." />
-          ) : isLoading ? (
+          ) : isTimetableLoading ? (
             <LoadingState message="시간표를 불러오는 중..." />
           ) : state.timetableError ? (
             <ErrorState message={state.timetableError} onRetry={retryFetch} />
@@ -343,7 +478,7 @@ export function HomeDashboard() {
               title="초기 설정을 먼저 해 주세요."
               message="급식도 학교 기준으로 불러오므로, 학교 이름과 학년/반을 먼저 저장해 주세요."
             />
-          ) : isLoading ? (
+          ) : isMealLoading ? (
             <LoadingState message="급식을 불러오는 중..." />
           ) : state.mealError ? (
             <ErrorState message={state.mealError} onRetry={retryFetch} />
@@ -391,7 +526,7 @@ export function HomeDashboard() {
               title="초기 설정을 저장해 주세요."
               message="설정을 저장하면 일정과 시간표를 같은 기준으로 계속 확인할 수 있어요."
             />
-          ) : isLoading ? (
+          ) : isScheduleLoading ? (
             <LoadingState message="일정을 불러오는 중..." />
           ) : upcomingSchedules.length > 0 ? (
             <div className="grid gap-4">
