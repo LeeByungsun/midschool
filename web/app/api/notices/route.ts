@@ -4,7 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";
 import { buildNoticeHomepageCandidates } from "@/lib/notices/candidates";
-import { isRecoverableNoticeError } from "@/lib/notices/errors";
+import {
+  isDgeSchoolHomepage,
+  isRecoverableNoticeError,
+} from "@/lib/notices/errors";
 import { createNoticeErrorResponse, createNoticeSuccessResponse } from "@/lib/notices/response";
 import { mapSchoolInfo } from "@/lib/neis/mapper";
 import { fetchSchoolHomepageNotices } from "@/lib/notices/fetch";
@@ -122,18 +125,6 @@ function buildRecoverableNoticeMessage(params: {
   }
 
   return "가정통신문 목록을 불러오지 못했어요.";
-}
-
-function isDgeSchoolHomepage(homepageUrl: string) {
-  if (!homepageUrl) {
-    return false;
-  }
-
-  try {
-    return new URL(homepageUrl).hostname.endsWith("dge.ms.kr");
-  } catch {
-    return false;
-  }
 }
 
 function createTimeoutPromise(homepageUrl: string) {

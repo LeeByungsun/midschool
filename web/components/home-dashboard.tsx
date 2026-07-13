@@ -17,6 +17,7 @@ import { HomeTimerCard } from "@/components/home-timer-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useStudentPreferences } from "@/hooks/use-student-preferences";
 import { formatDateKey, formatKoreanDateLabel, formatMonthKey } from "@/lib/date";
+import { canRetryNoticeRequest } from "@/lib/notices/errors";
 import { resolveNoticeCardState, type NoticeLoadState } from "@/lib/notices/view-state";
 import type { MealInfo, SchoolEvent, TimetableItem } from "@/lib/neis/types";
 import { isVisibleSchedule } from "@/lib/schedule";
@@ -92,9 +93,6 @@ const initialNoticeState: NoticeRequestState = {
   requestToken: "",
   loadState: initialNoticeLoadState,
 };
-
-const DGE_NOTICE_UNSUPPORTED_MESSAGE =
-  "대구교육청 학교 홈페이지는 가정통신문 조회를 아직 지원하지 않습니다.";
 
 function getNextMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 1);
@@ -345,7 +343,7 @@ export function HomeDashboard() {
           loadState: {
             status: "error",
             message,
-            canRetry: message !== DGE_NOTICE_UNSUPPORTED_MESSAGE,
+            canRetry: canRetryNoticeRequest(error),
           },
         });
       });
