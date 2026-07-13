@@ -6,12 +6,14 @@ import type {
   SchoolEvent,
   TimetableItem,
 } from "@/lib/neis/types";
-import type { NoticeSummary } from "@/lib/notices/types";
+import { createNoticeRequestError } from "./notices/errors";
+import type { NoticeErrorCode, NoticeSummary } from "@/lib/notices/types";
 import { readCache, writeCache } from "@/lib/storage/cache";
 
 type ApiListResponse<T> = {
   items: T[];
   message?: string;
+  errorCode?: NoticeErrorCode;
 };
 
 export type CacheStatus = "network" | "cache" | "stale-fallback";
@@ -105,6 +107,8 @@ async function fetchList<T>(
   path: string,
   cacheOptions?: CacheOptions,
   fetchOptions: FetchListOptions = {},
+  createError: (response: ApiListResponse<T>) => Error = (response) =>
+    new Error(response.message ?? "데이터를 불러오지 못했어요."),
 ) {
   const cached = cacheOptions ? readCache<T[]>(cacheOptions.key) : null;
 
@@ -133,7 +137,7 @@ async function fetchList<T>(
       } satisfies CachedListResult<T>;
     }
 
-    throw new Error(json.message ?? "데이터를 불러오지 못했어요.");
+    throw createError(json);
   }
 
   if (cacheOptions && (json.items.length > 0 || cacheOptions.cacheEmptyItems !== false)) {
@@ -314,5 +318,10 @@ export function fetchNotices(params: {
     limit: String(params.limit ?? 5),
   });
 
-  return fetchList<NoticeSummary>(`/api/notices?${search.toString()}`);
+  return fetchList<NoticeSummary>(
+    `/api/notices?${search.toString()}`,
+    undefined,
+    {},
+    createNoticeRequestError,
+  );
 }

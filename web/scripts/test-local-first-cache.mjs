@@ -24,10 +24,10 @@ async function loadSchoolApiModule() {
     }
   `;
   const cacheMockUrl = `data:text/javascript;base64,${Buffer.from(cacheMockSource).toString("base64")}#cache-${Date.now()}-${Math.random()}`;
-  const rewritten = source.replaceAll(
-    '"@/lib/storage/cache"',
-    JSON.stringify(cacheMockUrl),
-  );
+  const noticeErrorsUrl = new URL("../lib/notices/errors.ts", import.meta.url).href;
+  const rewritten = source
+    .replaceAll('"@/lib/storage/cache"', JSON.stringify(cacheMockUrl))
+    .replaceAll('"./notices/errors"', JSON.stringify(noticeErrorsUrl));
   const transpiled = ts.transpileModule(rewritten, {
     compilerOptions: {
       module: ts.ModuleKind.ESNext,
