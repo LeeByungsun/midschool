@@ -43,6 +43,35 @@ test("meal browser keeps the weekly loading and navigation contract", async () =
   assert.match(mealBrowserSource, /선택한 주의 급식을 불러오는 중/);
 });
 
+test("meal nutrition and origin details stay hidden until their buttons are used", async () => {
+  const { mealBrowserSource } = await readSources();
+
+  assert.match(
+    mealBrowserSource,
+    /const \[isNutritionExpanded, setIsNutritionExpanded\] = useState\(false\)/,
+  );
+  assert.match(
+    mealBrowserSource,
+    /const \[isOriginExpanded, setIsOriginExpanded\] = useState\(false\)/,
+  );
+  assert.match(mealBrowserSource, /aria-expanded=\{isNutritionExpanded\}/);
+  assert.match(mealBrowserSource, /aria-expanded=\{isOriginExpanded\}/);
+  assert.match(mealBrowserSource, /aria-controls=\{nutritionPanelId\}/);
+  assert.match(mealBrowserSource, /aria-controls=\{originPanelId\}/);
+  assert.match(
+    mealBrowserSource,
+    /onClick=\{\(\) => setIsNutritionExpanded\(\(prev\) => !prev\)\}/,
+  );
+  assert.match(
+    mealBrowserSource,
+    /onClick=\{\(\) => setIsOriginExpanded\(\(prev\) => !prev\)\}/,
+  );
+  assert.match(mealBrowserSource, /hidden=\{!isNutritionExpanded\}/);
+  assert.match(mealBrowserSource, /hidden=\{!isOriginExpanded\}/);
+  assert.match(mealBrowserSource, /isNutritionExpanded \? "숨기기" : "보기"/);
+  assert.match(mealBrowserSource, /isOriginExpanded \? "숨기기" : "보기"/);
+});
+
 test("weekly meals page and API stay aligned with the weekly detail flow", async () => {
   const { mealsPageSource, mealsRouteSource, homeDashboardSource } = await readSources();
 

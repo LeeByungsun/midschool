@@ -2,7 +2,7 @@
 
 /** 홈 급식 카드에서 이동한 뒤 일주일치 급식을 보여주는 클라이언트 컴포넌트입니다. */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import {
   EmptyState,
@@ -106,9 +106,14 @@ function parseInfoLines(value: string) {
 }
 
 function MealDetailCard({ meal, showDate = true }: MealDetailCardProps) {
+  const detailId = useId();
+  const [isNutritionExpanded, setIsNutritionExpanded] = useState(false);
+  const [isOriginExpanded, setIsOriginExpanded] = useState(false);
   const menuItems = parseMenuItems(meal.menu);
   const nutritionLines = parseInfoLines(meal.nutritionInfo);
   const originLines = parseInfoLines(meal.originInfo);
+  const nutritionPanelId = `${detailId}-nutrition`;
+  const originPanelId = `${detailId}-origin`;
 
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
@@ -153,33 +158,63 @@ function MealDetailCard({ meal, showDate = true }: MealDetailCardProps) {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-          <h4 className="text-sm font-semibold text-slate-900">영양 정보</h4>
-          {nutritionLines.length > 0 ? (
-            <ul className="mt-3 grid gap-2">
-              {nutritionLines.map((line) => (
-                <li key={`${meal.date}-nutrition-${line}`} className="text-sm text-slate-600">
-                  {line}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 text-sm text-slate-500">제공된 영양 정보가 없어요.</p>
-          )}
+          <h4>
+            <button
+              type="button"
+              aria-expanded={isNutritionExpanded}
+              aria-controls={nutritionPanelId}
+              onClick={() => setIsNutritionExpanded((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl px-1 py-1 text-left text-sm font-semibold text-slate-900 transition hover:text-sky-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-600"
+            >
+              <span>영양 정보</span>
+              <span className="text-xs text-sky-700">
+                {isNutritionExpanded ? "숨기기" : "보기"}
+              </span>
+            </button>
+          </h4>
+          <div id={nutritionPanelId} hidden={!isNutritionExpanded}>
+            {nutritionLines.length > 0 ? (
+              <ul className="mt-3 grid gap-2">
+                {nutritionLines.map((line) => (
+                  <li key={`${meal.date}-nutrition-${line}`} className="text-sm text-slate-600">
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">제공된 영양 정보가 없어요.</p>
+            )}
+          </div>
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-          <h4 className="text-sm font-semibold text-slate-900">원산지 정보</h4>
-          {originLines.length > 0 ? (
-            <ul className="mt-3 grid gap-2">
-              {originLines.map((line) => (
-                <li key={`${meal.date}-origin-${line}`} className="text-sm text-slate-600">
-                  {line}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 text-sm text-slate-500">제공된 원산지 정보가 없어요.</p>
-          )}
+          <h4>
+            <button
+              type="button"
+              aria-expanded={isOriginExpanded}
+              aria-controls={originPanelId}
+              onClick={() => setIsOriginExpanded((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl px-1 py-1 text-left text-sm font-semibold text-slate-900 transition hover:text-sky-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-600"
+            >
+              <span>원산지 정보</span>
+              <span className="text-xs text-sky-700">
+                {isOriginExpanded ? "숨기기" : "보기"}
+              </span>
+            </button>
+          </h4>
+          <div id={originPanelId} hidden={!isOriginExpanded}>
+            {originLines.length > 0 ? (
+              <ul className="mt-3 grid gap-2">
+                {originLines.map((line) => (
+                  <li key={`${meal.date}-origin-${line}`} className="text-sm text-slate-600">
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">제공된 원산지 정보가 없어요.</p>
+            )}
+          </div>
         </section>
       </div>
     </article>
