@@ -1,138 +1,111 @@
 # 프로젝트 구조
 
-이 저장소는 **학교도우미** 서비스를 위한 루트 작업공간이며, Android 앱과 Web 클라이언트를 분리한 구조를 사용합니다.
+이 저장소는 **학교도우미** 서비스를 위한 멀티플랫폼 작업공간입니다. Android, iOS, Web 클라이언트가 같은 기능 도메인(학생 설정, 시간표, 급식, 학사 일정, 타이머)을 제공하며, 플랫폼별 구현과 검증 도구는 각 폴더에 분리되어 있습니다.
 
-현재 문서는 **푸시된 추적 파일 기준** 저장소 구조를 설명합니다.
+> 이 문서는 현재 Git 추적 소스 기준 구조를 설명합니다. 빌드 산출물(`.gradle/`, `.build/`, `.next/`, `node_modules/`)은 구조 설명에서 제외합니다.
 
 ## 최상위 구조
 
 ```text
 misSchoolApp/
-├── .gitignore            # 루트 ignore 규칙
-├── README.md             # 저장소 시작 안내
-├── android/              # Android Gradle 프로젝트
-├── docs/                 # 기획/구조/설정 문서
-└── web/                  # 학교도우미 Next.js Web 클라이언트
+├── README.md                  # 저장소 개요와 플랫폼별 시작 안내
+├── android/                   # Kotlin/Gradle Android 앱
+├── ios/                       # SwiftUI/Xcode iOS 앱 및 WidgetKit 위젯
+├── web/                       # Next.js App Router 웹 클라이언트
+├── docs/                      # 제품·운영·검증 문서
+├── scripts/                   # 저장소 공통 보조 스크립트
+└── .codex/                    # 로컬 에이전트/스킬 설정
 ```
 
-## `android/` 내부 구조
+## Android: `android/`
+
+단일 `:app` 모듈의 Kotlin 앱입니다. XML + DataBinding UI, Hilt DI, MVVM, Retrofit 기반 NEIS 연동을 사용합니다.
 
 ```text
 android/
-├── AGENTS.md             # Android 작업 규칙
-├── README.md             # Android 작업 안내
-├── app/                  # Android application module
+├── app/
 │   ├── build.gradle.kts
-│   ├── proguard-rules.pro
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/bsbarron/midschoolapp/
-│   │   │   │   ├── data/         # 모델, 원격 API, repository
-│   │   │   │   ├── di/           # Hilt 모듈
-│   │   │   │   ├── timer/        # 타이머 알람/스케줄링
-│   │   │   │   ├── ui/           # 화면별 ViewModel / UI state
-│   │   │   │   ├── util/         # 공용 유틸
-│   │   │   │   └── widget/       # 앱 위젯 및 커스텀 뷰
-│   │   │   ├── res/              # layout, drawable, values, xml
-│   │   │   └── AndroidManifest.xml
-│   │   ├── test/                 # 로컬 단위 테스트
-│   │   └── androidTest/          # 계측 테스트
-├── gradle/
-│   ├── libs.versions.toml
-│   └── wrapper/
-├── build.gradle.kts
-├── gradle.properties
-├── gradlew
-├── gradlew.bat
-└── settings.gradle.kts
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml
+│       │   ├── java/com/lbs/schoolhelper/
+│       │   │   ├── data/       # 모델, NEIS/공지 원격 API, repository
+│       │   │   ├── di/         # Hilt 모듈
+│       │   │   ├── timer/      # 알람, 부팅 복원, 수신기
+│       │   │   ├── ui/         # 화면별 ViewModel, UiState, adapter
+│       │   │   ├── util/       # 공용 유틸
+│       │   │   └── widget/     # App Widget provider와 설정 화면
+│       │   └── res/            # XML 레이아웃, drawable, 문자열, 위젯 메타데이터
+│       ├── test/               # Robolectric/JUnit 단위 테스트
+│       └── androidTest/        # 계측 테스트
+├── gradle/libs.versions.toml  # 의존성 버전 카탈로그
+├── scripts/                   # Android 검증 보조 스크립트
+└── AGENTS.md                  # Android 작업 규칙
 ```
 
-## 왜 `android/` 아래로 분리했나요?
+주요 Activity는 루트 패키지에, 화면 상태와 로직은 `ui/<feature>/`에 둡니다. 학교·사용자 설정은 `data/repository/`, 외부 데이터 계약은 `data/remote/`에 둡니다.
 
-이 구조는 다음 목적에 유리합니다.
+## iOS: `ios/`
 
-- 저장소 루트를 문서/자동화/도구 자산과 함께 운영하기 쉬움
-- 이후 iOS, backend, web 같은 다른 플랫폼 폴더를 추가하기 쉬움
-- Codex/OMX 자산과 안드로이드 앱 소스를 역할별로 분리 가능
-
-## `docs/` 내부 구조
+SwiftUI 앱, WidgetKit extension, Swift Package 기반 Core 테스트를 함께 관리합니다.
 
 ```text
-docs/
-├── android-studio-setup.md   # Android Studio 열기와 로컬 실행 안내
-├── project-structure.md      # 현재 저장소 구조 문서
-└── project_specification.md  # 멀티플랫폼 기능/정책 스펙
+ios/
+├── SchoolHelper.xcodeproj/    # 앱·UI 테스트·위젯 target 및 공유 scheme
+├── SchoolHelper/
+│   ├── App/                   # 앱 진입점, 탭 구성, 앱 상태, Crashlytics 초기화
+│   ├── Core/
+│   │   ├── Models/            # 공통 도메인 모델
+│   │   ├── Networking/        # NEIS와 학교 검색 클라이언트
+│   │   ├── Notifications/     # 권한 및 타이머 알림
+│   │   ├── Repositories/      # 학교 데이터 및 위젯 스냅샷 조합
+│   │   ├── Storage/           # UserDefaults/App Group 기반 저장소
+│   │   └── Views/             # 앱·위젯 공유 표시 뷰
+│   ├── Features/              # Home, Setup, Timetable, Meals, Schedule, Timer, Settings
+│   └── Resources/             # 에셋과 Firebase 설정 파일
+├── SchoolHelperWidget/        # WidgetKit extension
+├── SchoolHelperTests/         # Xcode 단위 테스트
+├── SchoolHelperUITests/       # Xcode UI 테스트
+├── Tests/SchoolHelperIOSCoreTests/ # SwiftPM Core 테스트
+├── Package.swift              # UI 의존성을 제외한 Core 테스트 package
+└── scripts/                   # simulator·실기기·App Group 검증 스크립트
 ```
 
-## `web/` 내부 주요 구조
+공유 도메인/저장소/네트워크는 `Core/`, 화면과 ViewModel은 `Features/<feature>/`에 둡니다. Xcode 프로젝트 파일명은 `SchoolHelper.xcodeproj`이고, 앱 실행 scheme은 `SchoolHelperIOS`입니다.
+
+## Web: `web/`
+
+Next.js App Router 기반 웹 앱입니다. 브라우저는 외부 NEIS API를 직접 호출하지 않고 `app/api/` route handler를 통해 서버 측 BFF 경계에 접근합니다.
 
 ```text
 web/
-├── AGENTS.md                 # Web 작업 규칙
-├── README.md                 # Web 작업 안내
 ├── app/
-│   ├── page.tsx               # 홈 대시보드
-│   ├── setup/page.tsx         # 초기 설정
-│   ├── settings/page.tsx      # 설정
-│   ├── timetable/page.tsx     # 시간표
-│   ├── schedule/page.tsx      # 학사 일정
-│   ├── meals/page.tsx         # 주간 급식 상세
-│   ├── timer/page.tsx         # 타이머
-│   └── api/                   # NEIS/가정통신문 BFF route handlers
-├── components/                # 화면/카드/상태 UI 컴포넌트
-│   ├── home-dashboard.tsx     # 홈 실데이터 대시보드 + 가정통신문 카드 조합
-│   ├── home-timer-card.tsx    # 홈 타이머 요약/빠른 제어 카드
-│   ├── meal-browser.tsx       # 홈 급식 카드에서 이동하는 주간 급식 상세 조회
-│   ├── timer-panel.tsx        # 타이머 상세 제어 / 알림 / 오늘 기록
-│   └── data-state.tsx         # 공통 로딩/오류/빈 상태/설정 필요 UI
-├── hooks/                     # 브라우저 상태 구독 훅
-│   └── use-study-timer.ts     # 홈/타이머 페이지가 공유하는 타이머 상태 구독
+│   ├── api/                  # schools, timetable, meals, schedule, notices BFF route handlers
+│   ├── page.tsx              # 홈 대시보드
+│   ├── setup/ settings/      # 학생 초기 설정과 변경
+│   ├── timetable/ meals/ schedule/ timer/ # 기능별 페이지
+│   ├── layout.tsx
+│   └── globals.css
+├── components/               # 페이지 조합, 카드, 공통 데이터 상태 UI
+├── hooks/                    # hydration, 학생 설정, 타이머 상태 구독
 ├── lib/
-│   ├── neis/                  # NEIS 타입/매퍼/클라이언트
-│   ├── notices/               # 가정통신문 수집/파싱/provider 판별
-│   ├── storage/               # preferences/cache/browser storage
-│   │   ├── preferences.ts     # 학생 설정 저장
-│   │   ├── cache.ts           # 급식/시간표/일정 캐시 및 복구 전략
-│   │   ├── timer.ts           # 타이머 스냅샷/기록/알림 설정 저장
-│   │   └── browser-storage.ts # 브라우저 저장소 래퍼
-│   ├── timer.ts               # 타이머 상태 계산/복원용 순수 유틸
-│   └── *.ts                   # 날짜/사이트 데이터/도메인 유틸/API 호출 래퍼
-├── public/                    # 정적 리소스
-├── scripts/                   # node:test 기반 경량 회귀 스크립트
-│   ├── test-notices.mjs       # 가정통신문 provider/URL 처리 검증
-│   ├── test-notice-errors.mjs # 가정통신문 복구 오류 규칙 검증
-│   ├── test-timer.mjs         # 타이머 도메인/저장 규칙 검증
-│   ├── test-timer-storage.mjs  # 타이머 저장소 동기화/상태 계약 검증
-│   ├── test-home-timer-card-cleanup.mjs # 홈 타이머 카드 정합성 가드
-│   └── test-student-preferences-sync.mjs # 학생 설정 저장소 동기화 회귀 방지
-├── .env.example               # Web 로컬 환경변수 예시
-├── .gitignore
-├── eslint.config.mjs
-├── next.config.ts
+│   ├── neis/                 # NEIS 타입, 매퍼, 서버 클라이언트
+│   ├── notices/              # 가정통신문 provider 판별·수집·오류 처리
+│   ├── storage/              # 브라우저 저장소, 캐시, 사용자 설정, 타이머 스냅샷
+│   └── *.ts                  # 대시보드, 날짜, 화면용 도메인 유틸
+├── scripts/                  # node:test 기반 회귀 테스트
+├── public/
 ├── package.json
-├── package-lock.json
-├── postcss.config.mjs
-└── tsconfig.json
+└── AGENTS.md                 # Web 작업 규칙
 ```
 
-## 작업 규칙
+서버 데이터와 브라우저 로컬 상태를 분리합니다. `lib/storage/`는 설정·캐시·타이머 영속화를 담당하고, `hooks/`는 클라이언트 UI 구독 경계를 제공합니다.
 
-- 안드로이드 빌드/테스트 명령은 기본적으로 `android/` 안에서 실행
-- 웹 빌드/테스트 명령은 기본적으로 `web/` 안에서 실행
-- 문서는 `docs/`와 각 플랫폼 `README.md`를 기준으로 관리
-- 코드 전용 규칙 문서는 각 플랫폼의 `AGENTS.md`를 기준으로 관리
-- 사용자/서비스 표기는 문서에서 `학교도우미`를 우선 사용하고, 저장소명 `MisSchoolApp`은 저장소 식별 문맥에서만 사용
+## 문서와 검증의 기준
 
-## 자주 쓰는 명령
+- 전체 기능/정책: `project_specification.md`
+- Android 실행/구조: `../android/README.md`, `android-studio-setup.md`
+- iOS 실행/검증: `../ios/README.md`, `ios-project-specification.md`, `ios-runtime-verification.md`
+- Web 실행/구조: `../web/README.md`
 
-```bash
-cd android
-./gradlew testDebugUnitTest lintDebug
-./gradlew assembleDebug
-
-cd ../web
-npm run lint
-npm run typecheck
-npm test
-npm run build
-```
+대표 검증 명령은 각 플랫폼 README를 우선합니다. 코드 구조가 바뀌면 이 문서와 해당 플랫폼 README를 함께 갱신합니다.

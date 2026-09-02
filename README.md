@@ -55,7 +55,7 @@ misSchoolApp/
 │   │   ├── proguard-rules.pro
 │   │   └── src/
 │   │       ├── main/
-│   │       │   ├── java/com/bsbarron/midschoolapp/
+│   │       │   ├── java/com/lbs/schoolhelper/
 │   │       │   │   ├── data/
 │   │       │   │   ├── di/
 │   │       │   │   ├── timer/
@@ -78,8 +78,8 @@ misSchoolApp/
 │   └── project_specification.md
 ├── ios/
 │   ├── Package.swift
-│   ├── SchoolHelperIOS.xcodeproj/
-│   ├── SchoolHelperIOS/
+│   ├── SchoolHelper.xcodeproj/
+│   ├── SchoolHelper/
 │   ├── SchoolHelperWidget/
 │   └── Tests/
 └── web/
@@ -135,7 +135,7 @@ cd android
 ```bash
 cd ios
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-  xcodebuild -project SchoolHelperIOS.xcodeproj -scheme SchoolHelperIOS \
+  xcodebuild -project SchoolHelper.xcodeproj -scheme SchoolHelperIOS \
   -destination 'platform=iOS Simulator,name=iPhone 16' build
 ```
 

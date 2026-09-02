@@ -2,15 +2,20 @@
 
 이 폴더는 학교도우미의 iPhone용 앱 작업 공간입니다.
 
-현재 단계:
+현재 구현은 SwiftUI + MVVM 기반 iPhone 앱과 WidgetKit 위젯으로 구성됩니다.
 
-- iOS 전용 스펙 문서 추가
-- SwiftUI 기반 폴더 골격 생성
-- 화면/도메인 구조 초안 정리
-- shared app/widget storage 및 widget snapshot foundation 추가
-- `SchoolHelperWidget` WidgetKit source/target scaffold 추가
-- app group entitlement scaffold 추가
-- `SchoolHelperWidget.xcscheme` 공유 스킴 추가
+## 구조
+
+- `SchoolHelper.xcodeproj`: 앱, UI 테스트, 위젯 target과 공유 scheme
+- `SchoolHelper/App`: 앱 진입점, 탭, 앱 상태, Crashlytics 초기화
+- `SchoolHelper/Core`: 모델, NEIS/학교 검색 네트워크, 저장소, 알림, 위젯 스냅샷
+- `SchoolHelper/Features`: Home, Setup, Timetable, Meals, Schedule, Timer, Settings의 View/ViewModel
+- `SchoolHelperWidget`: 시간표 WidgetKit extension
+- `SchoolHelperTests`, `SchoolHelperUITests`: Xcode 테스트
+- `Tests/SchoolHelperIOSCoreTests`: SwiftPM으로 실행하는 Core 단위 테스트
+- `scripts`: simulator·실기기·App Group 검증 보조 스크립트
+
+전체 폴더 맵은 `../docs/project-structure.md`를 참고하세요.
 
 관련 문서:
 
@@ -20,7 +25,7 @@
 - `../docs/ios-parity-audit.md`
 - `../.codex/skills/ios-architecture/SKILL.md`
 
-목표 기능:
+주요 기능:
 
 - Setup
 - Home
@@ -36,6 +41,17 @@
 - UI 테스트 스킴: `SchoolHelperIOSUI`
 - 위젯 스킴: `SchoolHelperWidget`
 
+
+
+## 로컬 빌드와 Core 테스트
+
+```bash
+cd ios
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project SchoolHelper.xcodeproj -scheme SchoolHelperIOS \
+  -destination 'platform=iOS Simulator,name=iPhone 16' build
+swift test
+```
 
 실제 iPhone 설치:
 

@@ -329,7 +329,7 @@
 
 - **언어/런타임**: Swift 5.9 이상, SwiftUI
 - **최소 지원 버전**: iOS 16 이상
-- **의존성 및 빌드 관리**: Swift Package Manager (SPM) 및 Xcode Project (`SchoolHelperIOS.xcodeproj`)
+- **의존성 및 빌드 관리**: Swift Package Manager (SPM) 및 Xcode Project (`SchoolHelper.xcodeproj`)
 - **아키텍처**: MVVM (SwiftUI View + ObservableObject ViewModel)
 - **비동기 처리**: Swift Concurrency (`async`/`await`, `Task`, `MainActor`) 및 Combine
 - **네트워킹**: `URLSession` 기반 API 통신 (`NEISClient`)

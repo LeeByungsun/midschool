@@ -56,7 +56,7 @@ cd android
 ```text
 android/
 ├── app/
-│   ├── src/main/java/com/bsbarron/midschoolapp/
+│   ├── src/main/java/com/lbs/schoolhelper/
 │   │   ├── data/         # 모델, 원격 API, repository
 │   │   ├── di/           # Hilt 모듈
 │   │   ├── timer/        # 타이머 알람/스케줄링
