@@ -22,6 +22,7 @@ TODO.md
 !.codex/skills/
 !.codex/skills/**
 .codex/skills/.system/**
+.codex/skills/ios-architecture/
 !.codex/prompts/
 !.codex/prompts/**
 ios/system-evidence.local.json
