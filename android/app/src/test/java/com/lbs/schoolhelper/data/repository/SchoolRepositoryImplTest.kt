@@ -56,6 +56,59 @@ private fun <T> errorResponse(code: String, message: String): NeisResponse<T> {
 }
 
 class SchoolRepositoryImplTest {
+    private val telemetrySchool = StudentInfo("2", "5", "테스트중학교", "J10", "1234567", "중학교")
+
+    @Test
+    fun `cancelled requests escape every get and observe path`() = runBlocking {
+        val api = FakeNeisApiService().apply { failure = kotlinx.coroutines.CancellationException("cancel") }
+        val notices = FakeNoticeApiService().apply { failure = kotlinx.coroutines.CancellationException("cancel") }
+        val repository = SchoolRepositoryImpl(api, FakePreferencesRepository(telemetrySchool), notices)
+        val calls: List<suspend () -> Unit> = listOf(
+            { repository.searchSchools("학교") }, { repository.getMeals("20260914") },
+            { repository.getSchedules("202609") }, { repository.getTimetable("2", "5", "20260914") },
+            { repository.getNotices() }, { repository.observeMeals("20260914").toList() },
+            { repository.observeSchedules("202609").toList() },
+            { repository.observeTimetable("2", "5", "20260914").toList() }
+        )
+        for ((index, call) in calls.withIndex()) {
+            var escaped = false
+            try { call() } catch (_: kotlinx.coroutines.CancellationException) { escaped = true }
+            assertTrue("Cancellation swallowed by path $index", escaped)
+        }
+    }
+
+    @Test
+    fun `empty cached meals are usable when network fails`() = runBlocking {
+        val api = FakeNeisApiService().apply { failure = java.io.IOException("offline") }
+        val prefs = FakePreferencesRepository(telemetrySchool)
+        prefs.saveMealCache("J10", "1234567", "20260914", emptyList())
+        val repository = SchoolRepositoryImpl(api, prefs, FakeNoticeApiService())
+        assertEquals(emptyList<MealInfo>(), repository.getMeals("20260914").getOrThrow())
+    }
+
+    @Test
+    fun `cache does not hide failed network attempt from telemetry`() = runBlocking {
+        val api = FakeNeisApiService().apply { failure = java.io.IOException("https://private/?KEY=secret") }
+        val prefs = FakePreferencesRepository(telemetrySchool)
+        prefs.saveMealCache("J10", "1234567", "20260914", emptyList())
+        val records = mutableListOf<Pair<com.lbs.schoolhelper.telemetry.LoadOutcome, com.lbs.schoolhelper.telemetry.DataSource>>()
+        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
+            override fun dataLoaded(feature: com.lbs.schoolhelper.telemetry.Feature, school: StudentInfo,
+                outcome: com.lbs.schoolhelper.telemetry.LoadOutcome, source: com.lbs.schoolhelper.telemetry.DataSource,
+                durationMillis: Long, error: Throwable?) {
+                assertEquals("1234567", school.schoolCode)
+                assertTrue(durationMillis >= 0)
+                records += outcome to source
+            }
+        }
+        val repository = SchoolRepositoryImpl(api, prefs, FakeNoticeApiService(), telemetry)
+        repository.getMeals("20260914")
+        assertEquals(listOf(
+            com.lbs.schoolhelper.telemetry.LoadOutcome.FAILURE to com.lbs.schoolhelper.telemetry.DataSource.NETWORK,
+            com.lbs.schoolhelper.telemetry.LoadOutcome.EMPTY to com.lbs.schoolhelper.telemetry.DataSource.CACHE
+        ), records)
+    }
+
 
     @Test
     fun `getMeals uses selected school codes and cache keys`() = runBlocking {
@@ -719,6 +772,7 @@ class SchoolRepositoryImplTest {
     }
 
     private class FakeNeisApiService : NeisApiService {
+        var failure: Exception? = null
         var mealsResponse: NeisResponse<MealRowDto> = successResponse(emptyList())
         var schedulesResponse: NeisResponse<ScheduleRowDto> = successResponse(emptyList())
         var elementaryTimetableResponse: NeisResponse<TimetableRowDto> = successResponse(emptyList())
@@ -747,6 +801,7 @@ class SchoolRepositoryImplTest {
             schoolCode: String,
             date: String?
         ): NeisResponse<MealRowDto> {
+            failure?.let { throw it }
             lastMealOfficeCode = officeCode
             lastMealSchoolCode = schoolCode
             return mealsResponse
@@ -761,6 +816,7 @@ class SchoolRepositoryImplTest {
             schoolCode: String,
             date: String?
         ): NeisResponse<ScheduleRowDto> {
+            failure?.let { throw it }
             if (failSchedules) throw IllegalStateException("schedule api error")
             lastScheduleOfficeCode = officeCode
             lastScheduleSchoolCode = schoolCode
@@ -778,6 +834,7 @@ class SchoolRepositoryImplTest {
             classroom: String,
             date: String?
         ): NeisResponse<TimetableRowDto> {
+            failure?.let { throw it }
             if (failElementaryTimetable) throw IllegalStateException("elementary timetable api error")
             elementaryCalled = true
             return elementaryTimetableResponse
@@ -794,6 +851,7 @@ class SchoolRepositoryImplTest {
             classroom: String,
             date: String?
         ): NeisResponse<TimetableRowDto> {
+            failure?.let { throw it }
             if (failMiddleTimetable) throw IllegalStateException("timetable api error")
             middleCalled = true
             return middleTimetableResponse
@@ -810,6 +868,7 @@ class SchoolRepositoryImplTest {
             classroom: String,
             date: String?
         ): NeisResponse<TimetableRowDto> {
+            failure?.let { throw it }
             if (failHighTimetable) throw IllegalStateException("high timetable api error")
             highCalled = true
             return highTimetableResponse
@@ -821,10 +880,14 @@ class SchoolRepositoryImplTest {
             pageIndex: Int,
             pageSize: Int,
             query: String
-        ): NeisResponse<SchoolInfoRowDto> = schoolInfoResponse
+        ): NeisResponse<SchoolInfoRowDto> {
+            failure?.let { throw it }
+            return schoolInfoResponse
+        }
     }
 
     private class FakeNoticeApiService : NoticeApiService {
+        var failure: Exception? = null
         var noticesResponse: NoticeListResponseDto = NoticeListResponseDto()
         var lastOfficeCode: String? = null
         var lastSchoolCode: String? = null
@@ -835,6 +898,7 @@ class SchoolRepositoryImplTest {
             schoolCode: String,
             limit: Int
         ): NoticeListResponseDto {
+            failure?.let { throw it }
             lastOfficeCode = officeCode
             lastSchoolCode = schoolCode
             lastLimit = limit
@@ -845,6 +909,13 @@ class SchoolRepositoryImplTest {
     private class FakePreferencesRepository(
         private var studentInfo: StudentInfo = StudentInfo()
     ) : PreferencesRepository {
+    private var analyticsConsent = false
+    private var diagnosticsConsent = false
+    override fun isAnalyticsEnabled() = analyticsConsent
+    override fun isDiagnosticsEnabled() = diagnosticsConsent
+    override fun saveAnalyticsEnabled(enabled: Boolean) { analyticsConsent = enabled }
+    override fun saveDiagnosticsEnabled(enabled: Boolean) { diagnosticsConsent = enabled }
+
         var savedMealCacheArgs: MealCacheArgs? = null
         var savedScheduleCacheEvents: List<SchoolEvent>? = null
         var savedTimetableCacheArgs: TimetableCacheArgs? = null

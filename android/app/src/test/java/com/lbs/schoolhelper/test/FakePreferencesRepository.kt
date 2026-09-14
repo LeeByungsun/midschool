@@ -22,6 +22,13 @@ class FakePreferencesRepository(
         isRunning = false
     )
 ) : PreferencesRepository {
+    private var analyticsConsent = false
+    private var diagnosticsConsent = false
+    override fun isAnalyticsEnabled() = analyticsConsent
+    override fun isDiagnosticsEnabled() = diagnosticsConsent
+    override fun saveAnalyticsEnabled(enabled: Boolean) { analyticsConsent = enabled }
+    override fun saveDiagnosticsEnabled(enabled: Boolean) { diagnosticsConsent = enabled }
+
     var currentStudentInfo: StudentInfo = studentInfo
         private set
     var currentTimerDisplayMode: TimerDisplayMode = timerDisplayMode

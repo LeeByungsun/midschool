@@ -37,6 +37,24 @@ class SetupViewModelTest {
     )
 
     @Test
+    fun `valid school save reports selection only after persistence`() = runBlocking {
+        val prefs = FakePreferencesRepository()
+        val savedPrevious = mutableListOf<StudentInfo>()
+        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
+            override fun schoolSaved(previous: StudentInfo) {
+                assertEquals("1234567", prefs.getStudentInfo().schoolCode)
+                savedPrevious += previous
+            }
+        }
+        val vm = SetupViewModel(application, prefs, FakeSchoolRepository(), telemetry)
+        vm.selectSchool(selectedSchool)
+        vm.updateGrade("2")
+        vm.updateClassroom("5")
+        vm.saveStudentInfo()
+        assertEquals(listOf(StudentInfo()), savedPrevious)
+    }
+
+    @Test
     fun init_whenLegacySchoolNameExists_requiresSchoolReselection() {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(

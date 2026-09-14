@@ -239,6 +239,34 @@
             android:text="@string/settings_timer_alert_vibration"
             android:textColor="@color/text_primary" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="@string/settings_telemetry_title"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_telemetry_description"
+            android:textColor="@color/text_primary" />
+        <Switch
+            android:id="@+id/analyticsSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/settings_analytics_consent"
+            android:textColor="@color/text_primary" />
+        <Switch
+            android:id="@+id/diagnosticsSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/settings_diagnostics_consent"
+            android:textColor="@color/text_primary" />
+
         <Button
             android:id="@+id/saveSettingsButton"
             android:layout_width="match_parent"

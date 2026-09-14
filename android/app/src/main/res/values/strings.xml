@@ -129,4 +129,8 @@
     <string name="widget_config_description">홈 화면 위젯에서 오늘과 내일 시간표를 어떻게 보여줄지 선택할 수 있어요.</string>
     <string name="widget_config_show_tomorrow">내일 시간표 표시</string>
     <string name="widget_config_save">저장하기</string>
+    <string name="settings_telemetry_title">앱 개선을 위한 선택적 정보 제공</string>
+    <string name="settings_telemetry_description">동의하면 Google Firebase를 통해 선택한 학교 코드·교육청·학교 종류, 앱 버전·OS·기기 모델 및 SDK 설치 식별정보를 처리합니다. 이용 분석에는 접속·기능 이용·조회 결과가, 오류 진단에는 오류 내역과 발생 화면이 포함됩니다. 이름·학년·반·검색어·광고 ID는 추가 전송하지 않습니다. 선택은 즉시 적용되며, 동의하지 않아도 앱을 사용할 수 있습니다. 끄면 이후 앱 실행에서 해당 수집을 중단합니다. Firebase 자동 오류 보고의 변경은 다음 앱 실행부터 적용될 수 있으며, 이미 전송된 정보는 자동 삭제되지 않습니다.</string>
+    <string name="settings_analytics_consent">[선택] 이용 정보 분석에 동의</string>
+    <string name="settings_diagnostics_consent">[선택] 오류 진단 정보 제공에 동의</string>
 </resources>

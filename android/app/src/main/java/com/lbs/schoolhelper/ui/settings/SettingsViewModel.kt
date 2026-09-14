@@ -9,6 +9,8 @@ import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.NoOpTelemetry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,7 +25,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     application: Application,
     private val preferencesRepository: PreferencesRepository,
-    private val schoolRepository: SchoolRepository
+    private val schoolRepository: SchoolRepository,
+    private val telemetry: AppTelemetry = NoOpTelemetry
 ) : AndroidViewModel(application) {
 
     private val appContext = application.applicationContext
@@ -43,7 +46,9 @@ class SettingsViewModel @Inject constructor(
             classroom = studentInfo.classroom,
             isRingMode = preferencesRepository.getTimerDisplayMode() == TimerDisplayMode.RING,
             notificationEnabled = preferencesRepository.isTimerNotificationEnabled(),
-            vibrationEnabled = preferencesRepository.isTimerVibrationEnabled()
+            vibrationEnabled = preferencesRepository.isTimerVibrationEnabled(),
+            analyticsEnabled = preferencesRepository.isAnalyticsEnabled(),
+            diagnosticsEnabled = preferencesRepository.isDiagnosticsEnabled()
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -53,6 +58,18 @@ class SettingsViewModel @Inject constructor(
 
     private val _closeEvent = MutableSharedFlow<Unit>()
     val closeEvent = _closeEvent.asSharedFlow()
+
+    fun updateAnalyticsEnabled(enabled: Boolean) {
+        preferencesRepository.saveAnalyticsEnabled(enabled)
+        _uiState.update { it.copy(analyticsEnabled = enabled) }
+        telemetry.setCollection(enabled, preferencesRepository.isDiagnosticsEnabled())
+    }
+
+    fun updateDiagnosticsEnabled(enabled: Boolean) {
+        preferencesRepository.saveDiagnosticsEnabled(enabled)
+        _uiState.update { it.copy(diagnosticsEnabled = enabled) }
+        telemetry.setCollection(preferencesRepository.isAnalyticsEnabled(), enabled)
+    }
 
     fun updateSchoolQuery(query: String) {
         val trimmedQuery = query.trim()
@@ -182,6 +199,7 @@ class SettingsViewModel @Inject constructor(
             return
         }
 
+        val previousStudentInfo = preferencesRepository.getStudentInfo()
         preferencesRepository.saveStudentInfo(
             StudentInfo(
                 grade = state.grade,
@@ -192,6 +210,7 @@ class SettingsViewModel @Inject constructor(
                 schoolKind = state.selectedSchool.schoolKind
             )
         )
+        telemetry.schoolSaved(previousStudentInfo)
         preferencesRepository.saveTimerDisplayMode(
             if (state.isRingMode) TimerDisplayMode.RING else TimerDisplayMode.COUNT
         )

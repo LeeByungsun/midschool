@@ -12,6 +12,9 @@ import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.SplashActivity
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.TelemetryLifecycleCallbacks
+import com.lbs.schoolhelper.telemetry.WidgetAction
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -53,6 +56,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             }
 
             ACTION_REFRESH -> {
+                dependencies(context).telemetry().widgetAction(WidgetAction.REFRESH)
                 val appWidgetId = intent.getIntExtra(
                     AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID
@@ -103,11 +107,13 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
+        dependencies(context).telemetry().widgetAction(WidgetAction.ENABLE)
         WidgetMidnightScheduler.scheduleNext(context)
     }
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
+        dependencies(context).telemetry().widgetAction(WidgetAction.DISABLE)
         WidgetMidnightScheduler.cancel(context)
     }
 
@@ -207,6 +213,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                         ?: Intent(context, SplashActivity::class.java).apply {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         }
+                    openAppIntent.withWidgetEntryPoint()
                     val openAppPendingIntent = PendingIntent.getActivity(
                         context,
                         appWidgetId + OPEN_APP_REQUEST_CODE_OFFSET,
@@ -380,4 +387,10 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 interface WidgetProviderEntryPoint {
     fun schoolRepository(): SchoolRepository
     fun preferencesRepository(): PreferencesRepository
+    fun telemetry(): AppTelemetry
+}
+
+/** Marks only a user-tapped widget launch; rendering/refreshing must not produce an open event. */
+internal fun Intent.withWidgetEntryPoint(): Intent = apply {
+    putExtra(TelemetryLifecycleCallbacks.ENTRY_POINT_EXTRA, "widget")
 }

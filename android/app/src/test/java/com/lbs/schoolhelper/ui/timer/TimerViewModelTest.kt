@@ -18,6 +18,28 @@ class TimerViewModelTest {
     private val application: Application = RuntimeEnvironment.getApplication()
 
     @Test
+    fun `user timer actions are recorded but restored running timer is not a new start`() {
+        val actions = mutableListOf<com.lbs.schoolhelper.telemetry.TimerAction>()
+        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
+            override fun timerAction(action: com.lbs.schoolhelper.telemetry.TimerAction, durationMillis: Long) {
+                assertTrue(durationMillis > 0)
+                actions += action
+            }
+        }
+        val prefs = FakePreferencesRepository(timerState = TimerPreferenceState("FOCUS", 10000, 10000, 0, false))
+        val vm = TimerViewModel(application, prefs, telemetry)
+        vm.toggleTimer()
+        vm.toggleTimer()
+        vm.resetTimer()
+        assertEquals(listOf(com.lbs.schoolhelper.telemetry.TimerAction.START,
+            com.lbs.schoolhelper.telemetry.TimerAction.PAUSE,
+            com.lbs.schoolhelper.telemetry.TimerAction.RESET), actions)
+        prefs.saveTimerState("FOCUS", 10000, 9000, System.currentTimeMillis() + 9000, true)
+        TimerViewModel(application, prefs, telemetry)
+        assertEquals(3, actions.size)
+    }
+
+    @Test
     fun toggleTimer_runningTickDoesNotPersistEverySecond() {
         val repository = FakePreferencesRepository(
             timerState = TimerPreferenceState(

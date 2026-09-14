@@ -15,6 +15,14 @@ class PreferencesRepositoryImpl @Inject constructor(
     private val userPreferencesStore: UserPreferencesStore
 ) : PreferencesRepository {
 
+    private val telemetryPreferences by lazy {
+        context.getSharedPreferences("telemetry_consent", Context.MODE_PRIVATE)
+    }
+    override fun isAnalyticsEnabled(): Boolean = telemetryPreferences.getBoolean("analytics", false)
+    override fun isDiagnosticsEnabled(): Boolean = telemetryPreferences.getBoolean("diagnostics", false)
+    override fun saveAnalyticsEnabled(enabled: Boolean) { telemetryPreferences.edit().putBoolean("analytics", enabled).apply() }
+    override fun saveDiagnosticsEnabled(enabled: Boolean) { telemetryPreferences.edit().putBoolean("diagnostics", enabled).apply() }
+
     private val sharedPreferences by lazy {
         context.getSharedPreferences(REPOSITORY_PREFS_NAME, Context.MODE_PRIVATE)
     }

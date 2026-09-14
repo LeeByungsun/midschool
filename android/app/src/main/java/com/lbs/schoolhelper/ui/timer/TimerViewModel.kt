@@ -6,6 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
+import com.lbs.schoolhelper.timer.TimerCompletion
+import com.lbs.schoolhelper.telemetry.*
 import com.lbs.schoolhelper.timer.TimerAlarmScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TimerViewModel @Inject constructor(
     application: Application,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val telemetry: AppTelemetry = NoOpTelemetry
 ) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     private val _uiState = MutableStateFlow(createInitialState())
@@ -47,6 +50,7 @@ class TimerViewModel @Inject constructor(
             progressFraction = 1f
         )
         saveTimerState(isRunning = false, targetAtMillis = 0L)
+        telemetry.timerAction(TimerAction.PRESET, preset.durationMillis)
     }
 
     fun toggleTimer() {
@@ -68,6 +72,7 @@ class TimerViewModel @Inject constructor(
             )
         }
         saveTimerState(isRunning = false, targetAtMillis = 0L)
+        telemetry.timerAction(TimerAction.RESET, _uiState.value.totalMillis)
     }
 
     fun refreshDisplayMode() {
@@ -79,7 +84,7 @@ class TimerViewModel @Inject constructor(
         countDownTimer?.cancel()
     }
 
-    private fun startTimer() {
+    private fun startTimer(recordAction: Boolean = true) {
         val currentState = _uiState.value
         val millisToRun = if (currentState.remainingMillis > 0L) {
             currentState.remainingMillis
@@ -96,6 +101,7 @@ class TimerViewModel @Inject constructor(
         }
         saveTimerState(isRunning = true, targetAtMillis = targetAtMillis)
         TimerAlarmScheduler.schedule(appContext, targetAtMillis)
+        if (recordAction) telemetry.timerAction(TimerAction.START, currentState.totalMillis)
 
         countDownTimer?.cancel()
         countDownTimer = object : CountDownTimer(millisToRun, 1000L) {
@@ -114,7 +120,7 @@ class TimerViewModel @Inject constructor(
 
             override fun onFinish() {
                 TimerAlarmScheduler.cancel(appContext)
-                preferencesRepository.clearTimerState()
+                TimerCompletion.complete(preferencesRepository, telemetry, System.currentTimeMillis())
                 _uiState.update {
                     it.copy(
                         remainingMillis = 0L,
@@ -148,6 +154,7 @@ class TimerViewModel @Inject constructor(
             )
         }
         saveTimerState(isRunning = false, targetAtMillis = 0L)
+        telemetry.timerAction(TimerAction.PAUSE, _uiState.value.totalMillis)
     }
 
     private fun restoreTimerState() {
@@ -178,9 +185,9 @@ class TimerViewModel @Inject constructor(
         )
 
         if (savedState.isRunning && remainingMillis > 0L) {
-            startTimer()
+            startTimer(recordAction = false)
         } else if (savedState.isRunning && remainingMillis == 0L) {
-            preferencesRepository.clearTimerState()
+            TimerCompletion.complete(preferencesRepository, telemetry, System.currentTimeMillis())
             TimerAlarmScheduler.cancel(appContext)
         }
     }

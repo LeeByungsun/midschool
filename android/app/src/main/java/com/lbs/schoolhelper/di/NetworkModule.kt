@@ -27,7 +27,8 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
+            // NEIS API keys are query parameters: even BASIC logs leak request URLs.
+            level = HttpLoggingInterceptor.Level.NONE
         }
     }
 

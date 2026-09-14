@@ -12,5 +12,7 @@ data class SettingsUiState(
     val classroom: String = "",
     val isRingMode: Boolean = false,
     val notificationEnabled: Boolean = true,
-    val vibrationEnabled: Boolean = true
+    val vibrationEnabled: Boolean = true,
+    val analyticsEnabled: Boolean = false,
+    val diagnosticsEnabled: Boolean = false
 )

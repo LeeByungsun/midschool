@@ -382,3 +382,7 @@
 - `.codex/`: 자동화 스킬 및 에이전트 자산
 
 이 기준을 유지하면 이후 Android, iOS, Web을 병행 개발할 때 공통 요구사항과 플랫폼 전용 요구사항을 더 명확하게 관리할 수 있습니다.
+
+## Android 운영 관측 (2026-09-14)
+
+Android 앱은 선택적 Firebase Analytics/Crashlytics 관측 경계를 사용한다. 학교·교육청·학교 종류 코드, 기능 이용, 조회 성공/빈 결과/실패, 소요시간, 제한된 오류 코드를 기록하되 학교 이름·학년·반·검색어·URL·API 키·응답 원문은 전송하지 않는다. Analytics와 오류 진단은 독립 선택이며 기본값은 꺼져 있다. 수집 동작과 Play Data safety/개인정보처리방침은 출시 전에 일치 여부를 검토한다. 상세 이벤트 사전과 QA 절차는 `docs/android-firebase-observability.md`에 둔다.

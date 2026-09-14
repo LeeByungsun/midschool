@@ -16,15 +16,18 @@ import androidx.core.app.NotificationManagerCompat
 import com.lbs.schoolhelper.MainActivity
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.TelemetryLifecycleCallbacks
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class TimerAlarmReceiver : BroadcastReceiver() {
     @Inject lateinit var preferencesRepository: PreferencesRepository
+    @Inject lateinit var telemetry: AppTelemetry
 
     override fun onReceive(context: Context, intent: Intent?) {
-        preferencesRepository.clearTimerState()
+        TimerCompletion.complete(preferencesRepository, telemetry, System.currentTimeMillis())
 
         if (!preferencesRepository.isTimerNotificationEnabled()) {
             return
@@ -47,6 +50,7 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         }
 
         val openIntent = Intent(context, MainActivity::class.java).apply {
+            putExtra(TelemetryLifecycleCallbacks.ENTRY_POINT_EXTRA, "notification")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val contentIntent = PendingIntent.getActivity(

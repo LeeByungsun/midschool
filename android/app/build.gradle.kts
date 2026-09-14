@@ -42,7 +42,24 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Ordinary debug builds never send telemetry.
+            buildConfigField("boolean", "TELEMETRY_ALLOWED", "false")
+            buildConfigField("String", "TELEMETRY_ENVIRONMENT", "\"debug\"")
+        }
+        create("qa") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".qa"
+            versionNameSuffix = "-qa"
+            isDebuggable = true
+            matchingFallbacks += listOf("debug")
+            // google-services.json must contain an explicit com.lbs.schoolhelper.qa client.
+            buildConfigField("boolean", "TELEMETRY_ALLOWED", "true")
+            buildConfigField("String", "TELEMETRY_ENVIRONMENT", "\"qa\"")
+        }
         release {
+            buildConfigField("boolean", "TELEMETRY_ALLOWED", googleServicesFile.exists().toString())
+            buildConfigField("String", "TELEMETRY_ENVIRONMENT", "\"release\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

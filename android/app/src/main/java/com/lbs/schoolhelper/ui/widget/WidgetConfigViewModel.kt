@@ -3,6 +3,9 @@ package com.lbs.schoolhelper.ui.widget
 import androidx.lifecycle.ViewModel
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.WidgetSettings
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.NoOpTelemetry
+import com.lbs.schoolhelper.telemetry.WidgetAction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WidgetConfigViewModel @Inject constructor(
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val telemetry: AppTelemetry = NoOpTelemetry
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WidgetConfigUiState())
@@ -40,6 +44,7 @@ class WidgetConfigViewModel @Inject constructor(
                 showTomorrowTimetable = _uiState.value.showTomorrowTimetable
             )
         )
+        telemetry.widgetAction(WidgetAction.CONFIGURE)
         _saveEvent.emit(Unit)
     }
 }

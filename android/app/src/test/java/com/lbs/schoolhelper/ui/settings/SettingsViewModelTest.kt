@@ -39,6 +39,42 @@ class SettingsViewModelTest {
     )
 
     @Test
+    fun `collection choice applies without saving invalid school form`() {
+        val repository = FakePreferencesRepository()
+        val changes = mutableListOf<Pair<Boolean, Boolean>>()
+        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
+            override fun setCollection(analytics: Boolean, diagnostics: Boolean) { changes += analytics to diagnostics }
+        }
+        val vm = SettingsViewModel(application, repository, FakeSchoolRepository(), telemetry)
+        vm.updateAnalyticsEnabled(true)
+        vm.updateDiagnosticsEnabled(true)
+        vm.updateAnalyticsEnabled(false)
+        assertEquals(listOf(true to false, true to true, false to true), changes)
+        assertFalse(repository.isAnalyticsEnabled())
+        assertTrue(repository.isDiagnosticsEnabled())
+        val restored = SettingsViewModel(application, repository, FakeSchoolRepository(), telemetry)
+        assertFalse(restored.uiState.value.analyticsEnabled)
+        assertTrue(restored.uiState.value.diagnosticsEnabled)
+    }
+
+    @Test
+    fun `school change reports old identity after new identity is saved`() = runBlocking {
+        val old = StudentInfo("2", "5", "이전학교", "B10", "7654321", "중학교")
+        val prefs = FakePreferencesRepository(studentInfo = old)
+        val changes = mutableListOf<StudentInfo>()
+        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
+            override fun schoolSaved(previous: StudentInfo) {
+                assertEquals("1234567", prefs.getStudentInfo().schoolCode)
+                changes += previous
+            }
+        }
+        val vm = SettingsViewModel(application, prefs, FakeSchoolRepository(), telemetry)
+        vm.selectSchool(selectedSchool)
+        vm.saveSettings()
+        assertEquals(listOf(old), changes)
+    }
+
+    @Test
     fun init_whenLegacySchoolNameExists_requiresSchoolReselection() {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(

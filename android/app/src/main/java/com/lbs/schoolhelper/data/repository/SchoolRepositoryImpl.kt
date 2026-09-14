@@ -19,15 +19,18 @@ import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.CancellationException
 import retrofit2.HttpException
+import com.lbs.schoolhelper.telemetry.*
 
 class SchoolRepositoryImpl @Inject constructor(
     private val apiService: NeisApiService,
     private val preferencesRepository: PreferencesRepository,
-    private val noticeApiService: NoticeApiService
+    private val noticeApiService: NoticeApiService,
+    private val telemetry: AppTelemetry = NoOpTelemetry
 ) : SchoolRepository {
 
-    override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> = runCatching {
+    override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> = loadNetwork(Feature.SCHOOL_SEARCH, preferencesRepository.getStudentInfo()) {
         val trimmedQuery = query.trim()
         require(trimmedQuery.length >= MIN_SCHOOL_QUERY_LENGTH) {
             "학교 이름은 두 글자 이상 입력해 주세요."
@@ -62,9 +65,9 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
-        val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
+        val studentInfo = selectedStudentInfo(Feature.MEALS).getOrElse { return Result.failure(it) }
         val cacheKey = date
-        val networkResult = runCatching { fetchMealsFromNetwork(studentInfo, date) }
+        val networkResult = loadNetwork(Feature.MEALS, studentInfo) { fetchMealsFromNetwork(studentInfo, date) }
 
         networkResult.getOrNull()?.let { meals ->
             if (!cacheKey.isNullOrBlank()) {
@@ -76,7 +79,8 @@ class SchoolRepositoryImpl @Inject constructor(
         val cachedMeals = cacheKey?.let {
             preferencesRepository.getMealCache(studentInfo.officeCode, studentInfo.schoolCode, it)
         }
-        return if (!cachedMeals.isNullOrEmpty()) {
+        return if (cachedMeals != null) {
+            recordCache(Feature.MEALS, studentInfo, cachedMeals)
             Result.success(cachedMeals)
         } else {
             Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("급식 정보를 불러오지 못했어요."))
@@ -84,7 +88,7 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override fun observeMeals(date: String?): Flow<Result<List<MealInfo>>> = flow {
-        val studentInfo = selectedStudentInfo().getOrElse {
+        val studentInfo = selectedStudentInfo(Feature.MEALS).getOrElse {
             emit(Result.failure(it))
             return@flow
         }
@@ -93,10 +97,11 @@ class SchoolRepositoryImpl @Inject constructor(
         }
 
         if (cachedMeals != null) {
+            recordCache(Feature.MEALS, studentInfo, cachedMeals)
             emit(Result.success(cachedMeals))
         }
 
-        val networkResult = runCatching { fetchMealsFromNetwork(studentInfo, date) }
+        val networkResult = loadNetwork(Feature.MEALS, studentInfo) { fetchMealsFromNetwork(studentInfo, date) }
         val networkMeals = networkResult.getOrNull()
 
         if (networkMeals != null) {
@@ -117,9 +122,9 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
-        val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
+        val studentInfo = selectedStudentInfo(Feature.SCHEDULE).getOrElse { return Result.failure(it) }
         val cacheKey = date
-        val networkResult = runCatching { fetchSchedulesFromNetwork(studentInfo, date) }
+        val networkResult = loadNetwork(Feature.SCHEDULE, studentInfo) { fetchSchedulesFromNetwork(studentInfo, date) }
 
         networkResult.getOrNull()?.let { schedules ->
             if (!cacheKey.isNullOrBlank()) {
@@ -137,6 +142,7 @@ class SchoolRepositoryImpl @Inject constructor(
             preferencesRepository.getScheduleCache(studentInfo.officeCode, studentInfo.schoolCode, it)
         }
         return if (cachedSchedules != null) {
+            recordCache(Feature.SCHEDULE, studentInfo, cachedSchedules)
             Result.success(cachedSchedules)
         } else {
             Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("학사 일정을 불러오지 못했어요."))
@@ -144,7 +150,7 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override fun observeSchedules(date: String?): Flow<Result<List<SchoolEvent>>> = flow {
-        val studentInfo = selectedStudentInfo().getOrElse {
+        val studentInfo = selectedStudentInfo(Feature.SCHEDULE).getOrElse {
             emit(Result.failure(it))
             return@flow
         }
@@ -153,10 +159,11 @@ class SchoolRepositoryImpl @Inject constructor(
         }
 
         if (cachedSchedules != null) {
+            recordCache(Feature.SCHEDULE, studentInfo, cachedSchedules)
             emit(Result.success(cachedSchedules))
         }
 
-        val networkResult = runCatching { fetchSchedulesFromNetwork(studentInfo, date) }
+        val networkResult = loadNetwork(Feature.SCHEDULE, studentInfo) { fetchSchedulesFromNetwork(studentInfo, date) }
         val networkSchedules = networkResult.getOrNull()
 
         if (networkSchedules != null) {
@@ -177,17 +184,23 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getNotices(limit: Int): Result<NoticeFeed> {
-        val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
+        val studentInfo = selectedStudentInfo(Feature.NOTICES).getOrElse { return Result.failure(it) }
         if (BuildConfig.WEB_BASE_URL.isBlank()) {
-            return Result.failure(IllegalStateException("가정통신문 서버 주소가 설정되지 않았어요."))
+            val error = IllegalStateException("가정통신문 서버 주소가 설정되지 않았어요.")
+            telemetry.dataLoaded(Feature.NOTICES, studentInfo, LoadOutcome.FAILURE, DataSource.CONFIG, 0L, error)
+            return Result.failure(error)
         }
 
+        val startedAt = System.nanoTime()
         return try {
             val response = noticeApiService.getNotices(
                 officeCode = studentInfo.officeCode,
                 schoolCode = studentInfo.schoolCode,
                 limit = limit.coerceIn(1, 10)
             )
+            telemetry.dataLoaded(Feature.NOTICES, studentInfo,
+                if (response.items.isEmpty()) LoadOutcome.EMPTY else LoadOutcome.SUCCESS,
+                DataSource.NETWORK, elapsedMillis(startedAt))
             Result.success(
                 NoticeFeed(
                     items = response.items.map { item ->
@@ -204,6 +217,9 @@ class SchoolRepositoryImpl @Inject constructor(
                 )
             )
         } catch (error: Exception) {
+            if (error is CancellationException) throw error
+            telemetry.dataLoaded(Feature.NOTICES, studentInfo, LoadOutcome.FAILURE,
+                DataSource.NETWORK, elapsedMillis(startedAt), error)
             Result.failure(mapNoticeError(error))
         }
     }
@@ -213,9 +229,9 @@ class SchoolRepositoryImpl @Inject constructor(
         classroom: String,
         date: String?
     ): Result<List<TimetableItem>> {
-        val studentInfo = selectedStudentInfo().getOrElse { return Result.failure(it) }
+        val studentInfo = selectedStudentInfo(Feature.TIMETABLE).getOrElse { return Result.failure(it) }
         val cacheKey = date
-        val networkResult = runCatching { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
+        val networkResult = loadNetwork(Feature.TIMETABLE, studentInfo) { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
 
         val cachedItems = cacheKey?.let {
             preferencesRepository.getTimetableCache(
@@ -242,6 +258,7 @@ class SchoolRepositoryImpl @Inject constructor(
         }
 
         return if (cachedItems != null) {
+            recordCache(Feature.TIMETABLE, studentInfo, cachedItems)
             Result.success(cachedItems)
         } else {
             Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("시간표 정보를 불러오지 못했어요."))
@@ -253,7 +270,7 @@ class SchoolRepositoryImpl @Inject constructor(
         classroom: String,
         date: String?
     ): Flow<Result<List<TimetableItem>>> = flow {
-        val studentInfo = selectedStudentInfo().getOrElse {
+        val studentInfo = selectedStudentInfo(Feature.TIMETABLE).getOrElse {
             emit(Result.failure(it))
             return@flow
         }
@@ -268,10 +285,11 @@ class SchoolRepositoryImpl @Inject constructor(
         }
 
         if (cachedItems != null) {
+            recordCache(Feature.TIMETABLE, studentInfo, cachedItems)
             emit(Result.success(cachedItems))
         }
 
-        val networkResult = runCatching { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
+        val networkResult = loadNetwork(Feature.TIMETABLE, studentInfo) { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
         val networkItems = networkResult.getOrNull()
 
         if (networkItems != null) {
@@ -292,6 +310,29 @@ class SchoolRepositoryImpl @Inject constructor(
             emit(Result.failure(networkResult.exceptionOrNull() ?: IllegalStateException("시간표 정보를 불러오지 못했어요.")))
         }
     }
+
+    private suspend fun <T> loadNetwork(feature: Feature, school: StudentInfo, block: suspend () -> List<T>): Result<List<T>> {
+        val startedAt = System.nanoTime()
+        return try {
+            val items = block()
+            telemetry.dataLoaded(feature, school, if (items.isEmpty()) LoadOutcome.EMPTY else LoadOutcome.SUCCESS,
+                DataSource.NETWORK, elapsedMillis(startedAt))
+            Result.success(items)
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
+            val source = if (feature == Feature.SCHOOL_SEARCH && error is IllegalArgumentException)
+                DataSource.VALIDATION else DataSource.NETWORK
+            telemetry.dataLoaded(feature, school, LoadOutcome.FAILURE, source, elapsedMillis(startedAt), error)
+            Result.failure(error)
+        }
+    }
+
+    private fun recordCache(feature: Feature, school: StudentInfo, items: List<*>) {
+        telemetry.dataLoaded(feature, school, if (items.isEmpty()) LoadOutcome.EMPTY else LoadOutcome.SUCCESS,
+            DataSource.CACHE, 0L)
+    }
+
+    private fun elapsedMillis(startedAt: Long): Long = (System.nanoTime() - startedAt) / 1_000_000L
 
     private suspend fun fetchMealsFromNetwork(
         studentInfo: StudentInfo,
@@ -401,12 +442,14 @@ class SchoolRepositoryImpl @Inject constructor(
             }
     }
 
-    private fun selectedStudentInfo(): Result<StudentInfo> {
+    private fun selectedStudentInfo(feature: Feature): Result<StudentInfo> {
         val studentInfo = preferencesRepository.getStudentInfo()
         return if (studentInfo.hasSchoolSelection()) {
             Result.success(studentInfo)
         } else {
-            Result.failure(IllegalStateException("설정에서 학교를 먼저 선택해 주세요."))
+            val error = IllegalStateException("설정에서 학교를 먼저 선택해 주세요.")
+            telemetry.dataLoaded(feature, studentInfo, LoadOutcome.FAILURE, DataSource.VALIDATION, 0L, error)
+            Result.failure(error)
         }
     }
 

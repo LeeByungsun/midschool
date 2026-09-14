@@ -49,11 +49,18 @@ Jetpack Compose는 현재 메인 UI 기술이 아니므로, 명시적인 전환 
 - 위젯 설정 변경은 추가 후 설정 아이콘을 통해 여는 현재 구조를 우선합니다.
 - 타이머는 앱을 떠나도 상태가 유지되어야 하며, 완료 알림과 진동 설정을 따릅니다.
 
-## 7. 문서 반영 규칙
+## 7. 운영 관측 기준
+- Firebase Analytics와 Crashlytics는 독립 동의이며 기본 수집은 꺼진 상태를 유지합니다.
+- 이벤트와 오류 보고는 `AppTelemetry` 경계를 통해서만 전송하고 Firebase SDK를 기능 코드에서 직접 호출하지 않습니다.
+- 학교 문맥은 교육청·학교 코드와 학교 종류만 허용합니다. 학교 이름, 학년/반, 검색어, URL, API 키, 응답 원문과 예외 메시지는 전송하지 않습니다.
+- SDK 호출 실패가 앱 기능을 중단시키지 않게 격리하고, `CancellationException`이나 정상적인 빈 응답을 비치명 오류로 보고하지 않습니다.
+- 일반 debug 빌드는 전송하지 않으며 QA/Release 환경을 명시적으로 분리합니다.
+
+## 8. 문서 반영 규칙
 - 기능을 추가하거나 흐름이 바뀌면 `docs/project_specification.md`를 함께 업데이트합니다.
 - Android 구조나 개발 규칙이 바뀌면 이 `android/AGENTS.md`도 같이 갱신합니다.
 
-## 8. 우선 참고할 자동화 자산
+## 9. 우선 참고할 자동화 자산
 - `.codex/Agent.md`: 저장소 자동화 자산 가이드
 - Android 관련 실행 스킬:
   - `.codex/skills/android-architecture/`

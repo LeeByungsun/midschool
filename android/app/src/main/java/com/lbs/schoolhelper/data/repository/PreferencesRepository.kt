@@ -6,6 +6,10 @@ import com.lbs.schoolhelper.data.model.SchoolEvent
 import com.lbs.schoolhelper.data.model.TimetableItem
 
 interface PreferencesRepository {
+    fun isAnalyticsEnabled(): Boolean
+    fun saveAnalyticsEnabled(enabled: Boolean)
+    fun isDiagnosticsEnabled(): Boolean
+    fun saveDiagnosticsEnabled(enabled: Boolean)
     fun getStudentInfo(): StudentInfo
     fun hasStudentInfo(): Boolean
     fun saveStudentInfo(studentInfo: StudentInfo)

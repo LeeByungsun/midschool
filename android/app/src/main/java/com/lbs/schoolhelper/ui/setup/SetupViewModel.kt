@@ -8,6 +8,8 @@ import com.lbs.schoolhelper.data.model.SchoolInfo
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.NoOpTelemetry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,7 +24,8 @@ import javax.inject.Inject
 class SetupViewModel @Inject constructor(
     application: Application,
     private val preferencesRepository: PreferencesRepository,
-    private val schoolRepository: SchoolRepository
+    private val schoolRepository: SchoolRepository,
+    private val telemetry: AppTelemetry = NoOpTelemetry
 ) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     private val initialStudentInfo = preferencesRepository.getStudentInfo()
@@ -166,6 +169,7 @@ class SetupViewModel @Inject constructor(
             return
         }
 
+        val previousStudentInfo = preferencesRepository.getStudentInfo()
         preferencesRepository.saveStudentInfo(
             StudentInfo(
                 grade = state.grade,
@@ -176,6 +180,7 @@ class SetupViewModel @Inject constructor(
                 schoolKind = state.selectedSchool.schoolKind
             )
         )
+        telemetry.schoolSaved(previousStudentInfo)
         _navigationEvent.emit(Unit)
     }
 

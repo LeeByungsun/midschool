@@ -50,6 +50,12 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
+        binding.analyticsSwitch.setOnCheckedChangeListener { _, checked ->
+            if (!isRenderingState) viewModel.updateAnalyticsEnabled(checked)
+        }
+        binding.diagnosticsSwitch.setOnCheckedChangeListener { _, checked ->
+            if (!isRenderingState) viewModel.updateDiagnosticsEnabled(checked)
+        }
         binding.saveSettingsButton.setOnClickListener {
             viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
             viewModel.updateGrade(binding.settingsGradeInput.text.toString().trim())
@@ -96,6 +102,8 @@ class SettingsActivity : AppCompatActivity() {
         binding.timerDisplayRingRadio.isChecked = state.isRingMode
         binding.timerNotificationSwitch.isChecked = state.notificationEnabled
         binding.timerVibrationSwitch.isChecked = state.vibrationEnabled
+        binding.analyticsSwitch.isChecked = state.analyticsEnabled
+        binding.diagnosticsSwitch.isChecked = state.diagnosticsEnabled
         binding.searchSchoolButton.isEnabled = !state.isSearching
         binding.searchSchoolButton.text = getString(
             if (state.isSearching) R.string.setup_school_search_loading else R.string.setup_school_search_button

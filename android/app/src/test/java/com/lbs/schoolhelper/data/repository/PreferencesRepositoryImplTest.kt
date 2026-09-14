@@ -28,6 +28,7 @@ class PreferencesRepositoryImplTest {
         context = RuntimeEnvironment.getApplication().applicationContext
         clearUserPrefs()
         clearRepositoryPrefs()
+        context.getSharedPreferences("telemetry_consent", Context.MODE_PRIVATE).edit().clear().commit()
         clearUserPrefs()
         preferencesRepository = PreferencesRepositoryImpl(context, Gson(), AndroidUserPreferencesStore(context))
     }
@@ -36,7 +37,22 @@ class PreferencesRepositoryImplTest {
     fun tearDown() {
         clearUserPrefs()
         clearRepositoryPrefs()
+        context.getSharedPreferences("telemetry_consent", Context.MODE_PRIVATE).edit().clear().commit()
         clearUserPrefs()
+    }
+
+    @Test
+    fun `collection defaults off and independent choices survive repository recreation`() {
+        assertFalse(preferencesRepository.isAnalyticsEnabled())
+        assertFalse(preferencesRepository.isDiagnosticsEnabled())
+        preferencesRepository.saveAnalyticsEnabled(true)
+        val restored = PreferencesRepositoryImpl(context, Gson(), AndroidUserPreferencesStore(context))
+        assertTrue(restored.isAnalyticsEnabled())
+        assertFalse(restored.isDiagnosticsEnabled())
+        restored.saveDiagnosticsEnabled(true)
+        restored.saveAnalyticsEnabled(false)
+        assertFalse(preferencesRepository.isAnalyticsEnabled())
+        assertTrue(preferencesRepository.isDiagnosticsEnabled())
     }
 
     @Test
