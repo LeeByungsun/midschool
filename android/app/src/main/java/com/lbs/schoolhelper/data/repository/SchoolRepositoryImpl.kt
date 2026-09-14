@@ -9,6 +9,7 @@ import com.lbs.schoolhelper.data.model.SchoolEvent
 import com.lbs.schoolhelper.data.model.SchoolInfo
 import com.lbs.schoolhelper.data.model.TimetableItem
 import com.lbs.schoolhelper.data.remote.NeisApiException
+import com.lbs.schoolhelper.data.remote.NeisApiKeyMissingException
 import com.lbs.schoolhelper.data.remote.NeisApiService
 import com.lbs.schoolhelper.data.remote.NoticeApiService
 import com.lbs.schoolhelper.data.remote.dto.NeisResultDto
@@ -29,6 +30,18 @@ class SchoolRepositoryImpl @Inject constructor(
     private val noticeApiService: NoticeApiService,
     private val telemetry: AppTelemetry = NoOpTelemetry
 ) : SchoolRepository {
+
+    private var neisApiKey: String = BuildConfig.NEIS_API_KEY
+
+    internal constructor(
+        apiService: NeisApiService,
+        preferencesRepository: PreferencesRepository,
+        noticeApiService: NoticeApiService,
+        telemetry: AppTelemetry = NoOpTelemetry,
+        neisApiKey: String
+    ) : this(apiService, preferencesRepository, noticeApiService, telemetry) {
+        this.neisApiKey = neisApiKey
+    }
 
     override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> = loadNetwork(Feature.SCHOOL_SEARCH, preferencesRepository.getStudentInfo()) {
         val trimmedQuery = query.trim()
@@ -230,6 +243,7 @@ class SchoolRepositoryImpl @Inject constructor(
         date: String?
     ): Result<List<TimetableItem>> {
         val studentInfo = selectedStudentInfo(Feature.TIMETABLE).getOrElse { return Result.failure(it) }
+        neisApiKeyConfigurationError(studentInfo)?.let { return Result.failure(it) }
         val cacheKey = date
         val networkResult = loadNetwork(Feature.TIMETABLE, studentInfo) { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
 
@@ -271,6 +285,10 @@ class SchoolRepositoryImpl @Inject constructor(
         date: String?
     ): Flow<Result<List<TimetableItem>>> = flow {
         val studentInfo = selectedStudentInfo(Feature.TIMETABLE).getOrElse {
+            emit(Result.failure(it))
+            return@flow
+        }
+        neisApiKeyConfigurationError(studentInfo)?.let {
             emit(Result.failure(it))
             return@flow
         }
@@ -330,6 +348,21 @@ class SchoolRepositoryImpl @Inject constructor(
     private fun recordCache(feature: Feature, school: StudentInfo, items: List<*>) {
         telemetry.dataLoaded(feature, school, if (items.isEmpty()) LoadOutcome.EMPTY else LoadOutcome.SUCCESS,
             DataSource.CACHE, 0L)
+    }
+
+    private fun neisApiKeyConfigurationError(studentInfo: StudentInfo): NeisApiKeyMissingException? {
+        if (neisApiKey.isNotBlank()) return null
+
+        return NeisApiKeyMissingException().also { error ->
+            telemetry.dataLoaded(
+                Feature.TIMETABLE,
+                studentInfo,
+                LoadOutcome.FAILURE,
+                DataSource.CONFIG,
+                0L,
+                error
+            )
+        }
     }
 
     private fun elapsedMillis(startedAt: Long): Long = (System.nanoTime() - startedAt) / 1_000_000L

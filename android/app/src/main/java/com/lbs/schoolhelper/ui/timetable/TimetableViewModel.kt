@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
+import com.lbs.schoolhelper.data.remote.NeisApiKeyMissingException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,6 +108,9 @@ class TimetableViewModel @Inject constructor(
                             )
                         },
                         statusText = when {
+                            result.exceptionOrNull() is NeisApiKeyMissingException -> {
+                                appContext.getString(R.string.timetable_neis_api_key_missing)
+                            }
                             result.isFailure -> appContext.getString(R.string.timetable_error)
                             items.isEmpty() -> appContext.getString(R.string.timetable_empty)
                             else -> ""

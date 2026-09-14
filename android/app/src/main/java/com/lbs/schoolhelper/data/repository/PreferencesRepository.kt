@@ -10,6 +10,8 @@ interface PreferencesRepository {
     fun saveAnalyticsEnabled(enabled: Boolean)
     fun isDiagnosticsEnabled(): Boolean
     fun saveDiagnosticsEnabled(enabled: Boolean)
+    fun hasCompletedTelemetryConsentPrompt(): Boolean
+    fun saveTelemetryConsentPromptCompleted()
     fun getStudentInfo(): StudentInfo
     fun hasStudentInfo(): Boolean
     fun saveStudentInfo(studentInfo: StudentInfo)

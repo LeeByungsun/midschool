@@ -27,7 +27,10 @@ class SplashViewModel @Inject constructor(
 
         decideNextScreenJob = viewModelScope.launch {
             delay(SPLASH_DELAY_MILLIS)
-            val destination = if (preferencesRepository.hasStudentInfo()) {
+            val destination = if (
+                preferencesRepository.hasStudentInfo() &&
+                preferencesRepository.hasCompletedTelemetryConsentPrompt()
+            ) {
                 SplashDestination.MAIN
             } else {
                 SplashDestination.SETUP

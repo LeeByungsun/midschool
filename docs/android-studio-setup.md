@@ -41,6 +41,14 @@ Android Studio에서는 저장소 루트가 아니라 **`android/` 폴더**를 �
 - `android/local.properties` 가 존재하는지 확인하세요.
 - Android SDK 경로가 바뀌었다면 Android Studio가 다시 생성하도록 유도하거나 수동 수정하세요.
 
+### 시간표가 인증키 설정 오류로 표시되는 경우
+- NEIS Open API에서 발급받은 키를 `android/local.properties`에만 추가하세요. 이 파일은 Git에 포함하지 않습니다.
+  ```properties
+  sdk.dir=/Users/계정명/Library/Android/sdk
+  NEIS_API_KEY=발급받은_나이스_인증키
+  ```
+- 키를 넣은 뒤 Gradle Sync 후 앱을 다시 빌드·설치하세요. 키가 비어 있으면 앱은 불완전한 캐시 시간표 대신 설정 오류를 표시합니다.
+
 ### Run/Debug 설정이 꼬인 경우
 - `android/` 를 다시 열고 Gradle Sync를 한 번 더 수행하세요.
 

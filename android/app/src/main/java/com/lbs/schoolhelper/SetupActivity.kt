@@ -27,6 +27,7 @@ import com.lbs.schoolhelper.util.applySystemBarPadding
 class SetupActivity : AppCompatActivity() {
     private val viewModel: SetupViewModel by viewModels()
     private lateinit var binding: ActivitySetupBinding
+    private var isRenderingState = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,6 +75,17 @@ class SetupActivity : AppCompatActivity() {
         binding.saveStudentInfoButton.setOnClickListener {
             saveStudentInfoFromInput()
         }
+        binding.setupAnalyticsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (!isRenderingState) viewModel.updateAnalyticsEnabled(isChecked)
+        }
+        binding.setupDiagnosticsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (!isRenderingState) viewModel.updateDiagnosticsEnabled(isChecked)
+        }
+        binding.completeTelemetryConsentButton.setOnClickListener {
+            lifecycleScope.launch {
+                viewModel.completeTelemetryConsentStep()
+            }
+        }
     }
 
     private fun searchSchoolsFromInput() {
@@ -120,6 +132,7 @@ class SetupActivity : AppCompatActivity() {
     }
 
     private fun renderState(state: SetupUiState) {
+        isRenderingState = true
         if (binding.schoolQueryInput.text.toString() != state.schoolQuery) {
             binding.schoolQueryInput.setText(state.schoolQuery)
         }
@@ -141,6 +154,11 @@ class SetupActivity : AppCompatActivity() {
         binding.schoolResultsLabel.isVisible = state.schoolResults.isNotEmpty()
         binding.schoolResultsGroup.isVisible = state.schoolResults.isNotEmpty()
         renderSchoolResults(state.schoolResults, state.selectedSchool)
+        binding.setupFormGroup.isVisible = !state.isTelemetryConsentStepVisible
+        binding.telemetryConsentGroup.isVisible = state.isTelemetryConsentStepVisible
+        binding.setupAnalyticsSwitch.isChecked = state.analyticsEnabled
+        binding.setupDiagnosticsSwitch.isChecked = state.diagnosticsEnabled
+        isRenderingState = false
     }
 
     private fun renderSchoolResults(

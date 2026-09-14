@@ -56,6 +56,18 @@ class PreferencesRepositoryImplTest {
     }
 
     @Test
+    fun `telemetry consent prompt is incomplete by default and persists after completion`() {
+        assertFalse(preferencesRepository.hasCompletedTelemetryConsentPrompt())
+
+        preferencesRepository.saveTelemetryConsentPromptCompleted()
+
+        assertTrue(
+            PreferencesRepositoryImpl(context, Gson(), AndroidUserPreferencesStore(context))
+                .hasCompletedTelemetryConsentPrompt()
+        )
+    }
+
+    @Test
     fun `student info round trips school identity and completeness`() {
         val studentInfo = StudentInfo(
             grade = "2",

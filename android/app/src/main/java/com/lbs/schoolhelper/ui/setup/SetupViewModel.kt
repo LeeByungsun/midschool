@@ -42,7 +42,11 @@ class SetupViewModel @Inject constructor(
                 ""
             },
             grade = initialStudentInfo.grade,
-            classroom = initialStudentInfo.classroom
+            classroom = initialStudentInfo.classroom,
+            isTelemetryConsentStepVisible = initialStudentInfo.isComplete() &&
+                !preferencesRepository.hasCompletedTelemetryConsentPrompt(),
+            analyticsEnabled = preferencesRepository.isAnalyticsEnabled(),
+            diagnosticsEnabled = preferencesRepository.isDiagnosticsEnabled()
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -158,6 +162,14 @@ class SetupViewModel @Inject constructor(
         _uiState.update { it.copy(classroom = classroom) }
     }
 
+    fun updateAnalyticsEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(analyticsEnabled = enabled) }
+    }
+
+    fun updateDiagnosticsEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(diagnosticsEnabled = enabled) }
+    }
+
     suspend fun saveStudentInfo() {
         val state = _uiState.value
         if (state.selectedSchool == null || state.selectedSchool.schoolName != state.schoolQuery.trim()) {
@@ -181,6 +193,28 @@ class SetupViewModel @Inject constructor(
             )
         )
         telemetry.schoolSaved(previousStudentInfo)
+        if (preferencesRepository.hasCompletedTelemetryConsentPrompt()) {
+            _navigationEvent.emit(Unit)
+        } else {
+            _uiState.update {
+                it.copy(
+                    isTelemetryConsentStepVisible = true,
+                    analyticsEnabled = preferencesRepository.isAnalyticsEnabled(),
+                    diagnosticsEnabled = preferencesRepository.isDiagnosticsEnabled()
+                )
+            }
+        }
+    }
+
+    suspend fun completeTelemetryConsentStep() {
+        val state = _uiState.value
+        if (!state.isTelemetryConsentStepVisible) return
+
+        preferencesRepository.saveAnalyticsEnabled(state.analyticsEnabled)
+        preferencesRepository.saveDiagnosticsEnabled(state.diagnosticsEnabled)
+        preferencesRepository.saveTelemetryConsentPromptCompleted()
+        telemetry.setCollection(state.analyticsEnabled, state.diagnosticsEnabled)
+        _uiState.update { it.copy(isTelemetryConsentStepVisible = false) }
         _navigationEvent.emit(Unit)
     }
 

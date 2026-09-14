@@ -9,5 +9,8 @@ data class SetupUiState(
     val searchMessage: String = "",
     val isSearching: Boolean = false,
     val grade: String = "",
-    val classroom: String = ""
+    val classroom: String = "",
+    val isTelemetryConsentStepVisible: Boolean = false,
+    val analyticsEnabled: Boolean = false,
+    val diagnosticsEnabled: Boolean = false
 )

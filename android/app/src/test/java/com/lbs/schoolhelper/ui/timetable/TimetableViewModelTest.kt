@@ -25,6 +25,45 @@ import java.time.format.DateTimeFormatter
 class TimetableViewModelTest {
 
     @Test
+    fun loadTimetableKeepsAndSortsAllSevenLessons() = runBlocking {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
+        val request = FakeSchoolRepository.TimetableRequest("1", "4", date)
+        val schoolRepository = FakeSchoolRepository().apply {
+            timetableFlowResultsByRequest[request] = listOf(
+                Result.success(
+                    (7 downTo 1).map { period ->
+                        TimetableItem(
+                            date = date,
+                            period = period.toString(),
+                            subject = "과목$period",
+                            grade = "1",
+                            classroom = "4"
+                        )
+                    }
+                )
+            )
+        }
+        val preferencesRepository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "1",
+                classroom = "4",
+                schoolName = "다원중학교",
+                officeCode = "J10",
+                schoolCode = "7679399",
+                schoolKind = "중학교"
+            )
+        )
+
+        val viewModel = TimetableViewModel(application, schoolRepository, preferencesRepository)
+        val state = withTimeout(1_000L) {
+            viewModel.uiState.first { it.items.size == 7 }
+        }
+
+        assertEquals((1..7).map(Int::toString), state.items.map(TimetableItem::period))
+    }
+
+    @Test
     fun loadTimetableShowsCachedTimetableBeforeChangedNetworkTimetable() = runBlocking {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)

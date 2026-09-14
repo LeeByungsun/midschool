@@ -12,7 +12,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -291,7 +293,8 @@ class SetupViewModelTest {
                 officeCode = selectedSchool.officeCode,
                 schoolCode = selectedSchool.schoolCode,
                 schoolKind = selectedSchool.schoolKind
-            )
+            ),
+            telemetryConsentPromptCompleted = true
         )
         val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
         val navigationDeferred = async(start = CoroutineStart.UNDISPATCHED) {
@@ -316,6 +319,79 @@ class SetupViewModelTest {
             ),
             repository.savedStudentInfoCalls
         )
+    }
+
+    @Test
+    fun `first valid school and classroom save waits for optional consent before navigating`() = runBlocking {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val navigationDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeoutOrNull(250L) { viewModel.navigationEvent.first() }
+        }
+
+        viewModel.updateGrade("2")
+        viewModel.updateClassroom("3")
+        viewModel.saveStudentInfo()
+
+        assertNull(navigationDeferred.await())
+        assertEquals(1, repository.savedStudentInfoCalls.size)
+        assertTrue(viewModel.uiState.value.isTelemetryConsentStepVisible)
+        assertFalse(viewModel.uiState.value.analyticsEnabled)
+        assertFalse(viewModel.uiState.value.diagnosticsEnabled)
+    }
+
+    @Test
+    fun `saved school and classroom without a consent decision resumes at consent step`() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                grade = "2",
+                classroom = "3",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+
+        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+
+        assertTrue(viewModel.uiState.value.isTelemetryConsentStepVisible)
+    }
+
+    @Test
+    fun `optional consent saves independent choices once then navigates`() = runBlocking {
+        val repository = FakePreferencesRepository()
+        val collectionCalls = mutableListOf<Pair<Boolean, Boolean>>()
+        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
+            override fun setCollection(analytics: Boolean, diagnostics: Boolean) {
+                collectionCalls += analytics to diagnostics
+            }
+        }
+        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository(), telemetry)
+        viewModel.selectSchool(selectedSchool)
+        viewModel.updateGrade("2")
+        viewModel.updateClassroom("3")
+        viewModel.saveStudentInfo()
+        viewModel.updateAnalyticsEnabled(true)
+        val navigationDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(3_000L) { viewModel.navigationEvent.first() }
+        }
+
+        viewModel.completeTelemetryConsentStep()
+
+        navigationDeferred.await()
+        assertTrue(repository.hasCompletedTelemetryConsentPrompt())
+        assertTrue(repository.isAnalyticsEnabled())
+        assertFalse(repository.isDiagnosticsEnabled())
+        assertEquals(listOf(true to false), collectionCalls)
+        assertFalse(viewModel.uiState.value.isTelemetryConsentStepVisible)
     }
 
     @Test

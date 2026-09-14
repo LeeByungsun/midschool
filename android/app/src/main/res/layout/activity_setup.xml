@@ -16,6 +16,12 @@
             android:orientation="vertical"
             android:padding="24dp">
 
+            <LinearLayout
+                android:id="@+id/setupFormGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -182,6 +188,61 @@
                 android:text="@string/setup_save_button"
                 android:textColor="@color/white"
                 android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/telemetryConsentGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/setup_consent_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/settings_telemetry_description"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp" />
+
+                <Switch
+                    android:id="@+id/setupAnalyticsSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:minHeight="48dp"
+                    android:text="@string/settings_analytics_consent"
+                    android:textColor="@color/text_primary" />
+
+                <Switch
+                    android:id="@+id/setupDiagnosticsSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:text="@string/settings_diagnostics_consent"
+                    android:textColor="@color/text_primary" />
+
+                <Button
+                    android:id="@+id/completeTelemetryConsentButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:backgroundTint="@color/brand_blue"
+                    android:paddingVertical="14dp"
+                    android:text="@string/setup_consent_continue"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

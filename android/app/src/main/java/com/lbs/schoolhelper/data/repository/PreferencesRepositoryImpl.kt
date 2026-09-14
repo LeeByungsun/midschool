@@ -22,6 +22,11 @@ class PreferencesRepositoryImpl @Inject constructor(
     override fun isDiagnosticsEnabled(): Boolean = telemetryPreferences.getBoolean("diagnostics", false)
     override fun saveAnalyticsEnabled(enabled: Boolean) { telemetryPreferences.edit().putBoolean("analytics", enabled).apply() }
     override fun saveDiagnosticsEnabled(enabled: Boolean) { telemetryPreferences.edit().putBoolean("diagnostics", enabled).apply() }
+    override fun hasCompletedTelemetryConsentPrompt(): Boolean =
+        telemetryPreferences.getBoolean("consent_prompt_completed", false)
+    override fun saveTelemetryConsentPromptCompleted() {
+        telemetryPreferences.edit().putBoolean("consent_prompt_completed", true).apply()
+    }
 
     private val sharedPreferences by lazy {
         context.getSharedPreferences(REPOSITORY_PREFS_NAME, Context.MODE_PRIVATE)

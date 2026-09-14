@@ -74,6 +74,8 @@
     <string name="setup_class_label">반</string>
     <string name="setup_class_hint">예: 3</string>
     <string name="setup_save_button">시작하기</string>
+    <string name="setup_consent_title">선택 정보 수집 동의</string>
+    <string name="setup_consent_continue">선택 완료하고 시작하기</string>
     <string name="setup_error_empty">학년과 반을 모두 입력해 주세요.</string>
     <string name="setup_error_school_required">학교 검색 후 목록에서 학교를 선택해 주세요.</string>
     <string name="school_search_min_query">학교 이름은 두 글자 이상 입력해 주세요.</string>
@@ -99,6 +101,7 @@
     <string name="timetable_loading">시간표를 불러오는 중입니다.</string>
     <string name="timetable_empty">이 날짜에는 등록된 시간표가 없어요.</string>
     <string name="timetable_error">시간표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</string>
+    <string name="timetable_neis_api_key_missing">시간표 인증키가 설정되지 않았어요. 앱을 다시 빌드해 주세요.</string>
     <string name="timetable_previous_day">이전 날</string>
     <string name="timetable_next_day">다음 날</string>
     <string name="timetable_today">오늘</string>

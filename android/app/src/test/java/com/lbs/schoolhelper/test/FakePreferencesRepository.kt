@@ -14,6 +14,7 @@ class FakePreferencesRepository(
     timerDisplayMode: TimerDisplayMode = TimerDisplayMode.COUNT,
     notificationEnabled: Boolean = true,
     vibrationEnabled: Boolean = true,
+    telemetryConsentPromptCompleted: Boolean = false,
     timerState: TimerPreferenceState = TimerPreferenceState(
         presetName = "FOCUS",
         totalMillis = 0L,
@@ -24,10 +25,13 @@ class FakePreferencesRepository(
 ) : PreferencesRepository {
     private var analyticsConsent = false
     private var diagnosticsConsent = false
+    private var telemetryConsentPromptCompleted = telemetryConsentPromptCompleted
     override fun isAnalyticsEnabled() = analyticsConsent
     override fun isDiagnosticsEnabled() = diagnosticsConsent
     override fun saveAnalyticsEnabled(enabled: Boolean) { analyticsConsent = enabled }
     override fun saveDiagnosticsEnabled(enabled: Boolean) { diagnosticsConsent = enabled }
+    override fun hasCompletedTelemetryConsentPrompt() = telemetryConsentPromptCompleted
+    override fun saveTelemetryConsentPromptCompleted() { telemetryConsentPromptCompleted = true }
 
     var currentStudentInfo: StudentInfo = studentInfo
         private set
