@@ -39,14 +39,17 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun onCreate_doesNotRequestNotificationPermissionWhenTimerAlertsAreDisabled() {
+    fun onCreate_requestsNotificationPermissionEvenWhenLegacyTimerAlertPreferenceIsDisabled() {
         clearUserPreferences()
         setTimerNotificationEnabled(false)
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
 
         val permissionRequest = shadowOf(activity).lastRequestedPermission
 
-        assertEquals(null, permissionRequest)
+        assertEquals(
+            listOf(Manifest.permission.POST_NOTIFICATIONS),
+            permissionRequest.requestedPermissions.toList()
+        )
     }
 
     @Test

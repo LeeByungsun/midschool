@@ -216,7 +216,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun maybeRequestNotificationPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        if (!UserPreferences.isTimerNotificationEnabled(this)) return
         if (
             ActivityCompat.checkSelfPermission(
                 this,

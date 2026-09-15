@@ -18,6 +18,14 @@ class TimerViewModelTest {
     private val application: Application = RuntimeEnvironment.getApplication()
 
     @Test
+    fun `timer controls use start then pause resume and restart labels`() {
+        assertEquals("시작", application.getString(com.lbs.schoolhelper.R.string.home_timer_start))
+        assertEquals("일시정지", application.getString(com.lbs.schoolhelper.R.string.home_timer_pause))
+        assertEquals("이어하기", application.getString(com.lbs.schoolhelper.R.string.home_timer_resume))
+        assertEquals("다시 시작", application.getString(com.lbs.schoolhelper.R.string.home_timer_restart))
+    }
+
+    @Test
     fun `user timer actions are recorded but restored running timer is not a new start`() {
         val actions = mutableListOf<com.lbs.schoolhelper.telemetry.TimerAction>()
         val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {

@@ -1,15 +1,15 @@
 package com.lbs.schoolhelper
 
-import android.Manifest
-import android.os.Bundle
-import android.content.pm.PackageManager
+import android.app.NotificationManager
+import android.content.Intent
 import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +18,7 @@ import com.lbs.schoolhelper.data.model.SchoolInfo
 import com.lbs.schoolhelper.databinding.ActivitySettingsBinding
 import com.lbs.schoolhelper.ui.settings.SettingsUiState
 import com.lbs.schoolhelper.ui.settings.SettingsViewModel
+import com.lbs.schoolhelper.timer.TimerNotificationChannel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
@@ -37,17 +38,15 @@ class SettingsActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
 
         binding.root.applySystemBarPadding()
+        binding.settingsVersionText.text = AppVersionLabel.format(BuildConfig.VERSION_NAME)
 
         binding.backButton.setOnClickListener { finish() }
         binding.searchSchoolButton.setOnClickListener {
             viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
             viewModel.searchSchools()
         }
-        binding.timerNotificationSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isRenderingState) return@setOnCheckedChangeListener
-            if (isChecked) {
-                maybeRequestNotificationPermission()
-            }
+        binding.openTimerNotificationSettingsButton.setOnClickListener {
+            openTimerNotificationSettings()
         }
 
         binding.analyticsSwitch.setOnCheckedChangeListener { _, checked ->
@@ -61,8 +60,6 @@ class SettingsActivity : AppCompatActivity() {
             viewModel.updateGrade(binding.settingsGradeInput.text.toString().trim())
             viewModel.updateClassroom(binding.settingsClassInput.text.toString().trim())
             viewModel.updateDisplayMode(binding.timerDisplayRingRadio.isChecked)
-            viewModel.updateNotificationEnabled(binding.timerNotificationSwitch.isChecked)
-            viewModel.updateVibrationEnabled(binding.timerVibrationSwitch.isChecked)
             lifecycleScope.launch {
                 viewModel.saveSettings()
             }
@@ -100,8 +97,6 @@ class SettingsActivity : AppCompatActivity() {
         }
         binding.timerDisplayCountRadio.isChecked = !state.isRingMode
         binding.timerDisplayRingRadio.isChecked = state.isRingMode
-        binding.timerNotificationSwitch.isChecked = state.notificationEnabled
-        binding.timerVibrationSwitch.isChecked = state.vibrationEnabled
         binding.analyticsSwitch.isChecked = state.analyticsEnabled
         binding.diagnosticsSwitch.isChecked = state.diagnosticsEnabled
         binding.searchSchoolButton.isEnabled = !state.isSearching
@@ -116,6 +111,22 @@ class SettingsActivity : AppCompatActivity() {
         binding.schoolResultsGroup.isVisible = state.schoolResults.isNotEmpty()
         renderSchoolResults(state.schoolResults, state.selectedSchool)
         isRenderingState = false
+    }
+
+    private fun openTimerNotificationSettings() {
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        TimerNotificationChannel.ensure(this, notificationManager)
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                putExtra(Settings.EXTRA_CHANNEL_ID, TimerNotificationChannel.ID)
+            }
+        } else {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            }
+        }
+        startActivity(intent)
     }
 
     private fun renderSchoolResults(
@@ -155,25 +166,4 @@ class SettingsActivity : AppCompatActivity() {
         ).joinToString("\n")
     }
 
-    private fun maybeRequestNotificationPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        if (
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-            REQUEST_CODE_POST_NOTIFICATIONS
-        )
-    }
-
-    companion object {
-        private const val REQUEST_CODE_POST_NOTIFICATIONS = 4102
-    }
 }

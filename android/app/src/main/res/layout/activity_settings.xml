@@ -223,21 +223,20 @@
             android:textSize="@dimen/text_body_small"
             android:textStyle="bold" />
 
-        <Switch
-            android:id="@+id/timerNotificationSwitch"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="@string/settings_timer_alert_notification"
-            android:textColor="@color/text_primary" />
+            android:text="@string/settings_timer_alert_description"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_body_small" />
 
-        <Switch
-            android:id="@+id/timerVibrationSwitch"
+        <Button
+            android:id="@+id/openTimerNotificationSettingsButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/settings_timer_alert_vibration"
-            android:textColor="@color/text_primary" />
+            android:text="@string/settings_timer_alert_open_system_settings" />
 
         <TextView
             android:layout_width="match_parent"
@@ -277,6 +276,15 @@
             android:text="@string/settings_save_button"
             android:textColor="@color/white"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/settingsVersionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_body_small" />
 
     </LinearLayout>
 
