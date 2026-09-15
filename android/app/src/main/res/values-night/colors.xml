@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_page">#111827</color>
+    <color name="surface_card">#1E293B</color>
+    <color name="surface_badge">#2A3C55</color>
+    <color name="brand_blue">#74A7FF</color>
+    <color name="brand_blue_soft">#243B5B</color>
+    <color name="on_brand_navy">#E4EEFF</color>
+    <color name="text_accent">#DDEBFF</color>
+    <color name="button_secondary_text">#DDEBFF</color>
+    <color name="button_secondary_stroke">#53729A</color>
+    <color name="button_start">#48A66E</color>
+    <color name="brand_green_soft">#183B2A</color>
+    <color name="brand_green_text">#94E2B3</color>
+    <color name="brand_yellow_soft">#4D3E16</color>
+    <color name="brand_yellow_text">#FFE08A</color>
+    <color name="text_primary">#F3F6FB</color>
+    <color name="text_secondary">#C2CDDB</color>
+    <color name="divider_soft">#41546B</color>
+</resources>

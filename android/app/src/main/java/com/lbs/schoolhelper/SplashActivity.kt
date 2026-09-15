@@ -20,7 +20,7 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableSchoolEdgeToEdge(useLightStatusBarIcons = false)
+        enableSchoolEdgeToEdge(useDarkSystemBarIcons = false)
         setContentView(R.layout.activity_splash)
 
         lifecycleScope.launch {

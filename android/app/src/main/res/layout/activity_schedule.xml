@@ -55,11 +55,11 @@
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="@string/schedule_previous_month"
-                android:textColor="@color/brand_navy"
+                android:textColor="@color/text_accent"
                 app:backgroundTint="@color/brand_blue_soft"
                 app:cornerRadius="18dp"
                 app:icon="@drawable/ic_back_simple"
-                app:iconTint="@color/brand_navy"
+                app:iconTint="@color/text_accent"
                 app:strokeWidth="0dp" />
 
             <TextView
@@ -81,7 +81,7 @@
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="@string/schedule_next_month"
-                android:textColor="@color/brand_navy"
+                android:textColor="@color/text_accent"
                 app:backgroundTint="@color/brand_blue_soft"
                 app:cornerRadius="18dp"
                 app:iconGravity="textEnd"

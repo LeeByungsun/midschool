@@ -10,6 +10,7 @@ import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.telemetry.AppTelemetry
 import com.lbs.schoolhelper.telemetry.NoOpTelemetry
+import com.lbs.schoolhelper.widget.MisSchoolWidgetProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -193,6 +194,7 @@ class SetupViewModel @Inject constructor(
             )
         )
         telemetry.schoolSaved(previousStudentInfo)
+        MisSchoolWidgetProvider.requestAllWidgetUpdates(appContext)
         if (preferencesRepository.hasCompletedTelemetryConsentPrompt()) {
             _navigationEvent.emit(Unit)
         } else {

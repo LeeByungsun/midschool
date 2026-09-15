@@ -2,9 +2,15 @@
 <resources>
     <color name="bg_page">#F4F7FB</color>
     <color name="surface_card">#FFFFFFFF</color>
+    <color name="surface_badge">#FFFFFFFF</color>
     <color name="brand_navy">#173B66</color>
     <color name="brand_blue">#4C8BF5</color>
     <color name="brand_blue_soft">#DDEBFF</color>
+    <color name="on_brand_navy">#DDEBFF</color>
+    <color name="text_accent">#173B66</color>
+    <color name="button_secondary_text">#173B66</color>
+    <color name="button_secondary_stroke">#B8CAE0</color>
+    <color name="button_start">#1E6B43</color>
     <color name="brand_green_soft">#E0F5E8</color>
     <color name="brand_green_text">#1E6B43</color>
     <color name="brand_yellow_soft">#FFF2CC</color>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data />
 
@@ -39,14 +40,37 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="@dimen/text_body" />
 
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/divider_soft"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:text="@string/setup_school_label"
+                android:text="@string/setup_school_step_title"
                 android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_body_small"
+                android:textSize="@dimen/text_section_title"
                 android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/setup_school_step_description"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_metadata" />
 
             <EditText
                 android:id="@+id/schoolQueryInput"
@@ -63,16 +87,14 @@
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/searchSchoolButton"
+                style="@style/Widget.MisSchoolApp.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:backgroundTint="@color/brand_blue"
-                android:paddingVertical="12dp"
                 android:text="@string/setup_school_search_button"
-                android:textColor="@color/white"
-                android:textStyle="bold" />
+                android:textAllCaps="false" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -132,10 +154,45 @@
                 android:orientation="vertical"
                 android:visibility="gone" />
 
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/divider_soft"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
+                android:text="@string/setup_student_step_title"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_section_title"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/setup_student_step_description"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_metadata" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:text="@string/setup_grade_label"
                 android:textColor="@color/text_primary"
                 android:textSize="@dimen/text_body_small"
@@ -178,16 +235,17 @@
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveStudentInfoButton"
+                style="@style/Widget.MisSchoolApp.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
-                android:backgroundTint="@color/brand_blue"
-                android:paddingVertical="14dp"
                 android:text="@string/setup_save_button"
-                android:textColor="@color/white"
-                android:textStyle="bold" />
+                android:textAllCaps="false" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
 
@@ -231,16 +289,14 @@
                     android:text="@string/settings_diagnostics_consent"
                     android:textColor="@color/text_primary" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/completeTelemetryConsentButton"
+                    style="@style/Widget.MisSchoolApp.Button.Primary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="28dp"
-                    android:backgroundTint="@color/brand_blue"
-                    android:paddingVertical="14dp"
                     android:text="@string/setup_consent_continue"
-                    android:textColor="@color/white"
-                    android:textStyle="bold" />
+                    android:textAllCaps="false" />
 
             </LinearLayout>
 

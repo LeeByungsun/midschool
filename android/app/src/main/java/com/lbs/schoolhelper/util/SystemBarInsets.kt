@@ -1,6 +1,7 @@
 package com.lbs.schoolhelper.util
 
 import android.graphics.Color
+import android.content.res.Configuration
 import android.view.View
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
@@ -38,19 +39,28 @@ fun View.applySystemBarPadding(
 }
 
 /**
- * Configures edge-to-edge system bars for the app's light surfaces.
+ * Configures edge-to-edge system bars for the app's current surface.
  *
- * Most screens use a light page background, so the status-bar content must use
- * dark icons. The splash screen opts into light icons because its surface is
- * the navy brand color.
+ * Most screens use dark icons in light mode and light icons in dark mode. The
+ * splash screen always opts into light icons because its surface is navy.
  */
-fun AppCompatActivity.enableSchoolEdgeToEdge(useLightStatusBarIcons: Boolean = true) {
+fun AppCompatActivity.enableSchoolEdgeToEdge(
+    useDarkSystemBarIcons: Boolean = !isNightMode()
+) {
     enableEdgeToEdge(
-        statusBarStyle = if (useLightStatusBarIcons) {
+        statusBarStyle = if (useDarkSystemBarIcons) {
             SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
         } else {
             SystemBarStyle.dark(Color.TRANSPARENT)
         },
-        navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        navigationBarStyle = if (useDarkSystemBarIcons) {
+            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        }
     )
 }
+
+private fun AppCompatActivity.isNightMode(): Boolean =
+    resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+        Configuration.UI_MODE_NIGHT_YES
