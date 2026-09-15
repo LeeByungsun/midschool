@@ -11,6 +11,7 @@ import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
 import com.lbs.schoolhelper.telemetry.AppTelemetry
 import com.lbs.schoolhelper.telemetry.NoOpTelemetry
+import com.lbs.schoolhelper.widget.MisSchoolWidgetProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -216,6 +217,7 @@ class SettingsViewModel @Inject constructor(
         )
         preferencesRepository.saveTimerNotificationEnabled(state.notificationEnabled)
         preferencesRepository.saveTimerVibrationEnabled(state.vibrationEnabled)
+        MisSchoolWidgetProvider.requestAllWidgetUpdates(appContext)
         _messageEvent.emit(R.string.settings_saved)
         _closeEvent.emit(Unit)
     }

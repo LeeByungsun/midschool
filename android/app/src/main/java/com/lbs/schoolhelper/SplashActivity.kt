@@ -3,7 +3,6 @@ package com.lbs.schoolhelper
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -11,6 +10,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.ui.splash.SplashDestination
 import com.lbs.schoolhelper.ui.splash.SplashViewModel
+import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -20,7 +20,7 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableSchoolEdgeToEdge(useDarkSystemBarIcons = false)
         setContentView(R.layout.activity_splash)
 
         lifecycleScope.launch {

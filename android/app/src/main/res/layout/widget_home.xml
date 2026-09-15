@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/brand_navy"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold"
             tools:text="🗓️ 4월 19일 (토)" />
 
@@ -63,7 +63,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/widget_today_label"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textColor="@color/brand_blue"
                 android:textStyle="bold" />
             <TextView
@@ -73,7 +73,7 @@
                 android:ellipsize="end"
                 android:maxLines="8"
                 android:textColor="@color/text_primary"
-                android:textSize="11sp"
+                android:textSize="13sp"
                 android:layout_marginTop="2dp"
                 tools:text="1교시: 국어\n2교시: 수학" />
         </LinearLayout>
@@ -106,7 +106,7 @@
                 android:ellipsize="end"
                 android:maxLines="8"
                 android:textColor="@color/text_primary"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:layout_marginTop="2dp"
                 tools:text="불러오는 중..." />
         </LinearLayout>

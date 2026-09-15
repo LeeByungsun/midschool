@@ -28,7 +28,7 @@
                     android:layout_weight="1"
                     android:text="@string/home_timer_title"
                     android:textColor="@color/text_primary"
-                    android:textSize="28sp"
+                    android:textSize="@dimen/text_page_title"
                     android:textStyle="bold" />
 
                 <ImageButton
@@ -64,8 +64,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/home_timer_time"
-                        android:textColor="@color/brand_navy"
-                        android:textSize="56sp"
+                        android:textColor="@color/text_accent"
+                        android:textSize="@dimen/text_timer_value"
                         android:textStyle="bold" />
 
                     <com.lbs.schoolhelper.widget.TimerRingView

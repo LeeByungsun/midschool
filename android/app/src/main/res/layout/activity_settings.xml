@@ -29,7 +29,7 @@
                 android:layout_weight="1"
                 android:text="@string/settings_title"
                 android:textColor="@color/text_primary"
-                android:textSize="28sp"
+                android:textSize="@dimen/text_page_title"
                 android:textStyle="bold" />
 
             <ImageButton
@@ -48,7 +48,7 @@
             android:layout_marginTop="10dp"
             android:text="@string/settings_description"
             android:textColor="@color/text_secondary"
-            android:textSize="15sp" />
+            android:textSize="@dimen/text_body" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -56,7 +56,7 @@
             android:layout_marginTop="28dp"
             android:text="@string/setup_school_label"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold" />
 
         <EditText
@@ -87,7 +87,7 @@
             android:layout_marginTop="8dp"
             android:text="@string/setup_school_helper"
             android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/text_metadata" />
 
         <TextView
             android:id="@+id/schoolSearchMessageText"
@@ -97,7 +97,7 @@
             android:background="@color/brand_blue_soft"
             android:padding="12dp"
             android:textColor="@color/text_primary"
-            android:textSize="13sp"
+            android:textSize="@dimen/text_metadata"
             android:visibility="gone" />
 
         <TextView
@@ -106,7 +106,7 @@
             android:layout_marginTop="18dp"
             android:text="@string/setup_school_selected_label"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold" />
 
         <TextView
@@ -118,7 +118,7 @@
             android:padding="14dp"
             android:text="@string/setup_school_selected_empty"
             android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
+            android:textSize="@dimen/text_body_small" />
 
         <TextView
             android:id="@+id/schoolResultsLabel"
@@ -127,7 +127,7 @@
             android:layout_marginTop="18dp"
             android:text="@string/setup_school_results_label"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold"
             android:visibility="gone" />
 
@@ -145,7 +145,7 @@
             android:layout_marginTop="28dp"
             android:text="@string/setup_grade_label"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold" />
 
         <EditText
@@ -167,7 +167,7 @@
             android:layout_marginTop="22dp"
             android:text="@string/setup_class_label"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold" />
 
         <EditText
@@ -189,7 +189,7 @@
             android:layout_marginTop="26dp"
             android:text="@string/settings_timer_display_title"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold" />
 
         <RadioGroup
@@ -220,7 +220,7 @@
             android:layout_marginTop="26dp"
             android:text="@string/settings_timer_alert_title"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold" />
 
         <Switch

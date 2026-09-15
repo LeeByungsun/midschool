@@ -13,6 +13,7 @@
     <string name="home_today_summary_empty">오늘 보여줄 급식과 일정이 아직 없어요.</string>
     <string name="home_today_summary_error">나이스 데이터를 불러오지 못해 일부 정보는 기본 화면으로 표시 중입니다.</string>
     <string name="home_settings_button">설정</string>
+    <string name="home_settings_content_description">설정 열기</string>
     <string name="home_setup_button">학교 설정하러 가기</string>
     <string name="home_timetable_title">오늘 시간표</string>
     <string name="home_timetable_button">시간표 보러 가기</string>
@@ -61,8 +62,12 @@
     <string name="splash_loading">앱을 준비하고 있어요...</string>
     <string name="setup_title">처음 설정</string>
     <string name="setup_description">앱에서 시간표, 급식, 일정 정보를 정확하게 보여주기 위해 학교를 검색하고 학년과 반을 입력해 주세요.</string>
+    <string name="setup_school_step_title">1. 학교 선택</string>
+    <string name="setup_school_step_description">학교 이름을 검색하고 목록에서 선택해 주세요.</string>
+    <string name="setup_student_step_title">2. 학년과 반</string>
+    <string name="setup_student_step_description">정확한 시간표를 위해 현재 학년과 반을 입력해 주세요.</string>
     <string name="setup_school_label">학교 이름</string>
-    <string name="setup_school_hint">예: 미사초등학교 / 미사중학교 / 미사고등학교</string>
+    <string name="setup_school_hint">예: 다원중학교</string>
     <string name="setup_school_helper">현재는 초등학교/중학교/고등학교 검색 결과를 표시합니다.</string>
     <string name="setup_school_search_button">학교 검색</string>
     <string name="setup_school_search_loading">검색 중...</string>

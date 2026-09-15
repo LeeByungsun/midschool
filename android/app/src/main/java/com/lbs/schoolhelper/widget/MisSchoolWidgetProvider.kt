@@ -137,6 +137,20 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             context.sendBroadcast(intent)
         }
 
+        /** Refreshes every existing widget after the selected school or class changes. */
+        fun requestAllWidgetUpdates(context: Context) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetComponentName(context))
+            if (appWidgetIds.isEmpty()) return
+
+            WidgetMidnightScheduler.scheduleNext(context)
+            val intent = Intent(context, MisSchoolWidgetProvider::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+            }
+            context.sendBroadcast(intent)
+        }
+
         fun updateAllWidgets(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -356,7 +370,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
         }
 
         private fun String.truncatedWidgetSubject(): String {
-            return if (length > 6) take(5) else this
+            return take(6)
         }
 
         private fun dependencies(context: Context): WidgetProviderEntryPoint {

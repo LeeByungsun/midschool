@@ -27,7 +27,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="@dimen/timetable_period_badge_width"
                 android:layout_height="@dimen/timetable_period_badge_height"
-                app:cardBackgroundColor="@color/white"
+                app:cardBackgroundColor="@color/surface_badge"
                 app:cardCornerRadius="@dimen/timetable_period_badge_radius"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/divider_soft"
@@ -38,8 +38,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:textColor="@color/brand_navy"
-                    android:textSize="13sp"
+                    android:textColor="@color/text_accent"
+                    android:textSize="@dimen/text_metadata"
                     android:textStyle="bold" />
             </com.google.android.material.card.MaterialCardView>
 

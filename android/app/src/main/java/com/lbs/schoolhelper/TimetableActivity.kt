@@ -3,7 +3,6 @@ package com.lbs.schoolhelper
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
+import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 
 @AndroidEntryPoint
 class TimetableActivity : AppCompatActivity() {
@@ -24,7 +24,7 @@ class TimetableActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableSchoolEdgeToEdge()
         binding = ActivityTimetableBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.lifecycleOwner = this

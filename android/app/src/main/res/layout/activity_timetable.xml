@@ -25,16 +25,16 @@
                 android:layout_weight="1"
                 android:text="@string/timetable_title"
                 android:textColor="@color/text_primary"
-                android:textSize="28sp"
+                android:textSize="@dimen/text_page_title"
                 android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/timetableBackButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/settings_back"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_back_simple" />
         </LinearLayout>
 
@@ -66,7 +66,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/home_date_label"
                     android:textColor="@color/text_primary"
-                    android:textSize="22sp"
+                    android:textSize="@dimen/text_summary_title"
                     android:textStyle="bold" />
 
                 <TextView
@@ -76,7 +76,7 @@
                     android:layout_marginTop="8dp"
                     android:text="@string/home_semester_label"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_body_small"
                     android:textStyle="bold" />
 
                 <TextView
@@ -86,7 +86,7 @@
                     android:layout_marginTop="6dp"
                     android:text="@string/timetable_lesson_count_empty"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    android:textSize="@dimen/text_body_small" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -103,17 +103,13 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/previousDayButton"
+                style="@style/Widget.MisSchoolApp.Button.DateNavigation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="8dp"
                 android:text="@string/timetable_previous_day"
-                android:textColor="@color/brand_navy"
-                app:backgroundTint="@color/brand_blue_soft"
-                app:cornerRadius="18dp"
                 app:icon="@drawable/ic_back_simple"
-                app:iconTint="@color/brand_navy"
-                app:strokeWidth="0dp" />
+                app:iconTint="@color/text_accent"
+                app:iconPadding="6dp" />
 
             <View
                 android:layout_width="0dp"
@@ -122,33 +118,25 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/nextDayButton"
+                style="@style/Widget.MisSchoolApp.Button.DateNavigation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="8dp"
                 android:text="@string/timetable_next_day"
-                android:textColor="@color/brand_navy"
-                app:backgroundTint="@color/brand_blue_soft"
-                app:cornerRadius="18dp"
                 app:iconGravity="textEnd"
                 app:iconPadding="6dp"
-                app:strokeWidth="0dp" />
+                app:icon="@drawable/ic_forward_simple"
+                app:iconTint="@color/text_accent" />
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/todayButton"
+            style="@style/Widget.MisSchoolApp.Button.Today"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="8dp"
             android:text="@string/timetable_today"
-            android:textColor="@color/brand_yellow_text"
-            app:backgroundTint="@color/brand_yellow_soft"
-            app:cornerRadius="18dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/timetableDayNavigationRow"
-            app:strokeWidth="0dp" />
+            app:layout_constraintTop_toBottomOf="@id/timetableDayNavigationRow" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/timetableListCard"
@@ -177,7 +165,7 @@
                     android:lineSpacingExtra="2dp"
                     android:text="@string/timetable_loading"
                     android:textColor="@color/text_secondary"
-                    android:textSize="15sp"
+                    android:textSize="@dimen/text_body"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

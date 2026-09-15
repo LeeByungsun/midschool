@@ -28,7 +28,7 @@
                 android:layout_weight="1"
                 android:text="@string/home_schedule_title"
                 android:textColor="@color/text_primary"
-                android:textSize="28sp"
+                android:textSize="@dimen/text_page_title"
                 android:textStyle="bold" />
 
             <ImageButton
@@ -55,11 +55,11 @@
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="@string/schedule_previous_month"
-                android:textColor="@color/brand_navy"
+                android:textColor="@color/text_accent"
                 app:backgroundTint="@color/brand_blue_soft"
                 app:cornerRadius="18dp"
                 app:icon="@drawable/ic_back_simple"
-                app:iconTint="@color/brand_navy"
+                app:iconTint="@color/text_accent"
                 app:strokeWidth="0dp" />
 
             <TextView
@@ -71,7 +71,7 @@
                 android:gravity="center"
                 android:text="@string/schedule_month_placeholder"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_section_title"
                 android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
@@ -81,7 +81,7 @@
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="@string/schedule_next_month"
-                android:textColor="@color/brand_navy"
+                android:textColor="@color/text_accent"
                 app:backgroundTint="@color/brand_blue_soft"
                 app:cornerRadius="18dp"
                 app:iconGravity="textEnd"
@@ -107,7 +107,7 @@
                 android:padding="20dp"
                 android:text="@string/schedule_loading"
                 android:textColor="@color/text_secondary"
-                android:textSize="15sp" />
+                android:textSize="@dimen/text_body" />
         </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>

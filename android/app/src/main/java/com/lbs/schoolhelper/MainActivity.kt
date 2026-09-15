@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.os.Build
 import android.view.View
 import androidx.activity.viewModels
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
@@ -25,6 +24,7 @@ import com.lbs.schoolhelper.util.ExternalUrlOpener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
+import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableSchoolEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.lifecycleOwner = this

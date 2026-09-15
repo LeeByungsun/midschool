@@ -4,7 +4,6 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.os.Bundle
 import android.view.View
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -14,6 +13,7 @@ import com.lbs.schoolhelper.databinding.ActivityTimerBinding
 import com.lbs.schoolhelper.ui.timer.TimerPreset
 import com.lbs.schoolhelper.ui.timer.TimerViewModel
 import com.lbs.schoolhelper.util.applySystemBarPadding
+import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -25,7 +25,7 @@ class TimerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableSchoolEdgeToEdge()
         binding = ActivityTimerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.lifecycleOwner = this

@@ -1,7 +1,6 @@
 package com.lbs.schoolhelper
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -12,6 +11,7 @@ import com.lbs.schoolhelper.ui.schedule.ScheduleViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
+import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 
 @AndroidEntryPoint
 class ScheduleActivity : AppCompatActivity() {
@@ -20,7 +20,7 @@ class ScheduleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableSchoolEdgeToEdge()
         binding = ActivityScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.lifecycleOwner = this
