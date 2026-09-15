@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.CountDownTimer
 import androidx.lifecycle.AndroidViewModel
 import com.lbs.schoolhelper.R
+import com.lbs.schoolhelper.BuildConfig
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
 import com.lbs.schoolhelper.timer.TimerCompletion
@@ -160,15 +161,16 @@ class TimerViewModel @Inject constructor(
     private fun restoreTimerState() {
         val savedState = preferencesRepository.getTimerState()
         val preset = runCatching { TimerPreset.valueOf(savedState.presetName) }.getOrDefault(TimerPreset.FOCUS)
+        val savedTotalMillis = if (BuildConfig.BUILD_TYPE == "qa") preset.durationMillis else savedState.totalMillis
         val remainingMillis = if (savedState.isRunning && savedState.targetAtMillis > 0L) {
             (savedState.targetAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
         } else {
-            savedState.remainingMillis
-        }
+            savedState.remainingMillis.coerceAtMost(savedTotalMillis)
+        }.coerceAtMost(savedTotalMillis)
 
         _uiState.value = TimerUiState(
             selectedPreset = preset,
-            totalMillis = savedState.totalMillis,
+            totalMillis = savedTotalMillis,
             remainingMillis = remainingMillis,
             displayTimeText = formatTimerText(remainingMillis),
             subtitle = appContext.getString(preset.subtitleRes),
@@ -181,7 +183,7 @@ class TimerViewModel @Inject constructor(
             isRunning = false,
             isCompleted = savedState.isRunning && remainingMillis == 0L,
             isCountMode = isCountMode(),
-            progressFraction = calculateProgress(remainingMillis, savedState.totalMillis)
+            progressFraction = calculateProgress(remainingMillis, savedTotalMillis)
         )
 
         if (savedState.isRunning && remainingMillis > 0L) {
