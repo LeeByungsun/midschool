@@ -10,6 +10,7 @@ import com.lbs.schoolhelper.data.repository.TimerDisplayMode
 import com.lbs.schoolhelper.timer.TimerCompletion
 import com.lbs.schoolhelper.telemetry.*
 import com.lbs.schoolhelper.timer.TimerAlarmScheduler
+import com.lbs.schoolhelper.timer.TimerAlarmReceiver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -121,7 +122,9 @@ class TimerViewModel @Inject constructor(
 
             override fun onFinish() {
                 TimerAlarmScheduler.cancel(appContext)
-                TimerCompletion.complete(preferencesRepository, telemetry, System.currentTimeMillis())
+                if (TimerCompletion.complete(preferencesRepository, telemetry, System.currentTimeMillis())) {
+                    TimerAlarmReceiver.postCompletionNotification(appContext)
+                }
                 _uiState.update {
                     it.copy(
                         remainingMillis = 0L,
