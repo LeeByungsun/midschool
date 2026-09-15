@@ -1,6 +1,10 @@
 package com.lbs.schoolhelper.util
 
+import android.graphics.Color
 import android.view.View
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
@@ -31,4 +35,22 @@ fun View.applySystemBarPadding(
         )
         insets
     }
+}
+
+/**
+ * Configures edge-to-edge system bars for the app's light surfaces.
+ *
+ * Most screens use a light page background, so the status-bar content must use
+ * dark icons. The splash screen opts into light icons because its surface is
+ * the navy brand color.
+ */
+fun AppCompatActivity.enableSchoolEdgeToEdge(useLightStatusBarIcons: Boolean = true) {
+    enableEdgeToEdge(
+        statusBarStyle = if (useLightStatusBarIcons) {
+            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        },
+        navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+    )
 }

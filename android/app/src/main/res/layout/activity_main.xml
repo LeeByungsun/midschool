@@ -43,7 +43,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/home_school_name_placeholder"
                         android:textColor="@color/white"
-                        android:textSize="28sp"
+                        android:textSize="@dimen/text_hero_title"
                         android:textStyle="bold" />
 
                     <TextView
@@ -53,7 +53,7 @@
                         android:layout_marginTop="6dp"
                         android:text="@string/home_date_label"
                         android:textColor="@color/brand_blue_soft"
-                        android:textSize="15sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:id="@+id/classSummaryText"
@@ -62,7 +62,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/home_semester_label"
                         android:textColor="@color/brand_blue_soft"
-                        android:textSize="14sp" />
+                        android:textSize="@dimen/text_body_small" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/settingsButton"
@@ -108,7 +108,7 @@
                                 android:lineSpacingExtra="2dp"
                                 android:text="@string/home_today_summary_body"
                                 android:textColor="@color/brand_blue_soft"
-                                android:textSize="14sp" />
+                                android:textSize="@dimen/text_body_small" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/openTimetableButton"
@@ -149,7 +149,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/home_meal_title"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="@dimen/text_section_title"
                         android:textStyle="bold" />
 
                     <TextView
@@ -162,7 +162,7 @@
                         android:paddingVertical="6dp"
                         android:text="@string/home_meal_meta"
                         android:textColor="@color/brand_green_text"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_metadata"
                         android:textStyle="bold" />
 
                     <TextView
@@ -173,7 +173,7 @@
                         android:lineSpacingExtra="3dp"
                         android:text="@string/home_meal_menu"
                         android:textColor="@color/text_secondary"
-                        android:textSize="15sp" />
+                        android:textSize="@dimen/text_body" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -198,7 +198,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/home_schedule_title"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="@dimen/text_section_title"
                         android:textStyle="bold" />
 
                     <com.google.android.material.button.MaterialButton
@@ -221,7 +221,7 @@
                         android:lineSpacingExtra="4dp"
                         android:text="@string/home_schedule_empty"
                         android:textColor="@color/text_secondary"
-                        android:textSize="15sp" />
+                        android:textSize="@dimen/text_body" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -247,7 +247,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/home_notice_title"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="@dimen/text_section_title"
                         android:textStyle="bold" />
 
                     <com.google.android.material.button.MaterialButton
@@ -270,7 +270,7 @@
                         android:lineSpacingExtra="4dp"
                         android:text="@string/home_notice_empty"
                         android:textColor="@color/text_secondary"
-                        android:textSize="15sp" />
+                        android:textSize="@dimen/text_body" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -296,7 +296,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/home_timer_title"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="@dimen/text_section_title"
                         android:textStyle="bold" />
 
                     <TextView
@@ -324,7 +324,7 @@
                         android:layout_marginTop="8dp"
                         android:text="@string/home_timer_subtitle"
                         android:textColor="@color/text_secondary"
-                        android:textSize="15sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/openTimerDetailButton"

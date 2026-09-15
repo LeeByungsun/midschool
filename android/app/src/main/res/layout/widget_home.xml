@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/brand_navy"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body_small"
             android:textStyle="bold"
             tools:text="🗓️ 4월 19일 (토)" />
 

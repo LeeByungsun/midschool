@@ -3,7 +3,6 @@ package com.lbs.schoolhelper.widget
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -14,6 +13,7 @@ import com.lbs.schoolhelper.ui.widget.WidgetConfigViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
+import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 
 @AndroidEntryPoint
 class WidgetConfigActivity : AppCompatActivity() {
@@ -22,7 +22,7 @@ class WidgetConfigActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableSchoolEdgeToEdge()
         setResult(RESULT_CANCELED)
         binding = ActivityWidgetConfigBinding.inflate(layoutInflater)
         setContentView(binding.root)

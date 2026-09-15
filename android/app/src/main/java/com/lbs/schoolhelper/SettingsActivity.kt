@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
@@ -22,6 +21,7 @@ import com.lbs.schoolhelper.ui.settings.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
+import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
@@ -31,7 +31,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableSchoolEdgeToEdge()
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.lifecycleOwner = this

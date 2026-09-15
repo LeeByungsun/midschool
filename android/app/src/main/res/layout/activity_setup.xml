@@ -27,7 +27,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/setup_title"
                 android:textColor="@color/text_primary"
-                android:textSize="28sp"
+                android:textSize="@dimen/text_hero_title"
                 android:textStyle="bold" />
 
             <TextView
@@ -37,7 +37,7 @@
                 android:lineSpacingExtra="2dp"
                 android:text="@string/setup_description"
                 android:textColor="@color/text_secondary"
-                android:textSize="15sp" />
+                android:textSize="@dimen/text_body" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -45,7 +45,7 @@
                 android:layout_marginTop="28dp"
                 android:text="@string/setup_school_label"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body_small"
                 android:textStyle="bold" />
 
             <EditText
@@ -80,7 +80,7 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/setup_school_helper"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:textSize="@dimen/text_metadata" />
 
             <TextView
                 android:id="@+id/schoolSearchMessageText"
@@ -90,7 +90,7 @@
                 android:background="@color/brand_blue_soft"
                 android:padding="12dp"
                 android:textColor="@color/text_primary"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_metadata"
                 android:visibility="gone" />
 
             <TextView
@@ -99,7 +99,7 @@
                 android:layout_marginTop="18dp"
                 android:text="@string/setup_school_selected_label"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body_small"
                 android:textStyle="bold" />
 
             <TextView
@@ -111,7 +111,7 @@
                 android:padding="14dp"
                 android:text="@string/setup_school_selected_empty"
                 android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:textSize="@dimen/text_body_small" />
 
             <TextView
                 android:id="@+id/schoolResultsLabel"
@@ -120,7 +120,7 @@
                 android:layout_marginTop="18dp"
                 android:text="@string/setup_school_results_label"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body_small"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -138,7 +138,7 @@
                 android:layout_marginTop="28dp"
                 android:text="@string/setup_grade_label"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body_small"
                 android:textStyle="bold" />
 
             <EditText
@@ -161,7 +161,7 @@
                 android:layout_marginTop="22dp"
                 android:text="@string/setup_class_label"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body_small"
                 android:textStyle="bold" />
 
             <EditText
@@ -203,7 +203,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/setup_consent_title"
                     android:textColor="@color/text_primary"
-                    android:textSize="28sp"
+                    android:textSize="@dimen/text_page_title"
                     android:textStyle="bold" />
 
                 <TextView
@@ -212,7 +212,7 @@
                     android:layout_marginTop="10dp"
                     android:text="@string/settings_telemetry_description"
                     android:textColor="@color/text_secondary"
-                    android:textSize="15sp" />
+                    android:textSize="@dimen/text_body" />
 
                 <Switch
                     android:id="@+id/setupAnalyticsSwitch"
