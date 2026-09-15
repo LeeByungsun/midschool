@@ -10,6 +10,7 @@ import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -19,6 +20,7 @@ import com.lbs.schoolhelper.databinding.ActivitySettingsBinding
 import com.lbs.schoolhelper.ui.settings.SettingsUiState
 import com.lbs.schoolhelper.ui.settings.SettingsViewModel
 import com.lbs.schoolhelper.timer.TimerNotificationChannel
+import com.lbs.schoolhelper.timer.TimerNotificationSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
@@ -116,14 +118,14 @@ class SettingsActivity : AppCompatActivity() {
     private fun openTimerNotificationSettings() {
         val notificationManager = getSystemService(NotificationManager::class.java)
         TimerNotificationChannel.ensure(this, notificationManager)
-        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
-                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+        val action = TimerNotificationSettings.actionFor(
+            notificationsEnabled = NotificationManagerCompat.from(this).areNotificationsEnabled(),
+            sdkInt = Build.VERSION.SDK_INT
+        )
+        val intent = Intent(action).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            if (action == Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS) {
                 putExtra(Settings.EXTRA_CHANNEL_ID, TimerNotificationChannel.ID)
-            }
-        } else {
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
             }
         }
         startActivity(intent)
