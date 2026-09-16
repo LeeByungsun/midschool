@@ -168,7 +168,7 @@
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="6dp"
                         android:text="@string/home_meal_meta"
-                        android:textColor="@color/brand_green_text"
+                        android:textColor="@color/text_accent"
                         android:textSize="@dimen/text_metadata"
                         android:textStyle="bold" />
 

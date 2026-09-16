@@ -32,7 +32,7 @@ class MealDayAdapter :
             val context = binding.root.context
             (binding.root as MaterialCardView).setCardBackgroundColor(
                 context.getColor(
-                    if (item.isToday) R.color.brand_green_soft else R.color.surface_card
+                    if (item.isToday) R.color.brand_blue_soft else R.color.surface_card
                 )
             )
             binding.dateText.text = item.dateLabel
