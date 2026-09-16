@@ -8,6 +8,7 @@ import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
 import com.lbs.schoolhelper.data.repository.TimerPreferenceState
 import com.lbs.schoolhelper.data.repository.WidgetSettings
+import com.lbs.schoolhelper.ui.timer.PomodoroSettings
 
 class FakePreferencesRepository(
     studentInfo: StudentInfo = StudentInfo(),
@@ -43,6 +44,7 @@ class FakePreferencesRepository(
         private set
     var currentTimerState: TimerPreferenceState = timerState
         private set
+    var currentPomodoroSettings: PomodoroSettings = PomodoroSettings()
 
     val savedStudentInfoCalls = mutableListOf<StudentInfo>()
     val savedTimerDisplayModes = mutableListOf<TimerDisplayMode>()
@@ -115,6 +117,12 @@ class FakePreferencesRepository(
             targetAtMillis = 0L,
             isRunning = false
         )
+    }
+
+    override fun getPomodoroSettings(): PomodoroSettings = currentPomodoroSettings
+
+    override fun savePomodoroSettings(settings: PomodoroSettings) {
+        currentPomodoroSettings = settings.normalized()
     }
 
     override fun saveMealCache(

@@ -14,8 +14,8 @@ import com.lbs.schoolhelper.data.model.HomeContentStatus
 import com.lbs.schoolhelper.databinding.ActivityMainBinding
 import com.lbs.schoolhelper.ui.home.HomeNoticeAction
 import com.lbs.schoolhelper.ui.home.HomeViewModel
-import com.lbs.schoolhelper.ui.timer.TimerPreset
 import com.lbs.schoolhelper.ui.timer.TimerViewModel
+import com.lbs.schoolhelper.ui.timer.TimerPreset
 import com.lbs.schoolhelper.util.ExternalUrlOpener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -66,9 +66,6 @@ class MainActivity : AppCompatActivity() {
         binding.openNoticeButton.setOnClickListener {
             homeViewModel.onNoticeActionClicked()
         }
-        binding.focusPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.FOCUS) }
-        binding.breakPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.BREAK) }
-        binding.deepPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.DEEP_FOCUS) }
         binding.openTimerDetailButton.setOnClickListener {
             startActivity(Intent(this, TimerActivity::class.java))
         }

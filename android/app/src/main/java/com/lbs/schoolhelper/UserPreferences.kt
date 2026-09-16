@@ -2,6 +2,7 @@ package com.lbs.schoolhelper
 
 import android.content.Context
 import com.lbs.schoolhelper.data.repository.StudentInfo
+import com.lbs.schoolhelper.ui.timer.PomodoroSettings
 
 object UserPreferences {
     private const val PREFS_NAME = "midschool_prefs"
@@ -19,6 +20,10 @@ object UserPreferences {
     private const val KEY_TIMER_REMAINING_MILLIS = "timer_remaining_millis"
     private const val KEY_TIMER_RUNNING = "timer_running"
     private const val KEY_TIMER_PRESET = "timer_preset"
+    private const val KEY_POMODORO_FOCUS = "pomodoro_focus_minutes"
+    private const val KEY_POMODORO_SHORT_BREAK = "pomodoro_short_break_minutes"
+    private const val KEY_POMODORO_LONG_BREAK = "pomodoro_long_break_minutes"
+    private const val KEY_POMODORO_ROUNDS = "pomodoro_rounds"
 
     const val TIMER_DISPLAY_COUNT = "count"
     const val TIMER_DISPLAY_RING = "ring"
@@ -130,6 +135,25 @@ object UserPreferences {
             .remove(KEY_TIMER_RUNNING)
             .remove(KEY_TIMER_PRESET)
             .apply()
+    }
+
+    fun savePomodoroSettings(context: Context, settings: PomodoroSettings) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_POMODORO_FOCUS, settings.focusMinutes)
+            .putInt(KEY_POMODORO_SHORT_BREAK, settings.shortBreakMinutes)
+            .putInt(KEY_POMODORO_LONG_BREAK, settings.longBreakMinutes)
+            .putInt(KEY_POMODORO_ROUNDS, settings.rounds)
+            .apply()
+    }
+
+    fun getPomodoroSettings(context: Context): PomodoroSettings {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return PomodoroSettings(
+            focusMinutes = prefs.getInt(KEY_POMODORO_FOCUS, 25),
+            shortBreakMinutes = prefs.getInt(KEY_POMODORO_SHORT_BREAK, 5),
+            longBreakMinutes = prefs.getInt(KEY_POMODORO_LONG_BREAK, 15),
+            rounds = prefs.getInt(KEY_POMODORO_ROUNDS, 4)
+        ).normalized()
     }
 
     data class TimerState(

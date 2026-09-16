@@ -4,6 +4,7 @@ import com.lbs.schoolhelper.data.model.MealInfo
 import com.lbs.schoolhelper.data.model.SchoolInfo
 import com.lbs.schoolhelper.data.model.SchoolEvent
 import com.lbs.schoolhelper.data.model.TimetableItem
+import com.lbs.schoolhelper.ui.timer.PomodoroSettings
 
 interface PreferencesRepository {
     fun isAnalyticsEnabled(): Boolean
@@ -30,6 +31,8 @@ interface PreferencesRepository {
         isRunning: Boolean
     )
     fun clearTimerState()
+    fun getPomodoroSettings(): PomodoroSettings
+    fun savePomodoroSettings(settings: PomodoroSettings)
     fun saveMealCache(officeCode: String, schoolCode: String, date: String, meals: List<MealInfo>)
     fun getMealCache(officeCode: String, schoolCode: String, date: String): List<MealInfo>?
     fun saveScheduleCache(officeCode: String, schoolCode: String, date: String, events: List<SchoolEvent>)

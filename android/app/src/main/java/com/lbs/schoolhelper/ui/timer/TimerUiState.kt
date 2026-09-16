@@ -13,7 +13,12 @@ data class TimerUiState(
     val isRunning: Boolean = false,
     val isCompleted: Boolean = false,
     val isCountMode: Boolean = true,
-    val progressFraction: Float = 1f
+    val progressFraction: Float = 1f,
+    val phase: PomodoroPhase = PomodoroPhase.FOCUS,
+    val completedRounds: Int = 0,
+    val totalRounds: Int = 4,
+    val awaitingNextPhase: Boolean = false,
+    val sessionCompleted: Boolean = false
 )
 
 enum class TimerPreset(private val productionDurationMillis: Long, val subtitleRes: Int) {

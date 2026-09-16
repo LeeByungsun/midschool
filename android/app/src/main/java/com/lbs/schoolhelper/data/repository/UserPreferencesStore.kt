@@ -4,6 +4,7 @@ import android.content.Context
 import com.lbs.schoolhelper.UserPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import com.lbs.schoolhelper.ui.timer.PomodoroSettings
 
 interface UserPreferencesStore {
     fun getStudentInfo(): StudentInfo
@@ -24,6 +25,8 @@ interface UserPreferencesStore {
         isRunning: Boolean
     )
     fun clearTimerState()
+    fun getPomodoroSettings(): PomodoroSettings
+    fun savePomodoroSettings(settings: PomodoroSettings)
 }
 
 class AndroidUserPreferencesStore @Inject constructor(
@@ -76,5 +79,11 @@ class AndroidUserPreferencesStore @Inject constructor(
 
     override fun clearTimerState() {
         UserPreferences.clearTimerState(context)
+    }
+
+    override fun getPomodoroSettings(): PomodoroSettings = UserPreferences.getPomodoroSettings(context)
+
+    override fun savePomodoroSettings(settings: PomodoroSettings) {
+        UserPreferences.savePomodoroSettings(context, settings)
     }
 }

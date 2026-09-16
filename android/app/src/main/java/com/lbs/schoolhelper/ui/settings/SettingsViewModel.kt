@@ -11,6 +11,7 @@ import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
 import com.lbs.schoolhelper.telemetry.AppTelemetry
 import com.lbs.schoolhelper.telemetry.NoOpTelemetry
+import com.lbs.schoolhelper.ui.timer.PomodoroSettings
 import com.lbs.schoolhelper.widget.MisSchoolWidgetProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -46,6 +47,10 @@ class SettingsViewModel @Inject constructor(
             grade = studentInfo.grade,
             classroom = studentInfo.classroom,
             isRingMode = preferencesRepository.getTimerDisplayMode() == TimerDisplayMode.RING,
+            pomodoroFocusMinutes = preferencesRepository.getPomodoroSettings().focusMinutes,
+            pomodoroShortBreakMinutes = preferencesRepository.getPomodoroSettings().shortBreakMinutes,
+            pomodoroLongBreakMinutes = preferencesRepository.getPomodoroSettings().longBreakMinutes,
+            pomodoroRounds = preferencesRepository.getPomodoroSettings().rounds,
             notificationEnabled = preferencesRepository.isTimerNotificationEnabled(),
             vibrationEnabled = preferencesRepository.isTimerVibrationEnabled(),
             analyticsEnabled = preferencesRepository.isAnalyticsEnabled(),
@@ -181,6 +186,22 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(isRingMode = isRingMode) }
     }
 
+    fun updatePomodoroFocusMinutes(value: String) {
+        _uiState.update { it.copy(pomodoroFocusMinutes = value.toIntOrNull() ?: it.pomodoroFocusMinutes) }
+    }
+
+    fun updatePomodoroShortBreakMinutes(value: String) {
+        _uiState.update { it.copy(pomodoroShortBreakMinutes = value.toIntOrNull() ?: it.pomodoroShortBreakMinutes) }
+    }
+
+    fun updatePomodoroLongBreakMinutes(value: String) {
+        _uiState.update { it.copy(pomodoroLongBreakMinutes = value.toIntOrNull() ?: it.pomodoroLongBreakMinutes) }
+    }
+
+    fun updatePomodoroRounds(rounds: Int) {
+        _uiState.update { it.copy(pomodoroRounds = rounds.coerceIn(1, 4)) }
+    }
+
     fun updateNotificationEnabled(enabled: Boolean) {
         _uiState.update { it.copy(notificationEnabled = enabled) }
     }
@@ -214,6 +235,14 @@ class SettingsViewModel @Inject constructor(
         telemetry.schoolSaved(previousStudentInfo)
         preferencesRepository.saveTimerDisplayMode(
             if (state.isRingMode) TimerDisplayMode.RING else TimerDisplayMode.COUNT
+        )
+        preferencesRepository.savePomodoroSettings(
+            PomodoroSettings(
+                focusMinutes = state.pomodoroFocusMinutes,
+                shortBreakMinutes = state.pomodoroShortBreakMinutes,
+                longBreakMinutes = state.pomodoroLongBreakMinutes,
+                rounds = state.pomodoroRounds
+            ).normalized()
         )
         preferencesRepository.saveTimerNotificationEnabled(state.notificationEnabled)
         preferencesRepository.saveTimerVibrationEnabled(state.vibrationEnabled)

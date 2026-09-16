@@ -218,6 +218,65 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="26dp"
+            android:text="@string/settings_pomodoro_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_body_small"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_pomodoro_description"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_body_small" />
+
+        <EditText
+            android:id="@+id/pomodoroFocusMinutesInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/settings_pomodoro_focus_hint"
+            android:inputType="number"
+            android:maxLength="3" />
+
+        <EditText
+            android:id="@+id/pomodoroShortBreakMinutesInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/settings_pomodoro_short_break_hint"
+            android:inputType="number"
+            android:maxLength="3" />
+
+        <EditText
+            android:id="@+id/pomodoroLongBreakMinutesInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/settings_pomodoro_long_break_hint"
+            android:inputType="number"
+            android:maxLength="3" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_pomodoro_rounds_title"
+            android:textColor="@color/text_primary" />
+
+        <RadioGroup
+            android:id="@+id/pomodoroRoundsGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <RadioButton android:id="@+id/pomodoroRound1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1회" />
+            <RadioButton android:id="@+id/pomodoroRound2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2회" />
+            <RadioButton android:id="@+id/pomodoroRound3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="3회" />
+            <RadioButton android:id="@+id/pomodoroRound4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="4회" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
             android:text="@string/settings_timer_alert_title"
             android:textColor="@color/text_primary"
             android:textSize="@dimen/text_body_small"

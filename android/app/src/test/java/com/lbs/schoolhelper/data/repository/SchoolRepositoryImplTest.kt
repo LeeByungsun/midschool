@@ -1109,6 +1109,10 @@ class SchoolRepositoryImplTest {
 
         override fun clearTimerState() = Unit
 
+        override fun getPomodoroSettings() = com.lbs.schoolhelper.ui.timer.PomodoroSettings()
+
+        override fun savePomodoroSettings(settings: com.lbs.schoolhelper.ui.timer.PomodoroSettings) = Unit
+
         override fun saveMealCache(
             officeCode: String,
             schoolCode: String,

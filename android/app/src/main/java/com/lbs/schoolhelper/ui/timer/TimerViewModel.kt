@@ -3,12 +3,13 @@ package com.lbs.schoolhelper.ui.timer
 import android.app.Application
 import android.os.CountDownTimer
 import androidx.lifecycle.AndroidViewModel
-import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.BuildConfig
+import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
-import com.lbs.schoolhelper.timer.TimerCompletion
-import com.lbs.schoolhelper.telemetry.*
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.NoOpTelemetry
+import com.lbs.schoolhelper.telemetry.TimerAction
 import com.lbs.schoolhelper.timer.TimerAlarmScheduler
 import com.lbs.schoolhelper.timer.TimerCompletionAlert
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,206 +29,214 @@ class TimerViewModel @Inject constructor(
     private val appContext = application.applicationContext
     private val _uiState = MutableStateFlow(createInitialState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
-
     private var countDownTimer: CountDownTimer? = null
+    private var settings = effectiveSettings(preferencesRepository.getPomodoroSettings())
+    private var phase = PomodoroPhase.FOCUS
+    private var completedRounds = 0
+    private var awaitingNextPhase = false
+    private var sessionCompleted = false
 
-    init {
-        restoreTimerState()
+    init { restoreTimerState() }
+
+    fun updatePomodoroSettings(newSettings: PomodoroSettings) {
+        if (_uiState.value.isRunning) return
+        settings = effectiveSettings(newSettings.normalized())
+        preferencesRepository.savePomodoroSettings(newSettings.normalized())
+        resetTimer()
     }
 
     fun selectPreset(preset: TimerPreset) {
-        countDownTimer?.cancel()
-        TimerAlarmScheduler.cancel(appContext)
-
-        _uiState.value = TimerUiState(
-            selectedPreset = preset,
-            totalMillis = preset.durationMillis,
-            remainingMillis = preset.durationMillis,
-            displayTimeText = formatTimerText(preset.durationMillis),
-            subtitle = appContext.getString(preset.subtitleRes),
-            buttonTextRes = R.string.home_timer_start,
-            isRunning = false,
-            isCompleted = false,
-            isCountMode = isCountMode(),
-            progressFraction = 1f
-        )
-        saveTimerState(isRunning = false, targetAtMillis = 0L)
-        telemetry.timerAction(TimerAction.PRESET, preset.durationMillis)
+        // Kept for compatibility with the existing preset cards; all starts now use Pomodoro settings.
+        if (_uiState.value.isRunning) return
+        resetTimer()
     }
 
     fun toggleTimer() {
-        if (_uiState.value.isRunning) pauseTimer() else startTimer()
+        if (_uiState.value.isRunning) pauseTimer()
+        else if (awaitingNextPhase || sessionCompleted) startNextPhase()
+        else startCurrentPhase()
     }
 
     fun resetTimer() {
         countDownTimer?.cancel()
         TimerAlarmScheduler.cancel(appContext)
-        _uiState.update {
-            it.copy(
-                remainingMillis = it.totalMillis,
-                displayTimeText = formatTimerText(it.totalMillis),
-                buttonTextRes = R.string.home_timer_start,
-                isRunning = false,
-                isCompleted = false,
-                progressFraction = 1f,
-                isCountMode = isCountMode()
-            )
+        phase = PomodoroPhase.FOCUS
+        completedRounds = 0
+        awaitingNextPhase = false
+        sessionCompleted = false
+        render(settings.focusMinutes * MINUTE_MILLIS, running = false)
+        saveState(running = false, targetAtMillis = 0L)
+        telemetry.timerAction(TimerAction.RESET, settings.focusMinutes * MINUTE_MILLIS)
+    }
+
+    fun refreshDisplayMode() { _uiState.update { it.copy(isCountMode = isCountMode()) } }
+
+    override fun onCleared() { countDownTimer?.cancel(); super.onCleared() }
+
+    private fun startNextPhase() {
+        if (sessionCompleted) {
+            phase = PomodoroPhase.FOCUS
+            completedRounds = 0
+            sessionCompleted = false
+        } else if (awaitingNextPhase) {
+            awaitingNextPhase = false
         }
-        saveTimerState(isRunning = false, targetAtMillis = 0L)
-        telemetry.timerAction(TimerAction.RESET, _uiState.value.totalMillis)
+        startCurrentPhase()
     }
 
-    fun refreshDisplayMode() {
-        _uiState.update { it.copy(isCountMode = isCountMode()) }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        countDownTimer?.cancel()
-    }
-
-    private fun startTimer(recordAction: Boolean = true) {
-        val currentState = _uiState.value
-        val millisToRun = if (currentState.remainingMillis > 0L) {
-            currentState.remainingMillis
+    private fun startCurrentPhase(recordAction: Boolean = true) {
+        val fullDurationMillis = phaseDurationMillis()
+        val savedRemaining = _uiState.value.remainingMillis
+        val durationMillis = if (savedRemaining in 1 until fullDurationMillis && !awaitingNextPhase) {
+            savedRemaining
         } else {
-            currentState.totalMillis
+            fullDurationMillis
         }
-        val targetAtMillis = System.currentTimeMillis() + millisToRun
-        _uiState.update {
-            it.copy(
-                remainingMillis = millisToRun,
-                displayTimeText = formatTimerText(millisToRun),
-                isCompleted = false
-            )
-        }
-        saveTimerState(isRunning = true, targetAtMillis = targetAtMillis)
+        val targetAtMillis = System.currentTimeMillis() + durationMillis
+        awaitingNextPhase = false
+        sessionCompleted = false
+        render(durationMillis, running = true)
+        saveState(running = true, targetAtMillis = targetAtMillis)
         TimerAlarmScheduler.schedule(appContext, targetAtMillis)
-        if (recordAction) telemetry.timerAction(TimerAction.START, currentState.totalMillis)
-
+        if (recordAction) telemetry.timerAction(TimerAction.START, durationMillis)
         countDownTimer?.cancel()
-        countDownTimer = object : CountDownTimer(millisToRun, 1000L) {
+        countDownTimer = object : CountDownTimer(durationMillis, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
-                _uiState.update {
-                    it.copy(
-                        remainingMillis = millisUntilFinished,
-                        displayTimeText = formatTimerText(millisUntilFinished),
-                        buttonTextRes = R.string.home_timer_pause,
-                        isRunning = true,
-                        isCompleted = false,
-                        progressFraction = calculateProgress(millisUntilFinished, it.totalMillis)
-                    )
-                }
+                render(millisUntilFinished, running = true)
+                saveState(running = true, targetAtMillis = targetAtMillis)
             }
-
-            override fun onFinish() {
-                TimerAlarmScheduler.cancel(appContext)
-                if (TimerCompletion.complete(preferencesRepository, telemetry, System.currentTimeMillis())) {
-                    TimerCompletionAlert.play(appContext)
-                }
-                _uiState.update {
-                    it.copy(
-                        remainingMillis = 0L,
-                        displayTimeText = formatTimerText(0L),
-                        buttonTextRes = R.string.home_timer_restart,
-                        isRunning = false,
-                        isCompleted = true,
-                        progressFraction = 0f
-                    )
-                }
-            }
+            override fun onFinish() { finishPhase(playAlert = true) }
         }.start()
-
-        _uiState.update {
-            it.copy(
-                isRunning = true,
-                isCompleted = false,
-                buttonTextRes = R.string.home_timer_pause
-            )
-        }
     }
 
     private fun pauseTimer() {
         countDownTimer?.cancel()
         TimerAlarmScheduler.cancel(appContext)
-        _uiState.update {
-            it.copy(
-                isRunning = false,
-                isCompleted = false,
-                buttonTextRes = R.string.home_timer_resume
-            )
+        val remaining = _uiState.value.remainingMillis
+        render(remaining, running = false)
+        saveState(running = false, targetAtMillis = 0L)
+        telemetry.timerAction(TimerAction.PAUSE, remaining)
+    }
+
+    private fun finishPhase(playAlert: Boolean) {
+        TimerAlarmScheduler.cancel(appContext)
+        countDownTimer?.cancel()
+        if (playAlert) TimerCompletionAlert.play(appContext)
+        when (phase) {
+            PomodoroPhase.FOCUS -> {
+                completedRounds = (completedRounds + 1).coerceAtMost(settings.rounds)
+                phase = if (completedRounds >= settings.rounds) PomodoroPhase.LONG_BREAK else PomodoroPhase.SHORT_BREAK
+                awaitingNextPhase = true
+                render(phaseDurationMillis(), running = false)
+            }
+            PomodoroPhase.SHORT_BREAK -> {
+                phase = PomodoroPhase.FOCUS
+                awaitingNextPhase = true
+                render(phaseDurationMillis(), running = false)
+            }
+            PomodoroPhase.LONG_BREAK -> {
+                phase = PomodoroPhase.FOCUS
+                completedRounds = 0
+                awaitingNextPhase = false
+                sessionCompleted = true
+                render(settings.focusMinutes * MINUTE_MILLIS, running = false)
+            }
         }
-        saveTimerState(isRunning = false, targetAtMillis = 0L)
-        telemetry.timerAction(TimerAction.PAUSE, _uiState.value.totalMillis)
+        saveState(running = false, targetAtMillis = 0L)
     }
 
     private fun restoreTimerState() {
-        val savedState = preferencesRepository.getTimerState()
-        val preset = runCatching { TimerPreset.valueOf(savedState.presetName) }.getOrDefault(TimerPreset.FOCUS)
-        val savedTotalMillis = if (BuildConfig.BUILD_TYPE == "qa") preset.durationMillis else savedState.totalMillis
-        val remainingMillis = if (savedState.isRunning && savedState.targetAtMillis > 0L) {
-            (savedState.targetAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
-        } else {
-            savedState.remainingMillis.coerceAtMost(savedTotalMillis)
-        }.coerceAtMost(savedTotalMillis)
-
-        _uiState.value = TimerUiState(
-            selectedPreset = preset,
-            totalMillis = savedTotalMillis,
-            remainingMillis = remainingMillis,
-            displayTimeText = formatTimerText(remainingMillis),
-            subtitle = appContext.getString(preset.subtitleRes),
-            buttonTextRes = when {
-                remainingMillis == 0L -> R.string.home_timer_restart
-                savedState.isRunning -> R.string.home_timer_pause
-                remainingMillis < savedState.totalMillis -> R.string.home_timer_resume
-                else -> R.string.home_timer_start
-            },
-            isRunning = false,
-            isCompleted = savedState.isRunning && remainingMillis == 0L,
-            isCountMode = isCountMode(),
-            progressFraction = calculateProgress(remainingMillis, savedTotalMillis)
-        )
-
-        if (savedState.isRunning && remainingMillis > 0L) {
-            startTimer(recordAction = false)
-        } else if (savedState.isRunning && remainingMillis == 0L) {
-            TimerCompletion.complete(preferencesRepository, telemetry, System.currentTimeMillis())
-            TimerAlarmScheduler.cancel(appContext)
+        val saved = preferencesRepository.getTimerState()
+        val decoded = decodeState(saved.presetName)
+        if (decoded != null) {
+            phase = decoded.first
+            completedRounds = decoded.second
+        }
+        val remaining = if (saved.isRunning && saved.targetAtMillis > 0L) {
+            (saved.targetAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
+        } else saved.remainingMillis.coerceAtLeast(0L)
+        render(remaining.coerceAtMost(phaseDurationMillis()), running = false)
+        if (saved.isRunning && remaining > 0L) startCurrentPhase(recordAction = false)
+        else if (saved.isRunning && remaining == 0L) finishPhase(playAlert = false)
+        else {
+            awaitingNextPhase = saved.remainingMillis == 0L && decoded != null
+            render(if (awaitingNextPhase) phaseDurationMillis() else remaining, running = false)
         }
     }
 
-    private fun saveTimerState(isRunning: Boolean, targetAtMillis: Long) {
-        val state = _uiState.value
+    private fun render(remainingMillis: Long, running: Boolean) {
+        val total = phaseDurationMillis()
+        _uiState.value = TimerUiState(
+            selectedPreset = TimerPreset.FOCUS,
+            totalMillis = total,
+            remainingMillis = remainingMillis.coerceIn(0L, total),
+            displayTimeText = formatTimerText(remainingMillis),
+            subtitle = phaseLabel(),
+            buttonTextRes = when {
+                running -> R.string.home_timer_pause
+                sessionCompleted -> R.string.home_timer_new_session
+                awaitingNextPhase -> nextButtonRes()
+                remainingMillis < total -> R.string.home_timer_resume
+                else -> R.string.home_timer_start
+            },
+            isRunning = running,
+            isCompleted = sessionCompleted,
+            isCountMode = isCountMode(),
+            progressFraction = calculateProgress(remainingMillis, total),
+            phase = phase,
+            completedRounds = completedRounds,
+            totalRounds = settings.rounds,
+            awaitingNextPhase = awaitingNextPhase,
+            sessionCompleted = sessionCompleted
+        )
+    }
+
+    private fun nextButtonRes() = when (phase) {
+        PomodoroPhase.SHORT_BREAK -> R.string.home_timer_start_short_break
+        PomodoroPhase.FOCUS -> R.string.home_timer_start_focus
+        PomodoroPhase.LONG_BREAK -> R.string.home_timer_start_long_break
+    }
+
+    private fun phaseLabel() = when (phase) {
+        PomodoroPhase.FOCUS -> appContext.getString(R.string.home_timer_focus_round, (completedRounds + 1).coerceAtMost(settings.rounds), settings.rounds)
+        PomodoroPhase.SHORT_BREAK -> appContext.getString(R.string.home_timer_short_break_round, completedRounds, settings.rounds)
+        PomodoroPhase.LONG_BREAK -> appContext.getString(R.string.home_timer_long_break)
+    }
+
+    private fun phaseDurationMillis() = when (phase) {
+        PomodoroPhase.FOCUS -> settings.focusMinutes
+        PomodoroPhase.SHORT_BREAK -> settings.shortBreakMinutes
+        PomodoroPhase.LONG_BREAK -> settings.longBreakMinutes
+    } * MINUTE_MILLIS
+
+    private fun saveState(running: Boolean, targetAtMillis: Long) {
         preferencesRepository.saveTimerState(
-            presetName = state.selectedPreset.name,
-            totalMillis = state.totalMillis,
-            remainingMillis = state.remainingMillis,
+            presetName = "POMODORO_${phase.name}_$completedRounds",
+            totalMillis = phaseDurationMillis(),
+            remainingMillis = _uiState.value.remainingMillis,
             targetAtMillis = targetAtMillis,
-            isRunning = isRunning
+            isRunning = running
         )
     }
 
-    private fun isCountMode(): Boolean {
-        return preferencesRepository.getTimerDisplayMode() != TimerDisplayMode.RING
+    private fun decodeState(value: String): Pair<PomodoroPhase, Int>? {
+        if (!value.startsWith("POMODORO_")) return null
+        val parts = value.removePrefix("POMODORO_").split('_')
+        val savedPhase = runCatching { PomodoroPhase.valueOf(parts[0]) }.getOrNull() ?: return null
+        return savedPhase to (parts.getOrNull(1)?.toIntOrNull()?.coerceAtLeast(0) ?: 0)
     }
 
-    private fun calculateProgress(remainingMillis: Long, totalMillis: Long): Float {
-        if (totalMillis <= 0L) return 0f
-        return remainingMillis.toFloat() / totalMillis.toFloat()
-    }
+    private fun effectiveSettings(value: PomodoroSettings) = if (BuildConfig.BUILD_TYPE == "qa") {
+        value.copy(focusMinutes = 1, shortBreakMinutes = 1, longBreakMinutes = 1)
+    } else value
 
+    private fun isCountMode() = preferencesRepository.getTimerDisplayMode() != TimerDisplayMode.RING
+    private fun calculateProgress(remaining: Long, total: Long) = if (total <= 0L) 0f else remaining.toFloat() / total.toFloat()
     private fun formatTimerText(millis: Long): String {
-        val totalSeconds = (millis / 1000L).coerceAtLeast(0L)
-        val minutes = totalSeconds / 60L
-        val seconds = totalSeconds % 60L
-        return String.format(Locale.KOREAN, "%02d:%02d", minutes, seconds)
+        val seconds = (millis / 1000L).coerceAtLeast(0L)
+        return String.format(Locale.KOREAN, "%02d:%02d", seconds / 60L, seconds % 60L)
     }
+    private fun createInitialState() = TimerUiState(subtitle = appContext.getString(R.string.home_timer_focus_round, 1, 4), isCountMode = isCountMode())
 
-    private fun createInitialState(): TimerUiState {
-        return TimerUiState(
-            subtitle = appContext.getString(TimerPreset.FOCUS.subtitleRes),
-            isCountMode = isCountMode()
-        )
-    }
+    companion object { private const val MINUTE_MILLIS = 60_000L }
 }

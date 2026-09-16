@@ -10,8 +10,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.lbs.schoolhelper.databinding.ActivityTimerBinding
-import com.lbs.schoolhelper.ui.timer.TimerPreset
 import com.lbs.schoolhelper.ui.timer.TimerViewModel
+import com.lbs.schoolhelper.ui.timer.TimerPreset
 import com.lbs.schoolhelper.util.applySystemBarPadding
 import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,9 +47,6 @@ class TimerActivity : AppCompatActivity() {
 
     private fun bindClicks() {
         binding.timerBackButton.setOnClickListener { finish() }
-        binding.focusPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.FOCUS) }
-        binding.breakPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.BREAK) }
-        binding.deepPresetCard.setOnClickListener { timerViewModel.selectPreset(TimerPreset.DEEP_FOCUS) }
         binding.timerPrimaryButton.setOnClickListener { timerViewModel.toggleTimer() }
         binding.timerResetButton.setOnClickListener { timerViewModel.resetTimer() }
     }

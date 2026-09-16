@@ -8,6 +8,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import com.lbs.schoolhelper.ui.timer.PomodoroSettings
 
 class PreferencesRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
@@ -104,6 +105,12 @@ class PreferencesRepositoryImpl @Inject constructor(
 
     override fun clearTimerState() {
         userPreferencesStore.clearTimerState()
+    }
+
+    override fun getPomodoroSettings(): PomodoroSettings = userPreferencesStore.getPomodoroSettings()
+
+    override fun savePomodoroSettings(settings: PomodoroSettings) {
+        userPreferencesStore.savePomodoroSettings(settings.normalized())
     }
 
     override fun saveMealCache(
