@@ -1,6 +1,5 @@
 package com.lbs.schoolhelper
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.os.Looper
@@ -23,34 +22,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = SchoolHelperApplication::class, sdk = [34])
 class MainActivityNavigationTest {
-
-    @Test
-    fun onCreate_requestsNotificationPermissionWhenTimerAlertsAreEnabled() {
-        clearUserPreferences()
-        setTimerNotificationEnabled(true)
-        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
-
-        val permissionRequest = shadowOf(activity).lastRequestedPermission
-
-        assertEquals(
-            listOf(Manifest.permission.POST_NOTIFICATIONS),
-            permissionRequest.requestedPermissions.toList()
-        )
-    }
-
-    @Test
-    fun onCreate_requestsNotificationPermissionEvenWhenLegacyTimerAlertPreferenceIsDisabled() {
-        clearUserPreferences()
-        setTimerNotificationEnabled(false)
-        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
-
-        val permissionRequest = shadowOf(activity).lastRequestedPermission
-
-        assertEquals(
-            listOf(Manifest.permission.POST_NOTIFICATIONS),
-            permissionRequest.requestedPermissions.toList()
-        )
-    }
 
     @Test
     fun mealCardClickStartsMealActivity() {
@@ -125,11 +96,4 @@ class MainActivityNavigationTest {
             .commit()
     }
 
-    private fun setTimerNotificationEnabled(enabled: Boolean) {
-        val context = RuntimeEnvironment.getApplication().applicationContext as Context
-        context.getSharedPreferences("midschool_prefs", Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean("timer_notification_enabled", enabled)
-            .commit()
-    }
 }

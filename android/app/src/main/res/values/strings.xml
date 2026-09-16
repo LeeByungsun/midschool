@@ -97,8 +97,7 @@
     <string name="settings_timer_display_count">숫자 카운트로 보기</string>
     <string name="settings_timer_display_ring">원형 진행으로 보기</string>
     <string name="settings_timer_alert_title">타이머 완료 알림</string>
-    <string name="settings_timer_alert_description">알림음, 진동, 무음은 기기의 앱 알림 설정을 따릅니다.</string>
-    <string name="settings_timer_alert_open_system_settings">타이머 알림 설정 열기</string>
+    <string name="settings_timer_alert_description">타이머가 끝나면 단말의 현재 모드에 따라 소리나 진동이 한 번 울려요. 무음 모드에서는 울리지 않습니다.</string>
     <string name="settings_save_button">저장하기</string>
     <string name="settings_saved">설정이 저장되었어요.</string>
     <string name="settings_back">뒤로 가기</string>

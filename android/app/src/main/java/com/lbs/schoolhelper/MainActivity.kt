@@ -1,16 +1,12 @@
 package com.lbs.schoolhelper
 
-import android.Manifest
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Build
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -46,8 +42,6 @@ class MainActivity : AppCompatActivity() {
         bindHomeState()
         bindHomeEvents()
         bindTimerState()
-        maybeRequestNotificationPermission()
-
         homeViewModel.loadHomeData()
     }
 
@@ -214,25 +208,4 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun maybeRequestNotificationPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        if (
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-            REQUEST_CODE_POST_NOTIFICATIONS
-        )
-    }
-
-    companion object {
-        private const val REQUEST_CODE_POST_NOTIFICATIONS = 4101
-    }
 }

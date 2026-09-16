@@ -1,16 +1,12 @@
 package com.lbs.schoolhelper
 
-import android.app.NotificationManager
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -19,8 +15,6 @@ import com.lbs.schoolhelper.data.model.SchoolInfo
 import com.lbs.schoolhelper.databinding.ActivitySettingsBinding
 import com.lbs.schoolhelper.ui.settings.SettingsUiState
 import com.lbs.schoolhelper.ui.settings.SettingsViewModel
-import com.lbs.schoolhelper.timer.TimerNotificationChannel
-import com.lbs.schoolhelper.timer.TimerNotificationSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
@@ -46,9 +40,6 @@ class SettingsActivity : AppCompatActivity() {
         binding.searchSchoolButton.setOnClickListener {
             viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
             viewModel.searchSchools()
-        }
-        binding.openTimerNotificationSettingsButton.setOnClickListener {
-            openTimerNotificationSettings()
         }
 
         binding.analyticsSwitch.setOnCheckedChangeListener { _, checked ->
@@ -113,22 +104,6 @@ class SettingsActivity : AppCompatActivity() {
         binding.schoolResultsGroup.isVisible = state.schoolResults.isNotEmpty()
         renderSchoolResults(state.schoolResults, state.selectedSchool)
         isRenderingState = false
-    }
-
-    private fun openTimerNotificationSettings() {
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        TimerNotificationChannel.ensure(this, notificationManager)
-        val action = TimerNotificationSettings.actionFor(
-            notificationsEnabled = NotificationManagerCompat.from(this).areNotificationsEnabled(),
-            sdkInt = Build.VERSION.SDK_INT
-        )
-        val intent = Intent(action).apply {
-            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-            if (action == Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS) {
-                putExtra(Settings.EXTRA_CHANNEL_ID, TimerNotificationChannel.ID)
-            }
-        }
-        startActivity(intent)
     }
 
     private fun renderSchoolResults(
