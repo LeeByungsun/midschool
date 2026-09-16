@@ -3,6 +3,7 @@ package com.lbs.schoolhelper.ui.timer
 import android.app.Application
 import android.os.CountDownTimer
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.lbs.schoolhelper.BuildConfig
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
@@ -17,7 +18,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,6 +30,7 @@ class TimerViewModel @Inject constructor(
     private val telemetry: AppTelemetry = NoOpTelemetry
 ) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
+    private val instanceId = UUID.randomUUID().toString()
     private val _uiState = MutableStateFlow(createInitialState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
     private var countDownTimer: CountDownTimer? = null
@@ -36,7 +40,14 @@ class TimerViewModel @Inject constructor(
     private var awaitingNextPhase = false
     private var sessionCompleted = false
 
-    init { restoreTimerState() }
+    init {
+        restoreTimerState()
+        viewModelScope.launch {
+            TimerSyncBus.events.collect { sourceId ->
+                if (sourceId != instanceId) refreshFromPersistence()
+            }
+        }
+    }
 
     fun updatePomodoroSettings(newSettings: PomodoroSettings) {
         if (_uiState.value.isRunning) return
@@ -76,18 +87,23 @@ class TimerViewModel @Inject constructor(
         if (_uiState.value.isRunning) pauseTimer()
         else if (awaitingNextPhase || sessionCompleted) startNextPhase()
         else startCurrentPhase()
+        signalSync()
     }
 
     fun resetTimer() {
-        countDownTimer?.cancel()
-        TimerAlarmScheduler.cancel(appContext)
-        phase = PomodoroPhase.FOCUS
-        completedRounds = 0
-        awaitingNextPhase = false
-        sessionCompleted = false
-        render(settings.focusMinutes * MINUTE_MILLIS, running = false)
-        saveState(running = false, targetAtMillis = 0L)
-        telemetry.timerAction(TimerAction.RESET, settings.focusMinutes * MINUTE_MILLIS)
+        TimerSyncBus.withSessionLock {
+            TimerSyncBus.setRunning(false)
+            countDownTimer?.cancel()
+            TimerAlarmScheduler.cancel(appContext)
+            phase = PomodoroPhase.FOCUS
+            completedRounds = 0
+            awaitingNextPhase = false
+            sessionCompleted = false
+            render(settings.focusMinutes * MINUTE_MILLIS, running = false)
+            saveState(running = false, targetAtMillis = 0L)
+            telemetry.timerAction(TimerAction.RESET, settings.focusMinutes * MINUTE_MILLIS)
+        }
+        signalSync()
     }
 
     fun refreshDisplayMode() { _uiState.update { it.copy(isCountMode = isCountMode()) } }
@@ -126,6 +142,7 @@ class TimerViewModel @Inject constructor(
         val targetAtMillis = persistedTargetAtMillis ?: (System.currentTimeMillis() + durationMillis)
         awaitingNextPhase = false
         sessionCompleted = false
+        TimerSyncBus.setRunning(true)
         render(durationMillis, running = true)
         saveState(running = true, targetAtMillis = targetAtMillis)
         TimerAlarmScheduler.schedule(appContext, targetAtMillis)
@@ -133,23 +150,33 @@ class TimerViewModel @Inject constructor(
         countDownTimer?.cancel()
         countDownTimer = object : CountDownTimer(durationMillis, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
-                render(millisUntilFinished, running = true)
-                saveState(running = true, targetAtMillis = targetAtMillis)
+                TimerSyncBus.withSessionLock {
+                    if (!TimerSyncBus.isRunning()) {
+                        countDownTimer?.cancel()
+                        return@withSessionLock
+                    }
+                    render(millisUntilFinished, running = true)
+                    saveState(running = true, targetAtMillis = targetAtMillis)
+                }
             }
             override fun onFinish() { finishPhase(playAlert = true) }
         }.start()
     }
 
     private fun pauseTimer() {
-        countDownTimer?.cancel()
-        TimerAlarmScheduler.cancel(appContext)
-        val remaining = _uiState.value.remainingMillis
-        render(remaining, running = false)
-        saveState(running = false, targetAtMillis = 0L)
-        telemetry.timerAction(TimerAction.PAUSE, remaining)
+        TimerSyncBus.withSessionLock {
+            TimerSyncBus.setRunning(false)
+            countDownTimer?.cancel()
+            TimerAlarmScheduler.cancel(appContext)
+            val remaining = _uiState.value.remainingMillis
+            render(remaining, running = false)
+            saveState(running = false, targetAtMillis = 0L)
+            telemetry.timerAction(TimerAction.PAUSE, remaining)
+        }
     }
 
     private fun finishPhase(playAlert: Boolean) {
+        TimerSyncBus.setRunning(false)
         TimerAlarmScheduler.cancel(appContext)
         countDownTimer?.cancel()
         if (playAlert) TimerCompletionAlert.play(appContext)
@@ -159,12 +186,14 @@ class TimerViewModel @Inject constructor(
                 phase = if (completedRounds >= settings.rounds) PomodoroPhase.LONG_BREAK else PomodoroPhase.SHORT_BREAK
                 awaitingNextPhase = false
                 startCurrentPhase(recordAction = false, resumeRemaining = false)
+                signalSync()
                 return
             }
             PomodoroPhase.SHORT_BREAK -> {
                 phase = PomodoroPhase.FOCUS
                 awaitingNextPhase = false
                 startCurrentPhase(recordAction = false, resumeRemaining = false)
+                signalSync()
                 return
             }
             PomodoroPhase.LONG_BREAK -> {
@@ -176,6 +205,7 @@ class TimerViewModel @Inject constructor(
             }
         }
         saveState(running = false, targetAtMillis = 0L)
+        signalSync()
     }
 
     private fun restoreTimerState() {
@@ -255,6 +285,8 @@ class TimerViewModel @Inject constructor(
             isRunning = running
         )
     }
+
+    private fun signalSync() = TimerSyncBus.signal(instanceId)
 
     private fun decodeState(value: String): Pair<PomodoroPhase, Int>? {
         if (!value.startsWith("POMODORO_")) return null
