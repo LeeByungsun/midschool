@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         homeViewModel.loadHomeData()
         timerViewModel.refreshDisplayMode()
+        timerViewModel.refreshFromPersistence()
     }
 
     override fun onDestroy() {

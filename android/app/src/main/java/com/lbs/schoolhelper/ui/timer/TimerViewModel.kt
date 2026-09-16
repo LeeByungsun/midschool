@@ -92,6 +92,12 @@ class TimerViewModel @Inject constructor(
 
     fun refreshDisplayMode() { _uiState.update { it.copy(isCountMode = isCountMode()) } }
 
+    /** Re-reads the shared timer target so home and detail screens stay aligned. */
+    fun refreshFromPersistence() {
+        countDownTimer?.cancel()
+        restoreTimerState()
+    }
+
     override fun onCleared() { countDownTimer?.cancel(); super.onCleared() }
 
     private fun startNextPhase() {
@@ -105,7 +111,11 @@ class TimerViewModel @Inject constructor(
         startCurrentPhase()
     }
 
-    private fun startCurrentPhase(recordAction: Boolean = true, resumeRemaining: Boolean = true) {
+    private fun startCurrentPhase(
+        recordAction: Boolean = true,
+        resumeRemaining: Boolean = true,
+        persistedTargetAtMillis: Long? = null
+    ) {
         val fullDurationMillis = phaseDurationMillis()
         val savedRemaining = _uiState.value.remainingMillis
         val durationMillis = if (resumeRemaining && savedRemaining in 1 until fullDurationMillis && !awaitingNextPhase) {
@@ -113,7 +123,7 @@ class TimerViewModel @Inject constructor(
         } else {
             fullDurationMillis
         }
-        val targetAtMillis = System.currentTimeMillis() + durationMillis
+        val targetAtMillis = persistedTargetAtMillis ?: (System.currentTimeMillis() + durationMillis)
         awaitingNextPhase = false
         sessionCompleted = false
         render(durationMillis, running = true)
@@ -169,6 +179,7 @@ class TimerViewModel @Inject constructor(
     }
 
     private fun restoreTimerState() {
+        settings = effectiveSettings(preferencesRepository.getPomodoroSettings())
         val saved = preferencesRepository.getTimerState()
         val decoded = decodeState(saved.presetName)
         if (decoded != null) {
@@ -179,7 +190,9 @@ class TimerViewModel @Inject constructor(
             (saved.targetAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
         } else saved.remainingMillis.coerceAtLeast(0L)
         render(remaining.coerceAtMost(phaseDurationMillis()), running = false)
-        if (saved.isRunning && remaining > 0L) startCurrentPhase(recordAction = false)
+        if (saved.isRunning && remaining > 0L) {
+            startCurrentPhase(recordAction = false, persistedTargetAtMillis = saved.targetAtMillis)
+        }
         else if (saved.isRunning && remaining == 0L) finishPhase(playAlert = false)
         else {
             awaitingNextPhase = saved.remainingMillis == 0L && decoded != null
@@ -245,10 +258,15 @@ class TimerViewModel @Inject constructor(
 
     private fun decodeState(value: String): Pair<PomodoroPhase, Int>? {
         if (!value.startsWith("POMODORO_")) return null
-        val parts = value.removePrefix("POMODORO_").split('_')
-        val savedPhase = runCatching { PomodoroPhase.valueOf(parts[0]) }.getOrNull() ?: return null
-        return savedPhase to (parts.getOrNull(1)?.toIntOrNull()?.coerceAtLeast(0) ?: 0)
+        val encoded = value.removePrefix("POMODORO_")
+        val separator = encoded.lastIndexOf('_')
+        if (separator <= 0) return null
+        val savedPhase = runCatching { PomodoroPhase.valueOf(encoded.substring(0, separator)) }.getOrNull()
+            ?: return null
+        return savedPhase to encoded.substring(separator + 1).toIntOrNull().orZero()
     }
+
+    private fun Int?.orZero(): Int = this?.coerceAtLeast(0) ?: 0
 
     private fun effectiveSettings(value: PomodoroSettings) = if (BuildConfig.BUILD_TYPE == "qa") {
         value.copy(focusMinutes = 1, shortBreakMinutes = 1, longBreakMinutes = 1)

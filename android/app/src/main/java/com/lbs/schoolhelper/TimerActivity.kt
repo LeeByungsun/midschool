@@ -37,6 +37,7 @@ class TimerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         timerViewModel.refreshDisplayMode()
+        timerViewModel.refreshFromPersistence()
     }
 
     override fun onDestroy() {
