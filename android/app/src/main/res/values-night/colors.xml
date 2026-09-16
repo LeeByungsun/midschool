@@ -4,12 +4,15 @@
     <color name="surface_card">#1E293B</color>
     <color name="surface_badge">#2A3C55</color>
     <color name="brand_blue">#74A7FF</color>
+    <color name="home_header">#285F98</color>
+    <color name="home_header_subcard">#3472B0</color>
+    <color name="on_home_header">#EAF3FF</color>
     <color name="brand_blue_soft">#243B5B</color>
     <color name="on_brand_navy">#E4EEFF</color>
     <color name="text_accent">#DDEBFF</color>
     <color name="button_secondary_text">#DDEBFF</color>
     <color name="button_secondary_stroke">#53729A</color>
-    <color name="button_start">#48A66E</color>
+    <color name="button_start">#5A98E8</color>
     <color name="brand_green_soft">#183B2A</color>
     <color name="brand_green_text">#94E2B3</color>
     <color name="brand_yellow_soft">#4D3E16</color>
