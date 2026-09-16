@@ -18,7 +18,8 @@ data class TimerUiState(
     val completedRounds: Int = 0,
     val totalRounds: Int = 4,
     val awaitingNextPhase: Boolean = false,
-    val sessionCompleted: Boolean = false
+    val sessionCompleted: Boolean = false,
+    val focusMinutes: Int = 25
 )
 
 enum class TimerPreset(private val productionDurationMillis: Long, val subtitleRes: Int) {

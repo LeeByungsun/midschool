@@ -10,7 +10,7 @@ data class PomodoroSettings(
         focusMinutes = focusMinutes.coerceIn(MIN_MINUTES, MAX_MINUTES),
         shortBreakMinutes = shortBreakMinutes.coerceIn(MIN_MINUTES, MAX_MINUTES),
         longBreakMinutes = longBreakMinutes.coerceIn(MIN_MINUTES, MAX_MINUTES),
-        rounds = rounds.coerceIn(MIN_ROUNDS, MAX_ROUNDS)
+        rounds = if (rounds <= 2) 2 else 4
     )
 
     companion object {

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">학교생활도우미 QA</string>
-    <string name="home_timer_focus_label">집중 1분</string>
-    <string name="home_timer_break_label">휴식 1분</string>
-    <string name="home_timer_deep_label">초집중 1분</string>
+    <string name="home_timer_focus_label">25분 집중</string>
+    <string name="home_timer_break_label">40분 집중</string>
+    <string name="home_timer_deep_label">2회</string>
+    <string name="home_timer_round4_label">4회</string>
 </resources>

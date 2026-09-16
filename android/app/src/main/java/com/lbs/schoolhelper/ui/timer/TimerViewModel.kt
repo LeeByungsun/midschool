@@ -51,6 +51,27 @@ class TimerViewModel @Inject constructor(
         resetTimer()
     }
 
+    fun selectFocusMinutes(minutes: Int) {
+        if (_uiState.value.isRunning) return
+        val normalized = if (minutes >= 40) 40 else 25
+        val persistedSettings = preferencesRepository.getPomodoroSettings().copy(
+            focusMinutes = normalized,
+            shortBreakMinutes = if (normalized == 40) 10 else 5
+        )
+        settings = effectiveSettings(persistedSettings)
+        preferencesRepository.savePomodoroSettings(persistedSettings)
+        resetTimer()
+    }
+
+    fun selectRounds(rounds: Int) {
+        if (_uiState.value.isRunning) return
+        val persistedSettings = preferencesRepository.getPomodoroSettings()
+            .copy(rounds = if (rounds >= 4) 4 else 2)
+        settings = effectiveSettings(persistedSettings)
+        preferencesRepository.savePomodoroSettings(persistedSettings)
+        resetTimer()
+    }
+
     fun toggleTimer() {
         if (_uiState.value.isRunning) pauseTimer()
         else if (awaitingNextPhase || sessionCompleted) startNextPhase()
@@ -126,13 +147,15 @@ class TimerViewModel @Inject constructor(
             PomodoroPhase.FOCUS -> {
                 completedRounds = (completedRounds + 1).coerceAtMost(settings.rounds)
                 phase = if (completedRounds >= settings.rounds) PomodoroPhase.LONG_BREAK else PomodoroPhase.SHORT_BREAK
-                awaitingNextPhase = true
-                render(phaseDurationMillis(), running = false)
+                awaitingNextPhase = false
+                startCurrentPhase(recordAction = false)
+                return
             }
             PomodoroPhase.SHORT_BREAK -> {
                 phase = PomodoroPhase.FOCUS
-                awaitingNextPhase = true
-                render(phaseDurationMillis(), running = false)
+                awaitingNextPhase = false
+                startCurrentPhase(recordAction = false)
+                return
             }
             PomodoroPhase.LONG_BREAK -> {
                 phase = PomodoroPhase.FOCUS
@@ -187,7 +210,8 @@ class TimerViewModel @Inject constructor(
             completedRounds = completedRounds,
             totalRounds = settings.rounds,
             awaitingNextPhase = awaitingNextPhase,
-            sessionCompleted = sessionCompleted
+            sessionCompleted = sessionCompleted,
+            focusMinutes = settings.focusMinutes
         )
     }
 

@@ -137,7 +137,7 @@
                         </com.google.android.material.card.MaterialCardView>
 
                         <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/deepPresetCard"
+                            android:id="@+id/round2Card"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
@@ -155,6 +155,29 @@
                                 android:paddingHorizontal="8dp"
                                 android:paddingVertical="14dp"
                                 android:text="@string/home_timer_deep_label"
+                                android:textColor="@color/text_primary"
+                                android:textStyle="bold" />
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/round4Card"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            app:cardBackgroundColor="@color/surface_card"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider_soft"
+                            app:strokeWidth="1dp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="14dp"
+                                android:text="@string/home_timer_round4_label"
                                 android:textColor="@color/text_primary"
                                 android:textStyle="bold" />
                         </com.google.android.material.card.MaterialCardView>

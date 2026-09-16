@@ -15,7 +15,6 @@ import com.lbs.schoolhelper.databinding.ActivityMainBinding
 import com.lbs.schoolhelper.ui.home.HomeNoticeAction
 import com.lbs.schoolhelper.ui.home.HomeViewModel
 import com.lbs.schoolhelper.ui.timer.TimerViewModel
-import com.lbs.schoolhelper.ui.timer.TimerPreset
 import com.lbs.schoolhelper.util.ExternalUrlOpener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -60,6 +59,10 @@ class MainActivity : AppCompatActivity() {
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        binding.focusPresetCard.setOnClickListener { timerViewModel.selectFocusMinutes(25) }
+        binding.breakPresetCard.setOnClickListener { timerViewModel.selectFocusMinutes(40) }
+        binding.round2Card.setOnClickListener { timerViewModel.selectRounds(2) }
+        binding.round4Card.setOnClickListener { timerViewModel.selectRounds(4) }
         binding.mealCard.setOnClickListener {
             startActivity(Intent(this, MealActivity::class.java))
         }
@@ -151,7 +154,7 @@ class MainActivity : AppCompatActivity() {
                     )
                     binding.timerCountText.visibility = if (state.isCountMode) View.VISIBLE else View.GONE
                     binding.timerRingView.visibility = if (state.isCountMode) View.GONE else View.VISIBLE
-                    updatePresetSelection(state.selectedPreset)
+                    updatePresetSelection(state)
                     updateTimerCompletionBlink(state.isCompleted)
                 }
             }
@@ -191,18 +194,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updatePresetSelection(selectedPreset: TimerPreset) {
+    private fun updatePresetSelection(state: com.lbs.schoolhelper.ui.timer.TimerUiState) {
         val selectedColor = getColor(R.color.brand_blue_soft)
         val defaultColor = getColor(R.color.surface_card)
         binding.focusPresetCard.setCardBackgroundColor(
-            if (selectedPreset == TimerPreset.FOCUS) selectedColor else defaultColor
+            if (state.focusMinutes == 25) selectedColor else defaultColor
         )
         binding.breakPresetCard.setCardBackgroundColor(
-            if (selectedPreset == TimerPreset.BREAK) selectedColor else defaultColor
+            if (state.focusMinutes == 40) selectedColor else defaultColor
         )
-        binding.deepPresetCard.setCardBackgroundColor(
-            if (selectedPreset == TimerPreset.DEEP_FOCUS) selectedColor else defaultColor
-        )
+        binding.round2Card.setCardBackgroundColor(if (state.totalRounds == 2) selectedColor else defaultColor)
+        binding.round4Card.setCardBackgroundColor(if (state.totalRounds == 4) selectedColor else defaultColor)
     }
 
 }

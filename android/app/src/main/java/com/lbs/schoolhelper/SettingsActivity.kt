@@ -41,25 +41,6 @@ class SettingsActivity : AppCompatActivity() {
             viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
             viewModel.searchSchools()
         }
-        binding.pomodoroFocusMinutesInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) viewModel.updatePomodoroFocusMinutes(binding.pomodoroFocusMinutesInput.text.toString())
-        }
-        binding.pomodoroShortBreakMinutesInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) viewModel.updatePomodoroShortBreakMinutes(binding.pomodoroShortBreakMinutesInput.text.toString())
-        }
-        binding.pomodoroLongBreakMinutesInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) viewModel.updatePomodoroLongBreakMinutes(binding.pomodoroLongBreakMinutesInput.text.toString())
-        }
-        binding.pomodoroRoundsGroup.setOnCheckedChangeListener { _, checkedId ->
-            viewModel.updatePomodoroRounds(
-                when (checkedId) {
-                    R.id.pomodoroRound1 -> 1
-                    R.id.pomodoroRound2 -> 2
-                    R.id.pomodoroRound3 -> 3
-                    else -> 4
-                }
-            )
-        }
 
         binding.analyticsSwitch.setOnCheckedChangeListener { _, checked ->
             if (!isRenderingState) viewModel.updateAnalyticsEnabled(checked)
@@ -107,23 +88,6 @@ class SettingsActivity : AppCompatActivity() {
         if (binding.settingsClassInput.text.toString() != state.classroom) {
             binding.settingsClassInput.setText(state.classroom)
         }
-        if (binding.pomodoroFocusMinutesInput.text.toString() != state.pomodoroFocusMinutes.toString()) {
-            binding.pomodoroFocusMinutesInput.setText(state.pomodoroFocusMinutes.toString())
-        }
-        if (binding.pomodoroShortBreakMinutesInput.text.toString() != state.pomodoroShortBreakMinutes.toString()) {
-            binding.pomodoroShortBreakMinutesInput.setText(state.pomodoroShortBreakMinutes.toString())
-        }
-        if (binding.pomodoroLongBreakMinutesInput.text.toString() != state.pomodoroLongBreakMinutes.toString()) {
-            binding.pomodoroLongBreakMinutesInput.setText(state.pomodoroLongBreakMinutes.toString())
-        }
-        binding.pomodoroRoundsGroup.check(
-            when (state.pomodoroRounds) {
-                1 -> R.id.pomodoroRound1
-                2 -> R.id.pomodoroRound2
-                3 -> R.id.pomodoroRound3
-                else -> R.id.pomodoroRound4
-            }
-        )
         binding.timerDisplayCountRadio.isChecked = !state.isRingMode
         binding.timerDisplayRingRadio.isChecked = state.isRingMode
         binding.analyticsSwitch.isChecked = state.analyticsEnabled
