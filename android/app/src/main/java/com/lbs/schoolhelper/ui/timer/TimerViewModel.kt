@@ -105,10 +105,10 @@ class TimerViewModel @Inject constructor(
         startCurrentPhase()
     }
 
-    private fun startCurrentPhase(recordAction: Boolean = true) {
+    private fun startCurrentPhase(recordAction: Boolean = true, resumeRemaining: Boolean = true) {
         val fullDurationMillis = phaseDurationMillis()
         val savedRemaining = _uiState.value.remainingMillis
-        val durationMillis = if (savedRemaining in 1 until fullDurationMillis && !awaitingNextPhase) {
+        val durationMillis = if (resumeRemaining && savedRemaining in 1 until fullDurationMillis && !awaitingNextPhase) {
             savedRemaining
         } else {
             fullDurationMillis
@@ -148,13 +148,13 @@ class TimerViewModel @Inject constructor(
                 completedRounds = (completedRounds + 1).coerceAtMost(settings.rounds)
                 phase = if (completedRounds >= settings.rounds) PomodoroPhase.LONG_BREAK else PomodoroPhase.SHORT_BREAK
                 awaitingNextPhase = false
-                startCurrentPhase(recordAction = false)
+                startCurrentPhase(recordAction = false, resumeRemaining = false)
                 return
             }
             PomodoroPhase.SHORT_BREAK -> {
                 phase = PomodoroPhase.FOCUS
                 awaitingNextPhase = false
-                startCurrentPhase(recordAction = false)
+                startCurrentPhase(recordAction = false, resumeRemaining = false)
                 return
             }
             PomodoroPhase.LONG_BREAK -> {
