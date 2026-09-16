@@ -20,16 +20,6 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:layout_weight="1"
-                android:text="@string/widget_config_title"
-                android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_page_title"
-                android:textStyle="bold" />
-
             <ImageButton
                 android:id="@+id/widgetConfigBackButton"
                 android:layout_width="40dp"
@@ -38,6 +28,16 @@
                 android:contentDescription="@string/settings_back"
                 android:padding="8dp"
                 android:src="@drawable/ic_back_simple" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="@string/widget_config_title"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_page_title"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <TextView

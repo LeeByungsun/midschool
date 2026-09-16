@@ -5,6 +5,7 @@ import android.animation.ValueAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -36,6 +37,10 @@ class MainActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
 
         binding.main.applySystemBarPadding()
+
+        onBackPressedDispatcher.addCallback(this) {
+            showExitConfirmation()
+        }
 
         bindClicks()
         bindHomeState()
@@ -75,6 +80,15 @@ class MainActivity : AppCompatActivity() {
         }
         binding.timerPrimaryButton.setOnClickListener { timerViewModel.toggleTimer() }
         binding.timerResetButton.setOnClickListener { timerViewModel.resetTimer() }
+    }
+
+    private fun showExitConfirmation() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.home_exit_dialog_title)
+            .setMessage(R.string.home_exit_dialog_message)
+            .setNegativeButton(R.string.home_exit_dialog_cancel, null)
+            .setPositiveButton(R.string.home_exit_dialog_confirm) { _, _ -> finish() }
+            .show()
     }
 
     private fun bindHomeState() {
