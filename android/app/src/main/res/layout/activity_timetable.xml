@@ -106,10 +106,7 @@
                 style="@style/Widget.MisSchoolApp.Button.DateNavigation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/timetable_previous_day"
-                app:icon="@drawable/ic_back_simple"
-                app:iconTint="@color/text_accent"
-                app:iconPadding="6dp" />
+                android:text="@string/timetable_previous_day" />
 
             <View
                 android:layout_width="0dp"
@@ -122,21 +119,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/timetable_next_day"
-                app:iconGravity="textEnd"
-                app:iconPadding="6dp"
-                app:icon="@drawable/ic_forward_simple"
-                app:iconTint="@color/text_accent" />
+                />
         </LinearLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/todayButton"
-            style="@style/Widget.MisSchoolApp.Button.Today"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/timetable_today"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/timetableDayNavigationRow" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/timetableListCard"
@@ -149,7 +133,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/todayButton"
+            app:layout_constraintTop_toBottomOf="@id/timetableDayNavigationRow"
             app:strokeColor="@color/divider_soft"
             app:strokeWidth="1dp">
 

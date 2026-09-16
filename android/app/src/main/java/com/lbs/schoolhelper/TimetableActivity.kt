@@ -36,7 +36,6 @@ class TimetableActivity : AppCompatActivity() {
 
         binding.timetableBackButton.setOnClickListener { finish() }
         binding.previousDayButton.setOnClickListener { viewModel.showPreviousDay() }
-        binding.todayButton.setOnClickListener { viewModel.showToday() }
         binding.nextDayButton.setOnClickListener { viewModel.showNextDay() }
 
         lifecycleScope.launch {
@@ -52,7 +51,6 @@ class TimetableActivity : AppCompatActivity() {
                     } else {
                         View.VISIBLE
                     }
-                    binding.todayButton.visibility = if (state.showTodayButton) View.VISIBLE else View.GONE
                     timetableAdapter.submitList(state.items)
                 }
             }

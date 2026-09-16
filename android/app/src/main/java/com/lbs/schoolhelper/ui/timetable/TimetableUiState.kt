@@ -7,6 +7,5 @@ data class TimetableUiState(
     val classInfoText: String = "",
     val lessonCountText: String = "",
     val statusText: String = "",
-    val showTodayButton: Boolean = true,
     val items: List<TimetableItem> = emptyList()
 )

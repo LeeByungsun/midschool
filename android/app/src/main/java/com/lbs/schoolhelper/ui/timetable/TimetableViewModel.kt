@@ -41,11 +41,6 @@ class TimetableViewModel @Inject constructor(
         loadTimetable()
     }
 
-    fun showToday() {
-        currentDate = LocalDate.now()
-        loadTimetable()
-    }
-
     fun showNextDay() {
         currentDate = currentDate.plusDays(1)
         loadTimetable()
@@ -75,7 +70,6 @@ class TimetableViewModel @Inject constructor(
                 } else {
                     appContext.getString(R.string.timetable_loading)
                 },
-                showTodayButton = currentDate != LocalDate.now(),
                 items = emptyList()
             )
         }

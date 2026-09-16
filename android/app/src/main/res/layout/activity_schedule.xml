@@ -58,8 +58,6 @@
                 android:textColor="@color/text_accent"
                 app:backgroundTint="@color/brand_blue_soft"
                 app:cornerRadius="18dp"
-                app:icon="@drawable/ic_back_simple"
-                app:iconTint="@color/text_accent"
                 app:strokeWidth="0dp" />
 
             <TextView
