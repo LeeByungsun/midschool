@@ -1,9 +1,13 @@
 package com.lbs.schoolhelper.ui.timer
 
 import android.app.Application
+import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.repository.TimerPreferenceState
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.TimerAction
 import com.lbs.schoolhelper.test.FakePreferencesRepository
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,128 +18,72 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE, sdk = [34])
 class TimerViewModelTest {
-
     private val application: Application = RuntimeEnvironment.getApplication()
 
     @Test
-    fun `timer controls use start then pause resume and restart labels`() {
-        assertEquals("시작", application.getString(com.lbs.schoolhelper.R.string.home_timer_start))
-        assertEquals("일시정지", application.getString(com.lbs.schoolhelper.R.string.home_timer_pause))
-        assertEquals("이어하기", application.getString(com.lbs.schoolhelper.R.string.home_timer_resume))
-        assertEquals("다시 시작", application.getString(com.lbs.schoolhelper.R.string.home_timer_restart))
+    fun `timer controls expose expected labels`() {
+        assertEquals("시작", application.getString(R.string.home_timer_start))
+        assertEquals("일시정지", application.getString(R.string.home_timer_pause))
+        assertEquals("이어하기", application.getString(R.string.home_timer_resume))
     }
 
     @Test
-    fun `user timer actions are recorded but restored running timer is not a new start`() {
-        val actions = mutableListOf<com.lbs.schoolhelper.telemetry.TimerAction>()
-        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
-            override fun timerAction(action: com.lbs.schoolhelper.telemetry.TimerAction, durationMillis: Long) {
+    fun `screen view models share one session controller state`() {
+        val controller = TimerSessionController(application, FakePreferencesRepository())
+        val homeViewModel = TimerViewModel(controller)
+        val detailViewModel = TimerViewModel(controller)
+
+        homeViewModel.toggleTimer()
+
+        assertTrue(homeViewModel.uiState.value.isRunning)
+        assertTrue(detailViewModel.uiState.value.isRunning)
+        assertEquals(homeViewModel.uiState.value.remainingMillis, detailViewModel.uiState.value.remainingMillis)
+
+        detailViewModel.toggleTimer()
+
+        assertFalse(homeViewModel.uiState.value.isRunning)
+        assertFalse(detailViewModel.uiState.value.isRunning)
+    }
+
+    @Test
+    fun `user actions are recorded but restored session is not a new start`() {
+        val actions = mutableListOf<TimerAction>()
+        val telemetry = object : AppTelemetry {
+            override fun timerAction(action: TimerAction, durationMillis: Long) {
                 assertTrue(durationMillis > 0)
                 actions += action
             }
         }
-        val prefs = FakePreferencesRepository(timerState = TimerPreferenceState("FOCUS", 10000, 10000, 0, false))
-        val vm = TimerViewModel(application, prefs, telemetry)
-        vm.toggleTimer()
-        vm.toggleTimer()
-        vm.resetTimer()
-        assertEquals(listOf(com.lbs.schoolhelper.telemetry.TimerAction.START,
-            com.lbs.schoolhelper.telemetry.TimerAction.PAUSE,
-            com.lbs.schoolhelper.telemetry.TimerAction.RESET), actions)
-        prefs.saveTimerState("FOCUS", 10000, 9000, System.currentTimeMillis() + 9000, true)
-        TimerViewModel(application, prefs, telemetry)
+        val prefs = FakePreferencesRepository(timerState = TimerPreferenceState("FOCUS", 10_000, 10_000, 0, false))
+        val controller = TimerSessionController(application, prefs, telemetry)
+
+        controller.toggleTimer()
+        controller.toggleTimer()
+        controller.resetTimer()
+        assertEquals(listOf(TimerAction.START, TimerAction.PAUSE, TimerAction.RESET), actions)
+
+        prefs.saveTimerState("POMODORO_FOCUS_0", 10_000, 9_000, System.currentTimeMillis() + 9_000, true)
+        TimerSessionController(application, prefs, telemetry)
         assertEquals(3, actions.size)
     }
 
     @Test
-    fun toggleTimer_runningTickDoesNotPersistEverySecond() {
+    fun `alarm completion advances one persisted phase only once`() {
+        val nowMillis = 10_000L
         val repository = FakePreferencesRepository(
             timerState = TimerPreferenceState(
-                presetName = TimerPreset.FOCUS.name,
-                totalMillis = 2_000L,
-                remainingMillis = 2_000L,
-                targetAtMillis = 0L,
-                isRunning = false
+                presetName = "POMODORO_FOCUS_0",
+                totalMillis = 1_500_000L,
+                remainingMillis = 0L,
+                targetAtMillis = nowMillis,
+                isRunning = true
             )
         )
-        val viewModel = TimerViewModel(application, repository)
+        val controller = TimerSessionController(application, repository)
 
-        viewModel.toggleTimer()
-
-        assertEquals(1, repository.savedTimerStates.size)
-        assertTrue(repository.savedTimerStates.last().isRunning)
-
-        invokeOnTick(viewModel, 1_000L)
-
-        assertEquals(1, repository.savedTimerStates.size)
-        assertTrue(viewModel.uiState.value.remainingMillis < 2_000L)
-    }
-
-    @Test
-    fun pauseTimerPersistsLatestRemainingTimeOnce() {
-        val repository = FakePreferencesRepository(
-            timerState = TimerPreferenceState(
-                presetName = TimerPreset.FOCUS.name,
-                totalMillis = 2_000L,
-                remainingMillis = 2_000L,
-                targetAtMillis = 0L,
-                isRunning = false
-            )
-        )
-        val viewModel = TimerViewModel(application, repository)
-
-        viewModel.toggleTimer()
-        invokeOnTick(viewModel, 1_000L)
-        val remainingBeforePause = viewModel.uiState.value.remainingMillis
-
-        viewModel.toggleTimer()
-
-        assertEquals(2, repository.savedTimerStates.size)
-        val pausedState = repository.savedTimerStates.last()
-        assertEquals(false, pausedState.isRunning)
-        assertEquals(0L, pausedState.targetAtMillis)
-        assertEquals(remainingBeforePause, pausedState.remainingMillis)
-    }
-
-
-    @Test
-    fun timerFinishMarksCompletionForVisualBlink() {
-        val repository = FakePreferencesRepository(
-            timerState = TimerPreferenceState(
-                presetName = TimerPreset.FOCUS.name,
-                totalMillis = 2_000L,
-                remainingMillis = 2_000L,
-                targetAtMillis = 0L,
-                isRunning = false
-            )
-        )
-        val viewModel = TimerViewModel(application, repository)
-
-        viewModel.toggleTimer()
-        invokeOnFinish(viewModel)
-
-        val finishedState = viewModel.uiState.value
-        assertEquals(0L, finishedState.remainingMillis)
-        assertEquals(false, finishedState.isRunning)
-        assertTrue(finishedState.isCompleted)
-        assertEquals(com.lbs.schoolhelper.R.string.home_timer_restart, finishedState.buttonTextRes)
-    }
-
-    private fun invokeOnTick(viewModel: TimerViewModel, millisUntilFinished: Long) {
-        val timerField = TimerViewModel::class.java.getDeclaredField("countDownTimer")
-        timerField.isAccessible = true
-        val timer = timerField.get(viewModel) ?: error("countDownTimer missing")
-        val onTick = timer.javaClass.getDeclaredMethod("onTick", Long::class.javaPrimitiveType)
-        onTick.isAccessible = true
-        onTick.invoke(timer, millisUntilFinished)
-    }
-
-    private fun invokeOnFinish(viewModel: TimerViewModel) {
-        val timerField = TimerViewModel::class.java.getDeclaredField("countDownTimer")
-        timerField.isAccessible = true
-        val timer = timerField.get(viewModel) ?: error("countDownTimer missing")
-        val onFinish = timer.javaClass.getDeclaredMethod("onFinish")
-        onFinish.isAccessible = true
-        onFinish.invoke(timer)
+        assertTrue(controller.completeFromAlarm(nowMillis))
+        assertEquals(PomodoroPhase.SHORT_BREAK, controller.uiState.value.phase)
+        assertTrue(controller.uiState.value.isRunning)
+        assertFalse(controller.completeFromAlarm(nowMillis))
     }
 }

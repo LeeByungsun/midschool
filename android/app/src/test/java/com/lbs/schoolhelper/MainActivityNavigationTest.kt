@@ -1,7 +1,6 @@
 package com.lbs.schoolhelper
 
 import android.content.Context
-import android.content.Intent
 import android.os.Looper
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
@@ -10,6 +9,7 @@ import com.lbs.schoolhelper.data.model.HomeUiState
 import com.lbs.schoolhelper.ui.home.HomeViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,6 +17,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowToast
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -56,7 +57,7 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun noticeButtonClickStartsBrowsableIntentForLatestNotice() {
+    fun noticeButtonClickShowsErrorWhenNoBrowserCanHandleLatestNotice() {
         clearUserPreferences()
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
         val viewModel = ViewModelProvider(activity)[HomeViewModel::class.java]
@@ -75,10 +76,10 @@ class MainActivityNavigationTest {
         shadowOf(Looper.getMainLooper()).idle()
         activity.findViewById<View>(R.id.openNoticeButton).performClick()
 
-        val nextIntent = shadowOf(activity).nextStartedActivity
-        assertEquals(Intent.ACTION_VIEW, nextIntent.action)
-        assertEquals(noticeUrl, nextIntent.dataString)
-        assertTrue(nextIntent.categories?.contains(Intent.CATEGORY_BROWSABLE) == true)
+        // Robolectric does not provide a browser activity. A missing external handler must be safe
+        // and visible to the user rather than crashing the home activity.
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertEquals(activity.getString(R.string.home_notice_open_error), ShadowToast.getTextOfLatestToast())
     }
 
     @Suppress("UNCHECKED_CAST")

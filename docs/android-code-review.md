@@ -1,27 +1,27 @@
 # Android 프로젝트 코드 리뷰
 
 - **리뷰 일자:** 2026-09-20
-- **대상 커밋:** `326f051` (`fix(widget): keep timetable errors out of lesson content`)
+- **검토 기준:** `326f051` 이후 P0 보완 작업 반영 상태
 - **범위:** `android/` 하위 운영 코드, 리소스, Manifest, Gradle 설정
 - **리뷰 방식:** 독립 코드 품질 리뷰 + 독립 아키텍처 리뷰
-- **리뷰 결과:** **수정 요청(REQUEST CHANGES)**
-- **아키텍처 상태:** **차단(BLOCK)**
+- **리뷰 결과:** P0 보완 후 재검증 완료
+- **아키텍처 상태:** **출시 전 Medium 항목 관리 필요**
 
 ## 요약
 
-프로젝트는 Hilt DI, Repository 인터페이스, 사용자 동의 기반 telemetry 구조를 갖추고 있어 기본 경계는 잘 잡혀 있습니다. 다만 출시 안정성 관점에서 아래 네 가지는 우선 해결이 필요합니다.
+프로젝트는 Hilt DI, Repository 인터페이스, 사용자 동의 기반 telemetry 구조를 갖추고 있습니다. 이전 P0/High 네 건은 이번 보완에서 해결했고 전체 단위 테스트와 QA 빌드로 재검증했습니다. 남은 Medium 항목은 출시 전 정책·안정화 작업으로 관리합니다.
 
-1. 홈과 상세 화면이 각자 타이머를 실행해 완료 처리 경쟁 조건이 생길 수 있습니다.
-2. 백그라운드 AlarmReceiver가 완료 상태를 갱신하지 않고 소리만 재생합니다.
-3. 가정통신문의 외부 URL을 검증 없이 실행합니다.
-4. 전체 단위 테스트가 Robolectric 오류로 정상 완료되지 않습니다.
+1. 타이머는 앱 범위 단일 세션 컨트롤러가 상태·알람·단계 전환을 소유합니다.
+2. AlarmReceiver는 만료된 저장 상태를 compare-and-claim하여 같은 완료 경로로 전환합니다.
+3. 가정통신문 URL은 HTTPS·host 검증 및 실행 가능 앱 확인 후에만 엽니다.
+4. Robolectric을 `4.17`로 올려 `testDebugUnitTest` 전체 게이트를 복구했습니다.
 
 ## 심각도 요약
 
 | 심각도 | 건수 | 상태 |
 | --- | ---: | --- |
 | Critical | 0 | - |
-| High | 4 | 출시 전 수정 권장 |
+| High | 0 | 이전 4건 해결·재검증 완료 |
 | Medium | 4 | 다음 안정화 작업에 포함 |
 | Low | 2 | 품질 개선 작업으로 관리 |
 
@@ -29,33 +29,33 @@
 
 ## High
 
-### 1. 타이머 세션을 여러 ViewModel이 동시에 소유
+### 1. 타이머 세션을 여러 ViewModel이 동시에 소유 — 해결
 
-- **위치:** `ui/timer/TimerViewModel.kt:43-49, 130-208`, `MainActivity.kt:29-30`, `TimerActivity.kt:20-22`
+- **위치:** `ui/timer/TimerSessionController.kt`, `ui/timer/TimerViewModel.kt`, `MainActivity.kt`, `TimerActivity.kt`
 - **문제:** 홈과 상세 화면이 각각 `TimerViewModel`과 `CountDownTimer`를 생성하고 동일한 SharedPreferences, AlarmManager 상태를 갱신합니다.
 - **영향:** 완료음 중복, 다음 포모도로 단계 이중 전환, 남은 시간 되돌아감, 홈/상세 화면 불일치가 발생할 수 있습니다.
-- **권장 조치:** 앱 범위의 단일 `TimerSessionController`가 카운트다운·저장·단계 전환·알람 예약을 단독 소유하고, 각 화면은 동일한 `StateFlow`를 관찰하도록 변경합니다. 최소한 완료 시 target 시간을 compare-and-claim하여 한 번만 완료 처리해야 합니다.
+- **조치 완료:** `TimerSessionController`를 `@Singleton`으로 도입해 카운트다운·저장·단계 전환·알람 예약을 단독 소유합니다. 홈/상세 `TimerViewModel`은 동일 `StateFlow`를 관찰·위임하며, 회귀 테스트로 양 화면 상태 공유를 확인했습니다.
 
-### 2. AlarmReceiver가 완료 상태를 처리하지 않음
+### 2. AlarmReceiver가 완료 상태를 처리하지 않음 — 해결
 
-- **위치:** `timer/TimerAlarmReceiver.kt:7-10`, `timer/TimerCompletion.kt:8-15`, `ui/timer/TimerViewModel.kt:178-209`
+- **위치:** `timer/TimerAlarmReceiver.kt`, `ui/timer/TimerSessionController.kt`
 - **문제:** AlarmReceiver는 완료음을 재생하지만 타이머 상태를 완료 처리하거나 다음 단계를 시작하지 않습니다. `TimerCompletion.complete()`는 운영 경로에서 호출되지 않습니다.
 - **영향:** 앱이 백그라운드이거나 종료된 경우 `isRunning=true`인 만료 세션이 남고 자동 단계 전환이 중단될 수 있습니다.
-- **권장 조치:** UI 타이머와 AlarmReceiver가 하나의 원자적 `completeIfDue()` 완료 경로를 공유하도록 통합합니다. 이 경로는 완료 claim, 다음 단계 결정, 상태 저장, 알람 예약을 함께 수행해야 합니다.
+- **조치 완료:** `TimerAlarmReceiver`가 단일 세션의 `completeFromAlarm()`을 호출합니다. 이 경로는 target 시간으로 만료 상태를 claim하고, 다음 단계 저장·새 알람 예약·완료 피드백을 한 번만 수행합니다.
 
-### 3. 외부 URL을 검증 없이 실행
+### 3. 외부 URL을 검증 없이 실행 — 해결
 
 - **위치:** `util/ExternalUrlOpener.kt:9-28`, `MainActivity.kt:149-151`, `data/repository/SchoolRepositoryImpl.kt:219-227`
 - **문제:** 서버에서 받은 가정통신문 URL을 scheme·host 검증 없이 `ACTION_VIEW`로 전달합니다. 처리할 앱이 없는 경우도 안전하게 처리하지 않습니다.
 - **영향:** 비정상 또는 침해된 응답이 custom scheme을 실행할 수 있고, URL 처리 앱이 없으면 앱 오류가 발생할 수 있습니다.
-- **권장 조치:** HTTPS만 허용하고 필요한 경우 도메인 allowlist를 적용합니다. URL 실행은 `resolveActivity()`와 예외 처리를 갖춘 단일 함수로 통일합니다.
+- **조치 완료:** `ExternalUrlOpener`가 HTTPS와 host를 확인하고 `resolveActivity()` 및 예외 처리를 거친 뒤 실행합니다. 실패 시 홈 화면에서 사용자 안내를 표시하며, 비HTTPS·malformed URL 회귀 테스트를 추가했습니다.
 
-### 4. 전체 단위 테스트 게이트가 정상 완료되지 않음
+### 4. 전체 단위 테스트 게이트가 정상 완료되지 않음 — 해결
 
 - **위치:** `src/test/java/com/lbs/schoolhelper/MainActivityNavigationTest.kt:47-55`, `gradle/libs.versions.toml:20`
 - **문제:** `testDebugUnitTest` 실행 시 Robolectric의 `NoClassDefFoundError` 및 `ClassReader IllegalArgumentException`이 발생하고 테스트가 정상 종료되지 않습니다.
 - **영향:** 전체 회귀 상태를 증명할 수 없으므로 머지 및 출시 안정성을 보장하기 어렵습니다.
-- **권장 조치:** 현재 AGP/JDK와 호환되는 Robolectric 버전으로 업데이트하고 Hilt/Application 테스트 설정을 점검합니다. CI에서 전체 단위 테스트를 필수 게이트로 복구합니다.
+- **조치 완료:** Robolectric을 `4.12.2`에서 `4.17`로 업데이트했습니다. 최신 JDK/ASM 호환성 오류가 사라졌고 `:app:testDebugUnitTest` 전체 126개 테스트가 통과했습니다. 테스트의 빈 API 키 전제도 BuildConfig 값에 의존하지 않도록 명시했습니다.
 
 ---
 
@@ -138,11 +138,11 @@
 
 | 항목 | 결과 | 비고 |
 | --- | --- | --- |
-| `assembleQa` | 통과 | QA APK 빌드 가능 |
+| `assembleQa` | 통과 | QA APK 빌드 가능·단말 설치 완료 |
 | `lintQa` | 통과 | 오류는 없으나 lint 경고 존재 |
 | 최근 위젯 오류 처리 회귀 테스트 | 통과 | 오류 메시지 노출·빈 데이터·정렬 처리 검증 |
-| `testDebugUnitTest` 전체 실행 | 실패 | Robolectric 클래스 로딩 오류 및 정상 종료 불가 |
+| `testDebugUnitTest` 전체 실행 | 통과 | 126개 테스트 통과 (Robolectric 4.17) |
 
 ## 최종 권고
 
-현재 상태는 기능 검증용 QA 빌드는 가능하지만, **정식 출시 승인 전 상태는 아닙니다.** P0 항목인 타이머 완료 상태 통합, 외부 URL 검증, 전체 테스트 게이트 복구를 먼저 완료한 뒤 출시 전 재리뷰를 수행하는 것을 권장합니다.
+P0/High 항목은 해결되어 출시 후보의 기본 안정성 기준을 충족했습니다. 정식 출시 전에는 Medium 항목 중 백업 정책·NEIS 키 노출·오류 상태 표준화를 우선 검토하고, 배포 직전 실제 기기 스모크 테스트를 수행하는 것을 권장합니다.

@@ -563,7 +563,12 @@ class SchoolRepositoryImplTest {
         ).apply {
             timetableCache[TimetableCacheKey("J10", "7679399", "1", "4", "20260915")] = cachedItems
         }
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+        val repository = SchoolRepositoryImpl(
+            apiService,
+            preferencesRepository,
+            FakeNoticeApiService(),
+            neisApiKey = ""
+        )
 
         val result = repository.getTimetable("1", "4", "20260915")
 
@@ -590,7 +595,12 @@ class SchoolRepositoryImplTest {
                 TimetableItem("20260915", "1", "캐시 과목", "1", "4")
             )
         }
-        val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
+        val repository = SchoolRepositoryImpl(
+            apiService,
+            preferencesRepository,
+            FakeNoticeApiService(),
+            neisApiKey = ""
+        )
 
         val emissions = repository.observeTimetable("1", "4", "20260915").toList()
 
