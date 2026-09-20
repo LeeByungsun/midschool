@@ -20,6 +20,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
@@ -312,8 +313,14 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     coroutineScope {
                         val jobs = mutableListOf(
                             launch {
-                                schoolRepository.observeTimetable(grade, classroom, todayStr).collect { result ->
-                                    timetableTextToday = formatTimetableText(result = result, context = context)
+                                try {
+                                    schoolRepository.observeTimetable(grade, classroom, todayStr).collect { result ->
+                                        timetableTextToday = formatTimetableText(result = result, context = context)
+                                        publishTimetableTexts()
+                                    }
+                                } catch (error: Exception) {
+                                    if (error is CancellationException) throw error
+                                    timetableTextToday = context.getString(R.string.widget_load_error)
                                     publishTimetableTexts()
                                 }
                             }
@@ -321,8 +328,14 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 
                         if (widgetSettings.showTomorrowTimetable) {
                             jobs += launch {
-                                schoolRepository.observeTimetable(grade, classroom, tomorrowStr).collect { result ->
-                                    timetableTextTomorrow = formatTimetableText(result = result, context = context)
+                                try {
+                                    schoolRepository.observeTimetable(grade, classroom, tomorrowStr).collect { result ->
+                                        timetableTextTomorrow = formatTimetableText(result = result, context = context)
+                                        publishTimetableTexts()
+                                    }
+                                } catch (error: Exception) {
+                                    if (error is CancellationException) throw error
+                                    timetableTextTomorrow = context.getString(R.string.widget_load_error)
                                     publishTimetableTexts()
                                 }
                             }
@@ -331,7 +344,8 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                         jobs.joinAll()
                     }
 
-                } catch (e: Exception) {
+                } catch (error: Exception) {
+                    if (error is CancellationException) throw error
                     val errViews = createBaseViews()
                     errViews.setTextViewText(
                         R.id.widgetTimetableText,
@@ -339,7 +353,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     )
                     errViews.setTextViewText(
                         R.id.widgetTomorrowTimetableText,
-                        e.message ?: context.getString(R.string.widget_retry_hint)
+                        context.getString(R.string.widget_load_error)
                     )
                     appWidgetManager.updateAppWidget(appWidgetId, errViews)
                 } finally {
@@ -352,25 +366,11 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             result: Result<List<com.lbs.schoolhelper.data.model.TimetableItem>>,
             context: Context
         ): String {
-            result.exceptionOrNull()?.message?.let { return it }
-            val items = result.getOrNull().orEmpty()
-                .sortedBy { it.period.toIntOrNull() ?: Int.MAX_VALUE }
-                .mapNotNull { item ->
-                    item.subject.takeIf { subject -> subject.isNotBlank() }?.let { subject ->
-                        val period = item.period.takeIf { it.isNotBlank() } ?: "?"
-                        "${period}교시 ${subject.truncatedWidgetSubject()}"
-                    }
-                }
-
-            if (items.isEmpty()) {
-                return context.getString(R.string.widget_no_classes)
+            return when (val content = WidgetTimetableContentResolver.resolve(result)) {
+                WidgetTimetableContent.LoadError -> context.getString(R.string.widget_load_error)
+                WidgetTimetableContent.NoClasses -> context.getString(R.string.widget_no_classes)
+                is WidgetTimetableContent.Lessons -> content.text
             }
-
-            return items.joinToString("\n")
-        }
-
-        private fun String.truncatedWidgetSubject(): String {
-            return take(6)
         }
 
         private fun dependencies(context: Context): WidgetProviderEntryPoint {
