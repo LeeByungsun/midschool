@@ -1,101 +1,148 @@
-# Android 코드 리뷰 결과
+# Android 프로젝트 코드 리뷰
 
-이 문서에는 안드로이드 프로젝트([android/](file:///Users/byungsunlee/Project/misSchoolApp/android))의 전체 소스 코드 분석을 통해 발견된 9가지 주요 문제점 및 개선 요소가 포함되어 있습니다.
+- **리뷰 일자:** 2026-09-20
+- **대상 커밋:** `326f051` (`fix(widget): keep timetable errors out of lesson content`)
+- **범위:** `android/` 하위 운영 코드, 리소스, Manifest, Gradle 설정
+- **리뷰 방식:** 독립 코드 품질 리뷰 + 독립 아키텍처 리뷰
+- **리뷰 결과:** **수정 요청(REQUEST CHANGES)**
+- **아키텍처 상태:** **차단(BLOCK)**
 
-현재 기준 메모:
+## 요약
 
-- 2026-05-26: **1번 NEIS 에러 핸들링 항목 수정 완료**
-- 2026-05-26: **2번 POST_NOTIFICATIONS 권한 요청 항목 수정 완료**
-- 2026-05-26: **3번 타이머 per-tick 저장 항목 수정 완료**
-- 2026-05-26: **4번 주간 급식 순차 호출 항목 수정 완료**
-- 2026-05-26: **5번 재부팅 후 타이머 복구 누락 항목 수정 완료**
-- 2026-05-26: **6번 PreferencesRepositoryImpl 결합도 항목 수정 완료**
-- 2026-05-26: **7번 Flow 수집기 내 동적 뷰 생성 항목 수정 완료**
-- 2026-05-26: **8번 스플래시 회전 시 중복 화면 전환 항목 수정 완료**
-- 2026-05-26: **9번 BroadcastReceiver 직접 생성 항목 수정 완료**
-- 현재 남은 활성 항목은 **없음**
+프로젝트는 Hilt DI, Repository 인터페이스, 사용자 동의 기반 telemetry 구조를 갖추고 있어 기본 경계는 잘 잡혀 있습니다. 다만 출시 안정성 관점에서 아래 네 가지는 우선 해결이 필요합니다.
 
----
+1. 홈과 상세 화면이 각자 타이머를 실행해 완료 처리 경쟁 조건이 생길 수 있습니다.
+2. 백그라운드 AlarmReceiver가 완료 상태를 갱신하지 않고 소리만 재생합니다.
+3. 가정통신문의 외부 URL을 검증 없이 실행합니다.
+4. 전체 단위 테스트가 Robolectric 오류로 정상 완료되지 않습니다.
 
-## 1. 나이스(NEIS) API 에러 핸들링 논리 오류 (✅ 2026-05-26 해결)
-*   **위치:** [`SchoolRepositoryImpl.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/SchoolRepositoryImpl.kt#L268-L295) 및 [`NeisResponses.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/data/remote/dto/NeisResponses.kt)
-*   **상황:** API Key가 다르거나(인증 실패 `ERROR-300`), 일일 트래픽 초과(`ERROR-336`), 파라미터 오류(`INFO-100`) 등이 발생할 때 NEIS Open API는 데이터 배열을 반환하지 않고 **루트 레벨에 `RESULT` 객체만 담아 반환**합니다. (예: `{"RESULT": {"CODE": "ERROR-300", "MESSAGE": "..."}}`)
-*   **원인 및 문제점:**
-    *   현재 `NeisResponse<T>` DTO 클래스는 루트 레벨의 `RESULT` 필드가 선언되어 있지 않고, `mealServiceDietInfo` 같은 섹션 필드만 정의되어 있습니다.
-    *   에러 응답 시 `mealServiceDietInfo` 등은 `null`이 되며, `extractRows()`는 `sections.orEmpty()`를 수행하여 **빈 리스트**를 반환합니다.
-    *   결과적으로 에러 검증 함수인 `validateResult(result, ...)`에는 `null`이 전달되고, `result?.code`가 빈 문자열(`""`)이 되면서 `code.isBlank()` 가 `true`를 반환해 **에러가 감지되지 않고 정상 성공(`Result.success(emptyList())`)으로 처리**됩니다.
-*   **영향:** API 키 불일치나 서버 에러 등 실제 네트워크 에러가 발생해도, 앱은 에러 상태를 전혀 감지하지 못하고 화면에 **그저 정보가 없는 날(성공 + 빈 데이터)로 노출**하게 되며 로컬 캐시 복구 전략(Fallback)도 작동하지 않습니다.
-*   **현재 상태:** `NeisResponse<T>` 에 루트 `RESULT` 파싱을 추가했고, `SchoolRepositoryImpl.extractRows()` 가 루트 `RESULT` 와 섹션 `head.RESULT` 를 모두 검증하도록 수정했습니다. 관련 회귀 테스트도 추가했습니다.
+## 심각도 요약
+
+| 심각도 | 건수 | 상태 |
+| --- | ---: | --- |
+| Critical | 0 | - |
+| High | 4 | 출시 전 수정 권장 |
+| Medium | 4 | 다음 안정화 작업에 포함 |
+| Low | 2 | 품질 개선 작업으로 관리 |
 
 ---
 
-## 2. 알림 권한(POST_NOTIFICATIONS) 런타임 요청 부재 (✅ 2026-05-26 해결)
-*   **위치:** [`TimerAlarmReceiver.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/timer/TimerAlarmReceiver.kt#L39-L47) 및 [`MainActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/MainActivity.kt)
-*   **상황:** Android 13(Tiramisu, API 33) 이상 환경에서는 `POST_NOTIFICATIONS`가 런타임 권한이 되어 사용자의 명시적인 허용이 필요합니다.
-*   **문제점:** `TimerAlarmReceiver`에서 해당 권한이 없을 경우 조기 반환(`return`)하도록 방어 코드는 들어가 있으나, 정작 앱 내의 `MainActivity`나 `SettingsActivity` 등 진입점 화면 어디에서도 **사용자에게 이 알림 권한을 요청(Request)하는 로직이 없습니다.**
-*   **영향:** Android 13 이상 기기에서 타이머 완료 알림이 절대 발생하지 않고 차단됩니다.
-*   **현재 상태:** `MainActivity` 진입 시 알림 설정이 켜져 있고 권한이 없으면 `POST_NOTIFICATIONS` 를 요청하도록 수정했고, `SettingsActivity` 에서 알림 스위치를 켤 때도 같은 권한 요청이 발생하도록 보강했습니다.
+## High
+
+### 1. 타이머 세션을 여러 ViewModel이 동시에 소유
+
+- **위치:** `ui/timer/TimerViewModel.kt:43-49, 130-208`, `MainActivity.kt:29-30`, `TimerActivity.kt:20-22`
+- **문제:** 홈과 상세 화면이 각각 `TimerViewModel`과 `CountDownTimer`를 생성하고 동일한 SharedPreferences, AlarmManager 상태를 갱신합니다.
+- **영향:** 완료음 중복, 다음 포모도로 단계 이중 전환, 남은 시간 되돌아감, 홈/상세 화면 불일치가 발생할 수 있습니다.
+- **권장 조치:** 앱 범위의 단일 `TimerSessionController`가 카운트다운·저장·단계 전환·알람 예약을 단독 소유하고, 각 화면은 동일한 `StateFlow`를 관찰하도록 변경합니다. 최소한 완료 시 target 시간을 compare-and-claim하여 한 번만 완료 처리해야 합니다.
+
+### 2. AlarmReceiver가 완료 상태를 처리하지 않음
+
+- **위치:** `timer/TimerAlarmReceiver.kt:7-10`, `timer/TimerCompletion.kt:8-15`, `ui/timer/TimerViewModel.kt:178-209`
+- **문제:** AlarmReceiver는 완료음을 재생하지만 타이머 상태를 완료 처리하거나 다음 단계를 시작하지 않습니다. `TimerCompletion.complete()`는 운영 경로에서 호출되지 않습니다.
+- **영향:** 앱이 백그라운드이거나 종료된 경우 `isRunning=true`인 만료 세션이 남고 자동 단계 전환이 중단될 수 있습니다.
+- **권장 조치:** UI 타이머와 AlarmReceiver가 하나의 원자적 `completeIfDue()` 완료 경로를 공유하도록 통합합니다. 이 경로는 완료 claim, 다음 단계 결정, 상태 저장, 알람 예약을 함께 수행해야 합니다.
+
+### 3. 외부 URL을 검증 없이 실행
+
+- **위치:** `util/ExternalUrlOpener.kt:9-28`, `MainActivity.kt:149-151`, `data/repository/SchoolRepositoryImpl.kt:219-227`
+- **문제:** 서버에서 받은 가정통신문 URL을 scheme·host 검증 없이 `ACTION_VIEW`로 전달합니다. 처리할 앱이 없는 경우도 안전하게 처리하지 않습니다.
+- **영향:** 비정상 또는 침해된 응답이 custom scheme을 실행할 수 있고, URL 처리 앱이 없으면 앱 오류가 발생할 수 있습니다.
+- **권장 조치:** HTTPS만 허용하고 필요한 경우 도메인 allowlist를 적용합니다. URL 실행은 `resolveActivity()`와 예외 처리를 갖춘 단일 함수로 통일합니다.
+
+### 4. 전체 단위 테스트 게이트가 정상 완료되지 않음
+
+- **위치:** `src/test/java/com/lbs/schoolhelper/MainActivityNavigationTest.kt:47-55`, `gradle/libs.versions.toml:20`
+- **문제:** `testDebugUnitTest` 실행 시 Robolectric의 `NoClassDefFoundError` 및 `ClassReader IllegalArgumentException`이 발생하고 테스트가 정상 종료되지 않습니다.
+- **영향:** 전체 회귀 상태를 증명할 수 없으므로 머지 및 출시 안정성을 보장하기 어렵습니다.
+- **권장 조치:** 현재 AGP/JDK와 호환되는 Robolectric 버전으로 업데이트하고 Hilt/Application 테스트 설정을 점검합니다. CI에서 전체 단위 테스트를 필수 게이트로 복구합니다.
 
 ---
 
-## 3. 타이머 동작 시 매 초마다 SharedPreferences 디스크 쓰기 수행 (성능 이슈) (✅ 2026-05-26 해결)
-*   **위치:** [`TimerViewModel.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/ui/timer/TimerViewModel.kt#L88-L102)
-*   **상황:** 타이머가 흐르는 동안 `CountDownTimer.onTick` 콜백이 매 초(1000ms)마다 호출됩니다.
-*   **문제점:** 매 초마다 `saveTimerState`를 호출하여 `System.currentTimeMillis() + millisUntilFinished`로 계산한 값을 SharedPreferences에 `apply()` 하고 있습니다.
-    *   타이머 시작 시점(Start)에 완료 목표 절대 시간인 `targetAtMillis` 값을 **최초 1회만 고정해서 저장**해 두면, 앱이 강제 종료되거나 다시 켜졌을 때 `targetAtMillis - 현재_시스템_시간` 만 계산해도 남은 시간을 알아낼 수 있어 매 초마다 저장할 필요가 전혀 없습니다.
-*   **영향:** `apply()`는 비동기식으로 동작하지만, 매 초마다 SharedPreferences 메모리 캐시 변경 및 디스크 파일 쓰기 큐를 채우게 되므로 불필요한 GC(Garbage Collection) 유발, 배터리 소모 및 파일 입출력 오버헤드를 일으킵니다.
-*   **현재 상태:** `TimerViewModel` 에서 시작 시점에만 `targetAtMillis` 기준으로 저장하고, `onTick` 마다 저장하던 호출을 제거했습니다. pause 시에는 마지막 `remainingMillis` 저장은 유지하고, 회귀 테스트를 추가했습니다.
+## Medium
+
+### 5. 학사 일정 통신 실패가 ‘일정 없음’으로 표시됨
+
+- **위치:** `ui/schedule/ScheduleViewModel.kt:61-77`
+- **문제:** 실패한 `Result`를 빈 목록으로 변환해 네트워크 오류와 정상적인 빈 일정을 구분하지 못합니다.
+- **영향:** 사용자는 장애를 인지하거나 재시도할 방법이 없습니다.
+- **권장 조치:** `loading / empty / error / success` 상태를 분리하고 실패 시 안내와 재시도 동작을 제공합니다.
+
+### 6. 위젯 갱신 Receiver가 외부 refresh broadcast를 수용
+
+- **위치:** `AndroidManifest.xml:76-89`, `widget/MisSchoolWidgetProvider.kt:59-75, 272-360`
+- **문제:** exported 위젯 Provider가 앱 전용 refresh action도 함께 처리하며, widget ID를 포함한 외부 broadcast가 네트워크 작업을 유발할 수 있습니다.
+- **영향:** 반복 호출에 따른 배터리·네트워크 사용 증가와 telemetry 오염 가능성이 있습니다.
+- **권장 조치:** 앱 내부 refresh는 `exported=false` Receiver로 분리하고, 위젯별 중복 갱신을 debounce·mutex 또는 WorkManager unique work로 제한합니다.
+
+### 7. 학생 설정 및 캐시 데이터가 백업 대상
+
+- **위치:** `AndroidManifest.xml:13-17`, `res/xml/backup_rules.xml`, `res/xml/data_extraction_rules.xml`
+- **문제:** telemetry 파일만 백업에서 제외되어 학교·학년·반·시간표·급식·일정 캐시가 클라우드 백업 또는 기기 전송 대상이 될 수 있습니다.
+- **영향:** 개인정보 처리방침과 실제 백업 동작이 불일치할 수 있습니다.
+- **권장 조치:** 관련 SharedPreferences 파일을 백업 제외하거나, 백업 허용 범위를 개인정보 처리방침에 명시합니다.
+
+### 8. NEIS API 키가 APK에 포함되고 빈 키 처리도 불일치
+
+- **위치:** `app/build.gradle.kts:18-20, 39-41`, `data/remote/NeisApiService.kt`, `data/repository/SchoolRepositoryImpl.kt`
+- **문제:** API 키가 BuildConfig와 쿼리 파라미터에 포함됩니다. 빈 키 사전 검증도 시간표 중심으로만 적용됩니다.
+- **영향:** APK 분석을 통한 키·쿼터 노출 및 기능별 오류 경험 불일치가 생깁니다.
+- **권장 조치:** 가능하면 웹 백엔드를 통한 서버 호출로 키를 이동하고 rate limit을 적용합니다. 클라이언트 키가 불가피하면 제공자 제한과 모든 기능의 공통 설정 검증을 적용합니다.
 
 ---
 
-## 4. 주간 급식 조회 시 API 순차(Sequential) 호출 (성능 이슈) (✅ 2026-05-26 해결)
-*   **위치:** [`MealViewModel.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/ui/meal/MealViewModel.kt#L60-L65)
-*   **상황:** 주간 급식 탭에 진입하면 월요일부터 금요일까지 5일 치의 급식 데이터를 가져옵니다.
-*   **문제점:** `viewModelScope.launch` 내에서 `(0L..4L).map` 루프를 사용해 하루씩 `schoolRepository.getMeals(day)`를 직접 호출하고 있습니다. 이는 5번의 네트워크 요청이 **병렬이 아닌 순차적으로(하나가 끝나야 다음 날 요청 시작) 실행**됨을 의미합니다.
-*   **영향:** 네트워크 환경이 지연될 경우(예: 한 번의 요청에 300ms 소요 시) 총 로딩 시간이 `5 * 300ms = 1.5초` 이상으로 누적되어 화면 진입 로딩이 매우 느려집니다. 코루틴의 `async`와 `awaitAll`을 이용해 5개의 요청을 동시에 던지도록 처리해야 합니다.
-*   **현재 상태:** `MealViewModel.loadWeekMeals()` 를 `async` + `awaitAll()` 구조로 바꿔 월~금 5일 요청을 병렬화했고, 관련 회귀 테스트를 추가했습니다.
+## Low
+
+### 9. 이중 Splash 및 고정 시작 지연
+
+- **위치:** `SplashActivity.kt:17-41`, `ui/splash/SplashViewModel.kt:28-45`
+- **문제:** Android 12 이상 시스템 Splash 이후에도 1.2초 고정 자체 Splash가 실행됩니다.
+- **권장 조치:** AndroidX SplashScreen API의 keep condition으로 초기 라우팅을 처리하고 고정 지연을 제거합니다.
+
+### 10. Lint 경고 누적
+
+- **위치:** `res/layout/widget_home.xml:43-48, 81-87`, `res/layout/activity_settings.xml:62-71, 247-260`
+- **문제:** 접근성 설명 누락, 입력 필드 속성 누락, framework `Switch` 사용 등을 포함한 lint 경고가 남아 있습니다.
+- **권장 조치:** 장식 이미지는 접근성 트리에서 제외하고, 입력 필드에는 `inputType` 및 autofill 속성을 부여하며, `MaterialSwitch`로 일관되게 전환합니다.
 
 ---
 
-## 5. 디바이스 재부팅 시 타이머 복구 처리 누락 (기능 누락) (✅ 2026-05-26 해결)
-*   **위치:** [`AndroidManifest.xml`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/AndroidManifest.xml#L7)
-*   **상황:** 디바이스가 재부팅되면 OS에 등록된 AlarmManager의 알람이 모두 삭제됩니다.
-*   **문제점:** Manifest에는 `RECEIVE_BOOT_COMPLETED` 권한이 선언되어 있고 위젯 리시버에서 이 이벤트를 필터링하고 있지만, 정작 **타이머 알람을 복구하는 전용 BroadcastReceiver가 존재하지 않습니다.**
-*   **영향:** 타이머가 동작 중인 상태에서 사용자의 스마트폰이 재부팅되면 알람이 완전히 해제되며, 사용자는 지정된 시간(집중 시간 완료 등)에 알림을 받지 못하게 됩니다.
-*   **현재 상태:** `TimerBootReceiver` 와 `TimerBootRestorer` 를 추가해 `BOOT_COMPLETED` 수신 시 저장된 실행 중 타이머를 다시 스케줄하도록 수정했고, 만료된 상태는 정리하게 했습니다.
+## 아키텍처 개선 방향
+
+### 공통 오류 결과 모델
+
+현재 화면별로 오류·빈 데이터·캐시 데이터를 서로 다르게 처리합니다. `Success / Empty / Stale / Error(ErrorKind)`와 같은 공통 결과 모델을 도입하고, 모든 UI가 리소스 문자열로 변환하도록 권장합니다. 내부 `Throwable.message`는 telemetry에만 사용하고 UI에는 노출하지 않습니다.
+
+### Repository 분리
+
+`SchoolRepositoryImpl.kt`가 학교 검색, 급식, 시간표, 일정, 가정통신문까지 담당합니다. 기능별 data source 또는 use case로 점진 분리하면 테스트 범위와 오류 정책을 단순화할 수 있습니다.
 
 ---
 
-## 6. 의존성 주입(DI) 아키텍처 결합도 및 테스트성 이슈 (구조 문제) (✅ 2026-05-26 해결)
-*   **위치:** [`PreferencesRepositoryImpl.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/PreferencesRepositoryImpl.kt#L22-L32)
-*   **상황:** Hilt를 통해 Repository 패턴과 의존성 주입을 잘 설계하셨습니다.
-*   **문제점:** `PreferencesRepositoryImpl` 내부에서 데이터 저장/조회를 처리할 때, Hilt로 주입받는 인스턴스가 아니라 static Singleton 객체인 `UserPreferences`의 정적 메서드를 직접 호출하고 있습니다.
-*   **영향:** 단위 테스트(Unit Test)를 작성할 때 Repository의 Preferences 행위를 모킹(Mocking)하기 어려워져, 테스트 작성 편의성 및 설계의 결합도 관점에서 아쉬운 구조입니다. `UserPreferences` 내부 코드를 `PreferencesRepositoryImpl`로 병합하거나 `UserPreferences`를 인스턴스화하여 의존성 주입하도록 개선하면 테스트 작성이 한결 편리해집니다.
-*   **현재 상태:** `UserPreferencesStore` 추상화와 `AndroidUserPreferencesStore` 구현을 도입해 `PreferencesRepositoryImpl` 이 static `UserPreferences`에 직접 결합되지 않도록 수정했습니다.
+## 우선순위 로드맵
+
+| 우선순위 | 작업 | 완료 기준 |
+| --- | --- | --- |
+| P0 | 타이머 단일 세션 소유권 | 홈·상세·AlarmReceiver가 하나의 완료 상태 머신 사용 |
+| P0 | 외부 URL 안전 실행 | HTTPS/도메인 검증 및 실행 실패 처리 테스트 추가 |
+| P0 | 전체 테스트 게이트 복구 | `testDebugUnitTest`가 정상 종료·통과 |
+| P1 | 위젯 갱신 수명 관리 | 외부 refresh 경계 분리, 중복 요청 방지 |
+| P1 | 오류 상태 표준화 | 일정·급식·시간표·공지에 공통 오류/빈 상태 적용 |
+| P1 | 백업 정책 정리 | 실제 백업 범위와 개인정보 처리방침 일치 |
+| P2 | NEIS 키 호출 구조 개선 | 서버 프록시 또는 제공자 제한·공통 설정 검증 |
+| P2 | Splash·Lint 품질 개선 | 시작 지연 제거 및 lint 경고 점진 해소 |
 
 ---
 
-## 7. UI 렌더링 성능 저하 - Flow 수집기 내 동적 뷰 생성 안티패턴 (성능 이슈) (✅ 2026-05-26 해결)
-*   **위치:** [`TimetableActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/TimetableActivity.kt#L62-L77) 및 [`MealActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/MealActivity.kt#L55-L68)
-*   **상황:** 시간표 및 급식 화면의 각 요소를 구성하기 위해 Flow를 수집(collect)하여 UI에 반영합니다.
-*   **문제점:** 데이터 상태가 변경되어 Flow 수집기가 트리거될 때마다 `container.removeAllViews()`를 호출하고, 아이템 개수만큼 `MaterialCardView`, `LinearLayout`, `TextView` 등의 뷰를 **코드로 매번 새로 생성(Instantiate)하여 추가**하고 있습니다.
-*   **영향:** 안드로이드에서 프로그래밍 방식으로 뷰 객체를 다량 생성 및 레이아웃을 다시 빌드하는 것은 비용이 많이 드는 작업입니다. 상태가 조금만 갱신되어도 화면 전체 뷰를 파괴하고 다시 만들기 때문에, 메모리 오버헤드가 발생하고 화면이 버벅이는 현상(Jank)이 발생합니다. 효율성을 위해 `RecyclerView`와 `ListAdapter`/`DiffUtil` 구조로 개편해야 합니다.
-*   **현재 상태:** `TimetableActivity` 와 `MealActivity` 의 동적 컨테이너 렌더링을 `RecyclerView + ListAdapter + DiffUtil` 구조로 바꿨습니다. 아이템 레이아웃과 adapter를 분리했고, collect 시에는 `submitList()` 만 호출하도록 정리했습니다.
+## 검증 현황
 
----
+| 항목 | 결과 | 비고 |
+| --- | --- | --- |
+| `assembleQa` | 통과 | QA APK 빌드 가능 |
+| `lintQa` | 통과 | 오류는 없으나 lint 경고 존재 |
+| 최근 위젯 오류 처리 회귀 테스트 | 통과 | 오류 메시지 노출·빈 데이터·정렬 처리 검증 |
+| `testDebugUnitTest` 전체 실행 | 실패 | Robolectric 클래스 로딩 오류 및 정상 종료 불가 |
 
-## 8. 스플래시 화면 회전 시 중복 화면 전환 오류 (안정성 이슈) (✅ 2026-05-26 해결)
-*   **위치:** [`SplashActivity.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/SplashActivity.kt#L40) 및 [`SplashViewModel.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/ui/splash/SplashViewModel.kt)
-*   **상황:** `SplashActivity`가 시작되자마자 ViewModel에 목적지 판단을 지시합니다.
-*   **문제점:** 화면 회전(Configuration Change) 발생 시 `SplashActivity`가 파괴되고 재시작되면서 `viewModel.decideNextScreen()`이 다시 호출됩니다. 하지만 ViewModel 내부에서는 이미 동작 중인 대기 작업(1.2초 지연)을 중복 방지하지 않고 새로 Coroutine을 띄웁니다.
-*   **영향:** 회전 시 동일한 이동 이벤트(MAIN 또는 SETUP 목적지)가 여러 차례 연이어 발생하게 되어, 다음 화면(Activity)이 중복 시작되거나 비정상적인 백스택 꼬임 현상이 생길 수 있습니다. 이미 작업 중일 때는 호출을 무시하거나 이전 Job을 취소하는 플래그/로직이 필요합니다.
-*   **현재 상태:** `SplashViewModel` 에 목적지 판단 job 중복 실행 방지와 단일 navigation dispatch 가드를 추가했습니다. `SplashViewModelTest` 에서 `decideNextScreen()` 을 연속 호출해도 단 한 번만 이벤트가 나가는 회귀 케이스를 검증합니다.
+## 최종 권고
 
----
-
-## 9. BroadcastReceiver 인스턴스 직접 생성 안티패턴 (구조 문제) (✅ 2026-05-26 해결)
-*   **위치:** [`MisSchoolWidgetProvider.kt`](file:///Users/byungsunlee/Project/misSchoolApp/android/app/src/main/java/com/bsbarron/midschoolapp/widget/MisSchoolWidgetProvider.kt#L239-L247)
-*   **상황:** 시간/날짜 변경 등의 이벤트 발생 시 모든 위젯 화면을 갱신합니다.
-*   **문제점:** `updateAllWidgets` companion object 메서드 내부에서 각 위젯 ID마다 `MisSchoolWidgetProvider().updateAppWidget(...)`과 같이 **시스템이 생명주기를 관리하는 BroadcastReceiver 객체를 직접 생성자(`()`)로 인스턴스화**하여 호출하고 있습니다.
-*   **영향:** BroadcastReceiver는 안드로이드의 4대 컴포넌트 중 하나로, 개발자가 코드 상에서 직접 생성하는 행위는 프레임워크 설계 구조를 깨뜨리는 안티패턴입니다. `updateAppWidget` 메서드를 `companion object` 내부의 static 함수로 이동시키거나 별도 Helper 클래스로 이관하여 receiver 인스턴스 직접 생성을 방지해야 합니다.
-*   **현재 상태:** 위젯 갱신 로직을 companion/helper 경로로 끌어올려 `updateAllWidgets()` 가 더 이상 `MisSchoolWidgetProvider()` 인스턴스를 직접 생성하지 않도록 수정했습니다. 현재 코드 기준으로 receiver 직접 생성 경로는 제거되었습니다.
+현재 상태는 기능 검증용 QA 빌드는 가능하지만, **정식 출시 승인 전 상태는 아닙니다.** P0 항목인 타이머 완료 상태 통합, 외부 URL 검증, 전체 테스트 게이트 복구를 먼저 완료한 뒤 출시 전 재리뷰를 수행하는 것을 권장합니다.
