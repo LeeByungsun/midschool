@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">학교생활도우미</string>
-    <string name="home_school_name">중학교도우미</string>
+    <string name="app_name">스쿨온</string>
+    <string name="home_school_name">스쿨온</string>
     <string name="home_school_name_placeholder">학교를 설정해 주세요</string>
     <string name="home_date_label">3월 30일 월요일</string>
     <string name="home_semester_label">학년과 반을 설정해 주세요</string>
@@ -15,7 +15,7 @@
     <string name="home_settings_button">설정</string>
     <string name="home_settings_content_description">설정 열기</string>
     <string name="home_exit_dialog_title">앱을 종료할까요?</string>
-    <string name="home_exit_dialog_message">학교 도우미를 종료합니다.</string>
+    <string name="home_exit_dialog_message">스쿨온을 종료합니다.</string>
     <string name="home_exit_dialog_confirm">종료</string>
     <string name="home_exit_dialog_cancel">취소</string>
     <string name="home_setup_button">학교 설정하러 가기</string>
