@@ -94,7 +94,7 @@
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/focusPresetCard"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="52dp"
                             android:layout_weight="1"
                             app:cardBackgroundColor="@color/brand_blue_soft"
                             app:cardCornerRadius="18dp"
@@ -104,10 +104,9 @@
 
                             <TextView
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_height="match_parent"
                                 android:gravity="center"
                                 android:paddingHorizontal="8dp"
-                                android:paddingVertical="14dp"
                                 android:text="@string/home_timer_focus_label"
                                 android:textColor="@color/text_primary"
                                 android:textStyle="bold" />
@@ -116,7 +115,7 @@
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/breakPresetCard"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="52dp"
                             android:layout_marginStart="10dp"
                             android:layout_weight="1"
                             app:cardBackgroundColor="@color/surface_card"
@@ -127,10 +126,9 @@
 
                             <TextView
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_height="match_parent"
                                 android:gravity="center"
                                 android:paddingHorizontal="8dp"
-                                android:paddingVertical="14dp"
                                 android:text="@string/home_timer_break_label"
                                 android:textColor="@color/text_primary"
                                 android:textStyle="bold" />
@@ -139,7 +137,7 @@
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/round2Card"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="52dp"
                             android:layout_marginStart="10dp"
                             android:layout_weight="1"
                             app:cardBackgroundColor="@color/surface_card"
@@ -150,10 +148,9 @@
 
                             <TextView
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_height="match_parent"
                                 android:gravity="center"
                                 android:paddingHorizontal="8dp"
-                                android:paddingVertical="14dp"
                                 android:text="@string/home_timer_deep_label"
                                 android:textColor="@color/text_primary"
                                 android:textStyle="bold" />
@@ -162,7 +159,7 @@
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/round4Card"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="52dp"
                             android:layout_marginStart="10dp"
                             android:layout_weight="1"
                             app:cardBackgroundColor="@color/surface_card"
@@ -173,10 +170,9 @@
 
                             <TextView
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_height="match_parent"
                                 android:gravity="center"
                                 android:paddingHorizontal="8dp"
-                                android:paddingVertical="14dp"
                                 android:text="@string/home_timer_round4_label"
                                 android:textColor="@color/text_primary"
                                 android:textStyle="bold" />
@@ -193,10 +189,11 @@
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/timerPrimaryButton"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
+                            android:layout_height="52dp"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
+                            android:minHeight="0dp"
+                            android:layout_weight="1"
                             android:text="@string/home_timer_start"
                             android:textAllCaps="false"
                             android:textStyle="bold"
@@ -207,7 +204,10 @@
                             android:id="@+id/timerResetButton"
                             style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="52dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:minHeight="0dp"
                             android:layout_marginStart="12dp"
                             android:layout_weight="1"
                             android:text="@string/home_timer_reset"
