@@ -82,7 +82,7 @@ class MealViewModel @Inject constructor(
         return DayMealState(
             item = MealDayUiModel(
                 dateLabel = day.format(
-                    DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
+                    DateTimeFormatter.ofPattern(appContext.getString(R.string.date_format_day_with_weekday), Locale.KOREAN)
                 ),
                 detailText = appContext.getString(R.string.meal_loading),
                 isToday = day == LocalDate.now()
@@ -127,7 +127,7 @@ class MealViewModel @Inject constructor(
         return DayMealState(
             item = MealDayUiModel(
                 dateLabel = day.format(
-                    DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
+                    DateTimeFormatter.ofPattern(appContext.getString(R.string.date_format_day_with_weekday), Locale.KOREAN)
                 ),
                 detailText = detailText,
                 isToday = day == LocalDate.now()
@@ -143,7 +143,7 @@ class MealViewModel @Inject constructor(
     }
 
     private fun formatShortDate(date: LocalDate): String {
-        return date.format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN))
+        return date.format(DateTimeFormatter.ofPattern(appContext.getString(R.string.date_format_short_day), Locale.KOREAN))
     }
 
     private fun formatMeals(meals: List<MealInfo>): String {

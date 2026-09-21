@@ -98,7 +98,7 @@ class HomeViewModel private constructor(
                     resolveString(R.string.home_school_name_placeholder)
                 },
                 dateLabel = LocalDate.now().format(
-                    DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
+                    DateTimeFormatter.ofPattern(resolveString(R.string.date_format_day_with_weekday), Locale.KOREAN)
                 ),
                 classSummary = if (!hasSchoolSelection) {
                     resolveString(R.string.home_school_not_set_hint)

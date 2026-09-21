@@ -45,7 +45,7 @@ class TimerRingView @JvmOverloads constructor(
     private val arcBounds = RectF()
     private var progressFraction: Float = 1f
     private var centerTimeText: String = "40:00"
-    private var centerLabelText: String = "남은 시간"
+    private var centerLabelText: String = context.getString(R.string.home_timer_remaining)
 
     fun setTimerState(progressFraction: Float, timeText: String, labelText: String) {
         // 진행률은 0~1 범위로 고정해 잘못된 값이 들어와도 드로잉이 깨지지 않게 한다.

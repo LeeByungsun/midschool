@@ -10,7 +10,7 @@ internal sealed class WidgetTimetableContent {
 
 /** Converts repository output into safe, display-ready widget content. */
 internal object WidgetTimetableContentResolver {
-    fun resolve(result: Result<List<TimetableItem>>): WidgetTimetableContent {
+    fun resolve(result: Result<List<TimetableItem>>, lessonFormat: String): WidgetTimetableContent {
         if (result.isFailure) return WidgetTimetableContent.LoadError
 
         val lessons = result.getOrNull().orEmpty()
@@ -18,7 +18,7 @@ internal object WidgetTimetableContentResolver {
             .mapNotNull { item ->
                 item.subject.trim().takeIf { it.isNotEmpty() }?.let { subject ->
                     val period = item.period.trim().takeIf { it.isNotEmpty() } ?: "?"
-                    "${period}교시 ${subject.take(6)}"
+                    String.format(lessonFormat, period, subject.take(6))
                 }
             }
 

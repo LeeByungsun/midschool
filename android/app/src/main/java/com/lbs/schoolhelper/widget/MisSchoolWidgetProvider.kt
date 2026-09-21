@@ -210,7 +210,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
                     setTextViewText(
                         R.id.widgetDateText,
-                        WidgetDateFormatter.formatHeaderDate(today)
+                        WidgetDateFormatter.formatHeaderDate(context, today)
                     )
                     setViewVisibility(
                         R.id.widgetTomorrowSection,
@@ -366,7 +366,10 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             result: Result<List<com.lbs.schoolhelper.data.model.TimetableItem>>,
             context: Context
         ): String {
-            return when (val content = WidgetTimetableContentResolver.resolve(result)) {
+            return when (val content = WidgetTimetableContentResolver.resolve(
+                result = result,
+                lessonFormat = context.getString(R.string.widget_lesson_format)
+            )) {
                 WidgetTimetableContent.LoadError -> context.getString(R.string.widget_load_error)
                 WidgetTimetableContent.NoClasses -> context.getString(R.string.widget_no_classes)
                 is WidgetTimetableContent.Lessons -> content.text

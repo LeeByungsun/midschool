@@ -57,7 +57,7 @@ class TimetableViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 dateTitle = currentDate.format(
-                    DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
+                    DateTimeFormatter.ofPattern(appContext.getString(R.string.date_format_day_with_weekday), Locale.KOREAN)
                 ),
                 classInfoText = if (studentInfo.hasClassroomInfo()) {
                     appContext.getString(R.string.home_student_info_format, grade, classroom)

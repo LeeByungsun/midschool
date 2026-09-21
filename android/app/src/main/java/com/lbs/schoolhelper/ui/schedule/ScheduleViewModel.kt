@@ -52,7 +52,7 @@ class ScheduleViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 monthTitle = currentMonth.format(
-                    DateTimeFormatter.ofPattern("yyyy년 M월", Locale.KOREAN)
+                    DateTimeFormatter.ofPattern(appContext.getString(R.string.date_format_month), Locale.KOREAN)
                 ),
                 scheduleText = appContext.getString(R.string.schedule_loading)
             )
@@ -79,7 +79,7 @@ class ScheduleViewModel @Inject constructor(
             schedules.joinToString("\n\n") { event ->
                 val dateLabel = runCatching {
                     LocalDate.parse(event.date, DateTimeFormatter.BASIC_ISO_DATE).format(
-                        DateTimeFormatter.ofPattern("M월 d일 (E)", Locale.KOREAN)
+                        DateTimeFormatter.ofPattern(appContext.getString(R.string.date_format_day_with_short_weekday), Locale.KOREAN)
                     )
                 }.getOrDefault(event.date)
 

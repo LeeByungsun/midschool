@@ -9,7 +9,8 @@ class WidgetTimetableContentResolverTest {
     @Test
     fun `returns failure content instead of an exception message`() {
         val content = WidgetTimetableContentResolver.resolve(
-            Result.failure(IllegalStateException("Unable to resolve timetable response"))
+            result = Result.failure(IllegalStateException("Unable to resolve timetable response")),
+            lessonFormat = "%1\$s교시 %2\$s"
         )
 
         assertEquals(WidgetTimetableContent.LoadError, content)
@@ -18,7 +19,7 @@ class WidgetTimetableContentResolverTest {
     @Test
     fun `returns no classes when the successful response has no visible subjects`() {
         val content = WidgetTimetableContentResolver.resolve(
-            Result.success(
+            result = Result.success(
                 listOf(
                     TimetableItem(
                         date = "20260920",
@@ -28,7 +29,8 @@ class WidgetTimetableContentResolverTest {
                         classroom = "4"
                     )
                 )
-            )
+            ),
+            lessonFormat = "%1\$s교시 %2\$s"
         )
 
         assertEquals(WidgetTimetableContent.NoClasses, content)
@@ -37,12 +39,13 @@ class WidgetTimetableContentResolverTest {
     @Test
     fun `formats sorted and truncated visible subjects`() {
         val content = WidgetTimetableContentResolver.resolve(
-            Result.success(
+            result = Result.success(
                 listOf(
                     TimetableItem("20260920", "2", "사회문화와법경제", "1", "4"),
                     TimetableItem("20260920", "1", "국어", "1", "4")
                 )
-            )
+            ),
+            lessonFormat = "%1\$s교시 %2\$s"
         )
 
         assertEquals(
