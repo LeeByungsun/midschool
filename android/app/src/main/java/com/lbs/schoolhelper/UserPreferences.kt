@@ -151,7 +151,7 @@ object UserPreferences {
         return PomodoroSettings(
             focusMinutes = prefs.getInt(KEY_POMODORO_FOCUS, 25),
             shortBreakMinutes = prefs.getInt(KEY_POMODORO_SHORT_BREAK, 5),
-            longBreakMinutes = prefs.getInt(KEY_POMODORO_LONG_BREAK, 15),
+            longBreakMinutes = prefs.getInt(KEY_POMODORO_LONG_BREAK, 10),
             rounds = prefs.getInt(KEY_POMODORO_ROUNDS, 4)
         ).normalized()
     }

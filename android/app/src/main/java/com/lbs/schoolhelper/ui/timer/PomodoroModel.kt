@@ -3,7 +3,7 @@ package com.lbs.schoolhelper.ui.timer
 data class PomodoroSettings(
     val focusMinutes: Int = 25,
     val shortBreakMinutes: Int = 5,
-    val longBreakMinutes: Int = 15,
+    val longBreakMinutes: Int = 10,
     val rounds: Int = 4
 ) {
     fun normalized(): PomodoroSettings = copy(

@@ -14,6 +14,6 @@ class PomodoroModelTest {
 
     @Test
     fun `uses standard pomodoro defaults`() {
-        assertEquals(PomodoroSettings(25, 5, 15, 4), PomodoroSettings())
+        assertEquals(PomodoroSettings(25, 5, 10, 4), PomodoroSettings())
     }
 }
