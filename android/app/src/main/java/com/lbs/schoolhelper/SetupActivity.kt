@@ -42,6 +42,15 @@ class SetupActivity : AppCompatActivity() {
     }
 
     private fun bindClicks() {
+        binding.profileNameInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                viewModel.updateDisplayName(binding.profileNameInput.text.toString())
+                binding.schoolQueryInput.requestFocus()
+                true
+            } else {
+                false
+            }
+        }
         binding.schoolQueryInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 searchSchoolsFromInput()
@@ -86,6 +95,27 @@ class SetupActivity : AppCompatActivity() {
                 viewModel.completeTelemetryConsentStep()
             }
         }
+
+        binding.profileNameInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !isRenderingState) {
+                viewModel.updateDisplayName(binding.profileNameInput.text.toString())
+            }
+        }
+        binding.schoolQueryInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !isRenderingState) {
+                viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
+            }
+        }
+        binding.gradeInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !isRenderingState) {
+                viewModel.updateGrade(binding.gradeInput.text.toString().trim())
+            }
+        }
+        binding.classInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !isRenderingState) {
+                viewModel.updateClassroom(binding.classInput.text.toString().trim())
+            }
+        }
     }
 
     private fun searchSchoolsFromInput() {
@@ -96,6 +126,7 @@ class SetupActivity : AppCompatActivity() {
 
     private fun saveStudentInfoFromInput() {
         hideKeyboard(binding.classInput)
+        viewModel.updateDisplayName(binding.profileNameInput.text.toString())
         viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
         viewModel.updateGrade(binding.gradeInput.text.toString().trim())
         viewModel.updateClassroom(binding.classInput.text.toString().trim())
@@ -133,6 +164,9 @@ class SetupActivity : AppCompatActivity() {
 
     private fun renderState(state: SetupUiState) {
         isRenderingState = true
+        if (binding.profileNameInput.text.toString() != state.displayName) {
+            binding.profileNameInput.setText(state.displayName)
+        }
         if (binding.schoolQueryInput.text.toString() != state.schoolQuery) {
             binding.schoolQueryInput.setText(state.schoolQuery)
         }

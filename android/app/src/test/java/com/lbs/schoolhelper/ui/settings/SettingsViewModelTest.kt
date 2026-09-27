@@ -63,8 +63,9 @@ class SettingsViewModelTest {
         val prefs = FakePreferencesRepository(studentInfo = old)
         val changes = mutableListOf<StudentInfo>()
         val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
-            override fun schoolSaved(previous: StudentInfo) {
+            override fun schoolSaved(previous: StudentInfo, current: StudentInfo) {
                 assertEquals("1234567", prefs.getStudentInfo().schoolCode)
+                assertEquals("1234567", current.schoolCode)
                 changes += previous
             }
         }

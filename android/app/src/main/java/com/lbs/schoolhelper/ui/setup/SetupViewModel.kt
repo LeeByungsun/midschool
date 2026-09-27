@@ -5,6 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.model.SchoolInfo
+import com.lbs.schoolhelper.data.profile.MAX_PROFILE_NAME_LENGTH
+import com.lbs.schoolhelper.data.profile.ProfileMutationFailure
+import com.lbs.schoolhelper.data.profile.ProfileMutationResult
+import com.lbs.schoolhelper.data.profile.StudentProfileRepository
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
@@ -26,15 +30,18 @@ class SetupViewModel @Inject constructor(
     application: Application,
     private val preferencesRepository: PreferencesRepository,
     private val schoolRepository: SchoolRepository,
+    private val studentProfileRepository: StudentProfileRepository,
     private val telemetry: AppTelemetry = NoOpTelemetry
 ) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
-    private val initialStudentInfo = preferencesRepository.getStudentInfo()
+    private val initialProfile = studentProfileRepository.activeProfile.value
+    private val initialStudentInfo = initialProfile?.studentInfo ?: preferencesRepository.getStudentInfo()
     private var schoolSearchJob: Job? = null
     private var latestSearchRequestId: Long = 0L
 
     private val _uiState = MutableStateFlow(
         SetupUiState(
+            displayName = initialProfile?.displayName.orEmpty(),
             schoolQuery = initialStudentInfo.schoolName,
             selectedSchool = initialStudentInfo.takeIf { it.hasSchoolSelection() }?.toSchoolInfo(),
             searchMessage = if (initialStudentInfo.schoolName.isNotBlank() && !initialStudentInfo.hasSchoolSelection()) {
@@ -44,7 +51,9 @@ class SetupViewModel @Inject constructor(
             },
             grade = initialStudentInfo.grade,
             classroom = initialStudentInfo.classroom,
-            isTelemetryConsentStepVisible = initialStudentInfo.isComplete() &&
+            isTelemetryConsentStepVisible = initialProfile?.let {
+                it.displayName.isNotBlank() && it.studentInfo.isComplete()
+            } == true &&
                 !preferencesRepository.hasCompletedTelemetryConsentPrompt(),
             analyticsEnabled = preferencesRepository.isAnalyticsEnabled(),
             diagnosticsEnabled = preferencesRepository.isDiagnosticsEnabled()
@@ -57,6 +66,10 @@ class SetupViewModel @Inject constructor(
 
     private val _navigationEvent = MutableSharedFlow<Unit>()
     val navigationEvent = _navigationEvent.asSharedFlow()
+
+    fun updateDisplayName(displayName: String) {
+        _uiState.update { it.copy(displayName = displayName) }
+    }
 
     fun updateSchoolQuery(query: String) {
         val trimmedQuery = query.trim()
@@ -181,19 +194,39 @@ class SetupViewModel @Inject constructor(
             _messageEvent.emit(R.string.setup_error_empty)
             return
         }
+        val displayName = state.displayName.trim()
+        if (displayName.isBlank()) {
+            _messageEvent.emit(R.string.setup_error_profile_name_required)
+            return
+        }
+        if (displayName.length > MAX_PROFILE_NAME_LENGTH) {
+            _messageEvent.emit(R.string.setup_error_profile_name_too_long)
+            return
+        }
 
-        val previousStudentInfo = preferencesRepository.getStudentInfo()
-        preferencesRepository.saveStudentInfo(
-            StudentInfo(
-                grade = state.grade,
-                classroom = state.classroom,
-                schoolName = state.selectedSchool.schoolName,
-                officeCode = state.selectedSchool.officeCode,
-                schoolCode = state.selectedSchool.schoolCode,
-                schoolKind = state.selectedSchool.schoolKind
-            )
+        val previousStudentInfo = studentProfileRepository.activeProfile.value?.studentInfo ?: StudentInfo()
+        val studentInfo = StudentInfo(
+            grade = state.grade,
+            classroom = state.classroom,
+            schoolName = state.selectedSchool.schoolName,
+            officeCode = state.selectedSchool.officeCode,
+            schoolCode = state.selectedSchool.schoolCode,
+            schoolKind = state.selectedSchool.schoolKind
         )
-        telemetry.schoolSaved(previousStudentInfo)
+        val activeProfile = studentProfileRepository.activeProfile.value
+        val result = if (activeProfile == null) {
+            studentProfileRepository.addProfile(displayName, studentInfo)
+        } else {
+            studentProfileRepository.updateProfile(
+                activeProfile.copy(displayName = displayName, studentInfo = studentInfo)
+            )
+        }
+        if (result is ProfileMutationResult.Failure) {
+            _messageEvent.emit(result.reason.messageResource())
+            return
+        }
+
+        telemetry.schoolSaved(previousStudentInfo, studentInfo)
         MisSchoolWidgetProvider.requestAllWidgetUpdates(appContext)
         if (preferencesRepository.hasCompletedTelemetryConsentPrompt()) {
             _navigationEvent.emit(Unit)
@@ -222,5 +255,12 @@ class SetupViewModel @Inject constructor(
 
     companion object {
         private const val MIN_SCHOOL_QUERY_LENGTH = 2
+    }
+
+    private fun ProfileMutationFailure.messageResource(): Int = when (this) {
+        ProfileMutationFailure.BLANK_NAME -> R.string.setup_error_profile_name_required
+        ProfileMutationFailure.NAME_TOO_LONG -> R.string.setup_error_profile_name_too_long
+        ProfileMutationFailure.DUPLICATE_NAME -> R.string.setup_error_profile_name_duplicate
+        else -> R.string.setup_error_profile_save_failed
     }
 }

@@ -3,6 +3,7 @@ package com.lbs.schoolhelper.ui.setup
 import com.lbs.schoolhelper.data.model.SchoolInfo
 
 data class SetupUiState(
+    val displayName: String = "",
     val schoolQuery: String = "",
     val selectedSchool: SchoolInfo? = null,
     val schoolResults: List<SchoolInfo> = emptyList(),

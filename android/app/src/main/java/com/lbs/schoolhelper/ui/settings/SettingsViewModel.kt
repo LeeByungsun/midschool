@@ -201,17 +201,16 @@ class SettingsViewModel @Inject constructor(
         }
 
         val previousStudentInfo = preferencesRepository.getStudentInfo()
-        preferencesRepository.saveStudentInfo(
-            StudentInfo(
-                grade = state.grade,
-                classroom = state.classroom,
-                schoolName = state.selectedSchool.schoolName,
-                officeCode = state.selectedSchool.officeCode,
-                schoolCode = state.selectedSchool.schoolCode,
-                schoolKind = state.selectedSchool.schoolKind
-            )
+        val currentStudentInfo = StudentInfo(
+            grade = state.grade,
+            classroom = state.classroom,
+            schoolName = state.selectedSchool.schoolName,
+            officeCode = state.selectedSchool.officeCode,
+            schoolCode = state.selectedSchool.schoolCode,
+            schoolKind = state.selectedSchool.schoolKind
         )
-        telemetry.schoolSaved(previousStudentInfo)
+        preferencesRepository.saveStudentInfo(currentStudentInfo)
+        telemetry.schoolSaved(previousStudentInfo, currentStudentInfo)
         preferencesRepository.saveTimerDisplayMode(
             if (state.isRingMode) TimerDisplayMode.RING else TimerDisplayMode.COUNT
         )

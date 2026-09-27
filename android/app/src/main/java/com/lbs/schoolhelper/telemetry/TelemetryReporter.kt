@@ -43,13 +43,14 @@ class TelemetryReporter(
         event("feature_view", mapOf("feature" to feature.value))
     }
 
-    @Synchronized override fun schoolSaved(previous: StudentInfo) {
-        val current = studentInfo()
-        refreshContext()
+    @Synchronized override fun schoolSaved(previous: StudentInfo, current: StudentInfo) {
+        refreshContext(schoolContext(current))
         if (!current.hasSchoolSelection()) return
         when {
-            !previous.hasSchoolSelection() -> event("school_selected")
-            previous.officeCode != current.officeCode || previous.schoolCode != current.schoolCode -> event("school_changed")
+            !previous.hasSchoolSelection() -> event("school_selected", schoolContext(current))
+            previous.officeCode != current.officeCode || previous.schoolCode != current.schoolCode -> {
+                event("school_changed", schoolContext(current))
+            }
         }
     }
 

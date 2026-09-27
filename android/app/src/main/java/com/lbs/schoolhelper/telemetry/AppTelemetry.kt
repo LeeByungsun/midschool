@@ -10,7 +10,7 @@ interface AppTelemetry {
     fun clearDiagnostics() {}
     fun appOpened(entryPoint: EntryPoint) {}
     fun featureViewed(feature: Feature) {}
-    fun schoolSaved(previous: StudentInfo) {}
+    fun schoolSaved(previous: StudentInfo, current: StudentInfo) {}
     fun dataLoaded(feature: Feature, school: StudentInfo, outcome: LoadOutcome,
                    source: DataSource, durationMillis: Long, error: Throwable? = null) {}
     fun timerAction(action: TimerAction, durationMillis: Long) {}
@@ -73,8 +73,11 @@ class SafeTelemetry(private val delegate: AppTelemetry) : AppTelemetry {
     override fun clearDiagnostics() = run { delegate.clearDiagnostics() }
     override fun appOpened(entryPoint: EntryPoint) = run { delegate.appOpened(entryPoint) }
     override fun featureViewed(feature: Feature) = run { delegate.featureViewed(feature) }
-    override fun schoolSaved(previous: com.lbs.schoolhelper.data.repository.StudentInfo) = run {
-        delegate.schoolSaved(previous)
+    override fun schoolSaved(
+        previous: com.lbs.schoolhelper.data.repository.StudentInfo,
+        current: com.lbs.schoolhelper.data.repository.StudentInfo
+    ) = run {
+        delegate.schoolSaved(previous, current)
     }
     override fun dataLoaded(
         feature: Feature,
