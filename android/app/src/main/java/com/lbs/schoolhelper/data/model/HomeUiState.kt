@@ -9,6 +9,9 @@ enum class HomeContentStatus {
 }
 
 data class HomeUiState(
+    val activeProfileId: String = "",
+    val activeProfileName: String = "",
+    val profileChoices: List<HomeProfileChoice> = emptyList(),
     val schoolName: String = "",
     val dateLabel: String = "",
     val classSummary: String = "",
@@ -21,6 +24,12 @@ data class HomeUiState(
     val eventSummary: String = "",
     val scheduleStatus: HomeContentStatus = HomeContentStatus.NOT_CONFIGURED,
     val notices: HomeNoticeCardState = HomeNoticeCardState()
+)
+
+data class HomeProfileChoice(
+    val id: String,
+    val displayName: String,
+    val contextText: String
 )
 
 data class HomeNoticeCardState(

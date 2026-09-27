@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.model.HomeContentStatus
 import com.lbs.schoolhelper.data.model.HomeNoticeCardState
+import com.lbs.schoolhelper.data.model.HomeProfileChoice
 import com.lbs.schoolhelper.data.model.HomeUiState
 import com.lbs.schoolhelper.data.model.MealInfo
 import com.lbs.schoolhelper.data.model.NoticeFeed
 import com.lbs.schoolhelper.data.model.NoticePreview
 import com.lbs.schoolhelper.data.model.SchoolEvent
-import com.lbs.schoolhelper.data.repository.PreferencesRepository
+import com.lbs.schoolhelper.data.profile.StudentProfile
+import com.lbs.schoolhelper.data.profile.StudentProfileRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.util.isVisibleSchedule
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -34,11 +37,12 @@ import javax.inject.Inject
 class HomeViewModel private constructor(
     application: Application,
     private val schoolRepository: SchoolRepository,
-    private val preferencesRepository: PreferencesRepository,
+    private val studentProfileRepository: StudentProfileRepository,
     private val textResolver: (Int, Array<out Any?>) -> String
 ) : AndroidViewModel(application) {
 
     private var loadHomeJob: Job? = null
+    private var loadGeneration: Long = 0L
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val _noticeActionEvent = MutableSharedFlow<HomeNoticeAction>(extraBufferCapacity = 1)
@@ -48,20 +52,20 @@ class HomeViewModel private constructor(
     constructor(
         application: Application,
         schoolRepository: SchoolRepository,
-        preferencesRepository: PreferencesRepository
-    ) : this(application, schoolRepository, preferencesRepository, defaultTextResolver(application))
+        studentProfileRepository: StudentProfileRepository
+    ) : this(application, schoolRepository, studentProfileRepository, defaultTextResolver(application))
 
     companion object {
         fun createForTest(
             application: Application,
             schoolRepository: SchoolRepository,
-            preferencesRepository: PreferencesRepository,
+            studentProfileRepository: StudentProfileRepository,
             textResolver: (Int, Array<out Any?>) -> String
         ): HomeViewModel {
             return HomeViewModel(
                 application,
                 schoolRepository,
-                preferencesRepository,
+                studentProfileRepository,
                 textResolver
             )
         }
@@ -80,6 +84,11 @@ class HomeViewModel private constructor(
 
     init {
         refreshHeader()
+        viewModelScope.launch {
+            studentProfileRepository.activeProfile.drop(1).collect { profile ->
+                loadHomeData(profile)
+            }
+        }
     }
 
     private fun resolveString(@StringRes id: Int): String = textResolver(id, emptyArray<Any?>())
@@ -87,12 +96,27 @@ class HomeViewModel private constructor(
     private fun resolveString(@StringRes id: Int, vararg args: Any?): String = textResolver(id, args)
 
     fun refreshHeader() {
-        val studentInfo = preferencesRepository.getStudentInfo()
+        val profile = studentProfileRepository.activeProfile.value
+        val studentInfo = profile?.studentInfo ?: com.lbs.schoolhelper.data.repository.StudentInfo()
         val grade = studentInfo.grade
         val classroom = studentInfo.classroom
         val hasSchoolSelection = studentInfo.hasSchoolSelection()
         _uiState.update {
             it.copy(
+                activeProfileId = profile?.id.orEmpty(),
+                activeProfileName = profile?.displayName.orEmpty(),
+                profileChoices = studentProfileRepository.profiles.value.map { item ->
+                    HomeProfileChoice(
+                        id = item.id,
+                        displayName = item.displayName,
+                        contextText = resolveString(
+                            R.string.home_profile_context_format,
+                            item.studentInfo.schoolName,
+                            item.studentInfo.grade,
+                            item.studentInfo.classroom
+                        )
+                    )
+                },
                 isSchoolConfigured = hasSchoolSelection,
                 schoolName = studentInfo.schoolName.ifBlank {
                     resolveString(R.string.home_school_name_placeholder)
@@ -116,7 +140,17 @@ class HomeViewModel private constructor(
     }
 
     fun loadHomeData() {
+        loadHomeData(studentProfileRepository.activeProfile.value)
+    }
+
+    fun selectProfile(id: String) {
+        studentProfileRepository.selectProfile(id)
+    }
+
+    private fun loadHomeData(profile: StudentProfile?) {
         loadHomeJob?.cancel()
+        val requestGeneration = ++loadGeneration
+        val requestProfileId = profile?.id
         loadHomeJob = viewModelScope.launch {
             val today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
             refreshHeader()
@@ -133,9 +167,25 @@ class HomeViewModel private constructor(
                 )
             }
 
-            val studentInfo = preferencesRepository.getStudentInfo()
+            val studentInfo = profile?.studentInfo
+            if (studentInfo == null) {
+                updateIfCurrent(requestGeneration, requestProfileId) {
+                    it.copy(
+                        isSchoolConfigured = false,
+                        todaySummaryText = resolveString(R.string.home_school_not_set_summary),
+                        todayStatus = HomeContentStatus.NOT_CONFIGURED,
+                        mealSummary = resolveString(R.string.home_meal_missing_school),
+                        mealMeta = "",
+                        mealStatus = HomeContentStatus.NOT_CONFIGURED,
+                        eventSummary = resolveString(R.string.home_schedule_missing_school),
+                        scheduleStatus = HomeContentStatus.NOT_CONFIGURED,
+                        notices = buildSetupRequiredNoticeState()
+                    )
+                }
+                return@launch
+            }
             if (!studentInfo.hasSchoolSelection()) {
-                _uiState.update {
+                updateIfCurrent(requestGeneration, requestProfileId) {
                     it.copy(
                         isSchoolConfigured = false,
                         todaySummaryText = resolveString(R.string.home_school_not_set_summary),
@@ -153,7 +203,7 @@ class HomeViewModel private constructor(
 
             launch {
                 val noticesResult = schoolRepository.getNotices(studentInfo, limit = 3)
-                _uiState.update { current ->
+                updateIfCurrent(requestGeneration, requestProfileId) { current ->
                     current.copy(notices = buildNoticeCardState(noticesResult))
                 }
             }
@@ -161,6 +211,8 @@ class HomeViewModel private constructor(
             launch {
                 schoolRepository.observeMeals(studentInfo, today).collect { result ->
                     updateHomeSections(
+                        requestGeneration = requestGeneration,
+                        requestProfileId = requestProfileId,
                         mealUi = buildMealUi(
                             meal = result.getOrNull()?.firstOrNull(),
                             error = result.exceptionOrNull()
@@ -172,6 +224,8 @@ class HomeViewModel private constructor(
             launch {
                 schoolRepository.observeSchedules(studentInfo, today.take(6)).collect { result ->
                     updateHomeSections(
+                        requestGeneration = requestGeneration,
+                        requestProfileId = requestProfileId,
                         scheduleUi = buildScheduleUi(
                             events = result.getOrNull().orEmpty(),
                             error = result.exceptionOrNull()
@@ -183,10 +237,12 @@ class HomeViewModel private constructor(
     }
 
     private fun updateHomeSections(
+        requestGeneration: Long,
+        requestProfileId: String?,
         mealUi: HomeSectionUi? = null,
         scheduleUi: HomeSectionUi? = null
     ) {
-        _uiState.update { current ->
+        updateIfCurrent(requestGeneration, requestProfileId) { current ->
             val mealStatus = mealUi?.status ?: current.mealStatus
             val scheduleStatus = scheduleUi?.status ?: current.scheduleStatus
             val todayStatus = resolveTodayStatus(mealStatus, scheduleStatus)
@@ -202,6 +258,16 @@ class HomeViewModel private constructor(
                 scheduleStatus = scheduleStatus
             )
         }
+    }
+
+    private fun updateIfCurrent(
+        requestGeneration: Long,
+        requestProfileId: String?,
+        transform: (HomeUiState) -> HomeUiState
+    ) {
+        if (requestGeneration != loadGeneration) return
+        if (studentProfileRepository.activeProfile.value?.id != requestProfileId) return
+        _uiState.update(transform)
     }
 
     private fun resolveTodayStatus(

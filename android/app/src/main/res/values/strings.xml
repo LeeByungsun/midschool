@@ -75,6 +75,12 @@
     <string name="home_timer_break_label">40분 집중</string>
     <string name="home_timer_deep_label">2회</string>
     <string name="home_timer_round4_label">4회</string>
+    <string name="home_profile_select">자녀 선택 ▼</string>
+    <string name="home_profile_button">%1$s ▼</string>
+    <string name="home_profile_content_description">현재 자녀 %1$s, 자녀 변경</string>
+    <string name="home_profile_dialog_title">자녀 선택</string>
+    <string name="home_profile_add">＋ 자녀 추가</string>
+    <string name="home_profile_context_format">%1$s · %2$s학년 %3$s반</string>
     <string name="splash_subtitle">시간표, 급식, 일정, 집중력 타이머를 한곳에서</string>
     <string name="splash_loading">앱을 준비하고 있어요...</string>
     <string name="setup_title">처음 설정</string>

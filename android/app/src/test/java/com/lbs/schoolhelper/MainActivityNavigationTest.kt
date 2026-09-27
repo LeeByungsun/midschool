@@ -25,6 +25,18 @@ import org.robolectric.annotation.Config
 class MainActivityNavigationTest {
 
     @Test
+    fun addProfileAction_opensSettingsInAddMode() {
+        clearUserPreferences()
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+
+        activity.openAddProfileSettings()
+
+        val nextIntent = shadowOf(activity).nextStartedActivity
+        assertEquals(SettingsActivity::class.java.name, nextIntent.component?.className)
+        assertTrue(nextIntent.getBooleanExtra(SettingsActivity.EXTRA_START_ADD_PROFILE, false))
+    }
+
+    @Test
     fun mealCardClickStartsMealActivity() {
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
 
@@ -92,6 +104,10 @@ class MainActivityNavigationTest {
     private fun clearUserPreferences() {
         val context = RuntimeEnvironment.getApplication().applicationContext as Context
         context.getSharedPreferences("midschool_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .commit()
+        context.getSharedPreferences("student_profiles", Context.MODE_PRIVATE)
             .edit()
             .clear()
             .commit()

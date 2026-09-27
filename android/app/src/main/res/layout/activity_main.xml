@@ -47,10 +47,20 @@
                             android:layout_marginEnd="56dp"
                             android:orientation="vertical">
 
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/profileSwitchButton"
+                                style="@style/Widget.MisSchoolApp.Button.HeroAction"
+                                android:layout_width="wrap_content"
+                                android:layout_height="48dp"
+                                android:minHeight="48dp"
+                                android:text="@string/home_profile_select"
+                                android:textAllCaps="false" />
+
                             <TextView
                                 android:id="@+id/schoolNameText"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
                                 android:text="@string/home_school_name_placeholder"
                                 android:textColor="@color/white"
                                 android:textSize="@dimen/text_hero_title"
