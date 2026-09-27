@@ -2,6 +2,7 @@ package com.lbs.schoolhelper.test
 
 import com.lbs.schoolhelper.data.profile.ProfileMutationFailure
 import com.lbs.schoolhelper.data.profile.ProfileMutationResult
+import com.lbs.schoolhelper.data.profile.MAX_PROFILE_NAME_LENGTH
 import com.lbs.schoolhelper.data.profile.StudentProfile
 import com.lbs.schoolhelper.data.profile.StudentProfileRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
@@ -30,7 +31,9 @@ class FakeStudentProfileRepository(
         displayName: String,
         studentInfo: StudentInfo
     ): ProfileMutationResult<StudentProfile> {
-        val profile = StudentProfile(UUID.randomUUID().toString(), displayName.trim(), studentInfo)
+        val normalizedName = displayName.trim()
+        validate(normalizedName, studentInfo)?.let { return ProfileMutationResult.Failure(it) }
+        val profile = StudentProfile(UUID.randomUUID().toString(), normalizedName, studentInfo)
         mutableProfiles.value = profiles.value + profile
         mutableActiveProfile.value = profile
         return ProfileMutationResult.Success(profile)
@@ -39,8 +42,13 @@ class FakeStudentProfileRepository(
     override fun updateProfile(profile: StudentProfile): ProfileMutationResult<Unit> {
         val index = profiles.value.indexOfFirst { it.id == profile.id }
         if (index < 0) return ProfileMutationResult.Failure(ProfileMutationFailure.PROFILE_NOT_FOUND)
-        mutableProfiles.value = profiles.value.toMutableList().apply { this[index] = profile }
-        if (activeProfile.value?.id == profile.id) mutableActiveProfile.value = profile
+        val normalizedName = profile.displayName.trim()
+        validate(normalizedName, profile.studentInfo, profile.id)?.let {
+            return ProfileMutationResult.Failure(it)
+        }
+        val normalizedProfile = profile.copy(displayName = normalizedName)
+        mutableProfiles.value = profiles.value.toMutableList().apply { this[index] = normalizedProfile }
+        if (activeProfile.value?.id == profile.id) mutableActiveProfile.value = normalizedProfile
         return ProfileMutationResult.Success(Unit)
     }
 
@@ -65,5 +73,19 @@ class FakeStudentProfileRepository(
     override fun requiresInitialSetup(): Boolean {
         val active = activeProfile.value ?: return true
         return active.displayName.isBlank() || !active.studentInfo.isComplete()
+    }
+
+    private fun validate(
+        displayName: String,
+        studentInfo: StudentInfo,
+        excludingId: String? = null
+    ): ProfileMutationFailure? = when {
+        displayName.isBlank() -> ProfileMutationFailure.BLANK_NAME
+        displayName.length > MAX_PROFILE_NAME_LENGTH -> ProfileMutationFailure.NAME_TOO_LONG
+        profiles.value.any { it.id != excludingId && it.displayName.trim() == displayName } -> {
+            ProfileMutationFailure.DUPLICATE_NAME
+        }
+        !studentInfo.isComplete() -> ProfileMutationFailure.INCOMPLETE_STUDENT_INFO
+        else -> null
     }
 }

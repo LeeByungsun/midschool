@@ -4,10 +4,12 @@ import android.app.Application
 import android.os.Looper
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.model.SchoolInfo
+import com.lbs.schoolhelper.data.profile.StudentProfile
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.data.repository.TimerDisplayMode
 import com.lbs.schoolhelper.test.FakePreferencesRepository
 import com.lbs.schoolhelper.test.FakeSchoolRepository
+import com.lbs.schoolhelper.test.FakeStudentProfileRepository
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -39,20 +41,152 @@ class SettingsViewModelTest {
     )
 
     @Test
+    fun loadSettings_selectsActiveProfileForEditing() {
+        val first = profile("first", "민준", "1")
+        val second = profile("second", "서연", "2")
+
+        val viewModel = createViewModel(
+            profiles = FakeStudentProfileRepository(listOf(first, second), second.id)
+        )
+
+        assertEquals(second.id, viewModel.uiState.value.editingProfileId)
+        assertEquals("서연", viewModel.uiState.value.displayName)
+        assertEquals("2", viewModel.uiState.value.grade)
+        assertEquals(listOf(first, second), viewModel.uiState.value.profiles)
+    }
+
+    @Test
+    fun startAddingProfile_clearsOnlyProfileFormAndPreservesGlobalSettings() {
+        val preferences = FakePreferencesRepository(
+            timerDisplayMode = TimerDisplayMode.RING,
+            notificationEnabled = false,
+            vibrationEnabled = true
+        )
+        val viewModel = createViewModel(
+            preferences = preferences,
+            profiles = FakeStudentProfileRepository(listOf(profile("first", "민준", "1")), "first")
+        )
+
+        viewModel.startAddingProfile()
+
+        val state = viewModel.uiState.value
+        assertNull(state.editingProfileId)
+        assertEquals("", state.displayName)
+        assertEquals("", state.schoolQuery)
+        assertTrue(state.isRingMode)
+        assertFalse(state.notificationEnabled)
+        assertTrue(state.vibrationEnabled)
+    }
+
+    @Test
+    fun saveNewProfile_makesNewProfileActive() = runBlocking {
+        val first = profile("first", "민준", "1")
+        val profiles = FakeStudentProfileRepository(listOf(first), first.id)
+        val viewModel = createViewModel(profiles = profiles)
+
+        viewModel.startAddingProfile()
+        fillValidProfile(viewModel, "서연", "2")
+        viewModel.saveEditingProfile()
+
+        assertEquals("서연", profiles.activeProfile.value?.displayName)
+        assertEquals(profiles.activeProfile.value?.id, viewModel.uiState.value.editingProfileId)
+    }
+
+    @Test
+    fun saveExistingInactiveProfile_doesNotChangeActiveProfile() = runBlocking {
+        val first = profile("first", "민준", "1")
+        val second = profile("second", "서연", "2")
+        val profiles = FakeStudentProfileRepository(listOf(first, second), first.id)
+        val viewModel = createViewModel(profiles = profiles)
+
+        viewModel.selectEditingProfile(second.id)
+        viewModel.updateDisplayName("서연이")
+        viewModel.saveEditingProfile()
+
+        assertEquals(first.id, profiles.activeProfile.value?.id)
+        assertEquals("서연이", profiles.getProfile(second.id)?.displayName)
+    }
+
+    @Test
+    fun saveProfile_duplicateTrimmedNameShowsDuplicateError() = runBlocking {
+        val first = profile("first", "민준", "1")
+        val second = profile("second", "서연", "2")
+        val profiles = FakeStudentProfileRepository(listOf(first, second), first.id)
+        val viewModel = createViewModel(profiles = profiles)
+        val message = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(1_000L) { viewModel.messageEvent.first() }
+        }
+
+        viewModel.selectEditingProfile(second.id)
+        viewModel.updateDisplayName("  민준  ")
+        viewModel.saveEditingProfile()
+
+        assertEquals(R.string.setup_error_profile_name_duplicate, message.await())
+        assertEquals("서연", profiles.getProfile(second.id)?.displayName)
+    }
+
+    @Test
+    fun switchEditingProfile_withDirtyFormRequestsSaveDiscardOrCancel() = runBlocking {
+        val first = profile("first", "민준", "1")
+        val second = profile("second", "서연", "2")
+        val viewModel = createViewModel(
+            profiles = FakeStudentProfileRepository(listOf(first, second), first.id)
+        )
+        val prompt = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(1_000L) { viewModel.unsavedProfileChangesEvent.first() }
+        }
+
+        viewModel.updateDisplayName("수정 중")
+        viewModel.selectEditingProfile(second.id)
+
+        prompt.await()
+        assertEquals(first.id, viewModel.uiState.value.editingProfileId)
+        assertTrue(viewModel.uiState.value.hasUnsavedProfileChanges)
+
+        viewModel.resolveUnsavedProfileChanges(UnsavedProfileDecision.DISCARD)
+        assertEquals(second.id, viewModel.uiState.value.editingProfileId)
+        assertFalse(viewModel.uiState.value.hasUnsavedProfileChanges)
+    }
+
+    @Test
+    fun deleteProfile_whenOnlyOneDisablesDeletion() {
+        val only = profile("only", "민준", "1")
+        val viewModel = createViewModel(
+            profiles = FakeStudentProfileRepository(listOf(only), only.id)
+        )
+
+        assertFalse(viewModel.uiState.value.canDeleteProfile)
+    }
+
+    @Test
+    fun deleteActiveProfile_selectsRepositoryFallbackAndRefreshesForm() = runBlocking {
+        val first = profile("first", "민준", "1")
+        val second = profile("second", "서연", "2")
+        val profiles = FakeStudentProfileRepository(listOf(first, second), first.id)
+        val viewModel = createViewModel(profiles = profiles)
+
+        viewModel.deleteEditingProfile()
+
+        assertEquals(second.id, profiles.activeProfile.value?.id)
+        assertEquals(second.id, viewModel.uiState.value.editingProfileId)
+        assertEquals("서연", viewModel.uiState.value.displayName)
+    }
+
+    @Test
     fun `collection choice applies without saving invalid school form`() {
         val repository = FakePreferencesRepository()
         val changes = mutableListOf<Pair<Boolean, Boolean>>()
         val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
             override fun setCollection(analytics: Boolean, diagnostics: Boolean) { changes += analytics to diagnostics }
         }
-        val vm = SettingsViewModel(application, repository, FakeSchoolRepository(), telemetry)
+        val vm = createViewModel(repository, FakeSchoolRepository(), telemetry = telemetry)
         vm.updateAnalyticsEnabled(true)
         vm.updateDiagnosticsEnabled(true)
         vm.updateAnalyticsEnabled(false)
         assertEquals(listOf(true to false, true to true, false to true), changes)
         assertFalse(repository.isAnalyticsEnabled())
         assertTrue(repository.isDiagnosticsEnabled())
-        val restored = SettingsViewModel(application, repository, FakeSchoolRepository(), telemetry)
+        val restored = createViewModel(repository, FakeSchoolRepository(), telemetry = telemetry)
         assertFalse(restored.uiState.value.analyticsEnabled)
         assertTrue(restored.uiState.value.diagnosticsEnabled)
     }
@@ -64,12 +198,12 @@ class SettingsViewModelTest {
         val changes = mutableListOf<StudentInfo>()
         val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
             override fun schoolSaved(previous: StudentInfo, current: StudentInfo) {
-                assertEquals("1234567", prefs.getStudentInfo().schoolCode)
+                assertEquals("7654321", prefs.getStudentInfo().schoolCode)
                 assertEquals("1234567", current.schoolCode)
                 changes += previous
             }
         }
-        val vm = SettingsViewModel(application, prefs, FakeSchoolRepository(), telemetry)
+        val vm = createViewModel(prefs, FakeSchoolRepository(), telemetry = telemetry)
         vm.selectSchool(selectedSchool)
         vm.saveSettings()
         assertEquals(listOf(old), changes)
@@ -85,7 +219,7 @@ class SettingsViewModelTest {
             )
         )
 
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
         val state = viewModel.uiState.value
 
         assertEquals(selectedSchool.schoolName, state.schoolQuery)
@@ -109,7 +243,7 @@ class SettingsViewModelTest {
             vibrationEnabled = true
         )
 
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
         val state = viewModel.uiState.value
 
         assertEquals(selectedSchool.schoolName, state.schoolQuery)
@@ -132,7 +266,7 @@ class SettingsViewModelTest {
             )
         )
 
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
         val state = viewModel.uiState.value
 
         assertEquals(selectedSchool.schoolName, state.schoolQuery)
@@ -153,7 +287,7 @@ class SettingsViewModelTest {
                 schoolKind = selectedSchool.schoolKind
             )
         )
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
 
         viewModel.updateSchoolQuery("  ${selectedSchool.schoolName}  ")
 
@@ -173,7 +307,7 @@ class SettingsViewModelTest {
                 schoolKind = selectedSchool.schoolKind
             )
         )
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
 
         viewModel.updateSchoolQuery("다른 학교")
 
@@ -187,7 +321,7 @@ class SettingsViewModelTest {
     @Test
     fun searchSchools_whenQueryTooShort_showsValidationAndSkipsRepository() {
         val schoolRepository = FakeSchoolRepository()
-        val viewModel = SettingsViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery("미")
         viewModel.searchSchools()
@@ -205,7 +339,7 @@ class SettingsViewModelTest {
         val schoolRepository = FakeSchoolRepository(
             schoolSearchResult = Result.success(listOf(selectedSchool))
         )
-        val viewModel = SettingsViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery("미사중")
         viewModel.searchSchools()
@@ -230,7 +364,7 @@ class SettingsViewModelTest {
             searchDelayMillisByQuery["구미"] = 200L
             searchDelayMillisByQuery["미사"] = 10L
         }
-        val viewModel = SettingsViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery("구미")
         viewModel.searchSchools()
@@ -255,7 +389,7 @@ class SettingsViewModelTest {
         val schoolRepository = FakeSchoolRepository(
             schoolSearchResult = Result.success(listOf(selectedSchool, alternativeSchool))
         )
-        val viewModel = SettingsViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery("미사")
         viewModel.searchSchools()
@@ -292,7 +426,7 @@ class SettingsViewModelTest {
         val schoolRepository = FakeSchoolRepository(
             schoolSearchResult = Result.success(emptyList())
         )
-        val viewModel = SettingsViewModel(application, repository, schoolRepository)
+        val viewModel = createViewModel(repository, schoolRepository)
 
         viewModel.updateSchoolQuery("없는 학교")
         viewModel.searchSchools()
@@ -308,7 +442,7 @@ class SettingsViewModelTest {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(grade = "1", classroom = "2")
         )
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
@@ -333,7 +467,7 @@ class SettingsViewModelTest {
             notificationEnabled = true,
             vibrationEnabled = true
         )
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
@@ -359,7 +493,9 @@ class SettingsViewModelTest {
             notificationEnabled = true,
             vibrationEnabled = true
         )
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val original = StudentProfile("profile-1", "민준", repository.getStudentInfo())
+        val profiles = FakeStudentProfileRepository(listOf(original), original.id)
+        val viewModel = createViewModel(repository, FakeSchoolRepository(), profiles)
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
@@ -377,18 +513,17 @@ class SettingsViewModelTest {
         assertEquals(R.string.settings_saved, messageDeferred.await())
         closeDeferred.await()
         assertEquals(
-            listOf(
-                StudentInfo(
-                    grade = "3",
-                    classroom = "5",
-                    schoolName = selectedSchool.schoolName,
-                    officeCode = selectedSchool.officeCode,
-                    schoolCode = selectedSchool.schoolCode,
-                    schoolKind = selectedSchool.schoolKind
-                )
+            StudentInfo(
+                grade = "3",
+                classroom = "5",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
             ),
-            repository.savedStudentInfoCalls
+            profiles.activeProfile.value?.studentInfo
         )
+        assertTrue(repository.savedStudentInfoCalls.isEmpty())
         assertEquals(listOf(TimerDisplayMode.RING), repository.savedTimerDisplayModes)
         assertEquals(listOf(false), repository.savedNotificationEnabledValues)
         assertEquals(listOf(false), repository.savedVibrationEnabledValues)
@@ -406,7 +541,7 @@ class SettingsViewModelTest {
                 schoolKind = selectedSchool.schoolKind
             )
         )
-        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository, FakeSchoolRepository())
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
@@ -417,5 +552,52 @@ class SettingsViewModelTest {
         assertEquals(R.string.setup_error_school_required, messageDeferred.await())
         assertEquals(selectedSchool, viewModel.uiState.value.selectedSchool)
         assertTrue(repository.savedStudentInfoCalls.isEmpty())
+    }
+
+    private fun createViewModel(
+        preferences: FakePreferencesRepository = FakePreferencesRepository(),
+        schoolRepository: FakeSchoolRepository = FakeSchoolRepository(),
+        profiles: FakeStudentProfileRepository? = null,
+        telemetry: com.lbs.schoolhelper.telemetry.AppTelemetry = com.lbs.schoolhelper.telemetry.NoOpTelemetry
+    ): SettingsViewModel {
+        val resolvedProfiles = profiles ?: preferences.getStudentInfo().let { student ->
+            val initial = if (
+                student.schoolName.isNotBlank() || student.grade.isNotBlank() || student.classroom.isNotBlank()
+            ) {
+                listOf(StudentProfile("profile-1", "민준", student))
+            } else {
+                emptyList()
+            }
+            FakeStudentProfileRepository(initial, initial.firstOrNull()?.id)
+        }
+        return SettingsViewModel(
+            application = application,
+            preferencesRepository = preferences,
+            schoolRepository = schoolRepository,
+            studentProfileRepository = resolvedProfiles,
+            telemetry = telemetry
+        )
+    }
+
+    private fun profile(id: String, name: String, grade: String): StudentProfile {
+        return StudentProfile(
+            id = id,
+            displayName = name,
+            studentInfo = StudentInfo(
+                grade = grade,
+                classroom = "3",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+    }
+
+    private fun fillValidProfile(viewModel: SettingsViewModel, name: String, grade: String) {
+        viewModel.updateDisplayName(name)
+        viewModel.selectSchool(selectedSchool)
+        viewModel.updateGrade(grade)
+        viewModel.updateClassroom("3")
     }
 }

@@ -9,10 +9,12 @@ import com.lbs.schoolhelper.data.model.NoticeFeed
 import com.lbs.schoolhelper.data.model.NoticePreview
 import com.lbs.schoolhelper.data.model.SchoolEvent
 import com.lbs.schoolhelper.data.model.SchoolInfo
+import com.lbs.schoolhelper.data.profile.StudentProfile
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.test.FakePreferencesRepository
 import com.lbs.schoolhelper.test.FakeSchoolRepository
+import com.lbs.schoolhelper.test.FakeStudentProfileRepository
 import com.lbs.schoolhelper.ui.settings.SettingsViewModel
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.delay
@@ -61,7 +63,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun home_refreshesHeaderAfterSettingsSave() = runBlocking {
+    fun settingsSave_updatesStudentProfileWithoutWritingLegacyPreferences() = runBlocking {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val initialSchool = SchoolInfo(
             officeCode = "J10",
@@ -97,7 +99,14 @@ class HomeViewModelTest {
             homeViewModel.uiState.value.classSummary
         )
 
-        val settingsViewModel = SettingsViewModel(application, repository, schoolRepository)
+        val profile = StudentProfile("profile-1", "민준", repository.currentStudentInfo)
+        val profiles = FakeStudentProfileRepository(listOf(profile), profile.id)
+        val settingsViewModel = SettingsViewModel(
+            application,
+            repository,
+            schoolRepository,
+            profiles
+        )
         settingsViewModel.selectSchool(updatedSchool)
         settingsViewModel.updateGrade("2")
         settingsViewModel.updateClassroom("5")
@@ -113,13 +122,9 @@ class HomeViewModelTest {
         messageDeferred.await()
         closeDeferred.await()
 
-        homeViewModel.refreshHeader()
-        assertEquals("2", repository.currentStudentInfo.grade)
-        assertEquals("구미고등학교", homeViewModel.uiState.value.schoolName)
-        assertEquals(
-            application.getString(R.string.home_student_info_format, "2", "5"),
-            homeViewModel.uiState.value.classSummary
-        )
+        assertEquals("1", repository.currentStudentInfo.grade)
+        assertEquals("2", profiles.activeProfile.value?.studentInfo?.grade)
+        assertEquals("구미고등학교", profiles.activeProfile.value?.studentInfo?.schoolName)
     }
 
     @Test
