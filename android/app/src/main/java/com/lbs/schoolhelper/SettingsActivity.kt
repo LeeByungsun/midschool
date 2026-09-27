@@ -3,6 +3,7 @@ package com.lbs.schoolhelper
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -19,6 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
 import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
+import com.lbs.schoolhelper.util.requestVisibleAboveKeyboard
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
@@ -36,6 +38,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.root.applySystemBarPadding()
         binding.settingsVersionText.text = AppVersionLabel.format(BuildConfig.VERSION_NAME)
 
+        bindStudentInfoInputs()
         binding.backButton.setOnClickListener { finish() }
         binding.searchSchoolButton.setOnClickListener {
             viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
@@ -75,6 +78,72 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        persistStudentInfoDraftFromInputs()
+        super.onPause()
+    }
+
+    private fun bindStudentInfoInputs() {
+        binding.settingsSchoolQueryInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
+                viewModel.searchSchools()
+                true
+            } else {
+                false
+            }
+        }
+        binding.settingsGradeInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                binding.settingsClassInput.requestFocus()
+                true
+            } else {
+                false
+            }
+        }
+        binding.settingsClassInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                binding.settingsClassInput.clearFocus()
+                true
+            } else {
+                false
+            }
+        }
+
+        binding.settingsSchoolQueryInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.requestVisibleAboveKeyboard()
+            } else {
+                viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
+                viewModel.saveStudentInfoDraft()
+            }
+        }
+        binding.settingsGradeInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.requestVisibleAboveKeyboard()
+            } else {
+                viewModel.updateGrade(binding.settingsGradeInput.text.toString())
+                viewModel.saveStudentInfoDraft()
+            }
+        }
+        binding.settingsClassInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.requestVisibleAboveKeyboard()
+            } else {
+                viewModel.updateClassroom(binding.settingsClassInput.text.toString())
+                viewModel.saveStudentInfoDraft()
+            }
+        }
+    }
+
+    private fun persistStudentInfoDraftFromInputs() {
+        if (!::binding.isInitialized) return
+        viewModel.updateSchoolQuery(binding.settingsSchoolQueryInput.text.toString())
+        viewModel.updateGrade(binding.settingsGradeInput.text.toString())
+        viewModel.updateClassroom(binding.settingsClassInput.text.toString())
+        viewModel.saveStudentInfoDraft()
     }
 
     private fun renderState(state: SettingsUiState) {
@@ -117,7 +186,10 @@ class SettingsActivity : AppCompatActivity() {
                 text = formatSchoolOption(school)
                 isChecked = selectedSchool?.officeCode == school.officeCode &&
                     selectedSchool.schoolCode == school.schoolCode
-                setOnClickListener { viewModel.selectSchool(school) }
+                setOnClickListener {
+                    viewModel.selectSchool(school)
+                    viewModel.saveStudentInfoDraft()
+                }
             }
             binding.schoolResultsGroup.addView(radioButton)
         }

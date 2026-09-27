@@ -22,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
 import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
+import com.lbs.schoolhelper.util.requestVisibleAboveKeyboard
 
 @AndroidEntryPoint
 class SetupActivity : AppCompatActivity() {
@@ -41,7 +42,13 @@ class SetupActivity : AppCompatActivity() {
         bindState()
     }
 
+    override fun onPause() {
+        persistStudentInfoDraftFromInputs()
+        super.onPause()
+    }
+
     private fun bindClicks() {
+        bindStudentInfoFocusChanges()
         binding.schoolQueryInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 searchSchoolsFromInput()
@@ -86,6 +93,41 @@ class SetupActivity : AppCompatActivity() {
                 viewModel.completeTelemetryConsentStep()
             }
         }
+    }
+
+    private fun bindStudentInfoFocusChanges() {
+        binding.schoolQueryInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.requestVisibleAboveKeyboard()
+            } else {
+                viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
+                viewModel.saveStudentInfoDraft()
+            }
+        }
+        binding.gradeInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.requestVisibleAboveKeyboard()
+            } else {
+                viewModel.updateGrade(binding.gradeInput.text.toString())
+                viewModel.saveStudentInfoDraft()
+            }
+        }
+        binding.classInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.requestVisibleAboveKeyboard()
+            } else {
+                viewModel.updateClassroom(binding.classInput.text.toString())
+                viewModel.saveStudentInfoDraft()
+            }
+        }
+    }
+
+    private fun persistStudentInfoDraftFromInputs() {
+        if (!::binding.isInitialized) return
+        viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
+        viewModel.updateGrade(binding.gradeInput.text.toString())
+        viewModel.updateClassroom(binding.classInput.text.toString())
+        viewModel.saveStudentInfoDraft()
     }
 
     private fun searchSchoolsFromInput() {
@@ -172,7 +214,10 @@ class SetupActivity : AppCompatActivity() {
                 text = formatSchoolOption(school)
                 isChecked = selectedSchool?.officeCode == school.officeCode &&
                     selectedSchool.schoolCode == school.schoolCode
-                setOnClickListener { viewModel.selectSchool(school) }
+                setOnClickListener {
+                    viewModel.selectSchool(school)
+                    viewModel.saveStudentInfoDraft()
+                }
             }
             binding.schoolResultsGroup.addView(radioButton)
         }

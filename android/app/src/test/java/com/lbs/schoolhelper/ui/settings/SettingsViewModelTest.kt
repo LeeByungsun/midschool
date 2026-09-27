@@ -58,6 +58,50 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun saveStudentInfoDraft_persistsEditedClassroomWithoutClosingSettings() {
+        val original = StudentInfo(
+            grade = "1",
+            classroom = "2",
+            schoolName = selectedSchool.schoolName,
+            officeCode = selectedSchool.officeCode,
+            schoolCode = selectedSchool.schoolCode,
+            schoolKind = selectedSchool.schoolKind
+        )
+        val repository = FakePreferencesRepository(studentInfo = original)
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+
+        viewModel.updateGrade(" 2 ")
+        viewModel.updateClassroom(" 7 ")
+        viewModel.saveStudentInfoDraft()
+
+        assertEquals(
+            original.copy(grade = "2", classroom = "7"),
+            repository.currentStudentInfo
+        )
+        assertEquals(1, repository.savedStudentInfoCalls.size)
+    }
+
+    @Test
+    fun saveStudentInfoDraft_persistsNewSchoolWithoutConfirmingSettings() {
+        val original = StudentInfo(
+            grade = "1",
+            classroom = "2",
+            schoolName = "이전중학교",
+            officeCode = "B10",
+            schoolCode = "7654321",
+            schoolKind = "중학교"
+        )
+        val repository = FakePreferencesRepository(studentInfo = original)
+        val viewModel = SettingsViewModel(application, repository, FakeSchoolRepository())
+
+        viewModel.selectSchool(selectedSchool)
+        viewModel.saveStudentInfoDraft()
+
+        assertEquals(selectedSchool.schoolName, repository.currentStudentInfo.schoolName)
+        assertEquals(selectedSchool.schoolCode, repository.currentStudentInfo.schoolCode)
+    }
+
+    @Test
     fun `school change reports old identity after new identity is saved`() = runBlocking {
         val old = StudentInfo("2", "5", "이전학교", "B10", "7654321", "중학교")
         val prefs = FakePreferencesRepository(studentInfo = old)

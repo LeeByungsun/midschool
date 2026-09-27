@@ -1,7 +1,8 @@
 package com.lbs.schoolhelper.util
 
-import android.graphics.Color
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.Rect
 import android.view.View
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
@@ -64,3 +65,17 @@ fun AppCompatActivity.enableSchoolEdgeToEdge(
 private fun AppCompatActivity.isNightMode(): Boolean =
     resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
         Configuration.UI_MODE_NIGHT_YES
+
+/** Keeps a focused form field visible after the software keyboard changes the viewport. */
+fun View.requestVisibleAboveKeyboard() {
+    postDelayed(
+        {
+            val extraBottom = (16 * resources.displayMetrics.density).toInt()
+            requestRectangleOnScreen(
+                Rect(0, 0, width, height + extraBottom),
+                true
+            )
+        },
+        180L
+    )
+}

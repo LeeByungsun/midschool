@@ -176,6 +176,80 @@ class SetupViewModelTest {
     }
 
     @Test
+    fun saveStudentInfoDraft_persistsGradeAndClassroomWithoutCompletingSetup() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+
+        viewModel.updateGrade(" 2 ")
+        viewModel.updateClassroom(" 5 ")
+        viewModel.saveStudentInfoDraft()
+
+        assertEquals(
+            StudentInfo(
+                grade = "2",
+                classroom = "5",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            ),
+            repository.currentStudentInfo
+        )
+        assertFalse(viewModel.uiState.value.isTelemetryConsentStepVisible)
+    }
+
+    @Test
+    fun saveStudentInfoDraft_keepsPersistedSchoolUntilAnotherSearchResultIsSelected() {
+        val original = StudentInfo(
+            grade = "1",
+            classroom = "2",
+            schoolName = selectedSchool.schoolName,
+            officeCode = selectedSchool.officeCode,
+            schoolCode = selectedSchool.schoolCode,
+            schoolKind = selectedSchool.schoolKind
+        )
+        val repository = FakePreferencesRepository(studentInfo = original)
+        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+
+        viewModel.updateSchoolQuery("아직 선택하지 않은 학교")
+        viewModel.updateGrade("3")
+        viewModel.saveStudentInfoDraft()
+
+        assertEquals(original.copy(grade = "3"), repository.currentStudentInfo)
+    }
+
+    @Test
+    fun saveStudentInfoDraft_persistsSelectedSchoolWithoutCompletingSetup() {
+        val repository = FakePreferencesRepository(
+            studentInfo = StudentInfo(grade = "2", classroom = "5")
+        )
+        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+
+        viewModel.selectSchool(selectedSchool)
+        viewModel.saveStudentInfoDraft()
+
+        assertEquals(
+            StudentInfo(
+                grade = "2",
+                classroom = "5",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            ),
+            repository.currentStudentInfo
+        )
+        assertFalse(viewModel.uiState.value.isTelemetryConsentStepVisible)
+    }
+
+    @Test
     fun searchSchools_whenQueryTooShort_showsValidationAndSkipsRepository() {
         val schoolRepository = FakeSchoolRepository()
         val viewModel = SetupViewModel(application, FakePreferencesRepository(), schoolRepository)

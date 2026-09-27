@@ -10,6 +10,7 @@ import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.telemetry.AppTelemetry
 import com.lbs.schoolhelper.telemetry.NoOpTelemetry
+import com.lbs.schoolhelper.ui.common.mergeInputDraft
 import com.lbs.schoolhelper.widget.MisSchoolWidgetProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -161,6 +162,25 @@ class SetupViewModel @Inject constructor(
 
     fun updateClassroom(classroom: String) {
         _uiState.update { it.copy(classroom = classroom) }
+    }
+
+    /** Saves the editable form without advancing setup or showing validation messages. */
+    fun saveStudentInfoDraft() {
+        val state = _uiState.value
+        val previousStudentInfo = preferencesRepository.getStudentInfo()
+        val draft = previousStudentInfo.mergeInputDraft(
+            schoolQuery = state.schoolQuery,
+            selectedSchool = state.selectedSchool,
+            grade = state.grade,
+            classroom = state.classroom
+        )
+        if (draft == previousStudentInfo) return
+
+        preferencesRepository.saveStudentInfo(draft)
+        if (draft.isComplete()) {
+            telemetry.schoolSaved(previousStudentInfo)
+            MisSchoolWidgetProvider.requestAllWidgetUpdates(appContext)
+        }
     }
 
     fun updateAnalyticsEnabled(enabled: Boolean) {

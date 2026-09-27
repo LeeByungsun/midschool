@@ -66,7 +66,11 @@
             android:layout_marginTop="8dp"
             android:backgroundTint="@color/brand_blue"
             android:hint="@string/setup_school_hint"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
             android:paddingVertical="14dp"
+            android:singleLine="true"
             android:textColor="@color/text_primary"
             android:textColorHint="@color/text_secondary" />
 
@@ -155,6 +159,7 @@
             android:layout_marginTop="8dp"
             android:backgroundTint="@color/brand_blue"
             android:hint="@string/setup_grade_hint"
+            android:imeOptions="actionNext"
             android:inputType="number"
             android:maxLength="1"
             android:paddingVertical="14dp"
@@ -177,6 +182,7 @@
             android:layout_marginTop="8dp"
             android:backgroundTint="@color/brand_blue"
             android:hint="@string/setup_class_hint"
+            android:imeOptions="actionDone"
             android:inputType="number"
             android:maxLength="2"
             android:paddingVertical="14dp"
