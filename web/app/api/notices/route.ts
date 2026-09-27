@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchNeisJson, NeisClientError } from "@/lib/neis/client";
 import { buildNoticeHomepageCandidates } from "@/lib/notices/candidates";
 import {
-  isDgeSchoolHomepage,
   isRecoverableNoticeError,
 } from "@/lib/notices/errors";
 import { createNoticeErrorResponse, createNoticeSuccessResponse } from "@/lib/notices/response";
@@ -90,10 +89,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         createNoticeErrorResponse({
           message: recoverableMessage,
-          status: isDgeSchoolHomepage(resolvedHomepageUrl) ? "unsupported" : "unavailable",
-          errorCode: isDgeSchoolHomepage(resolvedHomepageUrl)
-            ? "UNSUPPORTED_PROVIDER"
-            : "NOTICE_SOURCE_UNAVAILABLE",
+          status: "unavailable",
+          errorCode: "NOTICE_SOURCE_UNAVAILABLE",
         }),
         { status: 200 },
       );
@@ -116,10 +113,6 @@ function buildRecoverableNoticeMessage(params: {
   error: unknown;
   homepageUrl: string;
 }) {
-  if (isDgeSchoolHomepage(params.homepageUrl)) {
-    return "대구교육청 학교 홈페이지는 가정통신문 조회를 아직 지원하지 않습니다.";
-  }
-
   if (params.error instanceof Error) {
     return `${params.error.message}${params.homepageUrl ? ` (homepage: ${params.homepageUrl})` : ""}`;
   }

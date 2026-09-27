@@ -1,6 +1,7 @@
 /** 학교 홈페이지 유형별 가정통신문 수집 전략 이름을 정의합니다. */
 
 export type NoticeProvider =
+  | "dge-board"
   | "sen-preview"
   | "goehs-board"
   | "gne-board"
@@ -15,6 +16,10 @@ export type NoticeProvider =
 
 export function detectNoticeProvider(homepageUrl: string, homepageHtml: string): NoticeProvider | null {
   const hostname = new URL(homepageUrl).hostname;
+
+  if (hostname === "dge.ms.kr" || hostname.endsWith(".dge.ms.kr")) {
+    return "dge-board";
+  }
 
   if (hostname.endsWith("busanedu.net") || homepageHtml.includes("school.busanedu.net")) {
     return "busan-school";

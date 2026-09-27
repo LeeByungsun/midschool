@@ -109,3 +109,7 @@ web/
 - Web 실행/구조: `../web/README.md`
 
 대표 검증 명령은 각 플랫폼 README를 우선합니다. 코드 구조가 바뀌면 이 문서와 해당 플랫폼 README를 함께 갱신합니다.
+
+### 대구 가정통신문 수집
+
+`web/lib/notices/provider.ts`의 `dge-board` 판별 → `fetch.ts`의 공개 게시판 조회 → `ntt-board.ts` 공통 파서. `scripts/test-dge-notices.mjs`와 `scripts/fixtures/dge-suseong-notices.html`이 수성중학교 구조의 회귀 테스트를 제공한다.
