@@ -68,7 +68,7 @@ class SettingsViewModel @Inject constructor(
     private val _messageEvent = MutableSharedFlow<Int>()
     val messageEvent = _messageEvent.asSharedFlow()
 
-    private val _closeEvent = MutableSharedFlow<Unit>()
+    private val _closeEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val closeEvent = _closeEvent.asSharedFlow()
 
     private val _unsavedProfileChangesEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)

@@ -149,6 +149,21 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun requestClose_withoutProfileChanges_emitsCloseEvent() = runBlocking {
+        val original = profile("profile-1", "민준", "1")
+        val viewModel = createViewModel(
+            profiles = FakeStudentProfileRepository(listOf(original), original.id)
+        )
+        val closeDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(1_000L) { viewModel.closeEvent.first() }
+        }
+
+        viewModel.requestClose()
+
+        closeDeferred.await()
+    }
+
+    @Test
     fun deleteProfile_whenOnlyOneDisablesDeletion() {
         val only = profile("only", "민준", "1")
         val viewModel = createViewModel(
