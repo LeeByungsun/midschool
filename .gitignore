@@ -29,6 +29,7 @@ ios/system-evidence.local.json
 ios/profile-backups.local/
 
 # Local editor/agent state
+.worktrees/
 .obsidian/
 .antigravitycli/
 *.xcuserdata/
