@@ -273,9 +273,6 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                 try {
                     val studentInfo = preferencesRepository.getStudentInfo()
                     val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
-                    val grade = studentInfo.grade
-                    val classroom = studentInfo.classroom
-
                     if (!studentInfo.isComplete()) {
                         val setupViews = createBaseViews()
                         setupViews.setTextViewText(
@@ -314,7 +311,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                         val jobs = mutableListOf(
                             launch {
                                 try {
-                                    schoolRepository.observeTimetable(grade, classroom, todayStr).collect { result ->
+                                    schoolRepository.observeTimetable(studentInfo, todayStr).collect { result ->
                                         timetableTextToday = formatTimetableText(result = result, context = context)
                                         publishTimetableTexts()
                                     }
@@ -329,7 +326,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                         if (widgetSettings.showTomorrowTimetable) {
                             jobs += launch {
                                 try {
-                                    schoolRepository.observeTimetable(grade, classroom, tomorrowStr).collect { result ->
+                                    schoolRepository.observeTimetable(studentInfo, tomorrowStr).collect { result ->
                                         timetableTextTomorrow = formatTimetableText(result = result, context = context)
                                         publishTimetableTexts()
                                     }

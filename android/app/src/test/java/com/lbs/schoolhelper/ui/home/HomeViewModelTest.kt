@@ -191,24 +191,23 @@ class HomeViewModelTest {
         val schoolRepository = object : SchoolRepository {
             override suspend fun searchSchools(query: String) = Result.success(emptyList<SchoolInfo>())
 
-            override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
+            override suspend fun getMeals(student: StudentInfo, date: String?): Result<List<MealInfo>> {
                 delay(200)
                 return Result.success(emptyList())
             }
 
-            override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
+            override suspend fun getSchedules(student: StudentInfo, date: String?): Result<List<SchoolEvent>> {
                 delay(200)
                 return Result.success(emptyList())
             }
 
-            override suspend fun getNotices(limit: Int): Result<NoticeFeed> {
+            override suspend fun getNotices(student: StudentInfo, limit: Int): Result<NoticeFeed> {
                 delay(200)
                 return Result.success(NoticeFeed())
             }
 
             override suspend fun getTimetable(
-                grade: String,
-                classroom: String,
+                student: StudentInfo,
                 date: String?
             ) = Result.success(emptyList<com.lbs.schoolhelper.data.model.TimetableItem>())
         }

@@ -78,8 +78,7 @@ class TimetableViewModel @Inject constructor(
 
         loadJob = viewModelScope.launch {
             schoolRepository.observeTimetable(
-                grade = grade,
-                classroom = classroom,
+                student = studentInfo,
                 date = currentDate.format(DateTimeFormatter.BASIC_ISO_DATE)
             ).collect { result ->
                 val items = result.getOrDefault(emptyList())

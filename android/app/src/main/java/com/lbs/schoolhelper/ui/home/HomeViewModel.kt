@@ -152,14 +152,14 @@ class HomeViewModel private constructor(
             }
 
             launch {
-                val noticesResult = schoolRepository.getNotices(limit = 3)
+                val noticesResult = schoolRepository.getNotices(studentInfo, limit = 3)
                 _uiState.update { current ->
                     current.copy(notices = buildNoticeCardState(noticesResult))
                 }
             }
 
             launch {
-                schoolRepository.observeMeals(today).collect { result ->
+                schoolRepository.observeMeals(studentInfo, today).collect { result ->
                     updateHomeSections(
                         mealUi = buildMealUi(
                             meal = result.getOrNull()?.firstOrNull(),
@@ -170,7 +170,7 @@ class HomeViewModel private constructor(
             }
 
             launch {
-                schoolRepository.observeSchedules(today.take(6)).collect { result ->
+                schoolRepository.observeSchedules(studentInfo, today.take(6)).collect { result ->
                     updateHomeSections(
                         scheduleUi = buildScheduleUi(
                             events = result.getOrNull().orEmpty(),

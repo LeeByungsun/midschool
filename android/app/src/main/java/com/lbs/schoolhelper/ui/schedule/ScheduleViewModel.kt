@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.model.SchoolEvent
+import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.util.isVisibleSchedule
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
     application: Application,
-    private val schoolRepository: SchoolRepository
+    private val schoolRepository: SchoolRepository,
+    private val preferencesRepository: PreferencesRepository
 ) : AndroidViewModel(application) {
 
     private val appContext = application.applicationContext
@@ -60,7 +62,8 @@ class ScheduleViewModel @Inject constructor(
 
         loadJob = viewModelScope.launch {
             val monthKey = currentMonth.format(DateTimeFormatter.ofPattern("yyyyMM"))
-            schoolRepository.observeSchedules(monthKey).collect { result ->
+            val studentInfo = preferencesRepository.getStudentInfo()
+            schoolRepository.observeSchedules(studentInfo, monthKey).collect { result ->
                 val schedules = result.getOrDefault(emptyList())
                     .filter { it.isVisibleSchedule() }
                     .sortedBy { it.date }

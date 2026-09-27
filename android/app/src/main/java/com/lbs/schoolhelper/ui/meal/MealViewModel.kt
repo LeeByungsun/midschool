@@ -53,7 +53,8 @@ class MealViewModel @Inject constructor(
             )
         }
 
-        if (!preferencesRepository.getStudentInfo().hasSchoolSelection()) {
+        val studentInfo = preferencesRepository.getStudentInfo()
+        if (!studentInfo.hasSchoolSelection()) {
             _uiState.update {
                 it.copy(
                     statusText = appContext.getString(R.string.meal_missing_student_info),
@@ -68,7 +69,7 @@ class MealViewModel @Inject constructor(
             weekdays.forEachIndexed { index, day ->
                 launch {
                     val date = day.format(DateTimeFormatter.BASIC_ISO_DATE)
-                    schoolRepository.observeMeals(date).collect { result ->
+                    schoolRepository.observeMeals(studentInfo, date).collect { result ->
                         dayStates[index] = buildDayUiModel(day = day, result = result)
                         publishWeekMealState(dayStates)
                     }

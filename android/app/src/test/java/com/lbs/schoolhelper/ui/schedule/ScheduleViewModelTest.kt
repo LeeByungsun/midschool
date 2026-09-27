@@ -3,6 +3,8 @@ package com.lbs.schoolhelper.ui.schedule
 import com.lbs.schoolhelper.MainActivity
 import com.lbs.schoolhelper.SchoolHelperApplication
 import com.lbs.schoolhelper.data.model.SchoolEvent
+import com.lbs.schoolhelper.data.repository.StudentInfo
+import com.lbs.schoolhelper.test.FakePreferencesRepository
 import com.lbs.schoolhelper.test.FakeSchoolRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -51,7 +53,13 @@ class ScheduleViewModelTest {
             scheduleFlowEmissionDelayMillisByDate[monthKey] = 200L
         }
 
-        val viewModel = ScheduleViewModel(application, schoolRepository)
+        val viewModel = ScheduleViewModel(
+            application,
+            schoolRepository,
+            FakePreferencesRepository(
+                studentInfo = StudentInfo("2", "3", "테스트중학교", "B10", "7010000", "중학교")
+            )
+        )
         val cachedState = withTimeout(1_000L) {
             viewModel.uiState.first { it.scheduleText.contains("캐시 행사") }
         }

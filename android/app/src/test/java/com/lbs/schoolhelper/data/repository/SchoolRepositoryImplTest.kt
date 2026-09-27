@@ -60,6 +60,108 @@ class SchoolRepositoryImplTest {
     private val configuredNeisApiKey = "configured-test-key"
 
     @Test
+    fun getMeals_usesThePassedStudentInsteadOfCurrentPreferences() = runBlocking {
+        val requestStudent = StudentInfo("1", "2", "요청중학교", "B10", "7654321", "중학교")
+        val api = FakeNeisApiService()
+        val repository = SchoolRepositoryImpl(
+            api,
+            FakePreferencesRepository(telemetrySchool),
+            FakeNoticeApiService(),
+            neisApiKey = configuredNeisApiKey
+        )
+
+        repository.getMeals(requestStudent, "20260914").getOrThrow()
+
+        assertEquals(requestStudent.officeCode, api.lastMealOfficeCode)
+        assertEquals(requestStudent.schoolCode, api.lastMealSchoolCode)
+    }
+
+    @Test
+    fun getSchedules_usesThePassedStudentForCacheAndNetwork() = runBlocking {
+        val requestStudent = StudentInfo("1", "2", "요청중학교", "B10", "7654321", "중학교")
+        val api = FakeNeisApiService()
+        val preferences = FakePreferencesRepository(telemetrySchool)
+        val repository = SchoolRepositoryImpl(
+            api,
+            preferences,
+            FakeNoticeApiService(),
+            neisApiKey = configuredNeisApiKey
+        )
+
+        repository.getSchedules(requestStudent, "202609").getOrThrow()
+
+        assertEquals(requestStudent.officeCode, api.lastScheduleOfficeCode)
+        assertEquals(requestStudent.schoolCode, api.lastScheduleSchoolCode)
+        assertEquals(requestStudent.officeCode, preferences.savedScheduleCacheArgs?.officeCode)
+        assertEquals(requestStudent.schoolCode, preferences.savedScheduleCacheArgs?.schoolCode)
+    }
+
+    @Test
+    fun getNotices_usesThePassedSchoolCode() = runBlocking {
+        val requestStudent = StudentInfo("1", "2", "요청중학교", "B10", "7654321", "중학교")
+        val notices = FakeNoticeApiService()
+        val repository = SchoolRepositoryImpl(
+            FakeNeisApiService(),
+            FakePreferencesRepository(telemetrySchool),
+            notices,
+            neisApiKey = configuredNeisApiKey
+        )
+
+        repository.getNotices(requestStudent, 3).getOrThrow()
+
+        assertEquals(requestStudent.officeCode, notices.lastOfficeCode)
+        assertEquals(requestStudent.schoolCode, notices.lastSchoolCode)
+    }
+
+    @Test
+    fun getTimetable_usesGradeAndClassroomFromPassedStudent() = runBlocking {
+        val requestStudent = StudentInfo("1", "2", "요청중학교", "B10", "7654321", "중학교")
+        val api = FakeNeisApiService()
+        val repository = SchoolRepositoryImpl(
+            api,
+            FakePreferencesRepository(telemetrySchool),
+            FakeNoticeApiService(),
+            neisApiKey = configuredNeisApiKey
+        )
+
+        repository.getTimetable(requestStudent, "20260914").getOrThrow()
+
+        assertEquals(requestStudent.officeCode, api.lastTimetableOfficeCode)
+        assertEquals(requestStudent.schoolCode, api.lastTimetableSchoolCode)
+        assertEquals(requestStudent.grade, api.lastTimetableGrade)
+        assertEquals(requestStudent.classroom, api.lastTimetableClassroom)
+    }
+
+    @Test
+    fun dataLoadedTelemetry_usesTheCapturedRequestStudent() = runBlocking {
+        val requestStudent = StudentInfo("1", "2", "요청중학교", "B10", "7654321", "중학교")
+        val capturedSchools = mutableListOf<StudentInfo>()
+        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
+            override fun dataLoaded(
+                feature: com.lbs.schoolhelper.telemetry.Feature,
+                school: StudentInfo,
+                outcome: com.lbs.schoolhelper.telemetry.LoadOutcome,
+                source: com.lbs.schoolhelper.telemetry.DataSource,
+                durationMillis: Long,
+                error: Throwable?
+            ) {
+                capturedSchools += school
+            }
+        }
+        val repository = SchoolRepositoryImpl(
+            FakeNeisApiService(),
+            FakePreferencesRepository(telemetrySchool),
+            FakeNoticeApiService(),
+            telemetry = telemetry,
+            neisApiKey = configuredNeisApiKey
+        )
+
+        repository.getMeals(requestStudent, "20260914").getOrThrow()
+
+        assertEquals(listOf(requestStudent), capturedSchools)
+    }
+
+    @Test
     fun `cancelled requests escape every get and observe path`() = runBlocking {
         val api = FakeNeisApiService().apply { failure = kotlinx.coroutines.CancellationException("cancel") }
         val notices = FakeNoticeApiService().apply { failure = kotlinx.coroutines.CancellationException("cancel") }
@@ -70,11 +172,11 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
         val calls: List<suspend () -> Unit> = listOf(
-            { repository.searchSchools("학교") }, { repository.getMeals("20260914") },
-            { repository.getSchedules("202609") }, { repository.getTimetable("2", "5", "20260914") },
-            { repository.getNotices() }, { repository.observeMeals("20260914").toList() },
-            { repository.observeSchedules("202609").toList() },
-            { repository.observeTimetable("2", "5", "20260914").toList() }
+            { repository.searchSchools("학교") }, { repository.getMeals(telemetrySchool, "20260914") },
+            { repository.getSchedules(telemetrySchool, "202609") }, { repository.getTimetable(telemetrySchool, "20260914") },
+            { repository.getNotices(telemetrySchool) }, { repository.observeMeals(telemetrySchool, "20260914").toList() },
+            { repository.observeSchedules(telemetrySchool, "202609").toList() },
+            { repository.observeTimetable(telemetrySchool, "20260914").toList() }
         )
         for ((index, call) in calls.withIndex()) {
             var escaped = false
@@ -89,7 +191,7 @@ class SchoolRepositoryImplTest {
         val prefs = FakePreferencesRepository(telemetrySchool)
         prefs.saveMealCache("J10", "1234567", "20260914", emptyList())
         val repository = SchoolRepositoryImpl(api, prefs, FakeNoticeApiService())
-        assertEquals(emptyList<MealInfo>(), repository.getMeals("20260914").getOrThrow())
+        assertEquals(emptyList<MealInfo>(), repository.getMeals(telemetrySchool, "20260914").getOrThrow())
     }
 
     @Test
@@ -108,7 +210,7 @@ class SchoolRepositoryImplTest {
             }
         }
         val repository = SchoolRepositoryImpl(api, prefs, FakeNoticeApiService(), telemetry)
-        repository.getMeals("20260914")
+        repository.getMeals(telemetrySchool, "20260914")
         assertEquals(listOf(
             com.lbs.schoolhelper.telemetry.LoadOutcome.FAILURE to com.lbs.schoolhelper.telemetry.DataSource.NETWORK,
             com.lbs.schoolhelper.telemetry.LoadOutcome.EMPTY to com.lbs.schoolhelper.telemetry.DataSource.CACHE
@@ -147,7 +249,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getMeals("20260519")
+        val result = repository.getMeals(telemetrySchool, "20260519")
 
         assertTrue(result.isSuccess)
         assertEquals("J10", apiService.lastMealOfficeCode)
@@ -178,7 +280,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getMeals("20260519")
+        val result = repository.getMeals(telemetrySchool, "20260519")
 
         assertTrue(result.isFailure)
         assertEquals("나이스 인증키를 다시 확인해 주세요.", result.exceptionOrNull()?.message)
@@ -230,7 +332,7 @@ class SchoolRepositoryImplTest {
         }
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val emissions = repository.observeMeals("20260519").toList()
+        val emissions = repository.observeMeals(telemetrySchool, "20260519").toList()
 
         assertEquals(2, emissions.size)
         assertEquals(cachedMeals, emissions[0].getOrThrow())
@@ -263,7 +365,7 @@ class SchoolRepositoryImplTest {
         )
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val result = repository.getSchedules("202605")
+        val result = repository.getSchedules(telemetrySchool, "202605")
 
         assertTrue(result.isSuccess)
         assertEquals("J10", apiService.lastScheduleOfficeCode)
@@ -295,7 +397,7 @@ class SchoolRepositoryImplTest {
         )
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val result = repository.getSchedules("202605")
+        val result = repository.getSchedules(telemetrySchool, "202605")
 
         assertTrue(result.isSuccess)
         assertEquals(
@@ -333,7 +435,7 @@ class SchoolRepositoryImplTest {
         }
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val result = repository.getSchedules("202605")
+        val result = repository.getSchedules(telemetrySchool, "202605")
 
         assertTrue(result.isSuccess)
         assertEquals(cacheEvents, result.getOrThrow())
@@ -359,7 +461,7 @@ class SchoolRepositoryImplTest {
         }
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val result = repository.getSchedules("202605")
+        val result = repository.getSchedules(telemetrySchool, "202605")
 
         assertTrue(result.isSuccess)
         assertEquals(emptyList<SchoolEvent>(), result.getOrThrow())
@@ -395,7 +497,7 @@ class SchoolRepositoryImplTest {
         }
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val emissions = repository.observeSchedules("202605").toList()
+        val emissions = repository.observeSchedules(telemetrySchool, "202605").toList()
 
         assertEquals(1, emissions.size)
         assertEquals(cachedEvents, emissions[0].getOrThrow())
@@ -420,7 +522,7 @@ class SchoolRepositoryImplTest {
         )
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val result = repository.getSchedules("202605")
+        val result = repository.getSchedules(telemetrySchool, "202605")
 
         assertTrue(result.isFailure)
     }
@@ -442,7 +544,7 @@ class SchoolRepositoryImplTest {
         )
         val repository = SchoolRepositoryImpl(apiService, preferencesRepository, FakeNoticeApiService())
 
-        val result = repository.getSchedules("202605")
+        val result = repository.getSchedules(telemetrySchool, "202605")
 
         assertTrue(result.isFailure)
         assertEquals("학사 일정 조회에 필요한 값이 누락되었어요.", result.exceptionOrNull()?.message)
@@ -481,7 +583,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getTimetable("3", "2", "20260519")
+        val result = repository.getTimetable(preferencesRepository.getStudentInfo().copy(grade = "3", classroom = "2"), "20260519")
 
         assertTrue(result.isSuccess)
         assertTrue(apiService.elementaryCalled)
@@ -520,7 +622,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getTimetable("3", "2", "20260519")
+        val result = repository.getTimetable(preferencesRepository.getStudentInfo().copy(grade = "3", classroom = "2"), "20260519")
 
         assertTrue(result.isSuccess)
         assertFalse(apiService.elementaryCalled)
@@ -570,7 +672,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = ""
         )
 
-        val result = repository.getTimetable("1", "4", "20260915")
+        val result = repository.getTimetable(preferencesRepository.getStudentInfo().copy(grade = "1", classroom = "4"), "20260915")
 
         assertTrue(result.isFailure)
         assertEquals("나이스 인증키가 설정되지 않았어요. 앱 설정을 확인해 주세요.", result.exceptionOrNull()?.message)
@@ -602,7 +704,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = ""
         )
 
-        val emissions = repository.observeTimetable("1", "4", "20260915").toList()
+        val emissions = repository.observeTimetable(preferencesRepository.getStudentInfo().copy(grade = "1", classroom = "4"), "20260915").toList()
 
         assertEquals(1, emissions.size)
         assertTrue(emissions.single().isFailure)
@@ -634,7 +736,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getTimetable("1", "4", "20260915")
+        val result = repository.getTimetable(preferencesRepository.getStudentInfo().copy(grade = "1", classroom = "4"), "20260915")
 
         assertEquals((1..7).map(Int::toString), result.getOrThrow().map(TimetableItem::period))
         assertEquals(7, preferencesRepository.savedTimetableCacheArgs?.items?.size)
@@ -672,7 +774,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getTimetable("2", "4", "20260519")
+        val result = repository.getTimetable(preferencesRepository.getStudentInfo().copy(grade = "2", classroom = "4"), "20260519")
 
         assertTrue(result.isSuccess)
         assertFalse(apiService.elementaryCalled)
@@ -713,7 +815,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getTimetable("3", "2", "20260519")
+        val result = repository.getTimetable(preferencesRepository.getStudentInfo().copy(grade = "3", classroom = "2"), "20260519")
 
         assertTrue(result.isSuccess)
         assertEquals(emptyList<TimetableItem>(), result.getOrThrow())
@@ -772,7 +874,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val emissions = repository.observeTimetable("3", "2", "20260519").toList()
+        val emissions = repository.observeTimetable(preferencesRepository.getStudentInfo().copy(grade = "3", classroom = "2"), "20260519").toList()
 
         assertEquals(2, emissions.size)
         assertEquals(cachedItems, emissions[0].getOrThrow())
@@ -804,7 +906,7 @@ class SchoolRepositoryImplTest {
             neisApiKey = configuredNeisApiKey
         )
 
-        val result = repository.getTimetable("3", "2", "20260519")
+        val result = repository.getTimetable(preferencesRepository.getStudentInfo().copy(grade = "3", classroom = "2"), "20260519")
 
         assertTrue(result.isSuccess)
         assertEquals(emptyList<TimetableItem>(), result.getOrThrow())
@@ -872,7 +974,7 @@ class SchoolRepositoryImplTest {
     fun `getSchedules fails when school selection is missing`() = runBlocking {
         val repository = SchoolRepositoryImpl(FakeNeisApiService(), FakePreferencesRepository(), FakeNoticeApiService())
 
-        val result = repository.getSchedules("202605")
+        val result = repository.getSchedules(StudentInfo(), "202605")
 
         assertTrue(result.isFailure)
         assertEquals("설정에서 학교를 먼저 선택해 주세요.", result.exceptionOrNull()?.message)
@@ -906,7 +1008,7 @@ class SchoolRepositoryImplTest {
         )
         val repository = SchoolRepositoryImpl(FakeNeisApiService(), preferencesRepository, noticeApiService)
 
-        val result = repository.getNotices(limit = 3)
+        val result = repository.getNotices(telemetrySchool, limit = 3)
 
         assertTrue(result.isSuccess)
         assertEquals("J10", noticeApiService.lastOfficeCode)
@@ -947,6 +1049,10 @@ class SchoolRepositoryImplTest {
         var lastMealSchoolCode: String? = null
         var lastScheduleOfficeCode: String? = null
         var lastScheduleSchoolCode: String? = null
+        var lastTimetableOfficeCode: String? = null
+        var lastTimetableSchoolCode: String? = null
+        var lastTimetableGrade: String? = null
+        var lastTimetableClassroom: String? = null
         var elementaryCalled = false
         var middleCalled = false
         var highCalled = false
@@ -996,6 +1102,7 @@ class SchoolRepositoryImplTest {
             failure?.let { throw it }
             if (failElementaryTimetable) throw IllegalStateException("elementary timetable api error")
             elementaryCalled = true
+            recordTimetableRequest(officeCode, schoolCode, grade, classroom)
             return elementaryTimetableResponse
         }
 
@@ -1013,6 +1120,7 @@ class SchoolRepositoryImplTest {
             failure?.let { throw it }
             if (failMiddleTimetable) throw IllegalStateException("timetable api error")
             middleCalled = true
+            recordTimetableRequest(officeCode, schoolCode, grade, classroom)
             return middleTimetableResponse
         }
 
@@ -1030,6 +1138,7 @@ class SchoolRepositoryImplTest {
             failure?.let { throw it }
             if (failHighTimetable) throw IllegalStateException("high timetable api error")
             highCalled = true
+            recordTimetableRequest(officeCode, schoolCode, grade, classroom)
             return highTimetableResponse
         }
 
@@ -1042,6 +1151,18 @@ class SchoolRepositoryImplTest {
         ): NeisResponse<SchoolInfoRowDto> {
             failure?.let { throw it }
             return schoolInfoResponse
+        }
+
+        private fun recordTimetableRequest(
+            officeCode: String,
+            schoolCode: String,
+            grade: String,
+            classroom: String
+        ) {
+            lastTimetableOfficeCode = officeCode
+            lastTimetableSchoolCode = schoolCode
+            lastTimetableGrade = grade
+            lastTimetableClassroom = classroom
         }
     }
 
@@ -1079,6 +1200,7 @@ class SchoolRepositoryImplTest {
     override fun saveTelemetryConsentPromptCompleted() { telemetryConsentPromptCompleted = true }
 
         var savedMealCacheArgs: MealCacheArgs? = null
+        var savedScheduleCacheArgs: ScheduleCacheArgs? = null
         var savedScheduleCacheEvents: List<SchoolEvent>? = null
         var savedTimetableCacheArgs: TimetableCacheArgs? = null
         val mealCache = mutableMapOf<MealCacheKey, List<MealInfo>>()
@@ -1145,6 +1267,7 @@ class SchoolRepositoryImplTest {
             date: String,
             events: List<SchoolEvent>
         ) {
+            savedScheduleCacheArgs = ScheduleCacheArgs(officeCode, schoolCode, date, events)
             savedScheduleCacheEvents = events
             scheduleCache[ScheduleCacheKey(officeCode, schoolCode, date)] = events
         }
@@ -1203,6 +1326,13 @@ class SchoolRepositoryImplTest {
         val officeCode: String,
         val schoolCode: String,
         val date: String
+    )
+
+    private data class ScheduleCacheArgs(
+        val officeCode: String,
+        val schoolCode: String,
+        val date: String,
+        val events: List<SchoolEvent>
     )
 
     private data class TimetableCacheArgs(
