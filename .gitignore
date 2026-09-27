@@ -37,3 +37,10 @@ xcuserdata/
 
 # Generated/check images
 checkimage/
+
+# Local release and workspace artifacts
+/.omx-state-locks.identity.json
+/android/app/release/
+/android/gradle/gradle-daemon-jvm.properties
+/screen_1.png
+/flutter/
