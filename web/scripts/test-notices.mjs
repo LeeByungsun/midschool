@@ -192,3 +192,13 @@ test('legacy jje homepage aliases map to school.jje.go.kr root and board paths',
     ],
   );
 });
+
+test('legacy dge middle-school homepages map to the centralized dge host', () => {
+  assert.deepEqual(buildLegacyHomepageAliases('https://suseong.dge.ms.kr/'), [
+    'https://dge.ms.kr/suseongm/',
+  ]);
+  assert.deepEqual(
+    buildLegacyHomepageAliases('https://suseong.dge.ms.kr/suseongm/main.do'),
+    ['https://dge.ms.kr/suseongm/main.do'],
+  );
+});

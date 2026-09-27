@@ -29,6 +29,28 @@ export function buildLegacyHomepageAliases(value: string) {
   const parsed = new URL(hasExplicitProtocol(trimmed) ? trimmed : `https://${trimmed}`);
   const aliases: string[] = [];
 
+  if (parsed.hostname.endsWith(".dge.ms.kr")) {
+    const legacySchoolId = parsed.hostname
+      .slice(0, -".dge.ms.kr".length)
+      .split(".")
+      .filter(Boolean)
+      .pop();
+
+    if (legacySchoolId) {
+      const firstPathSegment = parsed.pathname.split("/").filter(Boolean)[0];
+      const siteId = firstPathSegment || `${legacySchoolId}m`;
+      const aliasUrl = new URL("https://dge.ms.kr");
+      aliasUrl.pathname =
+        parsed.pathname === "/"
+          ? `/${siteId}/`
+          : parsed.pathname.startsWith(`/${siteId}/`) || parsed.pathname === `/${siteId}`
+            ? parsed.pathname
+            : `/${siteId}${parsed.pathname}`;
+      aliasUrl.search = parsed.search;
+      aliases.push(aliasUrl.toString());
+    }
+  }
+
   if (parsed.hostname.endsWith("jje.ms.kr")) {
     const schoolId = parsed.hostname.split(".")[0]?.trim();
 
