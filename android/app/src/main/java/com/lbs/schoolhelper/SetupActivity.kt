@@ -42,13 +42,16 @@ class SetupActivity : AppCompatActivity() {
         bindState()
     }
 
-    override fun onPause() {
-        persistStudentInfoDraftFromInputs()
-        super.onPause()
-    }
-
     private fun bindClicks() {
-        bindStudentInfoFocusChanges()
+        binding.profileNameInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                viewModel.updateDisplayName(binding.profileNameInput.text.toString())
+                binding.schoolQueryInput.requestFocus()
+                true
+            } else {
+                false
+            }
+        }
         binding.schoolQueryInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 searchSchoolsFromInput()
@@ -93,41 +96,35 @@ class SetupActivity : AppCompatActivity() {
                 viewModel.completeTelemetryConsentStep()
             }
         }
-    }
 
-    private fun bindStudentInfoFocusChanges() {
+        binding.profileNameInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.requestVisibleAboveKeyboard()
+            } else if (!isRenderingState) {
+                viewModel.updateDisplayName(binding.profileNameInput.text.toString())
+            }
+        }
         binding.schoolQueryInput.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
                 view.requestVisibleAboveKeyboard()
-            } else {
+            } else if (!isRenderingState) {
                 viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
-                viewModel.saveStudentInfoDraft()
             }
         }
         binding.gradeInput.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
                 view.requestVisibleAboveKeyboard()
-            } else {
-                viewModel.updateGrade(binding.gradeInput.text.toString())
-                viewModel.saveStudentInfoDraft()
+            } else if (!isRenderingState) {
+                viewModel.updateGrade(binding.gradeInput.text.toString().trim())
             }
         }
         binding.classInput.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
                 view.requestVisibleAboveKeyboard()
-            } else {
-                viewModel.updateClassroom(binding.classInput.text.toString())
-                viewModel.saveStudentInfoDraft()
+            } else if (!isRenderingState) {
+                viewModel.updateClassroom(binding.classInput.text.toString().trim())
             }
         }
-    }
-
-    private fun persistStudentInfoDraftFromInputs() {
-        if (!::binding.isInitialized) return
-        viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
-        viewModel.updateGrade(binding.gradeInput.text.toString())
-        viewModel.updateClassroom(binding.classInput.text.toString())
-        viewModel.saveStudentInfoDraft()
     }
 
     private fun searchSchoolsFromInput() {
@@ -138,6 +135,7 @@ class SetupActivity : AppCompatActivity() {
 
     private fun saveStudentInfoFromInput() {
         hideKeyboard(binding.classInput)
+        viewModel.updateDisplayName(binding.profileNameInput.text.toString())
         viewModel.updateSchoolQuery(binding.schoolQueryInput.text.toString())
         viewModel.updateGrade(binding.gradeInput.text.toString().trim())
         viewModel.updateClassroom(binding.classInput.text.toString().trim())
@@ -175,6 +173,9 @@ class SetupActivity : AppCompatActivity() {
 
     private fun renderState(state: SetupUiState) {
         isRenderingState = true
+        if (binding.profileNameInput.text.toString() != state.displayName) {
+            binding.profileNameInput.setText(state.displayName)
+        }
         if (binding.schoolQueryInput.text.toString() != state.schoolQuery) {
             binding.schoolQueryInput.setText(state.schoolQuery)
         }
@@ -214,10 +215,7 @@ class SetupActivity : AppCompatActivity() {
                 text = formatSchoolOption(school)
                 isChecked = selectedSchool?.officeCode == school.officeCode &&
                     selectedSchool.schoolCode == school.schoolCode
-                setOnClickListener {
-                    viewModel.selectSchool(school)
-                    viewModel.saveStudentInfoDraft()
-                }
+                setOnClickListener { viewModel.selectSchool(school) }
             }
             binding.schoolResultsGroup.addView(radioButton)
         }

@@ -6,6 +6,10 @@ import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepositoryImpl
 import com.lbs.schoolhelper.data.repository.AndroidUserPreferencesStore
 import com.lbs.schoolhelper.data.repository.UserPreferencesStore
+import com.lbs.schoolhelper.data.profile.SharedPreferencesStudentProfileStore
+import com.lbs.schoolhelper.data.profile.StudentProfileRepository
+import com.lbs.schoolhelper.data.profile.StudentProfileRepositoryImpl
+import com.lbs.schoolhelper.data.profile.StudentProfileStore
 import com.lbs.schoolhelper.ui.common.AndroidUiStringProvider
 import com.lbs.schoolhelper.ui.common.UiStringProvider
 import dagger.Binds
@@ -34,6 +38,18 @@ abstract class AppModule {
     abstract fun bindUserPreferencesStore(
         store: AndroidUserPreferencesStore
     ): UserPreferencesStore
+
+    @Binds
+    @Singleton
+    abstract fun bindStudentProfileStore(
+        store: SharedPreferencesStudentProfileStore
+    ): StudentProfileStore
+
+    @Binds
+    @Singleton
+    abstract fun bindStudentProfileRepository(
+        repository: StudentProfileRepositoryImpl
+    ): StudentProfileRepository
 
     @Binds
     @Singleton

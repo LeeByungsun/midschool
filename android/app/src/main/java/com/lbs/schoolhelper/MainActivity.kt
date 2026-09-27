@@ -13,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.lbs.schoolhelper.data.model.HomeContentStatus
+import com.lbs.schoolhelper.data.model.HomeUiState
 import com.lbs.schoolhelper.databinding.ActivityMainBinding
 import com.lbs.schoolhelper.ui.home.HomeNoticeAction
 import com.lbs.schoolhelper.ui.home.HomeViewModel
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private var timerCompletionAnimator: ValueAnimator? = null
     private val homeViewModel: HomeViewModel by viewModels()
     private val timerViewModel: TimerViewModel by viewModels()
+    private var latestHomeState = HomeUiState()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +68,7 @@ class MainActivity : AppCompatActivity() {
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        binding.profileSwitchButton.setOnClickListener { showProfileSelector() }
         binding.focusPresetCard.setOnClickListener { timerViewModel.selectFocusMinutes(25) }
         binding.breakPresetCard.setOnClickListener { timerViewModel.selectFocusMinutes(40) }
         binding.round2Card.setOnClickListener { timerViewModel.selectRounds(2) }
@@ -96,6 +99,16 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 homeViewModel.uiState.collect { state ->
+                    latestHomeState = state
+                    binding.profileSwitchButton.text = if (state.activeProfileName.isBlank()) {
+                        getString(R.string.home_profile_select)
+                    } else {
+                        getString(R.string.home_profile_button, state.activeProfileName)
+                    }
+                    binding.profileSwitchButton.contentDescription = getString(
+                        R.string.home_profile_content_description,
+                        state.activeProfileName.ifBlank { getString(R.string.home_profile_select) }
+                    )
                     binding.schoolNameText.text = state.schoolName
                     binding.dateLabelText.text = state.dateLabel
                     binding.classSummaryText.text = state.classSummary
@@ -136,6 +149,30 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showProfileSelector() {
+        val choices = latestHomeState.profileChoices
+        val labels = choices.map { choice ->
+            listOf(choice.displayName, choice.contextText).filter { it.isNotBlank() }.joinToString("\n")
+        } + getString(R.string.home_profile_add)
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.home_profile_dialog_title)
+            .setItems(labels.toTypedArray()) { _, position ->
+                if (position == choices.size) {
+                    openAddProfileSettings()
+                } else {
+                    choices.getOrNull(position)?.let { homeViewModel.selectProfile(it.id) }
+                }
+            }
+            .show()
+    }
+
+    internal fun openAddProfileSettings() {
+        startActivity(
+            Intent(this, SettingsActivity::class.java)
+                .putExtra(SettingsActivity.EXTRA_START_ADD_PROFILE, true)
+        )
     }
 
     private fun bindHomeEvents() {

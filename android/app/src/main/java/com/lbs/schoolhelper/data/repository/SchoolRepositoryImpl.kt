@@ -43,7 +43,7 @@ class SchoolRepositoryImpl @Inject constructor(
         this.neisApiKey = neisApiKey
     }
 
-    override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> = loadNetwork(Feature.SCHOOL_SEARCH, preferencesRepository.getStudentInfo()) {
+    override suspend fun searchSchools(query: String): Result<List<SchoolInfo>> = loadNetwork(Feature.SCHOOL_SEARCH, StudentInfo()) {
         val trimmedQuery = query.trim()
         require(trimmedQuery.length >= MIN_SCHOOL_QUERY_LENGTH) {
             "학교 이름은 두 글자 이상 입력해 주세요."
@@ -77,8 +77,8 @@ class SchoolRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
-        val studentInfo = selectedStudentInfo(Feature.MEALS).getOrElse { return Result.failure(it) }
+    override suspend fun getMeals(student: StudentInfo, date: String?): Result<List<MealInfo>> {
+        val studentInfo = validateStudentInfo(student, Feature.MEALS).getOrElse { return Result.failure(it) }
         val cacheKey = date
         val networkResult = loadNetwork(Feature.MEALS, studentInfo) { fetchMealsFromNetwork(studentInfo, date) }
 
@@ -100,8 +100,8 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeMeals(date: String?): Flow<Result<List<MealInfo>>> = flow {
-        val studentInfo = selectedStudentInfo(Feature.MEALS).getOrElse {
+    override fun observeMeals(student: StudentInfo, date: String?): Flow<Result<List<MealInfo>>> = flow {
+        val studentInfo = validateStudentInfo(student, Feature.MEALS).getOrElse {
             emit(Result.failure(it))
             return@flow
         }
@@ -134,8 +134,8 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
-        val studentInfo = selectedStudentInfo(Feature.SCHEDULE).getOrElse { return Result.failure(it) }
+    override suspend fun getSchedules(student: StudentInfo, date: String?): Result<List<SchoolEvent>> {
+        val studentInfo = validateStudentInfo(student, Feature.SCHEDULE).getOrElse { return Result.failure(it) }
         val cacheKey = date
         val networkResult = loadNetwork(Feature.SCHEDULE, studentInfo) { fetchSchedulesFromNetwork(studentInfo, date) }
 
@@ -162,8 +162,8 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeSchedules(date: String?): Flow<Result<List<SchoolEvent>>> = flow {
-        val studentInfo = selectedStudentInfo(Feature.SCHEDULE).getOrElse {
+    override fun observeSchedules(student: StudentInfo, date: String?): Flow<Result<List<SchoolEvent>>> = flow {
+        val studentInfo = validateStudentInfo(student, Feature.SCHEDULE).getOrElse {
             emit(Result.failure(it))
             return@flow
         }
@@ -196,8 +196,8 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getNotices(limit: Int): Result<NoticeFeed> {
-        val studentInfo = selectedStudentInfo(Feature.NOTICES).getOrElse { return Result.failure(it) }
+    override suspend fun getNotices(student: StudentInfo, limit: Int): Result<NoticeFeed> {
+        val studentInfo = validateStudentInfo(student, Feature.NOTICES).getOrElse { return Result.failure(it) }
         if (BuildConfig.WEB_BASE_URL.isBlank()) {
             val error = IllegalStateException("가정통신문 서버 주소가 설정되지 않았어요.")
             telemetry.dataLoaded(Feature.NOTICES, studentInfo, LoadOutcome.FAILURE, DataSource.CONFIG, 0L, error)
@@ -238,11 +238,12 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTimetable(
-        grade: String,
-        classroom: String,
+        student: StudentInfo,
         date: String?
     ): Result<List<TimetableItem>> {
-        val studentInfo = selectedStudentInfo(Feature.TIMETABLE).getOrElse { return Result.failure(it) }
+        val studentInfo = validateStudentInfo(student, Feature.TIMETABLE).getOrElse { return Result.failure(it) }
+        val grade = studentInfo.grade
+        val classroom = studentInfo.classroom
         neisApiKeyConfigurationError(studentInfo)?.let { return Result.failure(it) }
         val cacheKey = date
         val networkResult = loadNetwork(Feature.TIMETABLE, studentInfo) { fetchTimetableFromNetwork(studentInfo, grade, classroom, date) }
@@ -280,14 +281,15 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override fun observeTimetable(
-        grade: String,
-        classroom: String,
+        student: StudentInfo,
         date: String?
     ): Flow<Result<List<TimetableItem>>> = flow {
-        val studentInfo = selectedStudentInfo(Feature.TIMETABLE).getOrElse {
+        val studentInfo = validateStudentInfo(student, Feature.TIMETABLE).getOrElse {
             emit(Result.failure(it))
             return@flow
         }
+        val grade = studentInfo.grade
+        val classroom = studentInfo.classroom
         neisApiKeyConfigurationError(studentInfo)?.let {
             emit(Result.failure(it))
             return@flow
@@ -475,8 +477,7 @@ class SchoolRepositoryImpl @Inject constructor(
             }
     }
 
-    private fun selectedStudentInfo(feature: Feature): Result<StudentInfo> {
-        val studentInfo = preferencesRepository.getStudentInfo()
+    private fun validateStudentInfo(studentInfo: StudentInfo, feature: Feature): Result<StudentInfo> {
         return if (studentInfo.hasSchoolSelection()) {
             Result.success(studentInfo)
         } else {

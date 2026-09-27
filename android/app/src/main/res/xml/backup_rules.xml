@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
         <exclude domain="sharedpref" path="telemetry_consent.xml" />
+        <exclude domain="sharedpref" path="student_profiles.xml" />
         <exclude domain="sharedpref" path="com.google.firebase.crashlytics.xml" />
         <exclude domain="sharedpref" path="com.google.android.gms.measurement.prefs.xml" />
 </full-backup-content>

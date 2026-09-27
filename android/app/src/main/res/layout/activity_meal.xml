@@ -38,6 +38,18 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/mealProfileContextText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_body_small"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/mealHeaderRow" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/mealWeekCard"
             android:layout_width="0dp"
@@ -48,7 +60,7 @@
             app:cardElevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/mealHeaderRow"
+            app:layout_constraintTop_toBottomOf="@id/mealProfileContextText"
             app:strokeColor="@color/brand_blue_soft"
             app:strokeWidth="0dp">
 

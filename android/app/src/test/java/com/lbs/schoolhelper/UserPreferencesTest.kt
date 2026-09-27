@@ -67,6 +67,25 @@ class UserPreferencesTest {
         assertFalse(UserPreferences.hasStudentInfo(context))
     }
 
+    @Test
+    fun clearStudentInfo_removesOnlyLegacyStudentKeys() {
+        val studentInfo = StudentInfo(
+            grade = "2",
+            classroom = "3",
+            schoolName = "미사중학교",
+            officeCode = "J10",
+            schoolCode = "1234567",
+            schoolKind = "중학교"
+        )
+        UserPreferences.saveStudentInfo(context, studentInfo)
+        UserPreferences.saveTimerDisplayMode(context, UserPreferences.TIMER_DISPLAY_RING)
+
+        assertTrue(UserPreferences.clearStudentInfo(context))
+
+        assertEquals(StudentInfo(), UserPreferences.getStudentInfo(context))
+        assertEquals(UserPreferences.TIMER_DISPLAY_RING, UserPreferences.getTimerDisplayMode(context))
+    }
+
     private fun clearPrefs() {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()

@@ -10,6 +10,9 @@ interface UserPreferencesStore {
     fun getStudentInfo(): StudentInfo
     fun hasStudentInfo(): Boolean
     fun saveStudentInfo(studentInfo: StudentInfo)
+    fun getLegacyStudentInfo(): StudentInfo
+    fun hasLegacyStudentInfo(): Boolean
+    fun clearLegacyStudentInfo(): Boolean
     fun getTimerDisplayMode(): String
     fun saveTimerDisplayMode(displayMode: String)
     fun isTimerNotificationEnabled(): Boolean
@@ -39,6 +42,12 @@ class AndroidUserPreferencesStore @Inject constructor(
     override fun saveStudentInfo(studentInfo: StudentInfo) {
         UserPreferences.saveStudentInfo(context, studentInfo)
     }
+
+    override fun getLegacyStudentInfo(): StudentInfo = UserPreferences.getStudentInfo(context)
+
+    override fun hasLegacyStudentInfo(): Boolean = UserPreferences.hasLegacyStudentInfo(context)
+
+    override fun clearLegacyStudentInfo(): Boolean = UserPreferences.clearStudentInfo(context)
 
     override fun getTimerDisplayMode(): String = UserPreferences.getTimerDisplayMode(context)
 

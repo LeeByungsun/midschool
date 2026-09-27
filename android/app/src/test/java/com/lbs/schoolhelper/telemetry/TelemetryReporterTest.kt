@@ -45,7 +45,7 @@ class TelemetryReporterTest {
         reporter.setCollection(true, true)
         val previous = current
         current = school.copy(officeCode = "B10", schoolCode = "7654321")
-        reporter.schoolSaved(previous)
+        reporter.schoolSaved(previous, current)
         assertEquals("school_changed", sink.events.last().first)
         assertEquals("7654321", sink.contexts.last()["school_code"])
         current = StudentInfo()

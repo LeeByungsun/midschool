@@ -42,6 +42,8 @@ class TimetableActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // 날짜가 바뀔 때마다 기존 행을 비우고 현재 상태의 시간표를 다시 그린다.
                 viewModel.uiState.collect { state ->
+                    binding.timetableProfileContextText.text = state.profileContextText
+                    binding.timetableProfileContextText.visibility = if (state.profileContextText.isBlank()) View.GONE else View.VISIBLE
                     binding.timetableDateTitleText.text = state.dateTitle
                     binding.timetableClassInfoText.text = state.classInfoText
                     binding.timetableLessonCountText.text = state.lessonCountText

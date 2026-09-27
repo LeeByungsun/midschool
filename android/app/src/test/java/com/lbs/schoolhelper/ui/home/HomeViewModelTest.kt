@@ -1,5 +1,7 @@
 package com.lbs.schoolhelper.ui.home
 
+import android.app.Application
+import android.os.Looper
 import com.lbs.schoolhelper.MainActivity
 import com.lbs.schoolhelper.SchoolHelperApplication
 import com.lbs.schoolhelper.R
@@ -9,17 +11,22 @@ import com.lbs.schoolhelper.data.model.NoticeFeed
 import com.lbs.schoolhelper.data.model.NoticePreview
 import com.lbs.schoolhelper.data.model.SchoolEvent
 import com.lbs.schoolhelper.data.model.SchoolInfo
+import com.lbs.schoolhelper.data.profile.StudentProfile
 import com.lbs.schoolhelper.data.repository.SchoolRepository
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.test.FakePreferencesRepository
 import com.lbs.schoolhelper.test.FakeSchoolRepository
+import com.lbs.schoolhelper.test.FakeStudentProfileRepository
 import com.lbs.schoolhelper.ui.settings.SettingsViewModel
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.flow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -36,6 +43,87 @@ import java.time.Duration
 class HomeViewModelTest {
 
     @Test
+    fun initialState_showsActiveProfileNameSchoolAndClass() {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val active = profile("first", "민준", "구미중학교", "1", "2", "1111111")
+        val profiles = FakeStudentProfileRepository(listOf(active), active.id)
+
+        val viewModel = createViewModel(application, FakeSchoolRepository(), profiles)
+
+        assertEquals(active.id, viewModel.uiState.value.activeProfileId)
+        assertEquals("민준", viewModel.uiState.value.activeProfileName)
+        assertEquals("구미중학교", viewModel.uiState.value.schoolName)
+        assertEquals(
+            application.getString(R.string.home_student_info_format, "1", "2"),
+            viewModel.uiState.value.classSummary
+        )
+    }
+
+    @Test
+    fun selectProfile_updatesHeaderAndReloadsAllHomeSections() = runBlocking {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val first = profile("first", "민준", "구미중학교", "1", "2", "1111111")
+        val second = profile("second", "서연", "구미고등학교", "2", "5", "2222222")
+        val profiles = FakeStudentProfileRepository(listOf(first, second), first.id)
+        val schoolRepository = FakeSchoolRepository()
+        val viewModel = createViewModel(application, schoolRepository, profiles)
+
+        viewModel.selectProfile(second.id)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val state = viewModel.uiState.value
+        assertEquals(second.id, state.activeProfileId)
+        assertEquals("서연", state.activeProfileName)
+        assertEquals("구미고등학교", state.schoolName)
+        assertTrue(schoolRepository.requestedMealStudents.any { it.schoolCode == "2222222" })
+        assertTrue(schoolRepository.requestedScheduleStudents.any { it.schoolCode == "2222222" })
+        assertEquals("2222222", schoolRepository.lastNoticeStudent?.schoolCode)
+    }
+
+    @Test
+    fun stalePreviousProfileResponse_doesNotOverwriteNewProfileState() = runBlocking {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val first = profile("first", "민준", "구미중학교", "1", "2", "1111111")
+        val second = profile("second", "서연", "구미고등학교", "2", "5", "2222222")
+        val profiles = FakeStudentProfileRepository(listOf(first, second), first.id)
+        val schoolRepository = object : SchoolRepository {
+            override suspend fun searchSchools(query: String) = Result.success(emptyList<SchoolInfo>())
+
+            override suspend fun getMeals(student: StudentInfo, date: String?): Result<List<MealInfo>> {
+                if (student.schoolCode == first.studentInfo.schoolCode) {
+                    withContext(NonCancellable) { delay(200L) }
+                }
+                return Result.success(
+                    listOf(MealInfo(date.orEmpty(), "점심", "${student.schoolCode} 급식", "700 kcal"))
+                )
+            }
+
+            override fun observeMeals(student: StudentInfo, date: String?) = flow {
+                emit(getMeals(student, date))
+            }
+
+            override suspend fun getSchedules(student: StudentInfo, date: String?) =
+                Result.success(emptyList<SchoolEvent>())
+
+            override suspend fun getNotices(student: StudentInfo, limit: Int) =
+                Result.success(NoticeFeed())
+
+            override suspend fun getTimetable(student: StudentInfo, date: String?) =
+                Result.success(emptyList<com.lbs.schoolhelper.data.model.TimetableItem>())
+        }
+        val viewModel = createViewModel(application, schoolRepository, profiles)
+
+        viewModel.loadHomeData()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(10))
+        viewModel.selectProfile(second.id)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(250))
+
+        assertEquals(second.id, viewModel.uiState.value.activeProfileId)
+        assertTrue(viewModel.uiState.value.mealSummary.contains("2222222"))
+        assertFalse(viewModel.uiState.value.mealSummary.contains("1111111"))
+    }
+
+    @Test
     fun configuredHeader_usesNoticePlaceholderInsteadOfBlankState() {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val repository = FakePreferencesRepository(
@@ -48,7 +136,7 @@ class HomeViewModelTest {
                 schoolKind = "중학교"
             )
         )
-        val viewModel = HomeViewModel(application, FakeSchoolRepository(), repository)
+        val viewModel = createViewModel(application, FakeSchoolRepository(), repository)
 
         assertEquals(application.getString(R.string.home_notice_empty), viewModel.uiState.value.notices.summary)
         assertEquals(
@@ -61,7 +149,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun home_refreshesHeaderAfterSettingsSave() = runBlocking {
+    fun settingsSave_updatesStudentProfileWithoutWritingLegacyPreferences() = runBlocking {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val initialSchool = SchoolInfo(
             officeCode = "J10",
@@ -87,7 +175,7 @@ class HomeViewModelTest {
             )
         )
         val schoolRepository = FakeSchoolRepository()
-        val homeViewModel = HomeViewModel(application, schoolRepository, repository)
+        val homeViewModel = createViewModel(application, schoolRepository, repository)
 
         homeViewModel.refreshHeader()
         assertEquals("1", repository.currentStudentInfo.grade)
@@ -97,7 +185,14 @@ class HomeViewModelTest {
             homeViewModel.uiState.value.classSummary
         )
 
-        val settingsViewModel = SettingsViewModel(application, repository, schoolRepository)
+        val profile = StudentProfile("profile-1", "민준", repository.currentStudentInfo)
+        val profiles = FakeStudentProfileRepository(listOf(profile), profile.id)
+        val settingsViewModel = SettingsViewModel(
+            application,
+            repository,
+            schoolRepository,
+            profiles
+        )
         settingsViewModel.selectSchool(updatedSchool)
         settingsViewModel.updateGrade("2")
         settingsViewModel.updateClassroom("5")
@@ -113,13 +208,9 @@ class HomeViewModelTest {
         messageDeferred.await()
         closeDeferred.await()
 
-        homeViewModel.refreshHeader()
-        assertEquals("2", repository.currentStudentInfo.grade)
-        assertEquals("구미고등학교", homeViewModel.uiState.value.schoolName)
-        assertEquals(
-            application.getString(R.string.home_student_info_format, "2", "5"),
-            homeViewModel.uiState.value.classSummary
-        )
+        assertEquals("1", repository.currentStudentInfo.grade)
+        assertEquals("2", profiles.activeProfile.value?.studentInfo?.grade)
+        assertEquals("구미고등학교", profiles.activeProfile.value?.studentInfo?.schoolName)
     }
 
     @Test
@@ -127,7 +218,7 @@ class HomeViewModelTest {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val repository = FakePreferencesRepository(studentInfo = StudentInfo(grade = "1", classroom = "2"))
         val schoolRepository = FakeSchoolRepository()
-        val viewModel = HomeViewModel(application, schoolRepository, repository)
+        val viewModel = createViewModel(application, schoolRepository, repository)
 
         viewModel.loadHomeData()
         val state = withTimeout(1_000L) {
@@ -161,7 +252,7 @@ class HomeViewModelTest {
                 schoolName = "구미중학교"
             )
         )
-        val viewModel = HomeViewModel(application, FakeSchoolRepository(), repository)
+        val viewModel = createViewModel(application, FakeSchoolRepository(), repository)
 
         viewModel.refreshHeader()
 
@@ -191,28 +282,27 @@ class HomeViewModelTest {
         val schoolRepository = object : SchoolRepository {
             override suspend fun searchSchools(query: String) = Result.success(emptyList<SchoolInfo>())
 
-            override suspend fun getMeals(date: String?): Result<List<MealInfo>> {
+            override suspend fun getMeals(student: StudentInfo, date: String?): Result<List<MealInfo>> {
                 delay(200)
                 return Result.success(emptyList())
             }
 
-            override suspend fun getSchedules(date: String?): Result<List<SchoolEvent>> {
+            override suspend fun getSchedules(student: StudentInfo, date: String?): Result<List<SchoolEvent>> {
                 delay(200)
                 return Result.success(emptyList())
             }
 
-            override suspend fun getNotices(limit: Int): Result<NoticeFeed> {
+            override suspend fun getNotices(student: StudentInfo, limit: Int): Result<NoticeFeed> {
                 delay(200)
                 return Result.success(NoticeFeed())
             }
 
             override suspend fun getTimetable(
-                grade: String,
-                classroom: String,
+                student: StudentInfo,
                 date: String?
             ) = Result.success(emptyList<com.lbs.schoolhelper.data.model.TimetableItem>())
         }
-        val viewModel = HomeViewModel(application, schoolRepository, repository)
+        val viewModel = createViewModel(application, schoolRepository, repository)
 
         viewModel.loadHomeData()
         val loadingState = withTimeout(1_000L) {
@@ -264,7 +354,7 @@ class HomeViewModelTest {
                 )
             )
         )
-        val viewModel = HomeViewModel(application, schoolRepository, repository)
+        val viewModel = createViewModel(application, schoolRepository, repository)
 
         viewModel.loadHomeData()
         val state = withTimeout(1_000L) {
@@ -335,7 +425,7 @@ class HomeViewModelTest {
             mealFlowEmissionDelayMillisByDate[today] = 200L
             scheduleFlowResultsByDate[today.take(6)] = listOf(Result.success(emptyList()))
         }
-        val viewModel = HomeViewModel(application, schoolRepository, repository)
+        val viewModel = createViewModel(application, schoolRepository, repository)
 
         viewModel.loadHomeData()
         val cachedState = withTimeout(1_000L) {
@@ -382,7 +472,7 @@ class HomeViewModelTest {
                 )
             )
         )
-        val viewModel = HomeViewModel(application, schoolRepository, repository)
+        val viewModel = createViewModel(application, schoolRepository, repository)
 
         viewModel.loadHomeData()
 
@@ -470,7 +560,7 @@ class HomeViewModelTest {
                 )
             )
         )
-        val viewModel = HomeViewModel(application, schoolRepository, repository)
+        val viewModel = createViewModel(application, schoolRepository, repository)
 
         viewModel.loadHomeData()
         val successState = withTimeout(1_000L) {
@@ -529,7 +619,7 @@ class HomeViewModelTest {
     fun onNoticeActionClicked_emitsSetupAndUrlActions() = runBlocking {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
 
-        val missingSchoolViewModel = HomeViewModel(
+        val missingSchoolViewModel = createViewModel(
             application,
             FakeSchoolRepository(),
             FakePreferencesRepository(studentInfo = StudentInfo(grade = "1", classroom = "2"))
@@ -556,7 +646,7 @@ class HomeViewModelTest {
         )
         val noticeUrl = "https://example.com/notices/2"
         val noticeListUrl = "https://example.com/notices"
-        val configuredViewModel = HomeViewModel(
+        val configuredViewModel = createViewModel(
             application,
             FakeSchoolRepository(
                 noticesResult = Result.success(
@@ -586,4 +676,50 @@ class HomeViewModelTest {
         configuredViewModel.onNoticeActionClicked()
         assertEquals(HomeNoticeAction.OpenUrl(noticeListUrl), urlEventDeferred.await())
     }
+
+    private fun createViewModel(
+        application: Application,
+        schoolRepository: SchoolRepository,
+        preferences: FakePreferencesRepository
+    ): HomeViewModel {
+        val student = preferences.getStudentInfo()
+        val initialProfiles = if (
+            student.schoolName.isNotBlank() || student.grade.isNotBlank() || student.classroom.isNotBlank()
+        ) {
+            listOf(StudentProfile("profile-legacy", "테스트", student))
+        } else {
+            emptyList()
+        }
+        return createViewModel(
+            application,
+            schoolRepository,
+            FakeStudentProfileRepository(initialProfiles, initialProfiles.firstOrNull()?.id)
+        )
+    }
+
+    private fun createViewModel(
+        application: Application,
+        schoolRepository: SchoolRepository,
+        profiles: FakeStudentProfileRepository
+    ): HomeViewModel = HomeViewModel(application, schoolRepository, profiles)
+
+    private fun profile(
+        id: String,
+        name: String,
+        schoolName: String,
+        grade: String,
+        classroom: String,
+        schoolCode: String
+    ): StudentProfile = StudentProfile(
+        id = id,
+        displayName = name,
+        studentInfo = StudentInfo(
+            grade = grade,
+            classroom = classroom,
+            schoolName = schoolName,
+            officeCode = "J10",
+            schoolCode = schoolCode,
+            schoolKind = if (schoolName.endsWith("고등학교")) "고등학교" else "중학교"
+        )
+    )
 }

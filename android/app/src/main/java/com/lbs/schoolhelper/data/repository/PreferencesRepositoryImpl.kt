@@ -223,18 +223,21 @@ class PreferencesRepositoryImpl @Inject constructor(
 
     override fun getWidgetSettings(appWidgetId: Int): WidgetSettings {
         return WidgetSettings(
+            profileId = sharedPreferences.getString(widgetProfileKey(appWidgetId), "").orEmpty(),
             showTomorrowTimetable = sharedPreferences.getBoolean(widgetTomorrowKey(appWidgetId), true)
         )
     }
 
     override fun saveWidgetSettings(appWidgetId: Int, settings: WidgetSettings) {
         sharedPreferences.edit()
+            .putString(widgetProfileKey(appWidgetId), settings.profileId)
             .putBoolean(widgetTomorrowKey(appWidgetId), settings.showTomorrowTimetable)
             .apply()
     }
 
     override fun clearWidgetSettings(appWidgetId: Int) {
         sharedPreferences.edit()
+            .remove(widgetProfileKey(appWidgetId))
             .remove(widgetTomorrowKey(appWidgetId))
             .remove(widgetMealKey(appWidgetId))
             .remove(widgetSubjectCountKey(appWidgetId))
@@ -278,6 +281,8 @@ class PreferencesRepositoryImpl @Inject constructor(
     }
 
     private fun widgetTomorrowKey(appWidgetId: Int): String = "widget_${appWidgetId}_show_tomorrow"
+
+    private fun widgetProfileKey(appWidgetId: Int): String = "widget_${appWidgetId}_profile_id"
 
     private fun widgetMealKey(appWidgetId: Int): String = "widget_${appWidgetId}_show_meal"
 

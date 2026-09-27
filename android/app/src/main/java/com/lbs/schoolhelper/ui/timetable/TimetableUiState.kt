@@ -3,6 +3,7 @@ package com.lbs.schoolhelper.ui.timetable
 import com.lbs.schoolhelper.data.model.TimetableItem
 
 data class TimetableUiState(
+    val profileContextText: String = "",
     val dateTitle: String = "",
     val classInfoText: String = "",
     val lessonCountText: String = "",

@@ -4,9 +4,13 @@ import android.app.Application
 import android.os.Looper
 import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.data.model.SchoolInfo
+import com.lbs.schoolhelper.data.profile.StudentProfile
 import com.lbs.schoolhelper.data.repository.StudentInfo
+import com.lbs.schoolhelper.telemetry.AppTelemetry
+import com.lbs.schoolhelper.telemetry.NoOpTelemetry
 import com.lbs.schoolhelper.test.FakePreferencesRepository
 import com.lbs.schoolhelper.test.FakeSchoolRepository
+import com.lbs.schoolhelper.test.FakeStudentProfileRepository
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -39,16 +43,117 @@ class SetupViewModelTest {
     )
 
     @Test
+    fun setup_loadsLegacyDraftAndLeavesDisplayNameBlank() {
+        val draft = StudentProfile(
+            id = "legacy-profile",
+            displayName = "",
+            studentInfo = StudentInfo(
+                grade = "2",
+                classroom = "3",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+
+        val viewModel = createViewModel(
+            profiles = FakeStudentProfileRepository(listOf(draft), draft.id)
+        )
+
+        assertEquals("", viewModel.uiState.value.displayName)
+        assertEquals(selectedSchool.schoolName, viewModel.uiState.value.schoolQuery)
+        assertEquals("2", viewModel.uiState.value.grade)
+        assertEquals("3", viewModel.uiState.value.classroom)
+    }
+
+    @Test
+    fun saveProfile_blankNameEmitsNameRequiredMessage() = runBlocking {
+        val viewModel = createViewModel()
+        viewModel.selectSchool(selectedSchool)
+        viewModel.updateGrade("2")
+        viewModel.updateClassroom("3")
+        val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(3_000L) { viewModel.messageEvent.first() }
+        }
+
+        viewModel.saveStudentInfo()
+
+        assertEquals(R.string.setup_error_profile_name_required, messageDeferred.await())
+    }
+
+    @Test
+    fun saveProfile_validInputCompletesMigratedProfileWithoutShowingConsentAgain() = runBlocking {
+        val draft = StudentProfile(
+            id = "legacy-profile",
+            displayName = "",
+            studentInfo = StudentInfo(
+                grade = "2",
+                classroom = "3",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
+            )
+        )
+        val profiles = FakeStudentProfileRepository(listOf(draft), draft.id)
+        val preferences = FakePreferencesRepository(telemetryConsentPromptCompleted = true)
+        val viewModel = createViewModel(preferences, profiles = profiles)
+        val navigationDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(3_000L) { viewModel.navigationEvent.first() }
+        }
+
+        viewModel.updateDisplayName("민준")
+        viewModel.saveStudentInfo()
+
+        navigationDeferred.await()
+        assertEquals("민준", profiles.activeProfile.value?.displayName)
+        assertFalse(viewModel.uiState.value.isTelemetryConsentStepVisible)
+    }
+
+    @Test
+    fun saveProfile_firstNewProfileShowsConsentStep() = runBlocking {
+        val profiles = FakeStudentProfileRepository()
+        val viewModel = createViewModel(profiles = profiles)
+        viewModel.updateDisplayName("민준")
+        viewModel.selectSchool(selectedSchool)
+        viewModel.updateGrade("2")
+        viewModel.updateClassroom("3")
+
+        viewModel.saveStudentInfo()
+
+        assertEquals("민준", profiles.activeProfile.value?.displayName)
+        assertTrue(viewModel.uiState.value.isTelemetryConsentStepVisible)
+    }
+
+    @Test
+    fun editingNameDoesNotLoseFocusedSchoolGradeOrClassDraft() {
+        val viewModel = createViewModel()
+        viewModel.selectSchool(selectedSchool)
+        viewModel.updateGrade("2")
+        viewModel.updateClassroom("3")
+
+        viewModel.updateDisplayName("민준")
+
+        val state = viewModel.uiState.value
+        assertEquals("민준", state.displayName)
+        assertEquals(selectedSchool, state.selectedSchool)
+        assertEquals("2", state.grade)
+        assertEquals("3", state.classroom)
+    }
+
+    @Test
     fun `valid school save reports selection only after persistence`() = runBlocking {
         val prefs = FakePreferencesRepository()
         val savedPrevious = mutableListOf<StudentInfo>()
-        val telemetry = object : com.lbs.schoolhelper.telemetry.AppTelemetry {
-            override fun schoolSaved(previous: StudentInfo) {
-                assertEquals("1234567", prefs.getStudentInfo().schoolCode)
+        val telemetry = object : AppTelemetry {
+            override fun schoolSaved(previous: StudentInfo, current: StudentInfo) {
+                assertEquals("1234567", current.schoolCode)
                 savedPrevious += previous
             }
         }
-        val vm = SetupViewModel(application, prefs, FakeSchoolRepository(), telemetry)
+        val vm = createViewModel(prefs, telemetry = telemetry)
+        vm.updateDisplayName("민준")
         vm.selectSchool(selectedSchool)
         vm.updateGrade("2")
         vm.updateClassroom("5")
@@ -66,7 +171,7 @@ class SetupViewModelTest {
             )
         )
 
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
         val state = viewModel.uiState.value
 
         assertEquals(selectedSchool.schoolName, state.schoolQuery)
@@ -79,7 +184,7 @@ class SetupViewModelTest {
         val schoolRepository = FakeSchoolRepository(
             schoolSearchResult = Result.success(listOf(selectedSchool))
         )
-        val viewModel = SetupViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery(selectedSchool.schoolName)
         viewModel.searchSchools()
@@ -99,7 +204,7 @@ class SetupViewModelTest {
     @Test
     fun saveStudentInfo_whenSchoolIsMissing_emitsSchoolRequiredMessage() = runBlocking {
         val repository = FakePreferencesRepository()
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(3_000L) { viewModel.messageEvent.first() }
         }
@@ -122,7 +227,7 @@ class SetupViewModelTest {
             )
         )
 
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
         val state = viewModel.uiState.value
 
         assertEquals(selectedSchool.schoolName, state.schoolQuery)
@@ -144,7 +249,7 @@ class SetupViewModelTest {
             )
         )
 
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
 
         viewModel.updateSchoolQuery("  ${selectedSchool.schoolName}  ")
 
@@ -164,7 +269,7 @@ class SetupViewModelTest {
                 schoolKind = selectedSchool.schoolKind
             )
         )
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
 
         viewModel.updateSchoolQuery("다른 학교")
 
@@ -176,83 +281,9 @@ class SetupViewModelTest {
     }
 
     @Test
-    fun saveStudentInfoDraft_persistsGradeAndClassroomWithoutCompletingSetup() {
-        val repository = FakePreferencesRepository(
-            studentInfo = StudentInfo(
-                schoolName = selectedSchool.schoolName,
-                officeCode = selectedSchool.officeCode,
-                schoolCode = selectedSchool.schoolCode,
-                schoolKind = selectedSchool.schoolKind
-            )
-        )
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
-
-        viewModel.updateGrade(" 2 ")
-        viewModel.updateClassroom(" 5 ")
-        viewModel.saveStudentInfoDraft()
-
-        assertEquals(
-            StudentInfo(
-                grade = "2",
-                classroom = "5",
-                schoolName = selectedSchool.schoolName,
-                officeCode = selectedSchool.officeCode,
-                schoolCode = selectedSchool.schoolCode,
-                schoolKind = selectedSchool.schoolKind
-            ),
-            repository.currentStudentInfo
-        )
-        assertFalse(viewModel.uiState.value.isTelemetryConsentStepVisible)
-    }
-
-    @Test
-    fun saveStudentInfoDraft_keepsPersistedSchoolUntilAnotherSearchResultIsSelected() {
-        val original = StudentInfo(
-            grade = "1",
-            classroom = "2",
-            schoolName = selectedSchool.schoolName,
-            officeCode = selectedSchool.officeCode,
-            schoolCode = selectedSchool.schoolCode,
-            schoolKind = selectedSchool.schoolKind
-        )
-        val repository = FakePreferencesRepository(studentInfo = original)
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
-
-        viewModel.updateSchoolQuery("아직 선택하지 않은 학교")
-        viewModel.updateGrade("3")
-        viewModel.saveStudentInfoDraft()
-
-        assertEquals(original.copy(grade = "3"), repository.currentStudentInfo)
-    }
-
-    @Test
-    fun saveStudentInfoDraft_persistsSelectedSchoolWithoutCompletingSetup() {
-        val repository = FakePreferencesRepository(
-            studentInfo = StudentInfo(grade = "2", classroom = "5")
-        )
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
-
-        viewModel.selectSchool(selectedSchool)
-        viewModel.saveStudentInfoDraft()
-
-        assertEquals(
-            StudentInfo(
-                grade = "2",
-                classroom = "5",
-                schoolName = selectedSchool.schoolName,
-                officeCode = selectedSchool.officeCode,
-                schoolCode = selectedSchool.schoolCode,
-                schoolKind = selectedSchool.schoolKind
-            ),
-            repository.currentStudentInfo
-        )
-        assertFalse(viewModel.uiState.value.isTelemetryConsentStepVisible)
-    }
-
-    @Test
     fun searchSchools_whenQueryTooShort_showsValidationAndSkipsRepository() {
         val schoolRepository = FakeSchoolRepository()
-        val viewModel = SetupViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery("미")
         viewModel.searchSchools()
@@ -270,7 +301,7 @@ class SetupViewModelTest {
         val schoolRepository = FakeSchoolRepository(
             schoolSearchResult = Result.success(listOf(selectedSchool))
         )
-        val viewModel = SetupViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery("미사중")
         viewModel.searchSchools()
@@ -295,7 +326,7 @@ class SetupViewModelTest {
             searchDelayMillisByQuery["구미"] = 200L
             searchDelayMillisByQuery["미사"] = 10L
         }
-        val viewModel = SetupViewModel(application, FakePreferencesRepository(), schoolRepository)
+        val viewModel = createViewModel(FakePreferencesRepository(), schoolRepository)
 
         viewModel.updateSchoolQuery("구미")
         viewModel.searchSchools()
@@ -326,7 +357,7 @@ class SetupViewModelTest {
         val schoolRepository = FakeSchoolRepository(
             schoolSearchResult = Result.failure(IllegalStateException("검색 실패"))
         )
-        val viewModel = SetupViewModel(application, repository, schoolRepository)
+        val viewModel = createViewModel(repository, schoolRepository)
 
         viewModel.updateSchoolQuery("새 학교")
         viewModel.searchSchools()
@@ -347,7 +378,7 @@ class SetupViewModelTest {
                 schoolKind = selectedSchool.schoolKind
             )
         )
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(3_000L) { viewModel.messageEvent.first() }
         }
@@ -370,7 +401,9 @@ class SetupViewModelTest {
             ),
             telemetryConsentPromptCompleted = true
         )
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val profiles = FakeStudentProfileRepository()
+        val viewModel = createViewModel(repository, profiles = profiles)
+        viewModel.updateDisplayName("민준")
         val navigationDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(3_000L) { viewModel.navigationEvent.first() }
         }
@@ -381,18 +414,17 @@ class SetupViewModelTest {
 
         navigationDeferred.await()
         assertEquals(
-            listOf(
-                StudentInfo(
-                    grade = "2",
-                    classroom = "3",
-                    schoolName = selectedSchool.schoolName,
-                    officeCode = selectedSchool.officeCode,
-                    schoolCode = selectedSchool.schoolCode,
-                    schoolKind = selectedSchool.schoolKind
-                )
+            StudentInfo(
+                grade = "2",
+                classroom = "3",
+                schoolName = selectedSchool.schoolName,
+                officeCode = selectedSchool.officeCode,
+                schoolCode = selectedSchool.schoolCode,
+                schoolKind = selectedSchool.schoolKind
             ),
-            repository.savedStudentInfoCalls
+            profiles.activeProfile.value?.studentInfo
         )
+        assertTrue(repository.savedStudentInfoCalls.isEmpty())
     }
 
     @Test
@@ -405,7 +437,9 @@ class SetupViewModelTest {
                 schoolKind = selectedSchool.schoolKind
             )
         )
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val profiles = FakeStudentProfileRepository()
+        val viewModel = createViewModel(repository, profiles = profiles)
+        viewModel.updateDisplayName("민준")
         val navigationDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeoutOrNull(250L) { viewModel.navigationEvent.first() }
         }
@@ -415,14 +449,15 @@ class SetupViewModelTest {
         viewModel.saveStudentInfo()
 
         assertNull(navigationDeferred.await())
-        assertEquals(1, repository.savedStudentInfoCalls.size)
+        assertEquals("민준", profiles.activeProfile.value?.displayName)
+        assertTrue(repository.savedStudentInfoCalls.isEmpty())
         assertTrue(viewModel.uiState.value.isTelemetryConsentStepVisible)
         assertFalse(viewModel.uiState.value.analyticsEnabled)
         assertFalse(viewModel.uiState.value.diagnosticsEnabled)
     }
 
     @Test
-    fun `saved school and classroom without a consent decision resumes at consent step`() {
+    fun `migrated school and classroom without a local name resumes at profile form`() {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(
                 grade = "2",
@@ -434,9 +469,10 @@ class SetupViewModelTest {
             )
         )
 
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
 
-        assertTrue(viewModel.uiState.value.isTelemetryConsentStepVisible)
+        assertFalse(viewModel.uiState.value.isTelemetryConsentStepVisible)
+        assertEquals("", viewModel.uiState.value.displayName)
     }
 
     @Test
@@ -448,7 +484,8 @@ class SetupViewModelTest {
                 collectionCalls += analytics to diagnostics
             }
         }
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository(), telemetry)
+        val viewModel = createViewModel(repository, telemetry = telemetry)
+        viewModel.updateDisplayName("민준")
         viewModel.selectSchool(selectedSchool)
         viewModel.updateGrade("2")
         viewModel.updateClassroom("3")
@@ -480,7 +517,7 @@ class SetupViewModelTest {
                 schoolKind = selectedSchool.schoolKind
             )
         )
-        val viewModel = SetupViewModel(application, repository, FakeSchoolRepository())
+        val viewModel = createViewModel(repository)
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(3_000L) { viewModel.messageEvent.first() }
         }
@@ -491,5 +528,20 @@ class SetupViewModelTest {
         assertEquals(R.string.setup_error_school_required, messageDeferred.await())
         assertEquals(selectedSchool, viewModel.uiState.value.selectedSchool)
         assertTrue(repository.savedStudentInfoCalls.isEmpty())
+    }
+
+    private fun createViewModel(
+        preferences: FakePreferencesRepository = FakePreferencesRepository(),
+        schoolRepository: FakeSchoolRepository = FakeSchoolRepository(),
+        profiles: FakeStudentProfileRepository = FakeStudentProfileRepository(),
+        telemetry: AppTelemetry = NoOpTelemetry
+    ): SetupViewModel {
+        return SetupViewModel(
+            application = application,
+            preferencesRepository = preferences,
+            schoolRepository = schoolRepository,
+            studentProfileRepository = profiles,
+            telemetry = telemetry
+        )
     }
 }

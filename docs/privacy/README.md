@@ -7,6 +7,12 @@
 - 전체 공개 문안: [`../privacy-policy.ko.md`](../privacy-policy.ko.md)
 - 앱 내 간단 안내 문안: [`../privacy-collection-summary.ko.md`](../privacy-collection-summary.ko.md)
 
+앱에서 입력하는 자녀 이름과 학교·학년·반 정보는 여러 자녀 프로필로 묶어 기기 내부
+`student_profiles` 저장소에만 보관합니다. 이 프로필 저장소는 Android 클라우드 백업과
+기기 간 자동 전송에서 제외하며, Firebase Analytics/Crashlytics에는 자녀 이름·프로필 ID를
+보내지 않습니다. 학교 조회에 필요한 학교 코드 등 최소한의 진단 정보만 사용자가 동의한
+경우 전송될 수 있습니다.
+
 ## 게시 순서
 
 1. 전체 문안의 대괄호 자리표시자(운영자/개발자 명칭, 문의용 이메일, 실제 Google Analytics 보관 기간)를 **실제 값으로 바꿉니다**. Play Console 개발자 표기와 운영자 명칭을 맞춥니다. 앱의 가정통신문 API 주소도 출시 빌드와 비교합니다.

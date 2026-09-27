@@ -54,6 +54,66 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
+            android:text="@string/settings_profile_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_section_title"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/settings_profile_selector_label"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_body_small"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/settingsProfileSelector"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/brand_blue" />
+
+        <Button
+            android:id="@+id/addProfileButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/brand_blue_soft"
+            android:text="@string/settings_profile_add"
+            android:textColor="@color/brand_blue"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="@string/settings_profile_name_label"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_body_small"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/settingsProfileNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/brand_blue"
+            android:hint="@string/setup_profile_name_hint"
+            android:imeOptions="actionNext"
+            android:inputType="textPersonName"
+            android:maxLength="10"
+            android:maxLines="1"
+            android:paddingVertical="14dp"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
             android:text="@string/setup_school_label"
             android:textColor="@color/text_primary"
             android:textSize="@dimen/text_body_small"
@@ -188,6 +248,17 @@
             android:paddingVertical="14dp"
             android:textColor="@color/text_primary"
             android:textColorHint="@color/text_secondary" />
+
+        <Button
+            android:id="@+id/deleteProfileButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:backgroundTint="@android:color/transparent"
+            android:text="@string/settings_profile_delete"
+            android:textColor="@color/error_red"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"

@@ -3,6 +3,7 @@ package com.lbs.schoolhelper.ui.splash
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.lbs.schoolhelper.data.profile.StudentProfileRepository
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     application: Application,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val studentProfileRepository: StudentProfileRepository
 ) : AndroidViewModel(application) {
     private val _navigationEvent = MutableSharedFlow<SplashDestination>()
     val navigationEvent = _navigationEvent.asSharedFlow()
@@ -28,7 +30,7 @@ class SplashViewModel @Inject constructor(
         decideNextScreenJob = viewModelScope.launch {
             delay(SPLASH_DELAY_MILLIS)
             val destination = if (
-                preferencesRepository.hasStudentInfo() &&
+                !studentProfileRepository.requiresInitialSetup() &&
                 preferencesRepository.hasCompletedTelemetryConsentPrompt()
             ) {
                 SplashDestination.MAIN

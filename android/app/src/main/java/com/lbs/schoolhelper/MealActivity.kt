@@ -38,6 +38,8 @@ class MealActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
+                    binding.mealProfileContextText.text = state.profileContextText
+                    binding.mealProfileContextText.visibility = if (state.profileContextText.isBlank()) View.GONE else View.VISIBLE
                     binding.mealWeekTitleText.text = state.weekTitle
                     binding.mealStatusText.text = state.statusText
                     binding.mealStatusText.visibility = if (state.statusText.isBlank()) {

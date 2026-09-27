@@ -1,6 +1,7 @@
 package com.lbs.schoolhelper.ui.meal
 
 data class MealUiState(
+    val profileContextText: String = "",
     val weekTitle: String = "",
     val statusText: String = "",
     val isLoading: Boolean = true,

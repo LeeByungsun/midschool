@@ -60,6 +60,30 @@ object UserPreferences {
         return getStudentInfo(context).isComplete()
     }
 
+    fun hasLegacyStudentInfo(context: Context): Boolean {
+        val info = getStudentInfo(context)
+        return listOf(
+            info.grade,
+            info.classroom,
+            info.schoolName,
+            info.officeCode,
+            info.schoolCode,
+            info.schoolKind
+        ).any(String::isNotBlank)
+    }
+
+    fun clearStudentInfo(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .remove(KEY_GRADE)
+            .remove(KEY_CLASSROOM)
+            .remove(KEY_SCHOOL_NAME)
+            .remove(KEY_OFFICE_CODE)
+            .remove(KEY_SCHOOL_CODE)
+            .remove(KEY_SCHOOL_KIND)
+            .commit()
+    }
+
     fun saveTimerDisplayMode(context: Context, displayMode: String) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()

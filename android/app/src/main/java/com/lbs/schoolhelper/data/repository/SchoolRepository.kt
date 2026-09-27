@@ -10,24 +10,23 @@ import kotlinx.coroutines.flow.flow
 
 interface SchoolRepository {
     suspend fun searchSchools(query: String): Result<List<SchoolInfo>>
-    suspend fun getMeals(date: String? = null): Result<List<MealInfo>>
-    suspend fun getSchedules(date: String? = null): Result<List<SchoolEvent>>
-    suspend fun getNotices(limit: Int = 3): Result<NoticeFeed>
-    suspend fun getTimetable(grade: String, classroom: String, date: String? = null): Result<List<TimetableItem>>
+    suspend fun getMeals(student: StudentInfo, date: String? = null): Result<List<MealInfo>>
+    suspend fun getSchedules(student: StudentInfo, date: String? = null): Result<List<SchoolEvent>>
+    suspend fun getNotices(student: StudentInfo, limit: Int = 3): Result<NoticeFeed>
+    suspend fun getTimetable(student: StudentInfo, date: String? = null): Result<List<TimetableItem>>
 
-    fun observeMeals(date: String? = null): Flow<Result<List<MealInfo>>> = flow {
-        emit(getMeals(date))
+    fun observeMeals(student: StudentInfo, date: String? = null): Flow<Result<List<MealInfo>>> = flow {
+        emit(getMeals(student, date))
     }
 
-    fun observeSchedules(date: String? = null): Flow<Result<List<SchoolEvent>>> = flow {
-        emit(getSchedules(date))
+    fun observeSchedules(student: StudentInfo, date: String? = null): Flow<Result<List<SchoolEvent>>> = flow {
+        emit(getSchedules(student, date))
     }
 
     fun observeTimetable(
-        grade: String,
-        classroom: String,
+        student: StudentInfo,
         date: String? = null
     ): Flow<Result<List<TimetableItem>>> = flow {
-        emit(getTimetable(grade, classroom, date))
+        emit(getTimetable(student, date))
     }
 }
