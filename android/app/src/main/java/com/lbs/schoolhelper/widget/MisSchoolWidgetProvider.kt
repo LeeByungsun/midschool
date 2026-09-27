@@ -12,6 +12,7 @@ import com.lbs.schoolhelper.R
 import com.lbs.schoolhelper.SplashActivity
 import com.lbs.schoolhelper.data.repository.PreferencesRepository
 import com.lbs.schoolhelper.data.repository.SchoolRepository
+import com.lbs.schoolhelper.data.profile.StudentProfileRepository
 import com.lbs.schoolhelper.telemetry.AppTelemetry
 import com.lbs.schoolhelper.telemetry.TelemetryLifecycleCallbacks
 import com.lbs.schoolhelper.telemetry.WidgetAction
@@ -179,6 +180,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             val dependencies = dependencies(context)
             val schoolRepository = dependencies.schoolRepository()
             val preferencesRepository = dependencies.preferencesRepository()
+            val studentProfileRepository = dependencies.studentProfileRepository()
             val remainingUpdates = AtomicInteger(appWidgetIds.size)
             appWidgetIds.forEach { appWidgetId ->
                 updateAppWidget(
@@ -187,6 +189,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
                     appWidgetId = appWidgetId,
                     schoolRepository = schoolRepository,
                     preferencesRepository = preferencesRepository,
+                    studentProfileRepository = studentProfileRepository,
                     onComplete = {
                         if (remainingUpdates.decrementAndGet() == 0) {
                             onComplete?.invoke()
@@ -202,6 +205,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int,
             schoolRepository: SchoolRepository = dependencies(context).schoolRepository(),
             preferencesRepository: PreferencesRepository = dependencies(context).preferencesRepository(),
+            studentProfileRepository: StudentProfileRepository = dependencies(context).studentProfileRepository(),
             onComplete: (() -> Unit)? = null
         ) {
             fun createBaseViews(): RemoteViews {
@@ -271,9 +275,18 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val studentInfo = preferencesRepository.getStudentInfo()
                     val widgetSettings = preferencesRepository.getWidgetSettings(appWidgetId)
-                    if (!studentInfo.isComplete()) {
+                    val profile = WidgetProfileResolver.resolve(
+                        widgetSettings,
+                        studentProfileRepository.profiles.value,
+                        studentProfileRepository.activeProfile.value
+                    )
+                    val normalizedSettings = widgetSettings.copy(profileId = profile?.id.orEmpty())
+                    if (normalizedSettings != widgetSettings) {
+                        preferencesRepository.saveWidgetSettings(appWidgetId, normalizedSettings)
+                    }
+                    val studentInfo = profile?.studentInfo
+                    if (studentInfo == null || !studentInfo.isComplete()) {
                         val setupViews = createBaseViews()
                         setupViews.setTextViewText(
                             R.id.widgetTimetableText,
@@ -401,6 +414,7 @@ class MisSchoolWidgetProvider : AppWidgetProvider() {
 interface WidgetProviderEntryPoint {
     fun schoolRepository(): SchoolRepository
     fun preferencesRepository(): PreferencesRepository
+    fun studentProfileRepository(): StudentProfileRepository
     fun telemetry(): AppTelemetry
 }
 

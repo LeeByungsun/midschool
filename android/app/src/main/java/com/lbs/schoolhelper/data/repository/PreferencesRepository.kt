@@ -100,5 +100,6 @@ data class TimerPreferenceState(
 )
 
 data class WidgetSettings(
+    val profileId: String = "",
     val showTomorrowTimetable: Boolean = true
 )
