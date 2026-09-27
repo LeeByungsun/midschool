@@ -34,6 +34,8 @@ class ScheduleActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
+                    binding.scheduleProfileContextText.text = state.profileContextText
+                    binding.scheduleProfileContextText.visibility = if (state.profileContextText.isBlank()) android.view.View.GONE else android.view.View.VISIBLE
                     binding.scheduleMonthTitleText.text = state.monthTitle
                     binding.scheduleListText.text = state.scheduleText
                 }
