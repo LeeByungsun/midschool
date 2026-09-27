@@ -35,6 +35,8 @@ class SetupViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     private val initialProfile = studentProfileRepository.activeProfile.value
+    // The repository migrates legacy data on app startup; the fallback keeps setup
+    // previews/tests backed by the legacy preference adapter working as well.
     private val initialStudentInfo = initialProfile?.studentInfo ?: preferencesRepository.getStudentInfo()
     private var schoolSearchJob: Job? = null
     private var latestSearchRequestId: Long = 0L

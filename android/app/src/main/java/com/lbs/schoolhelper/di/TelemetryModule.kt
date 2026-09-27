@@ -2,7 +2,8 @@ package com.lbs.schoolhelper.di
 
 import android.os.Build
 import com.lbs.schoolhelper.BuildConfig
-import com.lbs.schoolhelper.data.repository.PreferencesRepository
+import com.lbs.schoolhelper.data.profile.StudentProfileRepository
+import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.telemetry.AppTelemetry
 import com.lbs.schoolhelper.telemetry.DeviceContext
 import com.lbs.schoolhelper.telemetry.FirebaseTelemetrySink
@@ -18,11 +19,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object TelemetryModule {
     @Provides @Singleton
-    fun provideTelemetry(sink: FirebaseTelemetrySink, preferences: PreferencesRepository): AppTelemetry =
+    fun provideTelemetry(sink: FirebaseTelemetrySink, profiles: StudentProfileRepository): AppTelemetry =
         SafeTelemetry(
             TelemetryReporter(
                 sink = sink,
-                studentInfo = preferences::getStudentInfo,
+                studentInfo = { profiles.activeProfile.value?.studentInfo ?: StudentInfo() },
                 deviceContext = DeviceContext(
                     manufacturer = Build.MANUFACTURER.orEmpty(),
                     model = Build.MODEL.orEmpty(),

@@ -2,11 +2,13 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="telemetry_consent.xml" />
+        <exclude domain="sharedpref" path="student_profiles.xml" />
         <exclude domain="sharedpref" path="com.google.firebase.crashlytics.xml" />
         <exclude domain="sharedpref" path="com.google.android.gms.measurement.prefs.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="telemetry_consent.xml" />
+        <exclude domain="sharedpref" path="student_profiles.xml" />
         <exclude domain="sharedpref" path="com.google.firebase.crashlytics.xml" />
         <exclude domain="sharedpref" path="com.google.android.gms.measurement.prefs.xml" />
     </device-transfer>
