@@ -10,10 +10,19 @@
 ## 게시 순서
 
 1. 전체 문안의 대괄호 자리표시자(운영자/개발자 명칭, 문의용 이메일, 실제 Google Analytics 보관 기간)를 **실제 값으로 바꿉니다**. Play Console 개발자 표기와 운영자 명칭을 맞춥니다. 앱의 가정통신문 API 주소도 출시 빌드와 비교합니다.
-2. GitHub에 `schoolhelper-privacy` 같은 **공개 저장소**를 만듭니다. 문안을 `index.md`로 저장소 루트에 복사합니다. 필요하면 별도의 `index.html`로 변환해도 됩니다.
+2. GitHub에 `schoolon-privacy` 같은 **공개 저장소**를 만듭니다. 문안을 `index.md`로 저장소 루트에 복사합니다. 필요하면 별도의 `index.html`로 변환해도 됩니다.
 3. 저장소 **Settings → Pages → Build and deployment → Deploy from a branch**에서 `main` / `/ (root)`를 선택합니다.
-4. 게시된 `https://<GitHub 사용자명>.github.io/schoolhelper-privacy/`를 로그아웃/시크릿 창과 휴대전화에서 열어 확인합니다. GitHub 사용자·저장소 이름이 다르면 URL도 달라집니다.
+4. 게시된 `https://<GitHub 사용자명>.github.io/schoolon-privacy/`를 로그아웃/시크릿 창과 휴대전화에서 열어 확인합니다. GitHub 사용자·저장소 이름이 다르면 URL도 달라집니다.
 5. **동일한 공개 URL**을 Play Console의 개인정보처리방침 필드와 앱 내 개인정보처리방침 링크에 연결합니다. 현재 앱에는 방침 링크가 없으므로 출시 전 UI/문자열을 추가해야 합니다. Play Console **데이터 보안(Data safety)** 답변도 문안 및 실제 SDK 동작과 대조합니다.
+
+
+### 현재 저장소로 바로 게시하는 방법
+
+이 저장소를 공개로 유지할 수 있다면, GitHub Pages의 배포 원본을 `main` 브랜치의 `/docs` 폴더로 선택하세요. 배포 주소는 다음과 같습니다.
+
+`https://leebyungsun.github.io/midschool/privacy/`
+
+이 주소의 진입 페이지는 [`index.html`](index.html)이며, 페이지 제목과 표기 이름은 모두 **스쿨온**입니다.
 
 GitHub 저장소의 소스 페이지나 편집 가능한 문서 링크가 아니라 **게시된 Pages URL**을 사용하세요. Google Play는 누구나 접근 가능한 정상 웹페이지(지역 제한·PDF·수정 가능한 문서 제외)를 요구합니다. GitHub Pages는 `index.md`, `index.html`, `README.md`를 진입 파일로 인식합니다.
 
