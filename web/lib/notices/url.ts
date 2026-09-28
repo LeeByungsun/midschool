@@ -29,17 +29,17 @@ export function buildLegacyHomepageAliases(value: string) {
   const parsed = new URL(hasExplicitProtocol(trimmed) ? trimmed : `https://${trimmed}`);
   const aliases: string[] = [];
 
-  if (parsed.hostname.endsWith(".dge.ms.kr")) {
-    const legacySchoolId = parsed.hostname
-      .slice(0, -".dge.ms.kr".length)
-      .split(".")
-      .filter(Boolean)
-      .pop();
+  const legacyDgeMatch = parsed.hostname.match(/(?:^|\.)([^.]+)\.dge\.(ms|es|hs)\.kr$/);
+
+  if (legacyDgeMatch) {
+    const legacySchoolId = legacyDgeMatch[1];
+    const schoolLevel = legacyDgeMatch[2];
 
     if (legacySchoolId) {
       const firstPathSegment = parsed.pathname.split("/").filter(Boolean)[0];
-      const siteId = firstPathSegment || `${legacySchoolId}m`;
-      const aliasUrl = new URL("https://dge.ms.kr");
+      const siteIdSuffix = { ms: "m", es: "e", hs: "h" }[schoolLevel];
+      const siteId = firstPathSegment || `${legacySchoolId}${siteIdSuffix}`;
+      const aliasUrl = new URL(`https://dge.${schoolLevel}.kr`);
       aliasUrl.pathname =
         parsed.pathname === "/"
           ? `/${siteId}/`

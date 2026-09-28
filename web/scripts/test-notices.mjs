@@ -202,3 +202,19 @@ test('legacy dge middle-school homepages map to the centralized dge host', () =>
     ['https://dge.ms.kr/suseongm/main.do'],
   );
 });
+
+test('legacy dge elementary and high-school homepages map to their centralized hosts', () => {
+  assert.deepEqual(buildLegacyHomepageAliases('https://ndg.dge.es.kr/ndge/main.do'), [
+    'https://dge.es.kr/ndge/main.do',
+  ]);
+  assert.deepEqual(
+    buildLegacyHomepageAliases('https://daeseo.dge.es.kr/daeseoe/main.do'),
+    ['https://dge.es.kr/daeseoe/main.do'],
+  );
+  assert.deepEqual(
+    buildLegacyHomepageAliases(
+      'https://dgjeil.dge.hs.kr/dgjeilh/main.do?sysId=dgjeilh',
+    ),
+    ['https://dge.hs.kr/dgjeilh/main.do?sysId=dgjeilh'],
+  );
+});

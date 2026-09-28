@@ -17,7 +17,12 @@ export type NoticeProvider =
 export function detectNoticeProvider(homepageUrl: string, homepageHtml: string): NoticeProvider | null {
   const hostname = new URL(homepageUrl).hostname;
 
-  if (hostname === "dge.ms.kr" || hostname.endsWith(".dge.ms.kr")) {
+  if (
+    ["ms", "es", "hs"].some(
+      (schoolLevel) =>
+        hostname === `dge.${schoolLevel}.kr` || hostname.endsWith(`.dge.${schoolLevel}.kr`),
+    )
+  ) {
     return "dge-board";
   }
 
@@ -58,7 +63,12 @@ export function detectNoticeProvider(homepageUrl: string, homepageHtml: string):
   }
 
 
-  if (hostname.endsWith("goehs.kr") || homepageHtml.includes("/na/ntt/selectNttList.do")) {
+  if (
+    hostname.endsWith("goehs.kr") ||
+    hostname === "goesw.kr" ||
+    hostname.endsWith(".goesw.kr") ||
+    homepageHtml.includes("/na/ntt/selectNttList.do")
+  ) {
     return "goehs-board";
   }
 

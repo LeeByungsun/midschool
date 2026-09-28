@@ -33,7 +33,7 @@ export function parseGoehsNoticeBoardUrl(homepageUrl: string, html: string) {
     const href = match[1];
     const titleText = stripTags(match[2]);
 
-    if (titleText.includes("가정통신문")) {
+    if (titleText.includes("가정통신문") || titleText.endsWith("교육통신")) {
       return toAbsoluteUrl(homepageUrl, decodeHtml(href));
     }
   }
@@ -91,4 +91,3 @@ export function parseGoehsNoticeList(boardUrl: string, html: string, limit: numb
 
   return items;
 }
-
