@@ -120,7 +120,7 @@ class TimerSessionController @Inject constructor(
         completedRounds = 0
         awaitingNextPhase = false
         sessionCompleted = false
-        val duration = settings.focusMinutes * MINUTE_MILLIS
+        val duration = phaseDurationMillis()
         render(duration, running = false)
         saveState(running = false, targetAtMillis = 0L)
         if (recordTelemetry) telemetry.timerAction(TimerAction.RESET, duration)
@@ -227,7 +227,7 @@ class TimerSessionController @Inject constructor(
                 completedRounds = 0
                 awaitingNextPhase = false
                 sessionCompleted = true
-                render(settings.focusMinutes * MINUTE_MILLIS, running = false)
+                render(phaseDurationMillis(), running = false)
                 saveState(running = false, targetAtMillis = 0L)
             }
         }
@@ -298,11 +298,18 @@ class TimerSessionController @Inject constructor(
         PomodoroPhase.LONG_BREAK -> appContext.getString(R.string.home_timer_long_break)
     }
 
-    private fun phaseDurationMillis() = when (phase) {
-        PomodoroPhase.FOCUS -> settings.focusMinutes
-        PomodoroPhase.SHORT_BREAK -> settings.shortBreakMinutes
-        PomodoroPhase.LONG_BREAK -> settings.longBreakMinutes
-    } * MINUTE_MILLIS
+    private fun phaseDurationMillis(): Long {
+        val minutes = if (BuildConfig.BUILD_TYPE == "qa") {
+            1
+        } else {
+            when (phase) {
+                PomodoroPhase.FOCUS -> settings.focusMinutes
+                PomodoroPhase.SHORT_BREAK -> settings.shortBreakMinutes
+                PomodoroPhase.LONG_BREAK -> settings.longBreakMinutes
+            }
+        }
+        return minutes.toLong() * MINUTE_MILLIS
+    }
 
     private fun saveState(running: Boolean, targetAtMillis: Long) {
         preferencesRepository.saveTimerState(
@@ -324,7 +331,7 @@ class TimerSessionController @Inject constructor(
     }
 
     private fun Int?.orZero(): Int = this?.coerceAtLeast(0) ?: 0
-    private fun effectiveSettings(value: PomodoroSettings) = if (BuildConfig.BUILD_TYPE == "qa") value.copy(focusMinutes = 1, shortBreakMinutes = 1, longBreakMinutes = 1) else value
+    private fun effectiveSettings(value: PomodoroSettings) = value
     private fun isCountMode() = preferencesRepository.getTimerDisplayMode() != TimerDisplayMode.RING
     private fun calculateProgress(remaining: Long, total: Long) = if (total <= 0L) 0f else remaining.toFloat() / total.toFloat()
     private fun formatTimerText(millis: Long): String {

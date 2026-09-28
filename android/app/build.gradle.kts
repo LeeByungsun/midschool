@@ -53,6 +53,7 @@ android {
             initWith(getByName("debug"))
             applicationIdSuffix = ".qa"
             versionNameSuffix = "-qa"
+            // QA stays debuggable and is intentionally not minified.
             isDebuggable = true
             matchingFallbacks += listOf("debug")
             // google-services.json must contain an explicit com.lbs.schoolhelper.qa client.
@@ -62,7 +63,8 @@ android {
         release {
             buildConfigField("boolean", "TELEMETRY_ALLOWED", googleServicesFile.exists().toString())
             buildConfigField("String", "TELEMETRY_ENVIRONMENT", "\"release\"")
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
