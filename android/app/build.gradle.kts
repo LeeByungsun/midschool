@@ -1,4 +1,6 @@
 import java.util.Properties
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 plugins {
     alias(libs.plugins.android.application)
@@ -81,6 +83,44 @@ android {
         }
     }
 }
+
+// Keep the canonical Gradle outputs intact and provide release-ready copies
+// whose names are easy to identify in CI artifacts and on a developer machine.
+fun registerNamedArtifactTask(variant: String, versionName: String) {
+    val variantCapitalized = variant.replaceFirstChar { it.uppercaseChar() }
+    tasks.register("package${variantCapitalized}NamedArtifacts") {
+        group = "build"
+        description = "Builds the $variant APK/AAB with a version-and-timestamp filename."
+        dependsOn("assemble$variantCapitalized", "bundle$variantCapitalized")
+
+        doLast {
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+            val outputDirectory = layout.buildDirectory.dir("outputs/named/$variant").get().asFile
+            outputDirectory.mkdirs()
+
+            val apk = fileTree(layout.buildDirectory.dir("outputs/apk/$variant").get().asFile)
+                .matching { include("*.apk") }
+                .files
+                .singleOrNull()
+                ?: error("Expected exactly one APK for $variant")
+            val aab = fileTree(layout.buildDirectory.dir("outputs/bundle/$variant").get().asFile)
+                .matching { include("*.aab") }
+                .files
+                .singleOrNull()
+                ?: error("Expected exactly one AAB for $variant")
+
+            val baseName = "schoolon_${versionName}_${android.defaultConfig.versionCode}_$timestamp"
+            apk.copyTo(outputDirectory.resolve("$baseName.apk"), overwrite = true)
+            aab.copyTo(outputDirectory.resolve("$baseName.aab"), overwrite = true)
+            logger.lifecycle("Named artifacts: ${outputDirectory.resolve("$baseName.apk").absolutePath}")
+            logger.lifecycle("Named artifacts: ${outputDirectory.resolve("$baseName.aab").absolutePath}")
+        }
+    }
+}
+
+val baseVersionName = android.defaultConfig.versionName ?: error("versionName must be configured")
+registerNamedArtifactTask("qa", "$baseVersionName-qa")
+registerNamedArtifactTask("release", baseVersionName)
 
 dependencies {
     implementation(libs.androidx.core.ktx)
