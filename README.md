@@ -78,7 +78,8 @@ misSchoolApp/
 │   └── settings.gradle.kts
 ├── docs/
 │   ├── android-studio-setup.md
-│   ├── android-school-selection-review.md
+│   ├── ios-project-specification.md
+│   ├── privacy-policy.ko.md
 │   ├── project-structure.md
 │   └── project_specification.md
 ├── ios/
@@ -165,11 +166,10 @@ npm run build
 ## 문서 안내
 
 - 멀티플랫폼 기능 / 정책 스펙: `docs/project_specification.md`
-- Android 학교선택 검토 메모: `docs/android-school-selection-review.md`
-- Android 앞으로 할 일: `docs/android-app-todo.md`
 - 현재 저장소 구조 문서: `docs/project-structure.md`
 - Android Studio 열기 안내: `docs/android-studio-setup.md`
 - iOS 전용 스펙: `docs/ios-project-specification.md`
+- 개인정보처리방침: `docs/privacy-policy.ko.md`
 - 웹 전용 안내: `web/README.md`
 - Android 전용 안내: `android/README.md`
 

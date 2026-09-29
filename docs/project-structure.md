@@ -109,7 +109,7 @@ web/
 
 - 전체 기능/정책: `project_specification.md`
 - Android 실행/구조: `../android/README.md`, `android-studio-setup.md`
-- iOS 실행/검증: `../ios/README.md`, `ios-project-specification.md`, `ios-runtime-verification.md`
+- iOS 실행/구조: `../ios/README.md`, `ios-project-specification.md`
 - Web 실행/구조: `../web/README.md`
 
 대표 검증 명령은 각 플랫폼 README를 우선합니다. 코드 구조가 바뀌면 이 문서와 해당 플랫폼 README를 함께 갱신합니다.

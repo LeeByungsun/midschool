@@ -2,7 +2,7 @@
 
 ## 목표
 
-Android와 iOS 앱의 Firebase Crashlytics 빌드 설정을 점검합니다. 설정 파일을 추가하는 것만으로 실제 오류 전송이 시작된다고 가정하지 않습니다. 아래 Android 설명은 [관측 운영 문서](android-firebase-observability.md)의 빌드 변형·별도 동의 정책과 함께 읽습니다.
+Android와 iOS 앱의 Firebase Crashlytics 빌드 설정을 점검합니다. 설정 파일을 추가하는 것만으로 실제 오류 전송이 시작된다고 가정하지 않습니다. Android의 빌드 변형과 별도 동의 정책은 실제 코드 및 Firebase 콘솔 설정과 함께 확인합니다.
 
 ## 현재 코드 상태
 
@@ -69,7 +69,7 @@ cd android
 ```
 
 설정 파일 추가 후에는 릴리즈 빌드/배포 파이프라인에서 Crashlytics Plugin이 매핑 파일 업로드를 실행하는지 확인합니다.
-콘솔 수신은 [Android QA 절차](android-firebase-observability.md#qa-확인-절차)로 확인하며, 일반 debug 빌드 성공을 오류 전송 검증으로 간주하지 않습니다.
+콘솔 수신은 QA 빌드에서 별도 확인하며, 일반 debug 빌드 성공을 오류 전송 검증으로 간주하지 않습니다.
 
 ### iOS
 

@@ -44,3 +44,8 @@ checkimage/
 /android/gradle/gradle-daemon-jvm.properties
 /screen_1.png
 /flutter/
+
+# Local documentation and store assets
+/docs/store-assets/
+/docs/superpowers/
+/docs/internal/

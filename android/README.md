@@ -74,5 +74,5 @@ android/
 - 프로젝트 전체 스펙: `../docs/project_specification.md`
 - 프로젝트 구조: `../docs/project-structure.md`
 - Android Studio 사용 안내: `../docs/android-studio-setup.md`
-- Android 앞으로 할 일: `../docs/android-app-todo.md`
+- 개인정보처리방침: `../docs/privacy-policy.ko.md`
 - Android 전용 작업 규칙: `AGENTS.md`

@@ -182,4 +182,4 @@ iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
 
 현재는 **기능 parity를 우선하는 iPhone 앱 구현 + 코어 회귀 테스트 + simulator/device-preview 검증**을 기준으로 진행합니다.
 
-상세 parity 감사는 `docs/ios-parity-audit.md` 를 기준으로 추적합니다.
+상세 parity 감사와 실기기 검증 기록은 공개 기능 명세와 분리된 내부 문서로 관리합니다.
