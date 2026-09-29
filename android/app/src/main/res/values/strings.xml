@@ -63,10 +63,10 @@
     <string name="home_timer_restart">다시 시작</string>
     <string name="home_timer_new_session">새 세션 시작</string>
     <string name="home_timer_start_focus">다음 집중 시작</string>
-    <string name="home_timer_start_short_break">짧은 휴식 시작</string>
+    <string name="home_timer_start_short_break">쉬는 시간 시작</string>
     <string name="home_timer_start_long_break">긴 휴식 시작</string>
     <string name="home_timer_focus_round">집중 %1$d/%2$d</string>
-    <string name="home_timer_short_break_round">짧은 휴식 %1$d/%2$d</string>
+    <string name="home_timer_short_break_round">쉬는 시간 %1$d/%2$d</string>
     <string name="home_timer_long_break">긴 휴식</string>
     <string name="home_timer_reset">초기화</string>
     <string name="home_timer_detail_button">타이머 전체 보기</string>
@@ -130,7 +130,7 @@
     <string name="settings_pomodoro_title">포모도로 타이머</string>
     <string name="settings_pomodoro_description">집중과 휴식 시간을 설정하고 1~4회 라운드로 진행해요.</string>
     <string name="settings_pomodoro_focus_hint">집중 시간(분)</string>
-    <string name="settings_pomodoro_short_break_hint">짧은 휴식(분)</string>
+    <string name="settings_pomodoro_short_break_hint">쉬는 시간(분)</string>
     <string name="settings_pomodoro_long_break_hint">긴 휴식(분)</string>
     <string name="settings_pomodoro_rounds_title">라운드 수</string>
     <string name="settings_timer_alert_title">타이머 완료 알림</string>

@@ -213,9 +213,13 @@ class TimerSessionController @Inject constructor(
         when (phase) {
             PomodoroPhase.FOCUS -> {
                 completedRounds = (completedRounds + 1).coerceAtMost(settings.rounds)
-                phase = if (completedRounds >= settings.rounds) PomodoroPhase.LONG_BREAK else PomodoroPhase.SHORT_BREAK
-                awaitingNextPhase = false
-                startCurrentPhaseLocked(recordAction = false, resumeRemaining = false)
+                if (completedRounds >= settings.rounds) {
+                    completeSessionLocked()
+                } else {
+                    phase = PomodoroPhase.SHORT_BREAK
+                    awaitingNextPhase = false
+                    startCurrentPhaseLocked(recordAction = false, resumeRemaining = false)
+                }
             }
             PomodoroPhase.SHORT_BREAK -> {
                 phase = PomodoroPhase.FOCUS
@@ -223,15 +227,18 @@ class TimerSessionController @Inject constructor(
                 startCurrentPhaseLocked(recordAction = false, resumeRemaining = false)
             }
             PomodoroPhase.LONG_BREAK -> {
-                phase = PomodoroPhase.FOCUS
-                completedRounds = 0
-                awaitingNextPhase = false
-                sessionCompleted = true
-                render(phaseDurationMillis(), running = false)
-                saveState(running = false, targetAtMillis = 0L)
+                completeSessionLocked()
             }
         }
         return true
+    }
+
+    private fun completeSessionLocked() {
+        phase = PomodoroPhase.FOCUS
+        awaitingNextPhase = false
+        sessionCompleted = true
+        render(phaseDurationMillis(), running = false)
+        saveState(running = false, targetAtMillis = 0L)
     }
 
     private fun restoreTimerState() {

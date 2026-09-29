@@ -86,4 +86,29 @@ class TimerViewModelTest {
         assertTrue(controller.uiState.value.isRunning)
         assertFalse(controller.completeFromAlarm(nowMillis))
     }
+
+    @Test
+    fun `final focus round completes session without showing long break`() {
+        val nowMillis = 10_000L
+        val repository = FakePreferencesRepository(
+            timerState = TimerPreferenceState(
+                presetName = "POMODORO_FOCUS_3",
+                totalMillis = 1_500_000L,
+                remainingMillis = 0L,
+                targetAtMillis = nowMillis,
+                isRunning = true
+            )
+        )
+        val controller = TimerSessionController(application, repository)
+
+        assertTrue(controller.completeFromAlarm(nowMillis))
+
+        val state = controller.uiState.value
+        assertEquals(PomodoroPhase.FOCUS, state.phase)
+        assertEquals(4, state.completedRounds)
+        assertTrue(state.sessionCompleted)
+        assertFalse(state.isRunning)
+        assertEquals(R.string.home_timer_new_session, state.buttonTextRes)
+        assertEquals("집중 4/4", state.subtitle)
+    }
 }
