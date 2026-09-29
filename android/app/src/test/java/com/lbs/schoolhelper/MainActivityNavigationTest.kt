@@ -47,16 +47,6 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun timerDetailButtonClickStartsTimerActivity() {
-        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
-
-        activity.findViewById<View>(R.id.openTimerDetailButton).performClick()
-
-        val nextIntent = shadowOf(activity).nextStartedActivity
-        assertEquals(TimerActivity::class.java.name, nextIntent.component?.className)
-    }
-
-    @Test
     fun noticeButtonClickStartsSetupActivityWhenSchoolNotConfigured() {
         clearUserPreferences()
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()

@@ -210,22 +210,30 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/home_schedule_title"
-                        android:textColor="@color/text_primary"
-                        android:textSize="@dimen/text_section_title"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/openScheduleButton"
-                        style="@style/Widget.MisSchoolApp.Button.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:text="@string/home_schedule_button"
-                        android:textAllCaps="false" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/home_schedule_title"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_section_title"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/openScheduleButton"
+                            style="@style/Widget.MisSchoolApp.Button.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/home_schedule_button"
+                            android:textAllCaps="false" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/scheduleSummaryText"
@@ -256,22 +264,30 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/home_notice_title"
-                        android:textColor="@color/text_primary"
-                        android:textSize="@dimen/text_section_title"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/openNoticeButton"
-                        style="@style/Widget.MisSchoolApp.Button.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:text="@string/home_notice_open_button"
-                        android:textAllCaps="false" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/home_notice_title"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_section_title"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/openNoticeButton"
+                            style="@style/Widget.MisSchoolApp.Button.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/home_notice_open_button"
+                            android:textAllCaps="false" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/noticeSummaryText"
@@ -336,15 +352,6 @@
                         android:text="@string/home_timer_subtitle"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_body" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/openTimerDetailButton"
-                        style="@style/Widget.MisSchoolApp.Button.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:text="@string/home_timer_detail_button"
-                        android:textAllCaps="false" />
 
                     <LinearLayout
                         android:layout_width="match_parent"

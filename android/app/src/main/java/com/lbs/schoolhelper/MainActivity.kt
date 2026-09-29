@@ -79,9 +79,6 @@ class MainActivity : AppCompatActivity() {
         binding.openNoticeButton.setOnClickListener {
             homeViewModel.onNoticeActionClicked()
         }
-        binding.openTimerDetailButton.setOnClickListener {
-            startActivity(Intent(this, TimerActivity::class.java))
-        }
         binding.timerPrimaryButton.setOnClickListener { timerViewModel.toggleTimer() }
         binding.timerResetButton.setOnClickListener { timerViewModel.resetTimer() }
     }

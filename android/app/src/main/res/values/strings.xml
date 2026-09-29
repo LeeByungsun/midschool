@@ -43,7 +43,7 @@
     <string name="home_schedule_title">학사 일정</string>
     <string name="home_schedule_missing_school">학교 설정 후 이번 달 학사 일정을 확인해 주세요.</string>
     <string name="home_schedule_loading">이번 달 학사 일정을 불러오는 중이에요.</string>
-    <string name="home_schedule_button">월간 일정 보기</string>
+    <string name="home_schedule_button">월간 보기</string>
     <string name="home_schedule_empty">이번 달 일정이 여기에 표시됩니다.</string>
     <string name="home_schedule_error">학사 일정을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.</string>
     <string name="home_notice_title">가정통신문</string>
@@ -51,7 +51,7 @@
     <string name="home_notice_empty">최근 가정통신문이 여기에 표시됩니다.</string>
     <string name="home_notice_error">가정통신문을 불러오지 못했어요.</string>
     <string name="home_notice_open_error">가정통신문 링크를 열 수 없어요.</string>
-    <string name="home_notice_open_button">가정통신문 목록 열기</string>
+    <string name="home_notice_open_button">목록 열기</string>
     <string name="home_notice_unavailable_button">나중에 다시 보기</string>
     <string name="home_notice_preview_format">%1$s  %2$s</string>
     <string name="home_timer_title">집중력 타이머</string>
@@ -69,7 +69,6 @@
     <string name="home_timer_short_break_round">쉬는 시간 %1$d/%2$d</string>
     <string name="home_timer_long_break">긴 휴식</string>
     <string name="home_timer_reset">초기화</string>
-    <string name="home_timer_detail_button">타이머 전체 보기</string>
     <string name="home_timer_remaining">남은 시간</string>
     <string name="home_timer_focus_label">25분 집중</string>
     <string name="home_timer_break_label">40분 집중</string>
