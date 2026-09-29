@@ -1,5 +1,6 @@
 package com.lbs.schoolhelper.data.profile
 
+import android.util.Log
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import com.lbs.schoolhelper.data.repository.UserPreferencesStore
 import java.util.UUID
@@ -126,7 +127,11 @@ class StudentProfileRepositoryImpl private constructor(
     }
 
     private fun initialize() {
-        val stored = store.read()
+        val readResult = store.readResult()
+        if (readResult is StudentProfileReadResult.Corrupt) {
+            Log.w(TAG, "Stored student profiles could not be decoded; falling back to setup", readResult.error)
+        }
+        val stored = (readResult as? StudentProfileReadResult.Success)?.data
         if (stored != null && stored.schemaVersion == PROFILE_SCHEMA_VERSION) {
             val normalized = normalize(stored)
             currentData = normalized
@@ -161,7 +166,12 @@ class StudentProfileRepositoryImpl private constructor(
     private fun normalize(data: StudentProfilesData): StudentProfilesData {
         val seenIds = mutableSetOf<String>()
         val validProfiles = data.profiles.filter { profile ->
-            profile.id.isNotBlank() && seenIds.add(profile.id)
+            profile.id.isNotBlank() &&
+                // Keep a named profile or a complete legacy-migration profile,
+                // but discard accidental empty rows created by an interrupted
+                // setup flow.
+                (profile.displayName.isNotBlank() || profile.studentInfo.isComplete()) &&
+                seenIds.add(profile.id)
         }
         val activeId = data.activeProfileId
             .takeIf { id -> validProfiles.any { it.id == id } }
@@ -202,6 +212,8 @@ class StudentProfileRepositoryImpl private constructor(
     }
 
     companion object {
+        private const val TAG = "StudentProfileRepository"
+
         internal fun createForTest(
             store: StudentProfileStore,
             legacyStudentInfo: () -> StudentInfo,

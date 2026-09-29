@@ -164,6 +164,28 @@ class StudentProfileRepositoryImplTest {
     }
 
     @Test
+    fun initialize_removesAccidentalEmptyProfiles() {
+        val valid = profile("profile-1", "민준")
+        val empty = StudentProfile(
+            id = "profile-empty",
+            displayName = "",
+            studentInfo = StudentInfo()
+        )
+        val store = FakeStudentProfileStore(
+            data = StudentProfilesData(
+                activeProfileId = empty.id,
+                profiles = listOf(valid, empty)
+            )
+        )
+
+        val repository = repository(store = store)
+
+        assertEquals(listOf(valid), repository.profiles.value)
+        assertEquals(valid, repository.activeProfile.value)
+        assertEquals(listOf(valid), store.data?.profiles)
+    }
+
+    @Test
     fun initialize_withLegacyStudentInfo_createsUnnamedPendingProfile() {
         val legacy = completeStudent().copy(classroom = "")
         val store = FakeStudentProfileStore()
