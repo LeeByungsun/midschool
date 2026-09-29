@@ -14,6 +14,9 @@
 -keepclassmembers,allowoptimization class com.lbs.schoolhelper.data.profile.** {
     <fields>;
 }
+-keepclassmembers,allowoptimization class com.lbs.schoolhelper.data.repository.StudentInfo {
+    <fields>;
+}
 
 # Retrofit/Gson response DTOs are populated by reflection. Keep their JSON
 # field names and members while allowing the DTO classes themselves to rename.

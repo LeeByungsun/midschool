@@ -72,6 +72,50 @@ class SharedPreferencesStudentProfileStoreTest {
     }
 
     @Test
+    fun readResult_whenJsonIsMalformed_reportsCorruptDocumentAndPreservesRawJson() {
+        val rawJson = "{not-valid-json"
+        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(PROFILES_DATA_KEY, rawJson)
+            .commit()
+
+        val result = store.readResult()
+
+        assertTrue(result is StudentProfileReadResult.Corrupt)
+        assertEquals(rawJson, (result as StudentProfileReadResult.Corrupt).rawJson)
+    }
+
+    @Test
+    fun readResult_whenJsonIsMissing_reportsMissingDocument() {
+        assertEquals(StudentProfileReadResult.Missing, store.readResult())
+    }
+
+    @Test
+    fun read_restoresCanonicalKeysFromPreR8ProfileJson() {
+        val json = """
+            {"schemaVersion":1,"activeProfileId":"profile-1","profiles":[
+              {"id":"profile-1","displayName":"민준","studentInfo":{
+                "grade":"2","classroom":"3","schoolName":"한빛중학교",
+                "officeCode":"B10","schoolCode":"7010000","schoolKind":"중학교"
+              }}]
+            }
+        """.trimIndent()
+        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(PROFILES_DATA_KEY, json)
+            .commit()
+
+        val profile = requireNotNull(store.read()).profiles.single()
+
+        assertEquals("2", profile.studentInfo.grade)
+        assertEquals("3", profile.studentInfo.classroom)
+        assertEquals("한빛중학교", profile.studentInfo.schoolName)
+        assertEquals("B10", profile.studentInfo.officeCode)
+        assertEquals("7010000", profile.studentInfo.schoolCode)
+        assertEquals("중학교", profile.studentInfo.schoolKind)
+    }
+
+    @Test
     fun read_whenFileDoesNotExist_returnsNull() {
         assertNull(store.read())
     }

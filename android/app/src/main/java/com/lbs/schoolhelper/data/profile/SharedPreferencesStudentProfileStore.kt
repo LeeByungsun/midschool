@@ -13,10 +13,23 @@ class SharedPreferencesStudentProfileStore @Inject constructor(
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     override fun read(): StudentProfilesData? {
-        val json = preferences.getString(PROFILES_DATA_KEY, null) ?: return null
+        return when (val result = readResult()) {
+            StudentProfileReadResult.Missing -> null
+            is StudentProfileReadResult.Success -> result.data
+            is StudentProfileReadResult.Corrupt -> null
+        }
+    }
+
+    override fun readResult(): StudentProfileReadResult {
+        val json = preferences.getString(PROFILES_DATA_KEY, null)
+            ?: return StudentProfileReadResult.Missing
         return runCatching {
             gson.fromJson(json, StudentProfilesData::class.java)
-        }.getOrNull()
+                ?: throw IllegalStateException("Gson returned null for stored student profiles")
+        }.fold(
+            onSuccess = StudentProfileReadResult::Success,
+            onFailure = { StudentProfileReadResult.Corrupt(json, it) }
+        )
     }
 
     override fun write(data: StudentProfilesData): Boolean {

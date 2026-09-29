@@ -1,6 +1,7 @@
 package com.lbs.schoolhelper
 
 import android.content.Context
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import com.lbs.schoolhelper.data.repository.StudentInfo
 import org.junit.After
@@ -59,6 +60,20 @@ class StudentInfoFocusPersistenceTest {
         assertEquals("미사중학교", schoolInput.text.toString())
         assertEquals("2", gradeInput.text.toString())
         assertEquals("3", classInput.text.toString())
+    }
+
+    @Test
+    fun completingClassInputMovesFocusToSaveInsteadOfSubmitting() {
+        val activity = Robolectric.buildActivity(SetupActivity::class.java).setup().get()
+        val classInput = activity.findViewById<EditText>(R.id.classInput)
+        val saveButton = activity.findViewById<android.widget.Button>(R.id.saveStudentInfoButton)
+
+        classInput.requestFocus()
+        classInput.setText("3")
+        classInput.onEditorAction(EditorInfo.IME_ACTION_DONE)
+        Robolectric.flushForegroundThreadScheduler()
+
+        assertTrue(saveButton.hasFocus())
     }
 
     private fun clearPreferences() {

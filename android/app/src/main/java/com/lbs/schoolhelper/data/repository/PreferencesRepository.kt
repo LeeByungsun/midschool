@@ -1,5 +1,6 @@
 package com.lbs.schoolhelper.data.repository
 
+import com.google.gson.annotations.SerializedName
 import com.lbs.schoolhelper.data.model.MealInfo
 import com.lbs.schoolhelper.data.model.SchoolInfo
 import com.lbs.schoolhelper.data.model.SchoolEvent
@@ -58,11 +59,17 @@ interface PreferencesRepository {
 }
 
 data class StudentInfo(
+    @SerializedName("grade")
     val grade: String = "",
+    @SerializedName("classroom")
     val classroom: String = "",
+    @SerializedName("schoolName")
     val schoolName: String = "",
+    @SerializedName("officeCode")
     val officeCode: String = "",
+    @SerializedName("schoolCode")
     val schoolCode: String = "",
+    @SerializedName("schoolKind")
     val schoolKind: String = ""
 ) {
     fun hasClassroomInfo(): Boolean = grade.isNotBlank() && classroom.isNotBlank()

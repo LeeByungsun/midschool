@@ -71,7 +71,14 @@ class SetupActivity : AppCompatActivity() {
         }
         binding.classInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                saveStudentInfoFromInput()
+                // Completing the last field should not silently submit the
+                // form. Keep the consent step behind an explicit save action.
+                viewModel.updateClassroom(binding.classInput.text.toString().trim())
+                hideKeyboard(binding.classInput)
+                binding.saveStudentInfoButton.post {
+                    binding.saveStudentInfoButton.requestFocus()
+                    binding.saveStudentInfoButton.requestVisibleAboveKeyboard()
+                }
                 true
             } else {
                 false
