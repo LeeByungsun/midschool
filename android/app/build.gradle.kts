@@ -60,21 +60,6 @@ android {
             buildConfigField("boolean", "TELEMETRY_ALLOWED", "true")
             buildConfigField("String", "TELEMETRY_ENVIRONMENT", "\"qa\"")
         }
-        create("r8Qa") {
-            initWith(getByName("qa"))
-            // Same QA package/signing lets this minified build replace QA safely.
-            applicationIdSuffix = ".qa"
-            versionNameSuffix = "-r8qa"
-            // Keep the QA application id/signing, but run the real R8 pipeline.
-            isDebuggable = false
-            isMinifyEnabled = true
-            isShrinkResources = true
-            matchingFallbacks += listOf("qa", "release")
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
         release {
             buildConfigField("boolean", "TELEMETRY_ALLOWED", googleServicesFile.exists().toString())
             buildConfigField("String", "TELEMETRY_ENVIRONMENT", "\"release\"")
