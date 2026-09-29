@@ -4,7 +4,7 @@
 루트 `AGENTS.md`의 상위 규칙을 따르되, 안드로이드 코드에는 아래 기준을 우선 적용합니다.
 
 ## 1. 현재 프로젝트 기준
-- **앱 이름:** 중학교도우미
+- **앱 이름:** 스쿨온 (`qa` 빌드는 스쿨온 QA). 저장소의 멀티플랫폼 프로젝트 이름은 학교도우미
 - **언어:** Kotlin
 - **빌드:** Gradle Kotlin DSL
 - **minSdk / targetSdk:** 26 / 36
@@ -14,12 +14,12 @@
 - **패턴:** MVVM
 - **DI:** Hilt
 - **상태 관리:** `StateFlow`, `SharedFlow`
-- **데이터 접근:** `SchoolRepository`, `PreferencesRepository`
+- **데이터 접근:** `SchoolRepository`, `StudentProfileRepository`, `PreferencesRepository`
 - **원격 데이터:** Retrofit + OkHttp + Gson
 - **로컬 저장:** `SharedPreferences`를 `PreferencesRepository`로 감싸서 사용
 
 현재 프로젝트는 Clean Architecture의 일부 개념을 따르지만, 아직 별도 `domain` 모듈이나 UseCase 레이어는 없습니다.  
-새 기능은 기존 구조를 유지하면서 `ui/`, `data/`, `di/`, `widget/`, `timer/` 패턴에 맞춰 추가합니다.
+새 기능은 기존 구조를 유지하면서 `ui/`, `data/`, `di/`, `telemetry/`, `widget/`, `timer/` 패턴에 맞춰 추가합니다.
 
 ## 3. UI 개발 기준
 - **현재 UI 기준:** XML + DataBinding
@@ -43,6 +43,7 @@ Jetpack Compose는 현재 메인 UI 기술이 아니므로, 명시적인 전환 
 - 급식/시간표/학사 일정 캐시는 `PreferencesRepository`를 통해 관리합니다.
 - 날짜/월 단위 캐시는 조회 기준(학교 코드, 학년/반, 일자/월)이 드러나는 키와 TTL을 함께 유지합니다.
 - 새 저장 값이 필요하면 Activity에서 직접 `SharedPreferences`를 만지지 말고 `PreferencesRepository`에 API를 추가합니다.
+- 자녀 프로필의 추가·수정·삭제·전환은 `StudentProfileRepository` 경계를 사용합니다. 설정 화면의 프로필 입력은 포커스 이동만으로 영속 저장되지 않으며, 저장 버튼 또는 미저장 변경 확인을 거쳐 저장합니다.
 
 ## 6. 위젯/타이머 관련 기준
 - 위젯은 삼성 런처 호환성을 고려해 기본값으로 바로 추가되는 흐름을 유지합니다.
@@ -60,19 +61,10 @@ Jetpack Compose는 현재 메인 UI 기술이 아니므로, 명시적인 전환 
 - 기능을 추가하거나 흐름이 바뀌면 `docs/project_specification.md`를 함께 업데이트합니다.
 - Android 구조나 개발 규칙이 바뀌면 이 `android/AGENTS.md`도 같이 갱신합니다.
 
-## 9. 우선 참고할 자동화 자산
-- `.codex/Agent.md`: 저장소 자동화 자산 가이드
-- Android 관련 실행 스킬:
-  - `.codex/skills/android-architecture/`
-  - `.codex/skills/android-data-layer/`
-  - `.codex/skills/android-viewmodel/`
-  - `.codex/skills/android-coroutines/`
-  - `.codex/skills/android-retrofit/`
-  - `.codex/skills/android-accessibility/`
-  - 필요 시 Compose 참고:
-    - `.codex/skills/compose-navigation/`
-    - `.codex/skills/compose-ui/`
-- `docs/skills/web-automation-map.md`: 웹 자동화 구성 예시
-- 필요 시 `.codex/skills/`, `.codex/prompts/` 아래 실행 스킬/프롬프트를 함께 갱신합니다.
+## 9. 우선 참고 문서
+- `../README.md`: 저장소 및 플랫폼별 시작 안내
+- `README.md`: Android 프로젝트 열기·빌드·검증 안내
+- `../docs/project-structure.md`: 현재 추적 소스의 디렉터리 구조
+- `../docs/project_specification.md`: 현재 기능 및 플랫폼별 명세
 
 프로젝트 구조나 기술 선택이 바뀌면 이 문서를 먼저 최신화합니다.

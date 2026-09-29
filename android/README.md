@@ -1,6 +1,6 @@
-# 학교도우미 Android
+# 스쿨온 Android
 
-이 폴더는 `MisSchoolApp` 저장소 안의 **학교도우미 Android 앱 프로젝트**입니다.
+이 폴더는 `misSchoolApp` Gradle 프로젝트의 **스쿨온 Android 앱**입니다. 멀티플랫폼 프로젝트 문서에서는 학교도우미라는 이름을 사용합니다. 일반 빌드의 앱 이름은 `스쿨온`, QA 빌드는 `스쿨온 QA`입니다.
 
 Android 쪽은 현재 서비스의 기준 플랫폼이며, Kotlin + XML + Hilt + MVVM 구조를 사용합니다.
 
@@ -24,6 +24,8 @@ Android Studio에서는 저장소 루트가 아니라 **`android/` 폴더**를 �
 자세한 안내:
 - `../docs/android-studio-setup.md`
 
+가정통신문 서버 주소는 `android/local.properties`의 `WEB_BASE_URL`에서 빌드 설정으로 주입합니다. 기본값은 빈 문자열이므로 앱을 실행할 환경에서는 `/`로 끝나는 웹 서버 기본 URL을 설정하세요. NEIS 조회에는 같은 파일의 `NEIS_API_KEY`가 필요합니다. `local.properties`는 Git에 포함하지 않습니다.
+
 ## 자주 쓰는 명령
 
 ### 테스트 / 린트
@@ -38,27 +40,15 @@ cd android
 ./gradlew assembleDebug
 ```
 
-저장소 루트에서 실행하려면:
-
-```bash
-./android/gradlew testDebugUnitTest lintDebug
-./android/gradlew assembleDebug
-```
-
-### OMX 팀 명령
-```bash
-./android/scripts/team-school-selection-ab.sh
-./android/scripts/team-widget-timetable-check.sh
-```
-
 ## 폴더 구조 요약
 
 ```text
 android/
 ├── app/
 │   ├── src/main/java/com/lbs/schoolhelper/
-│   │   ├── data/         # 모델, 원격 API, repository
+│   │   ├── data/         # 모델, 자녀 프로필, 원격 API, repository
 │   │   ├── di/           # Hilt 모듈
+│   │   ├── telemetry/    # 선택적 Analytics/오류 진단 경계
 │   │   ├── timer/        # 타이머 알람/스케줄링
 │   │   ├── ui/           # 화면별 ViewModel / UI state
 │   │   ├── util/         # 공용 유틸
@@ -74,9 +64,10 @@ android/
 ## 현재 Android 기준 특징
 
 - 학교 생활 정보 조회의 기준 플랫폼
+- 자녀별 프로필과 학교/학년/반 설정
 - 앱 위젯 지원
 - 타이머 알림/진동 지원
-- XML 기반 화면 구성 유지
+- 홈 카드에서 타이머를 조작하는 XML 기반 화면 구성
 
 ## 관련 문서
 

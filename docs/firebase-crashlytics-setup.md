@@ -2,7 +2,7 @@
 
 ## 목표
 
-Android와 iOS 앱에서 Firebase Crashlytics가 빌드에 포함되고, Firebase 콘솔 설정 파일이 추가되면 실제 크래시 리포트가 Firebase 대시보드로 전송되도록 유지합니다.
+Android와 iOS 앱의 Firebase Crashlytics 빌드 설정을 점검합니다. 설정 파일을 추가하는 것만으로 실제 오류 전송이 시작된다고 가정하지 않습니다. 아래 Android 설명은 [관측 운영 문서](android-firebase-observability.md)의 빌드 변형·별도 동의 정책과 함께 읽습니다.
 
 ## 현재 코드 상태
 
@@ -19,6 +19,7 @@ Android와 iOS 앱에서 Firebase Crashlytics가 빌드에 포함되고, Firebas
 - 활성화 방식:
   - `google-services.json`이 있을 때만 Google Services Plugin과 Crashlytics Plugin을 적용합니다.
   - 설정 파일이 없는 로컬 환경에서도 Android 빌드가 깨지지 않습니다.
+  - 일반 debug 빌드는 텔레메트리를 전송하지 않습니다. QA와 release도 이용 분석·오류 진단을 각각 선택한 경우에만 해당 채널을 켭니다. QA 설정 파일에는 `com.lbs.schoolhelper.qa` 클라이언트가 필요합니다.
 
 ### iOS
 
@@ -42,8 +43,8 @@ Android와 iOS 앱에서 Firebase Crashlytics가 빌드에 포함되고, Firebas
 3. iOS 앱을 추가합니다.
    - Bundle ID: `com.lbs.shcoolhelper`
    - 받은 `GoogleService-Info.plist`를 `ios/SchoolHelper/Resources/GoogleService-Info.plist`에 둡니다.
-4. Firebase 콘솔의 Crashlytics 안내에 따라 각 플랫폼 앱을 1회 실행합니다.
-5. 테스트 크래시를 발생시킨 뒤 Firebase Crashlytics 대시보드에서 수신을 확인합니다.
+4. Firebase 콘솔의 Crashlytics 안내에 따라 각 플랫폼 앱을 실행하고, 플랫폼별 수집 동의 조건을 확인합니다.
+5. Android는 QA 전용 비치명 진단으로 콘솔 수신을 확인합니다. 운영 앱에서 테스트 크래시를 실행하지 않습니다. iOS 검증은 해당 앱의 별도 절차를 따릅니다.
 
 ## 검증 명령
 
@@ -68,6 +69,7 @@ cd android
 ```
 
 설정 파일 추가 후에는 릴리즈 빌드/배포 파이프라인에서 Crashlytics Plugin이 매핑 파일 업로드를 실행하는지 확인합니다.
+콘솔 수신은 [Android QA 절차](android-firebase-observability.md#qa-확인-절차)로 확인하며, 일반 debug 빌드 성공을 오류 전송 검증으로 간주하지 않습니다.
 
 ### iOS
 

@@ -1,6 +1,6 @@
-# 학교도우미 Android 앱 앞으로 할 일
+# 스쿨온 Android 앱 앞으로 할 일
 
-기준일: 2026-05-26
+Android 코드 대조: 2026-09-29 (`ae20ff6`). 실기기 결과는 [출시 준비 기록](android-release-readiness.md)의 검증 당시 범위만 인정한다.
 
 이 문서는 현재 저장소의 **Android 앱만** 기준으로 구현 상태를 정리하고, 다음 작업 우선순위를 명확히 남기기 위한 문서입니다.
 
@@ -9,7 +9,7 @@
 - `android/README.md`
 - `docs/project_specification.md`
 - `docs/android-school-selection-review.md`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/**`
+- `android/app/src/main/java/com/lbs/schoolhelper/**`
 
 ---
 
@@ -24,10 +24,12 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 - 홈 화면 위젯
 - 홈 대시보드 가정통신문 preview 카드
 - Repository / Preferences 기반의 기본 캐시 구조
+- 여러 자녀 프로필과 프로필별 학교·학년·반 저장
+- 기본 수집이 꺼진 Firebase Analytics/Crashlytics 독립 선택 동의(일반 debug 전송 제외)
 
-추가로, **학교 선택 A/B(검색/선택 UI + 학교 identity 저장)** 도 현재 브랜치 기준 구현되어 있습니다.
+**학교 검색·선택과 학교 identity 저장**은 현재 코드에 구현되어 있습니다. 2026-09-15 QA 실기기에서 신규 설정과 학교 A→B 변경 뒤 학교명·급식·시간표 복원을 확인했지만, 위젯·일정의 이전 학교 데이터 잔류까지 통과한 것은 아닙니다.
 
-지금 남은 일은 주로 **운영 검증**, **추가 회귀 검증**, **실기기 확인**입니다.
+지금 남은 일은 **앱 내 개인정보처리방침 링크**, **출시 운영 검토**, **추가 회귀·실기기 검증**입니다.
 
 ---
 
@@ -42,6 +44,8 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 - [x] 주간 급식 화면
 - [x] 일간 시간표 화면
 - [x] 월간 학사 일정 화면
+- [x] 여러 자녀 프로필 선택·편집 화면
+- [x] 선택 정보 수집 동의 화면·설정
 
 ### 데이터/아키텍처
 
@@ -100,10 +104,13 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 ### D. 운영 검증
 
-- [ ] Android 실기기에서 production notices 수동 확인
+- [ ] 출시 빌드에 주입한 `WEB_BASE_URL`로 가정통신문 조회·외부 링크 열기 확인
 - [ ] 에뮬레이터에서 production notices 수동 확인
 - [ ] 대구교육청(`*.dge.ms.kr`) 경로 대응 가능성 조사
 - [ ] 미지원 학교용 fallback 문구/버튼 흐름 점검
+- [ ] 학교 변경 후 급식·시간표·일정·위젯에 이전 학교 정보가 남지 않는지 실기기 확인
+- [ ] 삼성 런처 위젯, 재부팅, 타이머 완료 알림·진동, 작은 화면 확인
+- [ ] 앱 내 개인정보처리방침 링크 구현 및 공개 URL 확인; Play Data safety·Firebase 운영 설정 검토
 
 ---
 
@@ -113,14 +120,15 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 완료 기준:
 
-- school selection과 notices가 실기기/에뮬레이터에서 기대대로 동작
+- 미검증 항목까지 포함해 학교 변경과 가정통신문이 실기기/에뮬레이터에서 기대대로 동작
 - 수동 검증으로 남은 UX 리스크를 줄임
 
 세부 작업:
 
-- [ ] Android 실기기에서 school selection 저장/복원 수동 확인
+- [x] Android QA 실기기에서 신규 설정 및 학교 변경 뒤 학교명·급식·시간표 복원 확인(2026-09-15 기록)
+- [ ] Android 실기기에서 학교 변경 뒤 일정·위젯을 포함한 잔류 데이터 확인
 - [ ] Android 에뮬레이터에서 school selection 저장/복원 수동 확인
-- [ ] Android 실기기에서 production notices 수동 확인
+- [ ] Android 실기기에서 출시 빌드의 가정통신문 조회·링크 수동 확인
 - [ ] 에뮬레이터에서 production notices 수동 확인
 
 ## 2순위 — 회귀 검증 유지
@@ -142,11 +150,11 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 완료 기준:
 
-- notices와 학교 선택 흐름이 실기기/에뮬레이터에서 안정적으로 동작
+- 가정통신문과 학교 변경의 미검증 경로가 실기기/에뮬레이터에서 안정적으로 동작
 
 세부 작업:
 
-- [ ] Android 실기기에서 production notices 수동 확인
+- [ ] Android 실기기에서 출시 빌드의 가정통신문 조회·링크 수동 확인
 - [ ] 에뮬레이터에서 production notices 수동 확인
 - [ ] 미지원 학교 fallback 문구/버튼 흐름 점검
 
@@ -156,9 +164,9 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 다음 스프린트는 아래 순서가 가장 안전합니다.
 
-1. school selection 실기기/에뮬레이터 수동 확인
-2. notices 실기기 검증
-3. 남은 미지원 학교 fallback UX 정리
+1. 학교 변경 뒤 일정·위젯 잔류 데이터와 에뮬레이터 복원 확인
+2. 출시 빌드의 `WEB_BASE_URL`·가정통신문 조회·외부 링크 검증
+3. 미지원 학교 안내 및 [출시 준비 기록](android-release-readiness.md)의 나머지 실기기·운영 게이트 확인
 
 ---
 
@@ -178,16 +186,17 @@ Android 앱은 현재 서비스의 기준 플랫폼이며, 아래 축은 이미 
 
 학교 선택 기능 후속 작업 시 먼저 볼 파일:
 
-- `android/app/src/main/java/com/bsbarron/midschoolapp/SetupActivity.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/SettingsActivity.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/ui/setup/SetupViewModel.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/ui/settings/SettingsViewModel.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/UserPreferences.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/PreferencesRepository.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/PreferencesRepositoryImpl.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/data/repository/SchoolRepositoryImpl.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/ui/home/HomeViewModel.kt`
-- `android/app/src/main/java/com/bsbarron/midschoolapp/ui/splash/SplashViewModel.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/SetupActivity.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/SettingsActivity.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/ui/setup/SetupViewModel.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/ui/settings/SettingsViewModel.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/UserPreferences.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/data/profile/StudentProfileRepository.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/data/repository/PreferencesRepository.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/data/repository/PreferencesRepositoryImpl.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/data/repository/SchoolRepositoryImpl.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/ui/home/HomeViewModel.kt`
+- `android/app/src/main/java/com/lbs/schoolhelper/ui/splash/SplashViewModel.kt`
 - `android/app/src/main/res/layout/activity_setup.xml`
 - `android/app/src/main/res/layout/activity_settings.xml`
 

@@ -2,6 +2,8 @@
 
 이 저장소는 **학교도우미** 서비스를 위한 멀티플랫폼 작업공간입니다. Android, iOS, Web 클라이언트가 같은 기능 도메인(학생 설정, 시간표, 급식, 학사 일정, 타이머)을 제공하며, 플랫폼별 구현과 검증 도구는 각 폴더에 분리되어 있습니다.
 
+현재 Android 앱 표기는 **스쿨온**이며 Gradle 프로젝트명 `misSchoolApp`과는 구분합니다.
+
 > 이 문서는 현재 Git 추적 소스 기준 구조를 설명합니다. 빌드 산출물(`.gradle/`, `.build/`, `.next/`, `node_modules/`)은 구조 설명에서 제외합니다.
 
 ## 최상위 구조
@@ -13,8 +15,7 @@ misSchoolApp/
 ├── ios/                       # SwiftUI/Xcode iOS 앱 및 WidgetKit 위젯
 ├── web/                       # Next.js App Router 웹 클라이언트
 ├── docs/                      # 제품·운영·검증 문서
-├── scripts/                   # 저장소 공통 보조 스크립트
-└── .codex/                    # 로컬 에이전트/스킬 설정
+└── scripts/                   # 저장소 공통 보조 스크립트
 ```
 
 ## Android: `android/`
@@ -29,13 +30,16 @@ android/
 │       ├── main/
 │       │   ├── AndroidManifest.xml
 │       │   ├── java/com/lbs/schoolhelper/
-│       │   │   ├── data/       # 모델, NEIS/공지 원격 API, repository
+│       │   │   ├── data/       # 모델, 자녀 프로필, NEIS/공지 원격 API, repository
 │       │   │   ├── di/         # Hilt 모듈
+│       │   │   ├── telemetry/  # Analytics/Crashlytics 전송 경계
 │       │   │   ├── timer/      # 알람, 부팅 복원, 수신기
 │       │   │   ├── ui/         # 화면별 ViewModel, UiState, adapter
 │       │   │   ├── util/       # 공용 유틸
 │       │   │   └── widget/     # App Widget provider와 설정 화면
 │       │   └── res/            # XML 레이아웃, drawable, 문자열, 위젯 메타데이터
+│       ├── debug/              # 일반 debug 변형 소스
+│       ├── qa/                 # QA 변형 소스·문자열
 │       ├── test/               # Robolectric/JUnit 단위 테스트
 │       └── androidTest/        # 계측 테스트
 ├── gradle/libs.versions.toml  # 의존성 버전 카탈로그
@@ -43,7 +47,7 @@ android/
 └── AGENTS.md                  # Android 작업 규칙
 ```
 
-주요 Activity는 루트 패키지에, 화면 상태와 로직은 `ui/<feature>/`에 둡니다. 학교·사용자 설정은 `data/repository/`, 외부 데이터 계약은 `data/remote/`에 둡니다.
+주요 Activity는 루트 패키지에, 화면 상태와 로직은 `ui/<feature>/`에 둡니다. 자녀별 프로필은 `data/profile/`, 학교 데이터·설정은 `data/repository/`, 외부 데이터 계약은 `data/remote/`에 둡니다.
 
 ## iOS: `ios/`
 

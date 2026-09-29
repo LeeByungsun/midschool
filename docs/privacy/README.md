@@ -15,8 +15,8 @@
 
 ## 게시 순서
 
-1. 전체 문안의 대괄호 자리표시자(운영자/개발자 명칭, 문의용 이메일, 실제 Google Analytics 보관 기간)를 **실제 값으로 바꿉니다**. Play Console 개발자 표기와 운영자 명칭을 맞춥니다. 앱의 가정통신문 API 주소도 출시 빌드와 비교합니다.
-2. GitHub에 `schoolon-privacy` 같은 **공개 저장소**를 만듭니다. 문안을 `index.md`로 저장소 루트에 복사합니다. 필요하면 별도의 `index.html`로 변환해도 됩니다.
+1. 전체 문안에 이미 적힌 운영자 명칭·문의 이메일을 실제 운영 정보와 대조하고, 아직 확인이 필요한 Firebase Analytics 보관 기간의 콘솔 설정값을 확인합니다. Play Console 개발자 표기와 운영자 명칭을 맞춥니다. 앱의 가정통신문 API 주소는 출시 빌드에 주입한 `WEB_BASE_URL`과 비교합니다.
+2. `schoolon-privacy` 같은 **방침 전용 공개 저장소**를 사용합니다. 이미 만들었다면 다시 만들 필요가 없습니다. 문안을 `index.md`로 저장소 루트에 복사하고, 필요하면 별도의 `index.html`로 변환합니다.
 3. 저장소 **Settings → Pages → Build and deployment → Deploy from a branch**에서 `main` / `/ (root)`를 선택합니다.
 4. 게시된 `https://<GitHub 사용자명>.github.io/schoolon-privacy/`를 로그아웃/시크릿 창과 휴대전화에서 열어 확인합니다. GitHub 사용자·저장소 이름이 다르면 URL도 달라집니다.
 5. **동일한 공개 URL**을 Play Console의 개인정보처리방침 필드와 앱 내 개인정보처리방침 링크에 연결합니다. 현재 앱에는 방침 링크가 없으므로 출시 전 UI/문자열을 추가해야 합니다. Play Console **데이터 보안(Data safety)** 답변도 문안 및 실제 SDK 동작과 대조합니다.
@@ -34,7 +34,7 @@ GitHub 저장소의 소스 페이지나 편집 가능한 문서 링크가 아니
 
 ## 출시 전 확인
 
-- [ ] 운영자/개발자 명칭·문의 이메일 입력
+- [ ] 운영자/개발자 명칭·문의 이메일의 실제 운영 정보 확인
 - [ ] Google Analytics의 **데이터 보관 기간** 실제 설정값 입력
 - [ ] 가정통신문 API 및 기타 외부 전송처가 출시 빌드와 일치
 - [ ] Pages URL 공개 접속 확인, 앱 내부 링크·Play Console URL 동일

@@ -1,6 +1,6 @@
 # Android Firebase 관측 운영 문서
 
-기준일: 2026-09-14 · 프로젝트: `schoolhelper-3c115` · Android 앱: `com.lbs.schoolhelper`, `com.lbs.schoolhelper.qa`
+실기기·콘솔 검증 기록: 2026-09-14 · 코드 대조: 2026-09-29 (`ae20ff6`) · 프로젝트: `schoolhelper-3c115` · Android 앱: `com.lbs.schoolhelper`, `com.lbs.schoolhelper.qa`. 과거 콘솔 수신 기록은 이번 코드 대조로 재검증한 결과가 아니다.
 
 ## 데이터 흐름
 
@@ -59,4 +59,5 @@ Crashlytics 알림은 P0 크래시·ANR 중심으로 담당자에게 연결한�
 - 설정 화면 개인정보처리방침 링크와 Play Console Data safety 내용의 법무/운영 검토
 - Analytics Custom Definitions, Crashlytics 알림 담당자와 보유 기간 설정
 - 학교 변경 경합, 접근성·회전, 삼성 위젯, 재부팅, 알림 거부/완료 경로의 추가 실기기 검증
+- 출시 빌드의 `WEB_BASE_URL` 주입·가정통신문 조회·외부 링크 및 QA/운영 데이터 분리 정책 확인
 - 비공개 테스트와 Play Console 출시 메타데이터

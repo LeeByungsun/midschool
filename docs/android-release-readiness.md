@@ -1,6 +1,6 @@
 # Android 출시 준비: 1단계 품질 기준선
 
-기준일: 2026-09-15. 범위: 현재 Android 앱, 1.0 출시 핵심 경로. 새 대형 기능/Compose 전환/Flutter 변경은 범위 밖.
+실기기 검증 기록: 2026-09-15. 코드·문서 대조: 2026-09-29, `ae20ff6` 기준. 범위: Android 1.0 출시 핵심 경로. 새 대형 기능/Compose 전환/Flutter 변경은 범위 밖. 아래의 과거 실기기 결과는 이번 코드 대조로 재검증한 결과가 아니다.
 
 **출시 가치:** 학교를 설정하면 급식·시간표·학사 일정·지원 학교 가정통신문을 안정적으로 조회한다. 위젯과 타이머는 기존 제공 기능이므로 회귀 검증 대상이다.
 
@@ -28,9 +28,10 @@
 | Q13 | P1 | 앱 재접속 학교·앱버전·기종, 조회 결과·예외를 Firebase에서 확인 | **통과:** DebugView에서 앱 접속 문맥·조회 결과, Crashlytics에서 QA 비치명 오류와 허용된 키 및 Samsung/Android 16 기기 정보를 확인 |
 
 ## 환경 / 기준선
-- 현재 브랜치: feat/android-release-observability.
+- 2026-09-15 검증 당시 브랜치: `feat/android-release-observability`. 2026-09-29 코드 대조 기준은 `ae20ff6`이며, 브랜치명이 출시 상태를 뜻하지 않는다.
 - JDK 17(Temurin), SDK는 `~/Library/Android/sdk` 사용. Android Studio 내장 JBR 25는 현재 Robolectric과 호환되지 않는다.
-- 2026-09-15 기준: 111개 단위 테스트, `lintDebug`, `assembleQa`, `assembleRelease` 통과. QA APK의 패키지/Firebase App ID/권한도 정적 검사했다.
+- 2026-09-15 검증 기록: 당시 111개 단위 테스트, `lintDebug`, `assembleQa`, `assembleRelease` 통과. QA APK의 패키지/Firebase App ID/권한도 정적 검사했다. 현재 테스트 수나 빌드 통과를 뜻하지 않으므로 출시 전 다시 실행한다.
+- 2026-09-29 코드 대조: `android/app/build.gradle.kts`는 `versionName=1.0`, `versionCode=4`, QA 접미사 `-qa`를 사용한다. 가정통신문 서버 주소 `WEB_BASE_URL`은 `local.properties`에서 주입되며 기본값은 빈 문자열이다. 출시 빌드의 실제 주소와 조회·링크 동작을 별도 확인한다.
 - `com.lbs.schoolhelper.qa`는 등록됐지만 같은 Firebase 프로젝트(`schoolhelper-3c115`) 안의 별도 Android 앱이다. 일반 debug 변형은 Firebase 초기화 공급자 자체를 제외하고, QA/Release만 명시적으로 초기화한다.
 - 실기기: Samsung SM-A346N, Android 16(API 36). QA 앱 설치·초기 설정·온라인 조회·오프라인 캐시·동의 조합·타이머 상태 복원을 확인했다.
 - Firebase: Analytics DebugView에서 접속/기능/조회/타이머 이벤트와 허용된 학교·단말 문맥을, Crashlytics에서 QA 비치명 오류 업로드와 허용된 커스텀 키를 확인했다.
@@ -43,6 +44,7 @@
 - 라이트/다크 색상 토큰과 edge-to-edge 시스템 바 아이콘을 모드별로 적용했다. SM-A346N 2.0× 글자 크기·다크 모드에서 홈/시간표의 제목·버튼·교시 배지·상태/내비게이션 바 대비를 확인했다.
 
 ## 공개 출시 전 남은 차단 항목
-- Q02 학교 변경 후 이전 학교 데이터 잔류 여부를 실기기에서 확인한다.
+- Q02 학교 변경 후 이전 학교 데이터가 급식·시간표·일정·위젯에 남지 않는지 실기기에서 확인한다. 과거 학교명·급식·시간표 확인만으로 전체 항목을 통과 처리하지 않는다.
+- 실제 출시 빌드에 주입한 `WEB_BASE_URL`과 가정통신문 조회·외부 링크·미지원 학교 안내를 확인한다(Q06).
 - Q07~Q11 중 작은 화면, 삼성 위젯, 재부팅, 타이머 완료 알림·진동 경로를 실제 조건에서 확인한다.
-- 개인정보처리방침, Play Console Data safety, Firebase 보유 기간과 운영 담당자/알림 정책을 승인한다.
+- 앱 내 개인정보처리방침 링크를 제공하고, 방침·Play Console Data safety·Firebase 보유 기간과 운영 담당자/알림 정책을 검토·승인한다. 2026-09-29 코드에는 방침 링크가 없다.
