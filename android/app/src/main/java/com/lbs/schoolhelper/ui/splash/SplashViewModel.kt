@@ -19,7 +19,7 @@ class SplashViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val studentProfileRepository: StudentProfileRepository
 ) : AndroidViewModel(application) {
-    private val _navigationEvent = MutableSharedFlow<SplashDestination>()
+    private val _navigationEvent = MutableSharedFlow<SplashDestination>(replay = 1)
     val navigationEvent = _navigationEvent.asSharedFlow()
     private var decideNextScreenJob: Job? = null
     private var navigationDispatched = false

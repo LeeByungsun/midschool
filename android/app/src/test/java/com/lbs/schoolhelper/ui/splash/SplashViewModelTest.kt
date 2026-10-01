@@ -69,7 +69,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun decideNextScreen_whenCalledTwice_emitsNavigationOnlyOnce() = runBlocking {
+    fun decideNextScreen_whenCalledTwice_keepsResolvedDestination() = runBlocking {
         val viewModel = viewModel(profile = readyProfile(), consentCompleted = true)
         val firstNavigation = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(3_000L) { viewModel.navigationEvent.first() }
@@ -80,13 +80,21 @@ class SplashViewModelTest {
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(1_300L))
 
         assertEquals(SplashDestination.MAIN, firstNavigation.await())
+    }
 
-        val secondNavigation = async(start = CoroutineStart.UNDISPATCHED) {
+    @Test
+    fun decideNextScreen_whenCollectorStartsAfterDecision_replaysDestination() = runBlocking {
+        val viewModel = viewModel(profile = readyProfile(), consentCompleted = true)
+
+        viewModel.decideNextScreen()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(1_300L))
+
+        val navigation = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeoutOrNull(200L) { viewModel.navigationEvent.first() }
         }
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(250L))
 
-        assertEquals(null, secondNavigation.await())
+        assertEquals(SplashDestination.MAIN, navigation.await())
     }
 
     private fun viewModel(
