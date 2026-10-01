@@ -40,6 +40,20 @@ cd android
 ./gradlew assembleDebug
 ```
 
+### 연결 단말 빌드·설치·실행
+
+저장소 루트에서 다음 스크립트를 사용합니다. 빌드 변형을 생략하면 QA를 사용합니다.
+
+```bash
+android/scripts/build-install.sh
+android/scripts/build-install.sh qa
+android/scripts/build-install.sh debug
+```
+
+스크립트는 연결된 단말을 확인하고 APK를 빌드한 뒤 덮어쓰기 설치하고 앱을 실행합니다.
+여러 단말이 연결된 경우 `ANDROID_SERIAL=<단말 번호>`를 함께 지정합니다.
+서명된 릴리스 산출물은 별도의 릴리스 빌드·배포 절차를 사용합니다.
+
 ## 폴더 구조 요약
 
 ```text
