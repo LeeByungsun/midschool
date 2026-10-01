@@ -9,6 +9,7 @@
     <dimen name="timetable_period_badge_height">36dp</dimen>
     <dimen name="timetable_period_badge_radius">18dp</dimen>
     <dimen name="timetable_subject_margin_start">14dp</dimen>
+    <dimen name="profile_selector_popup_radius">8dp</dimen>
 
     <!-- Shared typography scale for Android XML screens. Text sizes use sp in dimen resources. -->
     <dimen name="text_page_title">22sp</dimen>

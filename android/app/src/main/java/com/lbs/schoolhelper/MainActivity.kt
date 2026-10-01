@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         val labels = choices.map { choice ->
             listOf(choice.displayName, choice.contextText).filter { it.isNotBlank() }.joinToString("\n")
         } + getString(R.string.home_profile_add)
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(R.string.home_profile_dialog_title)
             .setItems(labels.toTypedArray()) { _, position ->
                 if (position == choices.size) {
@@ -162,7 +162,11 @@ class MainActivity : AppCompatActivity() {
                     choices.getOrNull(position)?.let { homeViewModel.selectProfile(it.id) }
                 }
             }
-            .show()
+            .create()
+        dialog.setOnShowListener {
+            dialog.window?.setBackgroundDrawableResource(R.drawable.bg_profile_selector_popup)
+        }
+        dialog.show()
     }
 
     internal fun openAddProfileSettings() {
