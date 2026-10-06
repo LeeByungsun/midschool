@@ -18,7 +18,10 @@ val localProperties = Properties().apply {
 }
 
 val neisApiKey = localProperties.getProperty("NEIS_API_KEY", "")
-val webBaseUrl = localProperties.getProperty("WEB_BASE_URL", "")
+val webBaseUrl = localProperties.getProperty("WEB_BASE_URL")
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+    ?: "https://midschool.vercel.app/"
 val googleServicesFile = file("google-services.json")
 
 if (googleServicesFile.exists()) {

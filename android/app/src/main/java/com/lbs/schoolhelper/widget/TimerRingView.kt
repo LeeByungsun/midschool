@@ -29,14 +29,14 @@ class TimerRingView @JvmOverloads constructor(
     private val timePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.brand_navy)
         textAlign = Paint.Align.CENTER
-        textSize = 54f
+        textSize = resources.getDimension(R.dimen.text_timer_value)
         typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
     }
 
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.text_secondary)
         textAlign = Paint.Align.CENTER
-        textSize = 32f
+        textSize = resources.getDimension(R.dimen.text_body)
     }
 
     private val density = resources.displayMetrics.density
@@ -46,12 +46,26 @@ class TimerRingView @JvmOverloads constructor(
     private var centerTimeText: String = "40:00"
     private var centerLabelText: String = context.getString(R.string.home_timer_remaining)
 
+    init {
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+        updateContentDescription()
+    }
+
     fun setTimerState(progressFraction: Float, timeText: String, labelText: String) {
         // 진행률은 0~1 범위로 고정해 잘못된 값이 들어와도 드로잉이 깨지지 않게 한다.
         this.progressFraction = progressFraction.coerceIn(0f, 1f)
         centerTimeText = timeText
         centerLabelText = labelText
+        updateContentDescription()
         invalidate()
+    }
+
+    private fun updateContentDescription() {
+        contentDescription = context.getString(
+            R.string.timer_ring_content_description,
+            centerLabelText,
+            centerTimeText
+        )
     }
 
     override fun onDraw(canvas: Canvas) {

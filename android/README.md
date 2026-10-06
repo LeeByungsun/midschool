@@ -24,7 +24,7 @@ Android Studio에서는 저장소 루트가 아니라 **`android/` 폴더**를 �
 자세한 안내:
 - `../docs/android-studio-setup.md`
 
-가정통신문 서버 주소는 `android/local.properties`의 `WEB_BASE_URL`에서 빌드 설정으로 주입합니다. 기본값은 빈 문자열이므로 앱을 실행할 환경에서는 `/`로 끝나는 웹 서버 기본 URL을 설정하세요. NEIS 조회에는 같은 파일의 `NEIS_API_KEY`가 필요합니다. `local.properties`는 Git에 포함하지 않습니다.
+가정통신문 서버 주소는 `android/local.properties`의 `WEB_BASE_URL`에서 빌드 설정으로 주입합니다. 값이 없거나 비어 있으면 `https://midschool.vercel.app/`을 사용하며, 별도 주소를 설정할 때는 `/`로 끝나는 웹 서버 기본 URL을 입력하세요. NEIS 조회에는 같은 파일의 `NEIS_API_KEY`가 필요합니다. `local.properties`는 Git에 포함하지 않습니다.
 
 ## 자주 쓰는 명령
 

@@ -15,6 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -453,7 +454,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun saveSettings_whenSchoolIsMissing_emitsSchoolRequiredMessage() = runBlocking {
+    fun saveSettings_whenUnchangedProfileIsIncomplete_savesGlobalSettingsAndCloses() = runBlocking {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(grade = "1", classroom = "2")
         )
@@ -461,16 +462,26 @@ class SettingsViewModelTest {
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
+        val closeDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(1_000L) { viewModel.closeEvent.first() }
+        }
+
+        viewModel.updateDisplayMode(isRingMode = true)
+        viewModel.updateNotificationEnabled(enabled = false)
+        viewModel.updateVibrationEnabled(enabled = false)
 
         viewModel.saveSettings()
 
-        assertEquals(R.string.setup_error_school_required, messageDeferred.await())
+        assertEquals(R.string.settings_saved, messageDeferred.await())
+        closeDeferred.await()
         assertTrue(repository.savedStudentInfoCalls.isEmpty())
-        assertTrue(repository.savedTimerDisplayModes.isEmpty())
+        assertEquals(listOf(TimerDisplayMode.RING), repository.savedTimerDisplayModes)
+        assertEquals(listOf(false), repository.savedNotificationEnabledValues)
+        assertEquals(listOf(false), repository.savedVibrationEnabledValues)
     }
 
     @Test
-    fun saveSettings_whenClassroomInfoIsMissing_emitsValidationMessage() = runBlocking {
+    fun saveSettings_whenDirtyProfileIsInvalid_savesGlobalSettingsButKeepsScreenOpen() = runBlocking {
         val repository = FakePreferencesRepository(
             studentInfo = StudentInfo(
                 schoolName = selectedSchool.schoolName,
@@ -486,11 +497,23 @@ class SettingsViewModelTest {
         val messageDeferred = async(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(1_000L) { viewModel.messageEvent.first() }
         }
+        val closeDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeoutOrNull(300L) { viewModel.closeEvent.first() }
+        }
+
+        viewModel.updateDisplayName("민준이")
+        viewModel.updateDisplayMode(isRingMode = true)
+        viewModel.updateNotificationEnabled(enabled = false)
+        viewModel.updateVibrationEnabled(enabled = false)
 
         viewModel.saveSettings()
 
         assertEquals(R.string.setup_error_empty, messageDeferred.await())
+        assertNull(closeDeferred.await())
         assertTrue(repository.savedStudentInfoCalls.isEmpty())
+        assertEquals(listOf(TimerDisplayMode.RING), repository.savedTimerDisplayModes)
+        assertEquals(listOf(false), repository.savedNotificationEnabledValues)
+        assertEquals(listOf(false), repository.savedVibrationEnabledValues)
     }
 
     @Test

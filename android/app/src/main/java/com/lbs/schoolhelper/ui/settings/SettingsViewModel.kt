@@ -242,7 +242,11 @@ class SettingsViewModel @Inject constructor(
     }
 
     suspend fun saveSettings() {
-        if (!persistEditingProfile(showSavedMessage = false)) return
+        val profileSaved = if (_uiState.value.hasUnsavedProfileChanges) {
+            persistEditingProfile(showSavedMessage = false)
+        } else {
+            true
+        }
 
         val state = _uiState.value
         preferencesRepository.saveTimerDisplayMode(
@@ -250,6 +254,9 @@ class SettingsViewModel @Inject constructor(
         )
         preferencesRepository.saveTimerNotificationEnabled(state.notificationEnabled)
         preferencesRepository.saveTimerVibrationEnabled(state.vibrationEnabled)
+
+        if (!profileSaved) return
+
         _messageEvent.emit(R.string.settings_saved)
         _closeEvent.emit(Unit)
     }

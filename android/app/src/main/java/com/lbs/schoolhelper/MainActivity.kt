@@ -59,6 +59,11 @@ class MainActivity : AppCompatActivity() {
         timerViewModel.refreshFromPersistence()
     }
 
+    override fun onStop() {
+        stopTimerCompletionBlink()
+        super.onStop()
+    }
+
     override fun onDestroy() {
         stopTimerCompletionBlink()
         super.onDestroy()

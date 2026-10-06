@@ -51,7 +51,7 @@
         </receiver>
         <activity
             android:name=".widget.WidgetConfigActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".MealActivity"
             android:exported="false" />
