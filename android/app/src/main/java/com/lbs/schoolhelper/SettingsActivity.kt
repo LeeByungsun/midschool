@@ -44,7 +44,10 @@ class SettingsActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
 
         binding.root.applySystemBarPadding()
-        binding.settingsVersionText.text = AppVersionLabel.format(BuildConfig.VERSION_NAME)
+        binding.settingsVersionText.text = AppVersionLabel.format(
+            versionName = BuildConfig.VERSION_NAME,
+            versionCode = BuildConfig.VERSION_CODE
+        )
         bindActions()
         bindState()
 
