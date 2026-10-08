@@ -5,14 +5,19 @@
 
     <data />
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/main"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/homeSwipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/bg_page"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        tools:context=".MainActivity">
+        android:layout_height="match_parent">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/main"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/bg_page"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            tools:context=".MainActivity">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -49,9 +54,9 @@
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/profileSwitchButton"
-                                style="@style/Widget.MisSchoolApp.Button.HeroAction"
+                                style="@style/Widget.MisSchoolApp.Button.HomeCompactHeroAction"
                                 android:layout_width="wrap_content"
-                                android:layout_height="48dp"
+                                android:layout_height="wrap_content"
                                 android:minHeight="48dp"
                                 android:text="@string/home_profile_select"
                                 android:textAllCaps="false" />
@@ -133,10 +138,10 @@
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/openTimetableButton"
-                                style="@style/Widget.MisSchoolApp.Button.HeroAction"
+                                style="@style/Widget.MisSchoolApp.Button.HomeCompactHeroAction"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
+                                android:layout_marginTop="8dp"
                                 android:text="@string/home_timetable_button"
                                 android:textAllCaps="false" />
                         </LinearLayout>
@@ -227,7 +232,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/openScheduleButton"
-                            style="@style/Widget.MisSchoolApp.Button.Secondary"
+                            style="@style/Widget.MisSchoolApp.Button.HomeCompactSecondary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
@@ -281,7 +286,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/openNoticeButton"
-                            style="@style/Widget.MisSchoolApp.Button.Secondary"
+                            style="@style/Widget.MisSchoolApp.Button.HomeCompactSecondary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
@@ -460,7 +465,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/timerPrimaryButton"
-                            style="@style/Widget.MisSchoolApp.Button.Start"
+                            style="@style/Widget.MisSchoolApp.Button.HomeCompactStart"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -469,7 +474,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/timerResetButton"
-                            style="@style/Widget.MisSchoolApp.Button.Secondary"
+                            style="@style/Widget.MisSchoolApp.Button.HomeCompactSecondary"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
@@ -482,5 +487,6 @@
 
         </LinearLayout>
 
-    </androidx.core.widget.NestedScrollView>
+        </androidx.core.widget.NestedScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

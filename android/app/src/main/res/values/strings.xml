@@ -108,6 +108,10 @@
     <string name="setup_save_button">시작하기</string>
     <string name="setup_consent_title">선택 정보 수집 동의</string>
     <string name="setup_consent_continue">선택 완료하고 시작하기</string>
+    <string name="privacy_policy">개인정보처리방침</string>
+    <string name="privacy_policy_view">개인정보처리방침 보기</string>
+    <string name="privacy_policy_url" translatable="false">https://leebyungsun.github.io/schoolon-privacy/</string>
+    <string name="legal_link_open_error">문서를 열 수 있는 브라우저를 찾지 못했어요.</string>
     <string name="setup_error_empty">학년과 반을 모두 입력해 주세요.</string>
     <string name="setup_error_school_required">학교 검색 후 목록에서 학교를 선택해 주세요.</string>
     <string name="setup_error_profile_name_required">자녀 이름을 입력해 주세요.</string>
@@ -137,6 +141,8 @@
     <string name="settings_timer_alert_description">타이머가 끝나면 단말의 현재 모드에 따라 소리나 진동이 한 번 울려요. 무음 모드에서는 울리지 않습니다.</string>
     <string name="settings_save_button">저장하기</string>
     <string name="settings_saved">설정이 저장되었어요.</string>
+    <string name="settings_app_info_title">앱 정보</string>
+    <string name="open_source_licenses">오픈소스 라이선스</string>
     <string name="settings_profile_title">자녀 프로필</string>
     <string name="settings_profile_selector_label">수정할 자녀</string>
     <string name="settings_profile_new">새 자녀 입력 중</string>

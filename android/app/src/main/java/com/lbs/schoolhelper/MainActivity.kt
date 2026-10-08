@@ -70,6 +70,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun bindClicks() {
+        binding.homeSwipeRefresh.setColorSchemeResources(R.color.brand_blue)
+        binding.homeSwipeRefresh.setOnRefreshListener(homeViewModel::refreshHomeData)
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
@@ -102,6 +104,7 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 homeViewModel.uiState.collect { state ->
                     latestHomeState = state
+                    binding.homeSwipeRefresh.isRefreshing = state.isRefreshing
                     binding.profileSwitchButton.text = if (state.activeProfileName.isBlank()) {
                         getString(R.string.home_profile_select)
                     } else {

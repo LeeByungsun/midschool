@@ -322,6 +322,14 @@
             android:layout_marginTop="8dp"
             android:text="@string/settings_telemetry_description"
             android:textColor="@color/text_primary" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/settingsTelemetryPrivacyPolicyButton"
+            style="@style/Widget.MisSchoolApp.Button.MenuRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/privacy_policy_view"
+            android:textAllCaps="false" />
         <Switch
             android:id="@+id/analyticsSwitch"
             android:layout_width="match_parent"
@@ -349,10 +357,37 @@
             android:textStyle="bold" />
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="@string/settings_app_info_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_body_small"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/settingsPrivacyPolicyButton"
+            style="@style/Widget.MisSchoolApp.Button.MenuRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start|center_vertical"
+            android:text="@string/privacy_policy"
+            android:textAllCaps="false" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/openSourceLicensesButton"
+            style="@style/Widget.MisSchoolApp.Button.MenuRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start|center_vertical"
+            android:text="@string/open_source_licenses"
+            android:textAllCaps="false" />
+
+        <TextView
             android:id="@+id/settingsVersionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="12dp"
             android:gravity="center"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_body_small" />

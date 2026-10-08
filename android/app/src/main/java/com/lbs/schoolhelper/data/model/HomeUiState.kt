@@ -16,6 +16,7 @@ data class HomeUiState(
     val dateLabel: String = "",
     val classSummary: String = "",
     val isSchoolConfigured: Boolean = false,
+    val isRefreshing: Boolean = false,
     val todaySummaryText: String = "",
     val todayStatus: HomeContentStatus = HomeContentStatus.NOT_CONFIGURED,
     val mealSummary: String = "",

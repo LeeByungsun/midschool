@@ -1,5 +1,6 @@
 package com.lbs.schoolhelper
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -22,7 +23,9 @@ import com.lbs.schoolhelper.ui.settings.SettingsViewModel
 import com.lbs.schoolhelper.ui.settings.UnsavedProfileDecision
 import com.lbs.schoolhelper.util.applySystemBarPadding
 import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
+import com.lbs.schoolhelper.util.ExternalUrlOpener
 import com.lbs.schoolhelper.util.requestVisibleAboveKeyboard
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -143,10 +146,22 @@ class SettingsActivity : AppCompatActivity() {
         binding.diagnosticsSwitch.setOnCheckedChangeListener { _, checked ->
             if (!isRenderingState) viewModel.updateDiagnosticsEnabled(checked)
         }
+        binding.settingsTelemetryPrivacyPolicyButton.setOnClickListener { openPrivacyPolicy() }
+        binding.settingsPrivacyPolicyButton.setOnClickListener { openPrivacyPolicy() }
+        binding.openSourceLicensesButton.setOnClickListener {
+            OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
+            startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+        }
         binding.saveSettingsButton.setOnClickListener {
             captureProfileForm()
             viewModel.updateDisplayMode(binding.timerDisplayRingRadio.isChecked)
             lifecycleScope.launch { viewModel.saveSettings() }
+        }
+    }
+
+    private fun openPrivacyPolicy() {
+        if (!ExternalUrlOpener.open(this, getString(R.string.privacy_policy_url))) {
+            Toast.makeText(this, R.string.legal_link_open_error, Toast.LENGTH_SHORT).show()
         }
     }
 

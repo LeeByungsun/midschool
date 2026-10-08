@@ -3,6 +3,7 @@ package com.lbs.schoolhelper
 import android.content.Context
 import android.os.Looper
 import android.view.View
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.lifecycle.ViewModelProvider
 import com.lbs.schoolhelper.data.model.HomeNoticeCardState
 import com.lbs.schoolhelper.data.model.HomeUiState
@@ -23,6 +24,14 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = SchoolHelperApplication::class, sdk = [34])
 class MainActivityNavigationTest {
+
+    @Test
+    fun homeProvidesPullToRefreshContainer() {
+        clearUserPreferences()
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+
+        assertTrue(activity.findViewById<SwipeRefreshLayout>(R.id.homeSwipeRefresh).isEnabled)
+    }
 
     @Test
     fun addProfileAction_opensSettingsInAddMode() {

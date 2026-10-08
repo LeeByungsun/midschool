@@ -140,14 +140,21 @@ class HomeViewModel private constructor(
     }
 
     fun loadHomeData() {
-        loadHomeData(studentProfileRepository.activeProfile.value)
+        loadHomeData(studentProfileRepository.activeProfile.value, showRefreshIndicator = false)
+    }
+
+    fun refreshHomeData() {
+        loadHomeData(studentProfileRepository.activeProfile.value, showRefreshIndicator = true)
     }
 
     fun selectProfile(id: String) {
         studentProfileRepository.selectProfile(id)
     }
 
-    private fun loadHomeData(profile: StudentProfile?) {
+    private fun loadHomeData(
+        profile: StudentProfile?,
+        showRefreshIndicator: Boolean = false
+    ) {
         loadHomeJob?.cancel()
         val requestGeneration = ++loadGeneration
         val requestProfileId = profile?.id
@@ -157,6 +164,7 @@ class HomeViewModel private constructor(
 
             _uiState.update {
                 it.copy(
+                    isRefreshing = showRefreshIndicator,
                     todaySummaryText = resolveString(R.string.home_today_summary_loading),
                     todayStatus = HomeContentStatus.LOADING,
                     mealSummary = resolveString(R.string.home_meal_loading),
@@ -232,6 +240,11 @@ class HomeViewModel private constructor(
                         )
                     )
                 }
+            }
+        }
+        loadHomeJob?.invokeOnCompletion {
+            updateIfCurrent(requestGeneration, requestProfileId) { state ->
+                state.copy(isRefreshing = false)
             }
         }
     }

@@ -53,6 +53,11 @@
             android:name=".widget.WidgetConfigActivity"
             android:exported="false" />
         <activity
+            android:name="com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MisSchoolApp.OssLicenses"
+            tools:replace="android:theme" />
+        <activity
             android:name=".MealActivity"
             android:exported="false" />
         <activity

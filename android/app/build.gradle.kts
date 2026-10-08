@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.oss.licenses)
 }
 
 val localProperties = Properties().apply {
@@ -37,7 +38,7 @@ android {
         applicationId = "com.lbs.schoolhelper"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
+        versionCode = 5
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -73,6 +74,19 @@ android {
                 "proguard-rules.pro"
             )
         }
+        create("qaRelease") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".qa"
+            versionNameSuffix = "-qa"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            buildConfigField("boolean", "TELEMETRY_ALLOWED", "true")
+            buildConfigField("String", "TELEMETRY_ENVIRONMENT", "\"qa\"")
+        }
+    }
+    sourceSets.getByName("qaRelease").apply {
+        manifest.srcFile("src/qa/AndroidManifest.xml")
+        res.directories.add("src/qa/res")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -125,6 +139,7 @@ fun registerNamedArtifactTask(variant: String, versionName: String) {
 
 val baseVersionName = android.defaultConfig.versionName ?: error("versionName must be configured")
 registerNamedArtifactTask("qa", "$baseVersionName-qa")
+registerNamedArtifactTask("qaRelease", "$baseVersionName-qa")
 registerNamedArtifactTask("release", baseVersionName)
 
 dependencies {
@@ -134,6 +149,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.kotlinx.coroutines.android)
@@ -145,6 +161,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.google.oss.licenses)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

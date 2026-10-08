@@ -21,6 +21,17 @@
         <item name="strokeColor">@color/white</item>
     </style>
 
+    <!-- Keeps a 48dp touch target while drawing a compact 32dp button surface. -->
+    <style name="Widget.MisSchoolApp.Button.HomeCompactSecondary" parent="Widget.MisSchoolApp.Button.Secondary">
+        <item name="android:insetTop">8dp</item>
+        <item name="android:insetBottom">8dp</item>
+    </style>
+
+    <style name="Widget.MisSchoolApp.Button.HomeCompactHeroAction" parent="Widget.MisSchoolApp.Button.HeroAction">
+        <item name="android:insetTop">8dp</item>
+        <item name="android:insetBottom">8dp</item>
+    </style>
+
     <style name="Widget.MisSchoolApp.Button.Start" parent="Widget.Material3.Button">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">48dp</item>
@@ -31,6 +42,11 @@
         <item name="android:textSize">@dimen/text_body</item>
         <item name="android:textStyle">bold</item>
         <item name="cornerRadius">16dp</item>
+    </style>
+
+    <style name="Widget.MisSchoolApp.Button.HomeCompactStart" parent="Widget.MisSchoolApp.Button.Start">
+        <item name="android:insetTop">8dp</item>
+        <item name="android:insetBottom">8dp</item>
     </style>
 
     <style name="Widget.MisSchoolApp.Button.Primary" parent="Widget.Material3.Button">
@@ -54,6 +70,15 @@
     <style name="Widget.MisSchoolApp.Button.Today" parent="Widget.MisSchoolApp.Button.DateNavigation">
         <item name="android:backgroundTint">@color/brand_yellow_soft</item>
         <item name="android:textColor">@color/brand_yellow_text</item>
+    </style>
+
+    <style name="Widget.MisSchoolApp.Button.MenuRow" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:textColor">@color/text_accent</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
 </resources>

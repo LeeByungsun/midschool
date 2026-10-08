@@ -43,6 +43,36 @@ import java.time.Duration
 class HomeViewModelTest {
 
     @Test
+    fun refreshHomeData_exposesRefreshProgressUntilHomeRequestsFinish() = runBlocking {
+        val application = Robolectric.setupActivity(MainActivity::class.java).application
+        val active = profile("first", "민준", "구미중학교", "1", "2", "1111111")
+        val profiles = FakeStudentProfileRepository(listOf(active), active.id)
+        val schoolRepository = object : SchoolRepository by FakeSchoolRepository() {
+            override fun observeMeals(student: StudentInfo, date: String?) = flow {
+                delay(200L)
+                emit(Result.success(emptyList<MealInfo>()))
+            }
+
+            override suspend fun getSchedules(student: StudentInfo, date: String?): Result<List<SchoolEvent>> {
+                delay(200L)
+                return Result.success(emptyList())
+            }
+
+            override fun observeSchedules(student: StudentInfo, date: String?) = flow {
+                emit(getSchedules(student, date))
+            }
+        }
+        val viewModel = createViewModel(application, schoolRepository, profiles)
+
+        viewModel.refreshHomeData()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(10))
+        assertTrue(viewModel.uiState.value.isRefreshing)
+
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(250))
+        assertFalse(viewModel.uiState.value.isRefreshing)
+    }
+
+    @Test
     fun initialState_showsActiveProfileNameSchoolAndClass() {
         val application = Robolectric.setupActivity(MainActivity::class.java).application
         val active = profile("first", "민준", "구미중학교", "1", "2", "1111111")

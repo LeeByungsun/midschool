@@ -5,7 +5,7 @@ set -euo pipefail
 usage() {
     cat <<'EOF'
 사용법:
-  android/scripts/build-install.sh [qa|debug]
+  android/scripts/build-install.sh [qa|qa-release|debug]
 
 기본 빌드 변형은 qa입니다.
 여러 단말이 연결된 경우 ANDROID_SERIAL을 지정하세요.
@@ -13,6 +13,7 @@ usage() {
 예시:
   android/scripts/build-install.sh
   android/scripts/build-install.sh qa
+  android/scripts/build-install.sh qa-release
   ANDROID_SERIAL=R3XXXXXXXXX android/scripts/build-install.sh debug
 EOF
 }
@@ -76,14 +77,21 @@ case "$variant" in
         ;;
     qa)
         gradle_variant="Qa"
+        apk_variant_dir="qa"
+        application_id="com.lbs.schoolhelper.qa"
+        ;;
+    qa-release)
+        gradle_variant="QaRelease"
+        apk_variant_dir="qaRelease"
         application_id="com.lbs.schoolhelper.qa"
         ;;
     debug)
         gradle_variant="Debug"
+        apk_variant_dir="debug"
         application_id="com.lbs.schoolhelper"
         ;;
     *)
-        fail "지원하지 않는 빌드 변형입니다: $variant (qa|debug)"
+        fail "지원하지 않는 빌드 변형입니다: $variant (qa|qa-release|debug)"
         ;;
 esac
 
@@ -139,7 +147,7 @@ resolve_java || fail "Java Runtime을 찾을 수 없습니다. Android Studio JB
     "$GRADLEW" ":app:assemble$gradle_variant" --console=plain
 )
 
-apk_dir="$ANDROID_DIR/app/build/outputs/apk/$variant"
+apk_dir="$ANDROID_DIR/app/build/outputs/apk/$apk_variant_dir"
 apk_files=()
 if [[ -d "$apk_dir" ]]; then
     while IFS= read -r apk; do

@@ -22,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.lbs.schoolhelper.util.applySystemBarPadding
 import com.lbs.schoolhelper.util.enableSchoolEdgeToEdge
+import com.lbs.schoolhelper.util.ExternalUrlOpener
 import com.lbs.schoolhelper.util.requestVisibleAboveKeyboard
 
 @AndroidEntryPoint
@@ -103,6 +104,7 @@ class SetupActivity : AppCompatActivity() {
                 viewModel.completeTelemetryConsentStep()
             }
         }
+        binding.setupPrivacyPolicyButton.setOnClickListener { openPrivacyPolicy() }
 
         binding.profileNameInput.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
@@ -131,6 +133,12 @@ class SetupActivity : AppCompatActivity() {
             } else if (!isRenderingState) {
                 viewModel.updateClassroom(binding.classInput.text.toString().trim())
             }
+        }
+    }
+
+    private fun openPrivacyPolicy() {
+        if (!ExternalUrlOpener.open(this, getString(R.string.privacy_policy_url))) {
+            Toast.makeText(this, R.string.legal_link_open_error, Toast.LENGTH_SHORT).show()
         }
     }
 

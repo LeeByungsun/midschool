@@ -331,6 +331,15 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_body" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/setupPrivacyPolicyButton"
+                    style="@style/Widget.MisSchoolApp.Button.MenuRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/privacy_policy_view"
+                    android:textAllCaps="false" />
+
                 <Switch
                     android:id="@+id/setupAnalyticsSwitch"
                     android:layout_width="match_parent"

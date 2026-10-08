@@ -4,4 +4,9 @@
         <item name="android:statusBarColor">@color/bg_page</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
+
+    <style name="Theme.MisSchoolApp.OssLicenses" parent="Theme.Material3.DayNight">
+        <item name="android:statusBarColor">@color/bg_page</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 </resources>
