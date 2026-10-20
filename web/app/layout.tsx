@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "학교도우미",
-  description: "시간표, 급식, 일정, 타이머를 한 화면에서 보는 학교도우미 웹앱",
+  title: "스쿨온",
+  description: "시간표, 급식, 일정, 타이머를 한 화면에서 보는 스쿨온 웹앱",
 };
 
 export default function RootLayout({

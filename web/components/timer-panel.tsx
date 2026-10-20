@@ -108,7 +108,7 @@ export function TimerPanel() {
         "Notification" in window &&
         Notification.permission === "granted"
       ) {
-        new Notification("학교도우미 타이머", {
+        new Notification("스쿨온 타이머", {
           body: `${snapshot.label} 세션이 끝났어요. 바로 다음 흐름을 이어 가세요.`,
           tag: "study-timer-complete",
         });
