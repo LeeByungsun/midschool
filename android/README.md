@@ -1,6 +1,6 @@
 # 스쿨온 Android
 
-이 폴더는 `misSchoolApp` Gradle 프로젝트의 **스쿨온 Android 앱**입니다. 멀티플랫폼 프로젝트 문서에서는 학교도우미라는 이름을 사용합니다. 일반 빌드의 앱 이름은 `스쿨온`, QA 빌드는 `스쿨온 QA`입니다.
+이 폴더는 `misSchoolApp` Gradle 프로젝트의 **스쿨온 Android 앱**입니다. 일반 빌드의 앱 이름은 `스쿨온`, QA 빌드는 `스쿨온-QA`입니다.
 
 Android 쪽은 현재 서비스의 기준 플랫폼이며, Kotlin + XML + Hilt + MVVM 구조를 사용합니다.
 

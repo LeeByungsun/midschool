@@ -32,7 +32,7 @@
   <circle cx="126" cy="1060" r="180" fill="#FFF2CC" fill-opacity="0.55"/>
 
   <text x="80" y="92" fill="#0F172A" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="44" font-weight="700">
-    중학교도우미 Android UI Refresh Mockup
+    스쿨온 Android UI Refresh Mockup
   </text>
   <text x="80" y="132" fill="#475569" font-family="Inter, Pretendard, Apple SD Gothic Neo, system-ui, sans-serif" font-size="22" font-weight="500">
     Mockup only · 2026-05-19 · existing flows preserved (dashboard / timetable / schedule / settings)
@@ -52,7 +52,7 @@
     <text x="38" y="84" fill="#FFFFFF" font-size="13" font-weight="700">5월 19일 화</text>
     <circle cx="262" cy="80" r="18" fill="#FFFFFF" fill-opacity="0.18"/>
     <path d="M255 80H269M262 73V87" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
-    <text x="20" y="126" fill="#FFFFFF" font-size="30" font-weight="700">중학교도우미</text>
+    <text x="20" y="126" fill="#FFFFFF" font-size="30" font-weight="700">스쿨온</text>
     <text x="20" y="152" fill="#DDEBFF" font-size="15" font-weight="600">미사중학교 · 2학년 3반</text>
     <rect x="20" y="174" width="266" height="92" rx="24" fill="#FFFFFF" fill-opacity="0.14"/>
     <text x="38" y="200" fill="#FFFFFF" font-size="14" font-weight="700">오늘의 학교생활</text>
