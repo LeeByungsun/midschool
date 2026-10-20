@@ -137,7 +137,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.buttons["닫기"].waitForExistence(timeout: 5))
         app.buttons["닫기"].tap()
 
-        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars.staticTexts["스쿨온"].waitForExistence(timeout: 5))
     }
 
     func testSettingsSaveDismissesModal() {
@@ -148,7 +148,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
         saveButton.tap()
 
-        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars.staticTexts["스쿨온"].waitForExistence(timeout: 5))
     }
 
     func testSettingsModalShowsWidgetPreview() {
@@ -195,7 +195,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = makeSeededApp()
         app.launch()
 
-        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars.staticTexts["스쿨온"].waitForExistence(timeout: 5))
         XCTAssertTrue(scrollToStaticText(containing: "현장학습 안내", in: app, maxSwipes: 5))
         XCTAssertTrue(scrollToButton(named: "가정통신문 열기", in: app, maxSwipes: 5))
         app.buttons["가정통신문 열기"].tap()
@@ -219,7 +219,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = makeLiveApp()
         app.launch()
 
-        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars.staticTexts["스쿨온"].waitForExistence(timeout: 10))
         XCTAssertTrue(scrollToStaticText(containing: "오케스트라", in: app, maxSwipes: 8))
         XCTAssertTrue(scrollToButton(named: "가정통신문 열기", in: app, maxSwipes: 3))
         app.buttons["가정통신문 열기"].tap()
@@ -244,7 +244,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = makeLiveApp()
         app.launch()
 
-        XCTAssertTrue(app.navigationBars.staticTexts["학교도우미"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars.staticTexts["스쿨온"].waitForExistence(timeout: 10))
         XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 30))
         XCTAssertTrue(scrollToStaticText(containing: "발아현미밥", in: app, maxSwipes: 8))
         XCTAssertTrue(scrollToStaticText(containing: "오케스트라", in: app, maxSwipes: 8))

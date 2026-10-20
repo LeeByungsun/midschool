@@ -3,7 +3,7 @@ import AppIntents
 import WidgetKit
 
 struct SchoolHelperWidgetConfigurationIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "학교도우미 위젯 설정"
+    static var title: LocalizedStringResource = "스쿨온 위젯 설정"
     static var description = IntentDescription("위젯에서 내일 시간표를 보여줄지 선택합니다.")
 
     @Parameter(title: "내일 시간표 표시", default: true)
@@ -101,7 +101,7 @@ struct SchoolHelperWidget: Widget {
         ) { entry in
             SchoolHelperWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("학교도우미")
+        .configurationDisplayName("스쿨온")
         .description("작은 위젯은 오늘 시간표, 중간/큰 위젯은 오늘/내일 시간표를 보여줍니다.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

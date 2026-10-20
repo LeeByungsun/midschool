@@ -98,7 +98,7 @@ struct HomeView: View {
                     .disabled(!viewModel.noticeActionEnabled)
                 }
             }
-            .navigationTitle("학교도우미")
+            .navigationTitle("스쿨온")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
