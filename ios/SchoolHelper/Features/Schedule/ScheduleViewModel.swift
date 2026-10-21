@@ -33,16 +33,25 @@ final class ScheduleViewModel: ObservableObject {
             statusText = "학교와 학년/반을 먼저 설정해 주세요."
             return
         }
+        let cached = repository.cachedSchedule(for: profile, month: currentMonth)
+        if let cached {
+            items = filteredAndSorted(cached)
+            hasLoadError = false
+            statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
+        } else {
+            items = []
+            statusText = "일정을 불러오는 중…"
+        }
         do {
-            items = try await repository.fetchSchedule(for: profile, month: currentMonth)
-                .filter(isVisibleSchedule)
-                .sorted { $0.date < $1.date }
+            items = filteredAndSorted(try await repository.fetchSchedule(for: profile, month: currentMonth))
             hasLoadError = false
             statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
         } catch {
-            items = []
-            hasLoadError = true
-            statusText = "일정을 불러오지 못했어요. 다시 시도해 주세요."
+            if cached == nil {
+                items = []
+                hasLoadError = true
+                statusText = "일정을 불러오지 못했어요. 다시 시도해 주세요."
+            }
         }
     }
 
@@ -71,6 +80,10 @@ final class ScheduleViewModel: ObservableObject {
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "yyyy년 M월"
         monthTitle = formatter.string(from: currentMonth)
+    }
+
+    private func filteredAndSorted(_ events: [SchoolEvent]) -> [SchoolEvent] {
+        events.filter(isVisibleSchedule).sorted { $0.date < $1.date }
     }
 
     private func isVisibleSchedule(_ event: SchoolEvent) -> Bool {

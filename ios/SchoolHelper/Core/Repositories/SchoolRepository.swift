@@ -10,12 +10,14 @@ protocol SchoolRepository {
     func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]?
     func cachedTodayMeals(for profile: StudentProfile, date: Date) -> [MealInfo]?
     func cachedWeekMeals(for profile: StudentProfile, weekStart: Date) -> [MealInfo]?
+    func cachedSchedule(for profile: StudentProfile, month: Date) -> [SchoolEvent]?
 }
 
 extension SchoolRepository {
     func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]? { nil }
     func cachedTodayMeals(for profile: StudentProfile, date: Date) -> [MealInfo]? { nil }
     func cachedWeekMeals(for profile: StudentProfile, weekStart: Date) -> [MealInfo]? { nil }
+    func cachedSchedule(for profile: StudentProfile, month: Date) -> [SchoolEvent]? { nil }
 }
 
 protocol NEISServicing {
@@ -211,6 +213,14 @@ struct DefaultSchoolRepository: SchoolRepository {
             }
             throw error
         }
+    }
+
+    func cachedSchedule(for profile: StudentProfile, month: Date) -> [SchoolEvent]? {
+        cacheStore.getSchedule(
+            officeCode: profile.officeCode,
+            schoolCode: profile.schoolCode,
+            month: formattedString(from: month, format: "yyyyMM")
+        )
     }
 
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] {

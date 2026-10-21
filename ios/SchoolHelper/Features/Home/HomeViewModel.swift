@@ -58,6 +58,11 @@ final class HomeViewModel: ObservableObject {
             mealSummary = "오늘 급식을 불러오는 중…"
             mealMeta = ""
         }
+        if let cached = repository.cachedSchedule(for: profile, month: currentDate) {
+            applyScheduleResult(.success(cached), referenceDate: currentDate)
+        } else {
+            eventSummary = "일정을 불러오는 중…"
+        }
 
         async let timetable = capture { try await repository.fetchTimetable(for: profile, date: currentDate) }
         async let meals = capture { try await repository.fetchTodayMeals(for: profile, date: currentDate) }

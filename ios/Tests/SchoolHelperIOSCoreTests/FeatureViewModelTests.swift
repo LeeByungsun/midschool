@@ -34,6 +34,16 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.items.map(\.menu), ["최신 급식"])
     }
 
+    func testScheduleViewModelShowsCacheBeforeRemoteRefreshCompletes() async {
+        let date = fixtureDate(year: 2026, month: 5, day: 1)
+        let viewModel = ScheduleViewModel(repository: DelayedCacheFirstScheduleRepository())
+        let loading = Task { await viewModel.load(profile: .fixture(), month: date) }
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertEqual(viewModel.items.map(\.title), ["캐시 일정"])
+        await loading.value
+        XCTAssertEqual(viewModel.items.map(\.title), ["최신 일정"])
+    }
+
     func testHomeViewModelShowsSetupMessagesWhenProfileIsIncomplete() async {
         let viewModel = HomeViewModel(
             repository: StubSchoolRepository(),
@@ -376,6 +386,21 @@ private struct DelayedCacheFirstMealsRepository: SchoolRepository {
     }
     func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] { [] }
     func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] { [] }
+    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] { [] }
+}
+
+private struct DelayedCacheFirstScheduleRepository: SchoolRepository {
+    func searchSchools(query: String) async throws -> [SchoolInfo] { [] }
+    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] { [] }
+    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] { [] }
+    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] { [] }
+    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
+        try await Task.sleep(nanoseconds: 80_000_000)
+        return [SchoolEvent(date: "20260520", title: "최신 일정", description: "")]
+    }
+    func cachedSchedule(for profile: StudentProfile, month: Date) -> [SchoolEvent]? {
+        [SchoolEvent(date: "20260510", title: "캐시 일정", description: "")]
+    }
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] { [] }
 }
 
