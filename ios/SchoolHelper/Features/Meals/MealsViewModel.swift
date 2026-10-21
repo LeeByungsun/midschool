@@ -36,15 +36,26 @@ final class MealsViewModel: ObservableObject {
         }
         let weekStart = Self.startOfSchoolWeek(containing: effectiveReferenceDate)
         weekTitle = formatWeekTitle(start: weekStart)
+        let cached = repository.cachedWeekMeals(for: profile, weekStart: weekStart)
+        if let cached {
+            items = cached.map { $0.withDisplayMenu() }
+            hasLoadError = false
+            statusText = items.isEmpty ? "선택한 주 급식이 없어요." : ""
+        } else {
+            items = []
+            statusText = "급식을 불러오는 중…"
+        }
         do {
             items = try await repository.fetchWeekMeals(for: profile, weekStart: weekStart)
                 .map { $0.withDisplayMenu() }
             hasLoadError = false
             statusText = items.isEmpty ? "선택한 주 급식이 없어요." : ""
         } catch {
-            items = []
-            hasLoadError = true
-            statusText = "급식을 불러오지 못했어요. 다시 시도해 주세요."
+            if cached == nil {
+                items = []
+                hasLoadError = true
+                statusText = "급식을 불러오지 못했어요. 다시 시도해 주세요."
+            }
         }
     }
 

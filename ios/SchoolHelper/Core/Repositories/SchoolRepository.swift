@@ -8,10 +8,14 @@ protocol SchoolRepository {
     func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent]
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview]
     func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]?
+    func cachedTodayMeals(for profile: StudentProfile, date: Date) -> [MealInfo]?
+    func cachedWeekMeals(for profile: StudentProfile, weekStart: Date) -> [MealInfo]?
 }
 
 extension SchoolRepository {
     func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]? { nil }
+    func cachedTodayMeals(for profile: StudentProfile, date: Date) -> [MealInfo]? { nil }
+    func cachedWeekMeals(for profile: StudentProfile, weekStart: Date) -> [MealInfo]? { nil }
 }
 
 protocol NEISServicing {
@@ -127,6 +131,24 @@ struct DefaultSchoolRepository: SchoolRepository {
             }
             return $0.date < $1.date
         }
+    }
+
+    func cachedTodayMeals(for profile: StudentProfile, date: Date) -> [MealInfo]? {
+        cacheStore.getMeals(
+            officeCode: profile.officeCode,
+            schoolCode: profile.schoolCode,
+            date: formattedString(from: date, format: "yyyyMMdd")
+        )?.map { $0.withDisplayMenu() }
+    }
+
+    func cachedWeekMeals(for profile: StudentProfile, weekStart: Date) -> [MealInfo]? {
+        var foundCache = false
+        let meals = weekDates(startingAt: weekStart).flatMap { date -> [MealInfo] in
+            guard let cached = cachedTodayMeals(for: profile, date: date) else { return [] }
+            foundCache = true
+            return cached
+        }
+        return foundCache ? meals.sorted { $0.date < $1.date } : nil
     }
 
     func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
