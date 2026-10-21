@@ -204,16 +204,22 @@ final class SettingsViewModel: ObservableObject {
             message = "학교를 검색 후 다시 선택해 주세요."
             return nil
         }
-        let trimmedGrade = draftProfile.grade.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedClassroom = draftProfile.classroom.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedGrade.isEmpty, !trimmedClassroom.isEmpty else {
-            message = "학년/반을 입력해 주세요."
+        let placement: AcademicPlacement
+        switch StudentProfile.validateAcademicPlacement(
+            grade: draftProfile.grade,
+            classroom: draftProfile.classroom,
+            schoolKind: school.schoolKind
+        ) {
+        case let .success(validPlacement):
+            placement = validPlacement
+        case let .failure(error):
+            message = error.message
             return nil
         }
 
         var profile = draftProfile
-        profile.grade = trimmedGrade
-        profile.classroom = trimmedClassroom
+        profile.grade = placement.grade
+        profile.classroom = placement.classroom
         profile.schoolName = school.schoolName
         profile.officeCode = school.officeCode
         profile.schoolCode = school.schoolCode

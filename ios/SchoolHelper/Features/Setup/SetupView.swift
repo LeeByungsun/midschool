@@ -73,10 +73,12 @@ struct SetupView: View {
                         get: { viewModel.draftProfile.grade },
                         set: { viewModel.updateGrade($0) }
                     ))
+                    .keyboardType(.numberPad)
                     TextField("반", text: Binding(
                         get: { viewModel.draftProfile.classroom },
                         set: { viewModel.updateClassroom($0) }
                     ))
+                    .keyboardType(.numberPad)
                 }
 
                 Section("개인정보 및 진단") {

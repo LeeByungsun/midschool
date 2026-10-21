@@ -94,6 +94,20 @@ final class ProfileEditorViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.message, "학년/반을 입력해 주세요.")
     }
 
+    func testSetupViewModelRejectsNonNumericClassroom() async {
+        var initialProfile = StudentProfile()
+        initialProfile.grade = "1"
+        initialProfile.classroom = "가"
+        let viewModel = SetupViewModel(initialProfile: initialProfile, repository: MockSchoolRepository())
+        viewModel.searchQuery = "미사중학교"
+
+        await viewModel.searchSchools()
+        let savedProfile = viewModel.buildProfileForSave()
+
+        XCTAssertNil(savedProfile)
+        XCTAssertEqual(viewModel.message, "반은 1 이상의 숫자로 입력해 주세요.")
+    }
+
     func testSetupViewModelIgnoresStaleSchoolSearchResults() async {
         let repository = DelayedSearchRepository(
             results: [
@@ -170,6 +184,21 @@ final class ProfileEditorViewModelTests: XCTestCase {
 
         XCTAssertNil(savedProfile)
         XCTAssertEqual(viewModel.message, "학교를 검색 후 다시 선택해 주세요.")
+    }
+
+    func testSettingsViewModelRejectsGradeOutsideSchoolRange() {
+        var profile = StudentProfile.fixture()
+        profile.grade = "4"
+        let viewModel = SettingsViewModel(
+            initialProfile: profile,
+            repository: MockSchoolRepository(),
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        let savedProfile = viewModel.buildProfileForSave()
+
+        XCTAssertNil(savedProfile)
+        XCTAssertEqual(viewModel.message, "중학교 학년은 1~3 사이의 숫자로 입력해 주세요.")
     }
 
     func testSettingsViewModelRequiresReselectWhenStoredSchoolCodeIsMissing() {
