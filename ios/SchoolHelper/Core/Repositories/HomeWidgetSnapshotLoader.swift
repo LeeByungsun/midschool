@@ -25,7 +25,8 @@ struct HomeWidgetSnapshotLoader {
         let profile = profileStore.load()
         let timerState = timerStore.load()
         let widgetSettings = widgetSettingsStore.load()
-        let shouldShowTomorrow = showTomorrow ?? widgetSettings.showTomorrowTimetable
+        let widgetRequestsTomorrow = showTomorrow ?? true
+        let shouldShowTomorrow = widgetSettings.showTomorrowTimetable && widgetRequestsTomorrow
         let schoolLabel = profile.isComplete
             ? "\(profile.schoolName) \(profile.grade)학년 \(profile.classroom)반"
             : "학교와 학년/반 설정 필요"

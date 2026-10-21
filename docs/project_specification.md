@@ -324,7 +324,7 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
 - **홈 화면 위젯 (`SchoolHelperWidget`)**
   - WidgetKit 프레임워크 기반의 오늘/내일 시간표 위젯.
   - 작은/중간/큰 위젯에서 화면 크기에 맞게 오늘/내일 시간표를 요약 표시.
-  - 위젯 설정(AppIntentConfiguration)을 통해 '내일 시간표 표시' 제어 가능.
+  - 앱 설정에서 '내일 시간표 표시'를 끄면 모든 위젯에서 숨기며, 앱 설정이 켜진 경우 위젯 설정(AppIntentConfiguration)으로 위젯별 표시 여부를 제어 가능.
   - 위젯 본문 탭 시 딥링크(`schoolhelper://`)를 통해 시간표 또는 설정 화면으로 즉시 진입.
   - iOS 17 이상의 `.containerBackground`를 적용함.
   - 현재 단일 프로필 구조이므로 Android처럼 위젯별 자녀 프로필 선택은 지원하지 않음.

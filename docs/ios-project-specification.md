@@ -106,7 +106,7 @@ iOS 앱은 SwiftUI 기반 iPhone 앱과 WidgetKit 시간표 위젯으로 구성�
 - 앱과 위젯은 App Group `group.com.lbs.shcoolhelper`의 `UserDefaults`를 공유합니다.
 - 작은 위젯은 오늘 시간표, 중간/큰 위젯은 오늘·내일 시간표를 표시합니다.
 - 긴 과목명은 Android 위젯과 같은 규칙으로 줄입니다.
-- `WidgetConfigurationIntent`에서 위젯별 `내일 시간표 표시`를 선택합니다.
+- 앱 설정에서 `내일 시간표 표시`를 끄면 모든 위젯에서 내일 시간표를 숨깁니다. 앱 설정이 켜져 있을 때는 `WidgetConfigurationIntent`에서 위젯별 표시 여부를 선택합니다.
 - 실행 중 타이머가 있으면 분 단위 또는 종료 시점에 맞춰 timeline을 갱신하고, 그 외에는 기본 30분 주기를 사용합니다.
 - 위젯을 누르면 설정 미완료 시 설정, 완료 시 시간표 딥링크로 이동합니다.
 - 현재 iOS가 단일 프로필이므로 Android처럼 위젯별 자녀 프로필을 선택할 수 없습니다.

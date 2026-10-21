@@ -226,6 +226,41 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
 
         XCTAssertNil(snapshot.tomorrowTimetable)
     }
+
+    func testSharedWidgetSettingOverridesPerWidgetTomorrowRequest() async {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let profileStore = StudentPreferencesStore(defaults: defaults)
+        profileStore.save(.fixture())
+        let timerStore = TimerPreferencesStore(defaults: defaults)
+        let widgetSettingsStore = WidgetSettingsStore(defaults: defaults)
+        widgetSettingsStore.save(WidgetSettings(showTomorrowTimetable: false))
+
+        let loader = HomeWidgetSnapshotLoader(
+            profileStore: profileStore,
+            timerStore: timerStore,
+            widgetSettingsStore: widgetSettingsStore,
+            repository: WidgetTimetableRepository(
+                todayItems: [],
+                tomorrowItems: [
+                    TimetableItem(
+                        date: "20260527",
+                        period: "1",
+                        subject: "영어",
+                        grade: "1",
+                        classroom: "2"
+                    ),
+                ]
+            )
+        )
+
+        let snapshot = await loader.load(
+            now: fixtureDate(year: 2026, month: 5, day: 26),
+            showTomorrow: true
+        )
+
+        XCTAssertNil(snapshot.tomorrowTimetable)
+    }
 }
 
 private struct WidgetTimetableRepository: SchoolRepository {
