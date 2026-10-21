@@ -3,6 +3,7 @@ import Foundation
 struct StudentProfile: Codable, Equatable {
     static let maximumDisplayNameLength = 10
 
+    var id: String = UUID().uuidString
     var displayName: String = ""
     var grade: String = ""
     var classroom: String = ""
@@ -20,6 +21,7 @@ struct StudentProfile: Codable, Equatable {
     }
 
     init(
+        id: String = UUID().uuidString,
         displayName: String = "",
         grade: String = "",
         classroom: String = "",
@@ -28,6 +30,7 @@ struct StudentProfile: Codable, Equatable {
         schoolCode: String = "",
         schoolKind: String = ""
     ) {
+        self.id = id
         self.displayName = displayName
         self.grade = grade
         self.classroom = classroom
@@ -38,11 +41,12 @@ struct StudentProfile: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case displayName, grade, classroom, schoolName, officeCode, schoolCode, schoolKind
+        case id, displayName, grade, classroom, schoolName, officeCode, schoolCode, schoolKind
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
         grade = try container.decodeIfPresent(String.self, forKey: .grade) ?? ""
         classroom = try container.decodeIfPresent(String.self, forKey: .classroom) ?? ""
         schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
@@ -55,6 +59,7 @@ struct StudentProfile: Codable, Equatable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
         try container.encode(displayName, forKey: .displayName)
         try container.encode(grade, forKey: .grade)
         try container.encode(classroom, forKey: .classroom)
@@ -121,6 +126,14 @@ struct StudentProfile: Codable, Equatable {
             )
         )
     }
+}
+
+struct StudentProfilesData: Codable, Equatable {
+    static let currentSchemaVersion = 1
+
+    var schemaVersion: Int = currentSchemaVersion
+    var activeProfileID: String = ""
+    var profiles: [StudentProfile] = []
 }
 
 enum DisplayNameValidationError: Error, Equatable {
