@@ -14,6 +14,7 @@ func fixtureDate(year: Int, month: Int, day: Int) -> Date {
 extension StudentProfile {
     static func fixture() -> StudentProfile {
         StudentProfile(
+            displayName: "지율",
             grade: "1",
             classroom: "2",
             schoolName: "미사중학교",

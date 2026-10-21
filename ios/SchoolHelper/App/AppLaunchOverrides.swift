@@ -9,6 +9,7 @@ enum AppLaunchOverrides {
 
         if environment["SCHOOLHELPER_SEED_PROFILE"] == "fixture" {
             return StudentProfile(
+                displayName: "지율",
                 grade: "1",
                 classroom: "2",
                 schoolName: "미사중학교",

@@ -16,6 +16,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("현재 설정") {
+                    Text(appState.profile.displayName.isEmpty ? "자녀 이름 미설정" : appState.profile.displayName)
                     Text(appState.profile.schoolName.isEmpty ? "학교 미설정" : appState.profile.schoolName)
                     Text(appState.profile.isComplete ? "\(appState.profile.grade)학년 \(appState.profile.classroom)반" : "설정 미완료")
                         .foregroundStyle(.secondary)
@@ -94,6 +95,11 @@ struct SettingsView: View {
                 }
 
                 Section("학생 정보") {
+                    TextField("자녀 이름 (10자 이하)", text: Binding(
+                        get: { viewModel.draftProfile.displayName },
+                        set: { viewModel.updateDisplayName($0) }
+                    ))
+                    .textContentType(.name)
                     TextField("학년", text: Binding(
                         get: { viewModel.draftProfile.grade },
                         set: { viewModel.updateGrade($0) }

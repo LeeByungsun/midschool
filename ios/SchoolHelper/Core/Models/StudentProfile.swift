@@ -1,6 +1,9 @@
 import Foundation
 
 struct StudentProfile: Codable, Equatable {
+    static let maximumDisplayNameLength = 10
+
+    var displayName: String = ""
     var grade: String = ""
     var classroom: String = ""
     var schoolName: String = ""
@@ -13,7 +16,63 @@ struct StudentProfile: Codable, Equatable {
     }
 
     var isComplete: Bool {
-        grade.isNotBlank && classroom.isNotBlank && hasSchoolSelection
+        displayName.isNotBlank && grade.isNotBlank && classroom.isNotBlank && hasSchoolSelection
+    }
+
+    init(
+        displayName: String = "",
+        grade: String = "",
+        classroom: String = "",
+        schoolName: String = "",
+        officeCode: String = "",
+        schoolCode: String = "",
+        schoolKind: String = ""
+    ) {
+        self.displayName = displayName
+        self.grade = grade
+        self.classroom = classroom
+        self.schoolName = schoolName
+        self.officeCode = officeCode
+        self.schoolCode = schoolCode
+        self.schoolKind = schoolKind
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case displayName, grade, classroom, schoolName, officeCode, schoolCode, schoolKind
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        grade = try container.decodeIfPresent(String.self, forKey: .grade) ?? ""
+        classroom = try container.decodeIfPresent(String.self, forKey: .classroom) ?? ""
+        schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
+        officeCode = try container.decodeIfPresent(String.self, forKey: .officeCode) ?? ""
+        schoolCode = try container.decodeIfPresent(String.self, forKey: .schoolCode) ?? ""
+        schoolKind = try container.decodeIfPresent(String.self, forKey: .schoolKind) ?? ""
+        displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
+            ?? (schoolName.isNotBlank ? "자녀" : "")
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(displayName, forKey: .displayName)
+        try container.encode(grade, forKey: .grade)
+        try container.encode(classroom, forKey: .classroom)
+        try container.encode(schoolName, forKey: .schoolName)
+        try container.encode(officeCode, forKey: .officeCode)
+        try container.encode(schoolCode, forKey: .schoolCode)
+        try container.encode(schoolKind, forKey: .schoolKind)
+    }
+
+    static func validateDisplayName(_ displayName: String) -> Result<String, DisplayNameValidationError> {
+        let trimmed = displayName.trimmed
+        guard !trimmed.isEmpty else {
+            return .failure(.missing)
+        }
+        guard trimmed.count <= maximumDisplayNameLength else {
+            return .failure(.tooLong)
+        }
+        return .success(trimmed)
     }
 
     var schoolInfo: SchoolInfo? {
@@ -61,6 +120,20 @@ struct StudentProfile: Codable, Equatable {
                 classroom: String(classroomNumber)
             )
         )
+    }
+}
+
+enum DisplayNameValidationError: Error, Equatable {
+    case missing
+    case tooLong
+
+    var message: String {
+        switch self {
+        case .missing:
+            return "자녀 이름을 입력해 주세요."
+        case .tooLong:
+            return "자녀 이름은 10자 이하로 입력해 주세요."
+        }
     }
 }
 

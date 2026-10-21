@@ -107,6 +107,10 @@ final class SetupViewModel: ObservableObject {
         draftProfile.grade = grade
     }
 
+    func updateDisplayName(_ displayName: String) {
+        draftProfile.displayName = displayName
+    }
+
     func updateClassroom(_ classroom: String) {
         draftProfile.classroom = classroom
     }
@@ -116,6 +120,14 @@ final class SetupViewModel: ObservableObject {
     }
 
     func buildProfileForSave() -> StudentProfile? {
+        let displayName: String
+        switch StudentProfile.validateDisplayName(draftProfile.displayName) {
+        case let .success(validDisplayName):
+            displayName = validDisplayName
+        case let .failure(error):
+            message = error.message
+            return nil
+        }
         let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let school = selectedSchool, school.schoolName == trimmedQuery else {
             message = "학교를 검색 후 다시 선택해 주세요."
@@ -135,6 +147,7 @@ final class SetupViewModel: ObservableObject {
         }
 
         var profile = draftProfile
+        profile.displayName = displayName
         profile.grade = placement.grade
         profile.classroom = placement.classroom
         profile.schoolName = school.schoolName

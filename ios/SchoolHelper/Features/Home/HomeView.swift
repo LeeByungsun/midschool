@@ -13,6 +13,8 @@ struct HomeView: View {
                 Section("학생 정보") {
                     Text(viewModel.dateLabel)
                         .font(.headline)
+                    Text(appState.profile.displayName.isEmpty ? "자녀 이름 미설정" : appState.profile.displayName)
+                        .font(.headline)
                     Text(appState.profile.schoolName.isEmpty ? "학교 미설정" : appState.profile.schoolName)
                     Text(appState.profile.isComplete ? "\(appState.profile.grade)학년 \(appState.profile.classroom)반" : "학년/반 미완료")
                         .foregroundStyle(.secondary)

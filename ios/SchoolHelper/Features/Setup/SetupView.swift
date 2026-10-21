@@ -69,6 +69,11 @@ struct SetupView: View {
                 }
 
                 Section("학생 정보") {
+                    TextField("자녀 이름 (10자 이하)", text: Binding(
+                        get: { viewModel.draftProfile.displayName },
+                        set: { viewModel.updateDisplayName($0) }
+                    ))
+                    .textContentType(.name)
                     TextField("학년", text: Binding(
                         get: { viewModel.draftProfile.grade },
                         set: { viewModel.updateGrade($0) }

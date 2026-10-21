@@ -3,6 +3,49 @@ import XCTest
 
 @MainActor
 final class ProfileEditorViewModelTests: XCTestCase {
+    func testLegacyStoredProfileGetsLocalDefaultDisplayName() throws {
+        let data = try JSONSerialization.data(withJSONObject: [
+            "grade": "1",
+            "classroom": "2",
+            "schoolName": "미사중학교",
+            "officeCode": "J10",
+            "schoolCode": "7692129",
+            "schoolKind": "중학교"
+        ])
+
+        let profile = try JSONDecoder().decode(StudentProfile.self, from: data)
+
+        XCTAssertEqual(profile.displayName, "자녀")
+        XCTAssertTrue(profile.isComplete)
+    }
+
+    func testSetupViewModelTrimsAndSavesDisplayName() async {
+        var initialProfile = StudentProfile()
+        initialProfile.displayName = "  지율  "
+        initialProfile.grade = "1"
+        initialProfile.classroom = "2"
+        let viewModel = SetupViewModel(initialProfile: initialProfile, repository: MockSchoolRepository())
+        viewModel.searchQuery = "미사중학교"
+
+        await viewModel.searchSchools()
+        let savedProfile = viewModel.buildProfileForSave()
+
+        XCTAssertEqual(savedProfile?.displayName, "지율")
+    }
+
+    func testSettingsViewModelRejectsDisplayNameOverTenCharacters() {
+        var profile = StudentProfile.fixture()
+        profile.displayName = "열한글자이름입니다가나다"
+        let viewModel = SettingsViewModel(
+            initialProfile: profile,
+            repository: MockSchoolRepository(),
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        XCTAssertNil(viewModel.buildProfileForSave())
+        XCTAssertEqual(viewModel.message, "자녀 이름은 10자 이하로 입력해 주세요.")
+    }
+
     func testStudentProfileUsesBlankAwareCompletionLikeAndroid() {
         var profile = StudentProfile.fixture()
         profile.grade = " "
@@ -44,6 +87,7 @@ final class ProfileEditorViewModelTests: XCTestCase {
 
     func testSetupViewModelAutoSelectsSingleResultAndBuildsProfile() async {
         var initialProfile = StudentProfile()
+        initialProfile.displayName = "지율"
         initialProfile.grade = "1"
         initialProfile.classroom = "2"
         let viewModel = SetupViewModel(initialProfile: initialProfile, repository: MockSchoolRepository())
@@ -82,6 +126,7 @@ final class ProfileEditorViewModelTests: XCTestCase {
 
     func testSetupViewModelRejectsBlankGradeAndClassroom() async {
         var initialProfile = StudentProfile()
+        initialProfile.displayName = "지율"
         initialProfile.grade = " "
         initialProfile.classroom = "\n"
         let viewModel = SetupViewModel(initialProfile: initialProfile, repository: MockSchoolRepository())
@@ -96,6 +141,7 @@ final class ProfileEditorViewModelTests: XCTestCase {
 
     func testSetupViewModelRejectsNonNumericClassroom() async {
         var initialProfile = StudentProfile()
+        initialProfile.displayName = "지율"
         initialProfile.grade = "1"
         initialProfile.classroom = "가"
         let viewModel = SetupViewModel(initialProfile: initialProfile, repository: MockSchoolRepository())
