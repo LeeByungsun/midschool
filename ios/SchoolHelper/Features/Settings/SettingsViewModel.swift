@@ -15,10 +15,12 @@ final class SettingsViewModel: ObservableObject {
     @Published var notificationPermissionSummary: String = "알림 권한 상태를 확인하는 중이에요."
     @Published var canRequestNotificationPermission: Bool = false
     @Published var showTomorrowTimetable: Bool
+    @Published var diagnosticsEnabled: Bool
 
     private let repository: SchoolRepository
     private let timerSettingsStore: TimerSettingsStore
     private let widgetSettingsStore: WidgetSettingsStore
+    private let diagnosticsConsentStore: DiagnosticsConsentStore
     private let notificationAuthorizationProvider: NotificationAuthorizationProviding
     private let notificationScheduler: TimerNotificationScheduling?
     private let widgetTimelineReloader: WidgetTimelineReloading
@@ -29,6 +31,7 @@ final class SettingsViewModel: ObservableObject {
         repository: SchoolRepository = DefaultSchoolRepository(),
         timerSettingsStore: TimerSettingsStore = TimerSettingsStore(),
         widgetSettingsStore: WidgetSettingsStore = WidgetSettingsStore(),
+        diagnosticsConsentStore: DiagnosticsConsentStore = DiagnosticsConsentStore(),
         notificationAuthorizationProvider: NotificationAuthorizationProviding = NotificationAuthorizationProvider.fromEnvironment(),
         notificationScheduler: TimerNotificationScheduling? = nil,
         widgetTimelineReloader: WidgetTimelineReloading = WidgetTimelineReloader()
@@ -42,6 +45,7 @@ final class SettingsViewModel: ObservableObject {
         self.repository = repository
         self.timerSettingsStore = timerSettingsStore
         self.widgetSettingsStore = widgetSettingsStore
+        self.diagnosticsConsentStore = diagnosticsConsentStore
         self.notificationAuthorizationProvider = notificationAuthorizationProvider
         self.notificationScheduler = notificationScheduler
         self.widgetTimelineReloader = widgetTimelineReloader
@@ -49,6 +53,7 @@ final class SettingsViewModel: ObservableObject {
         self.notificationEnabled = timerSettings.notificationEnabled
         self.vibrationEnabled = timerSettings.vibrationEnabled
         self.showTomorrowTimetable = widgetSettings.showTomorrowTimetable
+        self.diagnosticsEnabled = diagnosticsConsentStore.isEnabled()
     }
 
     func updateSchoolQuery(_ query: String) {
@@ -145,6 +150,7 @@ final class SettingsViewModel: ObservableObject {
         notificationEnabled = timerSettings.notificationEnabled
         vibrationEnabled = timerSettings.vibrationEnabled
         showTomorrowTimetable = widgetSettings.showTomorrowTimetable
+        diagnosticsEnabled = diagnosticsConsentStore.isEnabled()
     }
 
     func saveTimerSettings() {
@@ -162,6 +168,10 @@ final class SettingsViewModel: ObservableObject {
             WidgetSettings(showTomorrowTimetable: showTomorrowTimetable)
         )
         widgetTimelineReloader.reloadAllTimelines()
+    }
+
+    func saveDiagnosticsConsent() {
+        diagnosticsConsentStore.save(isEnabled: diagnosticsEnabled)
     }
 
     func refreshNotificationPermission() async {

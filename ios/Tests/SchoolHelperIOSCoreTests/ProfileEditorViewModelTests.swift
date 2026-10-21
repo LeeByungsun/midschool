@@ -24,6 +24,24 @@ final class ProfileEditorViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.searchResults.isEmpty)
     }
 
+    func testSetupViewModelLoadsAndSavesDiagnosticsConsent() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let consentStore = DiagnosticsConsentStore(defaults: defaults)
+        let viewModel = SetupViewModel(
+            initialProfile: StudentProfile(),
+            repository: MockSchoolRepository(),
+            diagnosticsConsentStore: consentStore
+        )
+
+        XCTAssertFalse(viewModel.diagnosticsEnabled)
+
+        viewModel.diagnosticsEnabled = true
+        viewModel.saveDiagnosticsConsent()
+
+        XCTAssertTrue(consentStore.isEnabled())
+    }
+
     func testSetupViewModelAutoSelectsSingleResultAndBuildsProfile() async {
         var initialProfile = StudentProfile()
         initialProfile.grade = "1"

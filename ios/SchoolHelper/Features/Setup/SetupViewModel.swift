@@ -9,19 +9,24 @@ final class SetupViewModel: ObservableObject {
     @Published var selectedSchool: SchoolInfo?
     @Published var message: String = ""
     @Published var isSearching: Bool = false
+    @Published var diagnosticsEnabled: Bool
 
     private let repository: SchoolRepository
+    private let diagnosticsConsentStore: DiagnosticsConsentStore
     private var latestSearchRequestID = 0
 
     init(
         initialProfile: StudentProfile,
-        repository: SchoolRepository = DefaultSchoolRepository()
+        repository: SchoolRepository = DefaultSchoolRepository(),
+        diagnosticsConsentStore: DiagnosticsConsentStore = DiagnosticsConsentStore()
     ) {
         self.draftProfile = initialProfile
         self.searchQuery = initialProfile.schoolName
         self.selectedSchool = initialProfile.schoolInfo
         self.message = Self.initialSchoolMessage(for: initialProfile)
         self.repository = repository
+        self.diagnosticsConsentStore = diagnosticsConsentStore
+        self.diagnosticsEnabled = diagnosticsConsentStore.isEnabled()
     }
 
     func updateSchoolQuery(_ query: String) {
@@ -104,6 +109,10 @@ final class SetupViewModel: ObservableObject {
 
     func updateClassroom(_ classroom: String) {
         draftProfile.classroom = classroom
+    }
+
+    func saveDiagnosticsConsent() {
+        diagnosticsConsentStore.save(isEnabled: diagnosticsEnabled)
     }
 
     func buildProfileForSave() -> StudentProfile? {

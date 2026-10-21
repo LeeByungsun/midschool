@@ -31,10 +31,12 @@ Android와 iOS 앱의 Firebase Crashlytics 빌드 설정을 점검합니다. 설
   - `ios/SchoolHelper/Resources/GoogleService-Info.plist`
 - 활성화 방식:
   - 앱 시작 시 `GoogleService-Info.plist`가 번들에 있을 때만 `FirebaseApp.configure()`를 실행합니다.
-  - 현재 구현은 설정 파일이 있으면 `Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)`를 호출해 별도 동의 화면이나 설정 토글 없이 수집을 즉시 활성화합니다.
+  - `Info.plist`의 `FirebaseCrashlyticsCollectionEnabled`를 `false`로 두어 자동 수집을 차단합니다.
+  - 초기 설정과 설정 화면의 선택적 오류 진단 동의는 기본 OFF이며 로컬에 저장합니다. 저장된 동의가 켜진 경우에만 Crashlytics 수집을 활성화합니다.
+  - 동의를 끄면 이후 수집을 중단하고 전송 대기 보고서를 삭제합니다. iOS에는 Firebase Analytics를 연결하지 않습니다.
   - Xcode 빌드 중 설정 파일이 있으면 앱 번들로 복사합니다.
   - Crashlytics dSYM 업로드 Run Script는 Firebase SDK checkout과 앱 번들 설정 파일이 모두 있을 때만 실행합니다.
-  - 이 동작은 Android의 선택 동의 방식 및 공개 개인정보처리방침과 일치하지 않으므로, iOS 출시 전에 동의 흐름과 정책을 함께 정비해야 합니다.
+  - App Store 개인정보 응답과 공개 개인정보처리방침은 위 실제 동작을 기준으로 출시 전에 최종 대조합니다.
 
 ## Firebase 콘솔에서 해야 할 일
 
@@ -45,7 +47,7 @@ Android와 iOS 앱의 Firebase Crashlytics 빌드 설정을 점검합니다. 설
 3. iOS 앱을 추가합니다.
    - Bundle ID: `com.lbs.shcoolhelper`
    - 받은 `GoogleService-Info.plist`를 `ios/SchoolHelper/Resources/GoogleService-Info.plist`에 둡니다.
-4. Firebase 콘솔의 Crashlytics 안내에 따라 각 플랫폼 앱을 실행하고, 플랫폼별 수집 동의 조건을 확인합니다. iOS는 현재 사전 동의 없이 수집을 활성화하므로 출시 전 동의 UI·설정과 개인정보처리방침을 일치시킵니다.
+4. Firebase 콘솔의 Crashlytics 안내에 따라 각 플랫폼 앱을 실행하고, 플랫폼별 수집 동의 조건을 확인합니다. iOS는 오류 진단 동의를 켠 테스트 환경에서만 수신을 확인합니다.
 5. Android는 QA 전용 비치명 진단으로 콘솔 수신을 확인합니다. 운영 앱에서 테스트 크래시를 실행하지 않습니다. iOS 검증은 해당 앱의 별도 절차를 따릅니다.
 
 ## 검증 명령

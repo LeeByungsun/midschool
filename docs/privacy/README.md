@@ -7,11 +7,11 @@
 - 전체 공개 문안: [`../privacy-policy.ko.md`](../privacy-policy.ko.md)
 - 앱 내 간단 안내 문안: [`../privacy-collection-summary.ko.md`](../privacy-collection-summary.ko.md)
 
-앱에서 입력하는 자녀 이름과 학교·학년·반 정보는 여러 자녀 프로필로 묶어 기기 내부
-`student_profiles` 저장소에만 보관합니다. 이 프로필 저장소는 Android 클라우드 백업과
-기기 간 자동 전송에서 제외하며, Firebase Analytics/Crashlytics에는 자녀 이름·프로필 ID를
-보내지 않습니다. 학교 조회에 필요한 학교 코드 등 최소한의 진단 정보만 사용자가 동의한
-경우 전송될 수 있습니다.
+Android에서 입력하는 자녀 이름과 학교·학년·반 정보는 여러 자녀 프로필로, iOS의 학교·학년·반
+정보는 단일 프로필로 기기 내부에만 보관합니다. Android 프로필 저장소는 클라우드 백업과 기기 간
+자동 전송에서 제외하며, Firebase Analytics/Crashlytics에는 자녀 이름·프로필 ID를 보내지 않습니다.
+iOS는 Analytics를 사용하지 않고, 두 플랫폼 모두 오류 진단에 동의한 경우에만 Crashlytics 수집을
+활성화합니다.
 
 ## 게시 순서
 
@@ -19,7 +19,7 @@
 2. `schoolon-privacy` 같은 **방침 전용 공개 저장소**를 사용합니다. 이미 만들었다면 다시 만들 필요가 없습니다. 문안을 `index.md`로 저장소 루트에 복사하고, 필요하면 별도의 `index.html`로 변환합니다.
 3. 저장소 **Settings → Pages → Build and deployment → Deploy from a branch**에서 `main` / `/ (root)`를 선택합니다.
 4. 게시된 `https://<GitHub 사용자명>.github.io/schoolon-privacy/`를 로그아웃/시크릿 창과 휴대전화에서 열어 확인합니다. GitHub 사용자·저장소 이름이 다르면 URL도 달라집니다.
-5. **동일한 공개 URL**을 Play Console의 개인정보처리방침 필드와 앱 내 개인정보처리방침 링크에 연결합니다. Android 앱은 초기 동의 단계와 설정 화면에서 아래 공개 URL을 열도록 구현되어 있습니다. Play Console **데이터 보안(Data safety)** 답변도 문안 및 실제 SDK 동작과 대조합니다.
+5. **동일한 공개 URL**을 Play Console·App Store Connect의 개인정보처리방침 필드와 앱 내 개인정보처리방침 링크에 연결합니다. Android와 iOS 앱은 초기 설정과 설정 화면에서 아래 공개 URL을 열도록 구현되어 있습니다. 스토어의 개인정보 응답도 문안 및 실제 SDK 동작과 대조합니다.
 
 
 ### 현재 공개 주소

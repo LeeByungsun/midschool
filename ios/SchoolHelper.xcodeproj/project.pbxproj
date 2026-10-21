@@ -23,6 +23,7 @@
 		35851EE540B4B9F34839566A /* SchoolHelperWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8FDCC89EF93EABA6019076 /* SchoolHelperWidget.swift */; };
 		369F179BFA71F4AA77FD63BB /* TimerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B301701C7448F1FB3C6C07 /* TimerViewModel.swift */; };
 		3E4CC74E803B94A6D3C260F3 /* StudentPreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBE5CE93E4E7FFC14DAC7660 /* StudentPreferencesStore.swift */; };
+		F2A2B3C4D5E6F70123456701 /* PrivacySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A2B3C4D5E6F70123456702 /* PrivacySettings.swift */; };
 		3EAAA5F8D24C1D40AAAE21AC /* StudentProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF14D69C063A580A08D1590 /* StudentProfile.swift */; };
 		408FD32D04BFEEEE55D33112 /* NotificationAuthorizationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F70B0E1C83C5C0EE86DBA6 /* NotificationAuthorizationProvider.swift */; };
 		412CB20FFB593AAD47AEF0B5 /* TimerPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E2516DA4976006996FE147 /* TimerPreset.swift */; };
@@ -182,6 +183,7 @@
 		E17D5A15E6DE84261E7B5F93 /* SchoolSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolSearchService.swift; sourceTree = "<group>"; };
 		E3B301701C7448F1FB3C6C07 /* TimerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewModel.swift; sourceTree = "<group>"; };
 		EBE5CE93E4E7FFC14DAC7660 /* StudentPreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudentPreferencesStore.swift; sourceTree = "<group>"; };
+		F2A2B3C4D5E6F70123456702 /* PrivacySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySettings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -395,6 +397,7 @@
 				8F5BC66889471C47950D8105 /* AppStorageConfig.swift */,
 				8C3AE71CC13E2BB653BC868B /* SchoolDataCacheStore.swift */,
 				EBE5CE93E4E7FFC14DAC7660 /* StudentPreferencesStore.swift */,
+				F2A2B3C4D5E6F70123456702 /* PrivacySettings.swift */,
 				6702DCCE44F9BC30778D0168 /* TimerPreferencesStore.swift */,
 				AE0159AD6C015B6DBC989BED /* TimerSettingsStore.swift */,
 				C0381DE1A2D58B81A4935233 /* WidgetSettingsStore.swift */,
@@ -738,6 +741,7 @@
 				662BA7C72FD697AA006B39C2 /* AppStorageConfig.swift in Sources */,
 				662BA7C82FD697AA006B39C2 /* SchoolDataCacheStore.swift in Sources */,
 				662BA7C92FD697AA006B39C2 /* StudentPreferencesStore.swift in Sources */,
+				F2A2B3C4D5E6F70123456701 /* PrivacySettings.swift in Sources */,
 				662BA7CA2FD697AA006B39C2 /* TimerPreferencesStore.swift in Sources */,
 				662BA7CB2FD697AA006B39C2 /* TimerSettingsStore.swift in Sources */,
 				662BA7CC2FD697AA006B39C2 /* WidgetSettingsStore.swift in Sources */,

@@ -79,9 +79,19 @@ struct SetupView: View {
                     ))
                 }
 
+                Section("개인정보 및 진단") {
+                    Text("오류 진단 정보 제공은 선택 사항이며, 동의하지 않아도 앱을 사용할 수 있어요.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    Link("개인정보처리방침 보기", destination: AppLegalResources.privacyPolicyURL)
+                    Toggle("[선택] 오류 진단 정보 제공에 동의", isOn: $viewModel.diagnosticsEnabled)
+                }
+
                 Section {
                     Button("저장하고 시작하기") {
                         if let profile = viewModel.buildProfileForSave() {
+                            viewModel.saveDiagnosticsConsent()
+                            FirebaseCrashReporting.setCollectionEnabled(viewModel.diagnosticsEnabled)
                             appState.saveProfile(profile)
                         }
                     }

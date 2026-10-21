@@ -3,6 +3,26 @@ import XCTest
 
 @MainActor
 final class SettingsViewModelTests: XCTestCase {
+    func testSettingsViewModelLoadsAndSavesDiagnosticsConsent() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let consentStore = DiagnosticsConsentStore(defaults: defaults)
+        consentStore.save(isEnabled: true)
+        let viewModel = SettingsViewModel(
+            initialProfile: StudentProfile.fixture(),
+            repository: MockSchoolRepository(),
+            diagnosticsConsentStore: consentStore,
+            notificationAuthorizationProvider: StubNotificationAuthorizationProvider()
+        )
+
+        XCTAssertTrue(viewModel.diagnosticsEnabled)
+
+        viewModel.diagnosticsEnabled = false
+        viewModel.saveDiagnosticsConsent()
+
+        XCTAssertFalse(consentStore.isEnabled())
+    }
+
     func testSettingsViewModelLoadsSavedTimerSettings() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)
