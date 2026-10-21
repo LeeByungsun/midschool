@@ -8,6 +8,19 @@ protocol TimerNotificationScheduling {
     func cancelPendingTimerCompletion()
 }
 
+enum TimerNotificationPresentationPolicy {
+    static let timerCompletionIdentifier = "schoolhelper.timer.complete"
+    static let vibrationEnabledKey = "timerVibrationEnabled"
+
+    static func shouldPlaySound(identifier: String) -> Bool {
+        identifier == timerCompletionIdentifier
+    }
+
+    static func shouldPlayHaptic(identifier: String, userInfo: [AnyHashable: Any]) -> Bool {
+        identifier == timerCompletionIdentifier && userInfo[vibrationEnabledKey] as? Bool == true
+    }
+}
+
 final class TimerNotificationScheduler: TimerNotificationScheduling {
     private let center: UNUserNotificationCenter
     private let environment: [String: String]
@@ -49,7 +62,7 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
                     "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
                     "scheduled": "false",
                     "reason": "notification authorization is not granted",
-                    "identifier": Self.notificationIdentifier,
+                    "identifier": TimerNotificationPresentationPolicy.timerCompletionIdentifier,
                 ])
                 return
             }
@@ -59,25 +72,26 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
             content.title = "타이머가 끝났어요"
             content.body = "\(presetTitle) 시간이 완료됐어요."
             content.sound = .default
+            content.userInfo[TimerNotificationPresentationPolicy.vibrationEnabledKey] = vibrationEnabled
             if #available(iOS 15.0, *) {
                 content.interruptionLevel = vibrationEnabled ? .timeSensitive : .active
             }
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: remaining, repeats: false)
             let request = UNNotificationRequest(
-                identifier: Self.notificationIdentifier,
+                identifier: TimerNotificationPresentationPolicy.timerCompletionIdentifier,
                 content: content,
                 trigger: trigger
             )
 
-            center.removePendingNotificationRequests(withIdentifiers: [Self.notificationIdentifier])
+            center.removePendingNotificationRequests(withIdentifiers: [TimerNotificationPresentationPolicy.timerCompletionIdentifier])
             center.add(request) { [center] error in
                 if let error {
                     self.writeSmokeStatus([
                         "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
                         "scheduled": "false",
                         "error": error.localizedDescription,
-                        "identifier": Self.notificationIdentifier,
+                        "identifier": TimerNotificationPresentationPolicy.timerCompletionIdentifier,
                     ])
                     return
                 }
@@ -86,8 +100,8 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
                     self.writeSmokeStatus([
                         "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
                         "scheduled": "true",
-                        "pending": requests.contains { $0.identifier == Self.notificationIdentifier } ? "true" : "false",
-                        "identifier": Self.notificationIdentifier,
+                        "pending": requests.contains { $0.identifier == TimerNotificationPresentationPolicy.timerCompletionIdentifier } ? "true" : "false",
+                        "identifier": TimerNotificationPresentationPolicy.timerCompletionIdentifier,
                         "remainingSeconds": String(Int(remaining.rounded())),
                         "presetTitle": presetTitle,
                     ])
@@ -97,7 +111,7 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
     }
 
     func cancelPendingTimerCompletion() {
-        center.removePendingNotificationRequests(withIdentifiers: [Self.notificationIdentifier])
+        center.removePendingNotificationRequests(withIdentifiers: [TimerNotificationPresentationPolicy.timerCompletionIdentifier])
     }
 
     private func shouldSkipNotificationRequest() -> Bool {
@@ -149,6 +163,5 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
         }
     }
 
-    private static let notificationIdentifier = "schoolhelper.timer.complete"
     private static let smokeStatusFileName = "schoolhelper-notification-smoke.json"
 }

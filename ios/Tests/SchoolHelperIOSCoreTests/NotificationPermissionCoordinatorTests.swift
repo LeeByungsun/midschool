@@ -3,6 +3,25 @@ import XCTest
 
 @MainActor
 final class NotificationPermissionCoordinatorTests: XCTestCase {
+    func testForegroundTimerNotificationPresentationPolicy() {
+        let identifier = TimerNotificationPresentationPolicy.timerCompletionIdentifier
+
+        XCTAssertTrue(TimerNotificationPresentationPolicy.shouldPlaySound(identifier: identifier))
+        XCTAssertTrue(
+            TimerNotificationPresentationPolicy.shouldPlayHaptic(
+                identifier: identifier,
+                userInfo: [TimerNotificationPresentationPolicy.vibrationEnabledKey: true]
+            )
+        )
+        XCTAssertFalse(
+            TimerNotificationPresentationPolicy.shouldPlayHaptic(
+                identifier: identifier,
+                userInfo: [TimerNotificationPresentationPolicy.vibrationEnabledKey: false]
+            )
+        )
+        XCTAssertFalse(TimerNotificationPresentationPolicy.shouldPlaySound(identifier: "other"))
+    }
+
     func testLaunchOverrideNotificationProviderUpdatesStatusAfterRequest() async {
         let provider = NotificationAuthorizationProvider.fromEnvironment([
             "SCHOOLHELPER_NOTIFICATION_AUTHORIZATION_STATUS": "not_determined",
