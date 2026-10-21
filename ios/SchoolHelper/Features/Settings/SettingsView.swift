@@ -140,6 +140,10 @@ struct SettingsView: View {
                     Toggle("[선택] 오류 진단 정보 제공에 동의", isOn: $viewModel.diagnosticsEnabled)
                 }
 
+                Section("앱 정보") {
+                    LabeledContent("버전", value: AppVersionLabel.current())
+                }
+
             }
             .navigationTitle("설정")
             .navigationBarTitleDisplayMode(.inline)

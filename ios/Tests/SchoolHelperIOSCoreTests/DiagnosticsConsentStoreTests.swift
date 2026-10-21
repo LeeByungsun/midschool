@@ -23,3 +23,12 @@ final class DiagnosticsConsentStoreTests: XCTestCase {
         XCTAssertFalse(store.isEnabled())
     }
 }
+
+final class AppVersionLabelTests: XCTestCase {
+    func testFormatsVersionNameAndBuildNumber() {
+        XCTAssertEqual(
+            AppVersionLabel.format(versionName: "1.0", buildNumber: "5"),
+            "v1.0(5)"
+        )
+    }
+}
