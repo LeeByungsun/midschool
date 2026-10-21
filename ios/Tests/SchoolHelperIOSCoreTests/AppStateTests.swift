@@ -3,6 +3,20 @@ import XCTest
 
 @MainActor
 final class AppStateTests: XCTestCase {
+    func testSettingsChangeNotificationAdvancesRevision() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let appState = AppState(
+            store: StudentPreferencesStore(defaults: defaults),
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+        let initialRevision = appState.settingsRevision
+
+        appState.notifySettingsChanged()
+
+        XCTAssertEqual(appState.settingsRevision, initialRevision + 1)
+    }
+
     func testSaveProfileTriggersWidgetReload() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

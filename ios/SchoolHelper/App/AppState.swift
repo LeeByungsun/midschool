@@ -12,6 +12,7 @@ enum AppRoute: String, CaseIterable {
 final class AppState: ObservableObject {
     @Published var profile: StudentProfile
     @Published var selectedRoute: AppRoute = .home
+    @Published private(set) var settingsRevision = 0
 
     private let store: StudentPreferencesStore
     private let widgetTimelineReloader: WidgetTimelineReloading
@@ -50,6 +51,10 @@ final class AppState: ObservableObject {
         self.profile = profile
         selectedRoute = .home
         widgetTimelineReloader.reloadAllTimelines()
+    }
+
+    func notifySettingsChanged() {
+        settingsRevision += 1
     }
 
     func handleDeepLink(_ url: URL) {

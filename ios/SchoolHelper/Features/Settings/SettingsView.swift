@@ -189,6 +189,7 @@ struct SettingsView: View {
         FirebaseCrashReporting.setCollectionEnabled(viewModel.diagnosticsEnabled)
         guard let profile = viewModel.buildProfileForSave() else { return }
         viewModel.saveTimerSettings()
+        appState.notifySettingsChanged()
         appState.saveProfile(profile)
         dismiss()
     }

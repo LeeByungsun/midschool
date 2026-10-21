@@ -3,6 +3,25 @@ import XCTest
 
 @MainActor
 final class TimerViewModelTests: XCTestCase {
+    func testRefreshSettingsReloadsSavedDisplayMode() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let settingsStore = TimerSettingsStore(defaults: defaults)
+        let viewModel = TimerViewModel(
+            store: TimerPreferencesStore(defaults: defaults),
+            settingsStore: settingsStore,
+            notificationScheduler: SpyTimerNotificationScheduler(),
+            widgetTimelineReloader: SpyWidgetTimelineReloader(),
+            sleep: { _ in }
+        )
+        XCTAssertEqual(viewModel.displayMode, .count)
+
+        settingsStore.save(TimerSettings(displayMode: .ring))
+        viewModel.refreshSettings()
+
+        XCTAssertEqual(viewModel.displayMode, .ring)
+    }
+
     func testTimerViewModelTracksRunningStateAgainstCurrentTime() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

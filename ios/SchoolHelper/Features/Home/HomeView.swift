@@ -120,6 +120,9 @@ struct HomeView: View {
             .onAppear {
                 timerViewModel.refreshRunningState()
             }
+            .onChange(of: appState.settingsRevision) { _, _ in
+                timerViewModel.refreshSettings()
+            }
             .task(id: isTimerCompleted) {
                 await updateCompletionBlink()
             }
