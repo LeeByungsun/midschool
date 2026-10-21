@@ -2,9 +2,12 @@ import SwiftUI
 
 struct SetupView: View {
     @EnvironmentObject private var appState: AppState
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: SetupViewModel
+    private let isAddingProfile: Bool
 
-    init() {
+    init(isAddingProfile: Bool = false) {
+        self.isAddingProfile = isAddingProfile
         _viewModel = StateObject(wrappedValue: SetupViewModel(initialProfile: StudentProfile()))
     }
 
@@ -86,25 +89,44 @@ struct SetupView: View {
                     .keyboardType(.numberPad)
                 }
 
-                Section("개인정보 및 진단") {
-                    Text("오류 진단 정보 제공은 선택 사항이며, 동의하지 않아도 앱을 사용할 수 있어요.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Link("개인정보처리방침 보기", destination: AppLegalResources.privacyPolicyURL)
-                    Toggle("[선택] 오류 진단 정보 제공에 동의", isOn: $viewModel.diagnosticsEnabled)
+                if !isAddingProfile {
+                    Section("개인정보 및 진단") {
+                        Text("오류 진단 정보 제공은 선택 사항이며, 동의하지 않아도 앱을 사용할 수 있어요.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Link("개인정보처리방침 보기", destination: AppLegalResources.privacyPolicyURL)
+                        Toggle("[선택] 오류 진단 정보 제공에 동의", isOn: $viewModel.diagnosticsEnabled)
+                    }
                 }
 
                 Section {
-                    Button("저장하고 시작하기") {
+                    Button(isAddingProfile ? "자녀 추가하기" : "저장하고 시작하기") {
                         if let profile = viewModel.buildProfileForSave() {
-                            viewModel.saveDiagnosticsConsent()
-                            FirebaseCrashReporting.setCollectionEnabled(viewModel.diagnosticsEnabled)
-                            appState.saveProfile(profile)
+                            if isAddingProfile {
+                                if appState.addProfile(profile) {
+                                    dismiss()
+                                } else {
+                                    viewModel.message = "같은 이름의 자녀가 이미 있어요."
+                                }
+                            } else {
+                                viewModel.saveDiagnosticsConsent()
+                                FirebaseCrashReporting.setCollectionEnabled(viewModel.diagnosticsEnabled)
+                                if !appState.saveProfile(profile) {
+                                    viewModel.message = "프로필을 저장하지 못했어요. 다시 시도해 주세요."
+                                }
+                            }
                         }
                     }
                 }
             }
-            .navigationTitle("초기 설정")
+            .navigationTitle(isAddingProfile ? "자녀 추가" : "초기 설정")
+            .toolbar {
+                if isAddingProfile {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("취소") { dismiss() }
+                    }
+                }
+            }
             .task(id: viewModel.searchQuery) {
                 await viewModel.searchSchoolsAfterDebounce()
             }

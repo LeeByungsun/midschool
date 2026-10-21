@@ -42,6 +42,66 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(reloader.reloadCount, 0)
     }
 
+    func testAddAndDeleteProfilePublishesTheNewActiveProfile() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = StudentPreferencesStore(defaults: defaults)
+        let first = StudentProfile.fixture()
+        store.save(first)
+        let reloader = SpyWidgetTimelineReloader()
+        let appState = AppState(store: store, widgetTimelineReloader: reloader)
+        var second = StudentProfile.fixture()
+        second.id = "second-profile"
+        second.displayName = "민준"
+
+        XCTAssertTrue(appState.addProfile(second))
+        XCTAssertEqual(appState.profile, second)
+        XCTAssertEqual(appState.profiles, [first, second])
+
+        XCTAssertTrue(appState.deleteProfile(id: second.id))
+        XCTAssertEqual(appState.profile, first)
+        XCTAssertEqual(appState.profiles, [first])
+        XCTAssertEqual(reloader.reloadCount, 2)
+    }
+
+    func testAddProfileRejectsDuplicateDisplayName() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = StudentPreferencesStore(defaults: defaults)
+        let profile = StudentProfile.fixture()
+        store.save(profile)
+        let appState = AppState(
+            store: store,
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+        var duplicate = profile
+        duplicate.id = "duplicate-profile"
+
+        XCTAssertFalse(appState.addProfile(duplicate))
+        XCTAssertEqual(appState.profiles, [profile])
+    }
+
+    func testSaveProfileRejectsAnotherProfilesDisplayName() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = StudentPreferencesStore(defaults: defaults)
+        let first = StudentProfile.fixture()
+        store.save(first)
+        var second = StudentProfile.fixture()
+        second.id = "second-profile"
+        second.displayName = "민준"
+        XCTAssertTrue(store.add(second))
+        let appState = AppState(
+            store: store,
+            widgetTimelineReloader: SpyWidgetTimelineReloader()
+        )
+        var renamed = second
+        renamed.displayName = first.displayName
+
+        XCTAssertFalse(appState.saveProfile(renamed))
+        XCTAssertEqual(appState.profile, second)
+    }
+
     func testSettingsChangeNotificationAdvancesRevision() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

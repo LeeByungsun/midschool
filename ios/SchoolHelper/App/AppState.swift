@@ -49,12 +49,14 @@ final class AppState: ObservableObject {
         applyInitialRouteOverride()
     }
 
-    func saveProfile(_ profile: StudentProfile) {
-        store.save(profile)
-        self.profile = profile
+    @discardableResult
+    func saveProfile(_ profile: StudentProfile) -> Bool {
+        guard store.save(profile) else { return false }
+        self.profile = store.load()
         profiles = store.loadProfiles()
         selectedRoute = .home
         widgetTimelineReloader.reloadAllTimelines()
+        return true
     }
 
     @discardableResult
@@ -63,6 +65,24 @@ final class AppState: ObservableObject {
         profile = store.load()
         profiles = store.loadProfiles()
         selectedRoute = .home
+        widgetTimelineReloader.reloadAllTimelines()
+        return true
+    }
+
+    @discardableResult
+    func addProfile(_ profile: StudentProfile) -> Bool {
+        guard store.add(profile) else { return false }
+        self.profile = store.load()
+        profiles = store.loadProfiles()
+        widgetTimelineReloader.reloadAllTimelines()
+        return true
+    }
+
+    @discardableResult
+    func deleteProfile(id: String) -> Bool {
+        guard store.deleteProfile(id: id) else { return false }
+        profile = store.load()
+        profiles = store.loadProfiles()
         widgetTimelineReloader.reloadAllTimelines()
         return true
     }

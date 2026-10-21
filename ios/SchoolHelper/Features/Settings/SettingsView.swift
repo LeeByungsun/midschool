@@ -6,6 +6,8 @@ struct SettingsView: View {
     @StateObject private var viewModel: SettingsViewModel
     @State private var widgetPreview: HomeWidgetSnapshot?
     @State private var isLoadingWidgetPreview = false
+    @State private var isAddingProfile = false
+    @State private var isConfirmingProfileDeletion = false
     private let widgetPreviewLoader = HomeWidgetSnapshotLoader()
 
     init() {
@@ -20,6 +22,17 @@ struct SettingsView: View {
                     Text(appState.profile.schoolName.isEmpty ? "학교 미설정" : appState.profile.schoolName)
                     Text(appState.profile.isComplete ? "\(appState.profile.grade)학년 \(appState.profile.classroom)반" : "설정 미완료")
                         .foregroundStyle(.secondary)
+                }
+
+                Section("자녀 관리") {
+                    Button("자녀 추가") {
+                        isAddingProfile = true
+                    }
+                    if appState.profiles.count > 1 {
+                        Button("현재 자녀 삭제", role: .destructive) {
+                            isConfirmingProfileDeletion = true
+                        }
+                    }
                 }
 
                 Section("위젯 미리보기") {
@@ -180,6 +193,25 @@ struct SettingsView: View {
             .task(id: viewModel.searchQuery) {
                 await viewModel.searchSchoolsAfterDebounce()
             }
+            .onChange(of: appState.profile) { _, profile in
+                viewModel.sync(with: profile)
+            }
+            .sheet(isPresented: $isAddingProfile) {
+                SetupView(isAddingProfile: true)
+                    .environmentObject(appState)
+            }
+            .confirmationDialog(
+                "현재 자녀를 삭제할까요?",
+                isPresented: $isConfirmingProfileDeletion,
+                titleVisibility: .visible
+            ) {
+                Button("삭제", role: .destructive) {
+                    _ = appState.deleteProfile(id: appState.profile.id)
+                }
+                Button("취소", role: .cancel) {}
+            } message: {
+                Text("삭제하면 이 자녀의 학교·학년·반 설정을 되돌릴 수 없어요.")
+            }
         }
     }
 
@@ -205,7 +237,10 @@ struct SettingsView: View {
         guard let profile = viewModel.buildProfileForSave() else { return }
         viewModel.saveTimerSettings()
         appState.notifySettingsChanged()
-        appState.saveProfile(profile)
+        guard appState.saveProfile(profile) else {
+            viewModel.message = "같은 이름의 자녀가 이미 있어요."
+            return
+        }
         dismiss()
     }
 }

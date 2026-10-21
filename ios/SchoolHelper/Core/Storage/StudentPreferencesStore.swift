@@ -14,15 +14,26 @@ final class StudentPreferencesStore {
         return data.profiles.first(where: { $0.id == data.activeProfileID }) ?? StudentProfile()
     }
 
-    func save(_ profile: StudentProfile) {
+    @discardableResult
+    func save(_ profile: StudentProfile) -> Bool {
         var data = loadData()
-        if let index = data.profiles.firstIndex(where: { $0.id == profile.id }) {
-            data.profiles[index] = profile
-        } else {
-            data.profiles.append(profile)
+        let normalizedName = profile.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard profile.isComplete,
+              !data.profiles.contains(where: {
+                  $0.id != profile.id && $0.displayName.trimmingCharacters(in: .whitespacesAndNewlines) == normalizedName
+              })
+        else {
+            return false
         }
-        data.activeProfileID = profile.id
-        persist(data)
+        var normalizedProfile = profile
+        normalizedProfile.displayName = normalizedName
+        if let index = data.profiles.firstIndex(where: { $0.id == profile.id }) {
+            data.profiles[index] = normalizedProfile
+        } else {
+            data.profiles.append(normalizedProfile)
+        }
+        data.activeProfileID = normalizedProfile.id
+        return persist(data)
     }
 
     func loadProfiles() -> [StudentProfile] {
