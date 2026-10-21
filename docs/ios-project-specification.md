@@ -78,7 +78,7 @@ iOS 앱은 SwiftUI 기반 iPhone 앱과 WidgetKit 시간표 위젯으로 구성�
 
 ### 3.2 저장과 캐시
 
-- `StudentPreferencesStore`: 프로필 목록과 활성 프로필 ID를 로컬에 저장하며, 기존 단일 `student_profile` 데이터는 최초 조회 시 목록 구조로 자동 이전합니다. 현재 화면에서는 활성 프로필 한 개만 편집합니다.
+- `StudentPreferencesStore`: 프로필 목록과 활성 프로필 ID를 로컬에 저장하며, 기존 단일 `student_profile` 데이터는 최초 조회 시 목록 구조로 자동 이전합니다. 홈은 저장된 프로필이 둘 이상이면 활성 자녀 전환 메뉴를 표시하지만, 추가·삭제 화면은 아직 없습니다.
 - `TimerPreferencesStore`, `TimerSettingsStore`: 타이머 상태와 표시/알림 설정
 - `WidgetSettingsStore`: 내일 시간표 표시 설정
 - `DiagnosticsConsentStore`: 기본 OFF인 오류 진단 정보 제공 동의
@@ -137,7 +137,7 @@ iOS 앱은 SwiftUI 기반 iPhone 앱과 WidgetKit 시간표 위젯으로 구성�
 
 | 우선순위 | 항목 | 현재 iOS 상태 |
 |---|---|---|
-| P1 | 다중 자녀 프로필 UI | 로컬 목록 저장·활성 선택·기존 데이터 이전 기반은 구현됐으나 화면에서 추가·전환·삭제는 아직 미지원 |
+| P1 | 다중 자녀 관리 UI | 로컬 목록 저장·기존 데이터 이전과 홈 전환은 구현됐으나 화면에서 추가·삭제는 아직 미지원 |
 | 완료 | 홈 새로고침 UX | 당겨서 새로고침과 상단 버튼 제공 |
 | 완료 | 앱 정보 | 개인정보처리방침·버전·OSS 라이선스 화면 제공 |
 | P2 | 캐시 우선 표시 | 네트워크 우선 + 실패 시 cache fallback |

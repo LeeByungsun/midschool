@@ -11,6 +11,7 @@ enum AppRoute: String, CaseIterable {
 
 final class AppState: ObservableObject {
     @Published var profile: StudentProfile
+    @Published private(set) var profiles: [StudentProfile]
     @Published var selectedRoute: AppRoute = .home
     @Published private(set) var settingsRevision = 0
 
@@ -27,6 +28,7 @@ final class AppState: ObservableObject {
             store.removeProfile()
         }
         self.profile = store.load()
+        self.profiles = store.loadProfiles()
     }
 
     var isSetupComplete: Bool {
@@ -43,14 +45,26 @@ final class AppState: ObservableObject {
             return
         }
         profile = store.load()
+        profiles = store.loadProfiles()
         applyInitialRouteOverride()
     }
 
     func saveProfile(_ profile: StudentProfile) {
         store.save(profile)
         self.profile = profile
+        profiles = store.loadProfiles()
         selectedRoute = .home
         widgetTimelineReloader.reloadAllTimelines()
+    }
+
+    @discardableResult
+    func selectProfile(id: String) -> Bool {
+        guard store.selectProfile(id: id) else { return false }
+        profile = store.load()
+        profiles = store.loadProfiles()
+        selectedRoute = .home
+        widgetTimelineReloader.reloadAllTimelines()
+        return true
     }
 
     func notifySettingsChanged() {

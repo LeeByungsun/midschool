@@ -3,6 +3,45 @@ import XCTest
 
 @MainActor
 final class AppStateTests: XCTestCase {
+    func testSelectProfilePublishesActiveProfileAndReloadsWidgets() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = StudentPreferencesStore(defaults: defaults)
+        let first = StudentProfile.fixture()
+        var second = StudentProfile.fixture()
+        second.id = "second-profile"
+        second.displayName = "민준"
+        store.save(first)
+        XCTAssertTrue(store.add(second))
+        let reloader = SpyWidgetTimelineReloader()
+        let appState = AppState(store: store, widgetTimelineReloader: reloader)
+
+        XCTAssertEqual(appState.profiles, [first, second])
+        XCTAssertEqual(appState.profile, second)
+
+        XCTAssertTrue(appState.selectProfile(id: first.id))
+
+        XCTAssertEqual(appState.profile, first)
+        XCTAssertEqual(appState.profiles, [first, second])
+        XCTAssertEqual(appState.selectedRoute, .home)
+        XCTAssertEqual(reloader.reloadCount, 1)
+    }
+
+    func testSelectProfileRejectsUnknownIDWithoutChangingActiveProfile() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = StudentPreferencesStore(defaults: defaults)
+        let profile = StudentProfile.fixture()
+        store.save(profile)
+        let reloader = SpyWidgetTimelineReloader()
+        let appState = AppState(store: store, widgetTimelineReloader: reloader)
+
+        XCTAssertFalse(appState.selectProfile(id: "missing"))
+
+        XCTAssertEqual(appState.profile, profile)
+        XCTAssertEqual(reloader.reloadCount, 0)
+    }
+
     func testSettingsChangeNotificationAdvancesRevision() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

@@ -13,6 +13,24 @@ struct HomeView: View {
                 Section("학생 정보") {
                     Text(viewModel.dateLabel)
                         .font(.headline)
+                    if appState.profiles.count > 1 {
+                        Menu {
+                            ForEach(appState.profiles, id: \.id) { profile in
+                                Button {
+                                    appState.selectProfile(id: profile.id)
+                                } label: {
+                                    if profile.id == appState.profile.id {
+                                        Label(profile.displayName, systemImage: "checkmark")
+                                    } else {
+                                        Text(profile.displayName)
+                                    }
+                                }
+                            }
+                        } label: {
+                            Label("자녀 선택", systemImage: "person.2")
+                        }
+                        .accessibilityIdentifier("home-profile-switcher")
+                    }
                     Text(appState.profile.displayName.isEmpty ? "자녀 이름 미설정" : appState.profile.displayName)
                         .font(.headline)
                     Text(appState.profile.schoolName.isEmpty ? "학교 미설정" : appState.profile.schoolName)
