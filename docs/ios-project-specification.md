@@ -1,185 +1,153 @@
-# 스쿨온 iOS 앱 스펙 초안
+# 스쿨온 iOS 앱 현재 명세
 
-기준일: 2026-05-28
+- **기준일:** 2026-10-21
+- **구현 대조 기준:** `main@7c05c97`
+- **기준 플랫폼:** Android 문서의 도메인·데이터 정책을 참고하되, 이 문서는 현재 iOS 구현과 남은 차이를 구분해 기록합니다.
 
-이 문서는 `docs/project_specification.md` 의 공통 요구사항을 바탕으로,
-`ios/` 폴더에서 구현할 iPhone용 앱 범위를 정리한 iOS 전용 스펙 초안입니다.
+## 1. 현재 범위
 
----
+iOS 앱은 SwiftUI 기반 iPhone 앱과 WidgetKit 시간표 위젯으로 구성됩니다. 현재 구현은 학교 한 곳과 학년·반을 저장하는 **단일 학생 프로필** 구조입니다. Android의 자녀 표시 이름, 다중 프로필, 선택형 Firebase 동의 흐름은 아직 iOS에 구현되어 있지 않습니다.
 
-## 1. 목표
+현재 제공 기능:
 
-iOS 앱은 Android 앱과 동일한 핵심 학생 기능을 iPhone에서도 사용할 수 있도록 만드는 것이 목표입니다.
+- 초등학교·중학교·고등학교 검색 및 학교/교육청 코드 저장
+- 홈의 오늘 시간표·급식·다가오는 일정·가정통신문·타이머 요약
+- 날짜 이동형 일간 시간표, 주간 급식, 월간 학사 일정
+- 집중/휴식/딥포커스 프리셋 타이머와 숫자/링 표시
+- 타이머 상태 복원, 완료 로컬 알림, 완료 시 홈·상세 화면 배경 깜박임
+- 작은/중간/큰 오늘·내일 시간표 위젯과 딥링크
+- 네트워크 캐시와 가정통신문 BFF 연동
 
-초기 목표:
+## 2. 화면과 사용자 흐름
 
-- 학교 검색 및 학생 설정 저장
-  - 기존 저장값에 학교명만 있고 학교 코드가 없으면 재검색/재선택 요구
-  - 학교/학년/반 완료 판정은 Android와 동일하게 공백 문자열을 미완료로 처리
-- 홈 대시보드
-- 시간표 조회
-- 급식 조회
-- 학사 일정 조회
-- 스터디 타이머
-- 가정통신문 미리보기
+### 2.1 초기 설정 (`SetupView`, `SetupViewModel`)
 
-최근 반영된 확장:
+- 학교 이름을 두 글자 이상 입력해 검색 결과에서 학교를 선택합니다.
+- 학교명, 교육청 코드, 학교 코드, 학교 종류와 학년·반을 저장합니다.
+- 빠른 연속 검색에서는 이전 요청 결과가 최신 검색을 덮어쓰지 않습니다.
+- 기존 저장값에 학교 코드가 없거나 검색어가 선택 학교와 달라지면 다시 선택하도록 안내합니다.
+- 현재 자녀 표시 이름, 다중 프로필, 개인정보처리방침 링크, Analytics/오류 진단 동의 단계는 없습니다.
 
-- 알림 권한/완료 알림
-- 위젯/홈 화면 확장
-- 타이머 종료 시 홈/상세 화면 배경 깜박임
+### 2.2 메인 탐색 (`RootTabView`)
 
----
+- 하단 탭은 홈, 시간표, 급식, 일정으로 구성합니다.
+- 설정과 타이머는 홈에서 sheet 또는 상세 탐색으로 엽니다.
+- 설정이 완료되지 않으면 초기 설정 화면을 표시합니다.
+- `schoolhelper://timetable`, `schoolhelper://settings` 등의 딥링크를 처리합니다.
 
-## 2. 1차 MVP 기능
+### 2.3 홈 (`HomeView`, `HomeViewModel`)
 
-### 2.1 Setup
-- 학교 검색
-- 학교 선택
-- 빠른 재검색 시 이전 검색 응답이 최신 결과를 덮어쓰지 않음
-- 학년/반 입력
-- 저장 완료 후 홈 진입
+- 오늘 날짜와 현재 학교·학년·반을 표시합니다.
+- 오늘 시간표, 급식 메뉴·식사 구분·칼로리, 가까운 일정 최대 3개, 가정통신문 최대 3개를 요약합니다.
+- 상단 `새로고침` 버튼으로 현재 데이터를 다시 요청합니다. Android의 당겨서 새로고침과 달리 pull-to-refresh는 아직 없습니다.
+- 가정통신문은 첫 항목의 게시판 목록 URL(`sourceUrl`)을 우선 열고, 없으면 상세 URL을 사용합니다.
+- 타이머 프리셋·시작/일시정지·리셋과 `타이머 전체 보기` 진입을 제공합니다.
 
-### 2.2 Home
-- 오늘 날짜
-- 저장된 학교/학년/반
-- 오늘 시간표 요약
-- 오늘 급식 요약 + 식사 구분/칼로리 메타
-- 다가오는 일정 요약
-- 타이머 요약 카드
-- 타이머 프리셋 선택 / 시작 / 일시정지 / 리셋 quick controls
-- 설정 화면 진입 버튼
+### 2.4 시간표·급식·일정
 
-### 2.3 Timetable
-- 날짜 이동형 일간 시간표
-- 교시별 과목 리스트
+- `TimetableView`: 이전/오늘/다음 날짜 이동과 교시별 과목 표시
+- `MealsView`: 이전 주/이번 주/다음 주 이동과 평일 5일 급식·칼로리 표시
+- `ScheduleView`: 이전 달/이번 달/다음 달 이동과 월간 일정 표시
+- 각 ViewModel은 설정이 미완료된 경우 조회 대신 설정 필요 상태를 표시합니다.
 
-### 2.4 Meals
-- 주간 급식 조회
-- 날짜별 메뉴/칼로리 표시
+### 2.5 설정 (`SettingsView`, `SettingsViewModel`)
 
-### 2.5 Schedule
-- 월간 또는 기간형 일정 조회
-
-### 2.6 Timer
-- 집중/휴식 프리셋
-- 숫자/링 표시 모드
-- 시작/일시정지/재시작/리셋
-- 상태 복구 가능한 저장 구조
-- 실행 중 countdown 갱신
-- 타이머 완료 알림 예약/취소
-- 타이머 종료 시 홈 타이머 영역과 상세 화면 배경 깜박임
-
-### 2.7 Settings
+- 현재 학교·학년·반 확인 및 단일 프로필 수정
 - 학교 재검색/재선택
-- 빠른 재검색 시 이전 검색 응답이 최신 결과를 덮어쓰지 않음
-- 학년/반 수정
-- 타이머 표시 모드
-- 알림음/진동 사용 여부
-  - 알림 OFF 저장 시 이미 예약된 타이머 완료 알림 취소
-- 알림 권한 상태 확인 및 요청
+- 타이머 숫자/링 표시 모드, 로컬 알림 사용, 진동 옵션 저장
+- 알림 권한 상태 표시 및 미결정 상태에서 권한 요청
+- 위젯 미리보기와 `내일 시간표 표시` 설정
+- 현재 Android에 있는 다중 자녀 관리, 개인정보처리방침, 오픈소스 라이선스, 앱 버전 표시는 없습니다.
 
-### 2.8 Notices
-- Android와 동일하게 web `/api/notices` BFF 사용
-- 학교/교육청 코드와 limit query 전달
-- 최근 가정통신문 최대 3개 홈 카드 표시
-- 날짜가 없으면 Android와 동일하게 제목만 표시
-- 첫 번째 가정통신문 URL 열기
+## 3. 데이터와 네트워크
 
-### 2.9 Widget foundation
-- 앱/위젯 shared suite 저장소
-- 오늘/내일 시간표 snapshot 로더
-- 작은/중간/큰 위젯 크기별 오늘/내일 시간표 표시
-- `SchoolHelperWidget` WidgetKit source/target scaffold
-- app group entitlement scaffold
-- 위젯용 `내일 시간표 표시` 설정 저장
-- `WidgetConfigurationIntent` 기반 위젯 개별 설정
+### 3.1 API
 
----
+- 학교 검색: `hub/schoolInfo`
+- 급식: `hub/mealServiceDietInfo`
+- 학사 일정: `hub/SchoolSchedule`
+- 초등학교 시간표: `hub/elsTimetable`
+- 중학교 시간표: `hub/misTimetable`
+- 고등학교 시간표: `hub/hisTimetable`
+- 가정통신문: `${WEB_BASE_URL}/api/notices`
+- 시간표 BFF fallback: NEIS 키가 없을 때 `${WEB_BASE_URL}/api/timetable`
 
-## 3. 기술 방향
+`NEIS_BASE_URL` 기본값은 `https://open.neis.go.kr/`, `WEB_BASE_URL` 기본값은 `https://midschool.vercel.app/`입니다. NEIS API 키는 실행 환경에서 선택적으로 읽으며 앱 저장소에 저장하지 않습니다.
 
-### UI
-- SwiftUI
+### 3.2 저장과 캐시
 
-### 상태
-- MVVM
-- `@StateObject` / `@ObservableObject` 기반 화면 상태
+- `StudentPreferencesStore`: 단일 `StudentProfile`
+- `TimerPreferencesStore`, `TimerSettingsStore`: 타이머 상태와 표시/알림 설정
+- `WidgetSettingsStore`: 내일 시간표 표시 설정
+- `SchoolDataCacheStore`: 급식 12시간, 시간표 24시간, 학사 일정 12시간
+- 캐시 키는 Android와 같은 학교·학급·날짜/월 문맥을 포함합니다.
+- 현재 iOS는 **네트워크 우선**이며 요청 실패 시 신선한 캐시를 사용합니다. Android의 캐시 우선 즉시 표시 후 최신 데이터 갱신 Flow와는 다릅니다.
 
-### 비동기
-- async/await
+### 3.3 현재 샘플 fallback 주의
 
-### 저장
-- UserDefaults 래퍼
-- 위젯 확장을 위한 shared suite 경계
-- NEIS 데이터 캐시
-  - 급식: 12시간
-  - 시간표: 24시간
-  - 학사 일정: 12시간
-  - 최신 요청 실패 시 fresh cache를 우선 fallback으로 사용
+`DefaultSchoolRepository`는 원격 조회와 신선한 캐시가 모두 실패하면 `MockSchoolRepository`의 샘플 데이터를 반환합니다. 학교 검색과 가정통신문도 원격 실패 시 샘플 결과로 대체될 수 있습니다. 실제 데이터처럼 보일 수 있으므로 **App Store 출시 전 제거하고 오류/빈 상태로 전환해야 하는 P0 항목**입니다.
 
-### 네트워크
-- URLSession 기반 client
-- NEIS / notices 경계 분리
-- notices는 Android와 동일하게 web `/api/notices` BFF를 우선 사용
+## 4. 타이머와 로컬 알림
 
----
+- 프리셋: 집중 40분, 휴식 10분, 딥포커스 25분
+- 앱을 다시 열면 저장된 목표 시각을 기준으로 남은 시간을 복원합니다.
+- 시작 시 알림 사용 설정과 권한이 허용되어 있으면 `UNUserNotificationCenter`에 완료 알림을 예약합니다.
+- 일시정지·리셋·알림 OFF 저장 시 예약된 완료 알림을 취소합니다.
+- 완료 상태는 홈 타이머 영역과 상세 화면의 배경 깜박임으로도 전달합니다.
+- 현재 `진동 사용` 값은 알림의 interruption level 선택에만 사용되고 `content.sound`는 항상 기본 사운드입니다. iOS 시스템 정책상 앱이 소리와 진동을 완전히 독립 제어한다고 보장할 수 없으므로 UI 문구와 실제 체감 동작을 출시 전에 다시 맞춰야 합니다.
 
-## 4. 공통 계약
+## 5. 위젯
 
-iOS 앱은 다음 공통 규칙을 Android/Web와 맞춥니다.
+- 앱과 위젯은 App Group `group.com.lbs.shcoolhelper`의 `UserDefaults`를 공유합니다.
+- 작은 위젯은 오늘 시간표, 중간/큰 위젯은 오늘·내일 시간표를 표시합니다.
+- 긴 과목명은 Android 위젯과 같은 규칙으로 줄입니다.
+- `WidgetConfigurationIntent`에서 위젯별 `내일 시간표 표시`를 선택합니다.
+- 실행 중 타이머가 있으면 분 단위 또는 종료 시점에 맞춰 timeline을 갱신하고, 그 외에는 기본 30분 주기를 사용합니다.
+- 위젯을 누르면 설정 미완료 시 설정, 완료 시 시간표 딥링크로 이동합니다.
+- 현재 iOS가 단일 프로필이므로 Android처럼 위젯별 자녀 프로필을 선택할 수 없습니다.
 
-- 학교 identity 저장:
-  - `schoolName`
-  - `officeCode`
-  - `schoolCode`
-  - `schoolKind`
-- 학생 설정 완료 조건:
-  - 학년/반 + 학교 identity
-- 캐시 키:
-  - 급식: 학교 + 날짜
-  - 시간표: 학교 + 학년/반 + 날짜
-  - 일정: 학교 + 월
+## 6. 기술 구조
 
----
+- 언어/UI: Swift 5.9 도구 체계, SwiftUI
+- 최소 배포 대상: iOS 17.0
+- 아키텍처: MVVM (`ObservableObject`, `@StateObject`)
+- 비동기 처리: Swift Concurrency (`async`/`await`, `Task`, `MainActor`)과 Combine
+- 네트워크: `URLSession`
+- 저장: App Group 기반 `UserDefaults`
+- 앱 프로젝트: `SchoolHelper.xcodeproj`
+- Core 회귀 테스트: Swift Package `SchoolHelperIOSCore`
 
-## 5. 현재 구현 우선순위
+`SchoolHelper` 프로젝트명, bundle id, App Group, `schoolhelper://` 스킴은 기존 설치·서명·저장 호환성을 위한 기술 식별자이며 사용자 노출 서비스명은 `스쿨온`입니다.
 
-1. iOS 앱 폴더 구조 확정
-2. SwiftUI 앱 진입점과 화면 골격 생성
-3. Setup/Home/Settings 흐름 우선 연결
-4. NEIS client와 mock 데이터/실데이터 경계 설계
-5. 화면별 ViewModel/Model 정리
-6. SwiftPM 기반 코어 회귀 테스트 경로 유지
+## 7. Firebase·개인정보·법적 정보 상태
 
----
+- iOS 앱은 `FirebaseCore`와 `FirebaseCrashlytics`를 연결합니다.
+- 현재 저장소에는 `GoogleService-Info.plist`가 있으며 앱 시작 시 Crashlytics 수집을 명시적으로 활성화합니다.
+- iOS에는 Firebase Analytics, 선택 동의 화면, Crashlytics 수집 토글, 개인정보처리방침 링크가 없습니다.
+- 공개 개인정보처리방침은 Android의 선택 동의형 Analytics/Crashlytics 및 다중 프로필 동작을 기준으로 작성되어 있어 현재 iOS 동작을 그대로 설명하지 못합니다.
+- 따라서 **iOS 배포 전** Android와 같은 사전 선택 동의·기본 OFF 경계를 구현하거나, 실제 수집 동작과 App Store 개인정보 응답·공개 방침을 일치시키는 별도 결정을 완료해야 합니다.
 
-## 6. 아직 열려 있는 결정/검증
+## 8. Android 기준 차이와 우선순위
 
-해결됨:
+| 우선순위 | 항목 | 현재 iOS 상태 |
+|---|---|---|
+| P0 | 샘플 데이터의 운영 fallback 제거 | 원격·캐시 실패 시 mock 데이터가 노출될 수 있음 |
+| P0 | 개인정보처리방침·Crashlytics 동의 정합성 | Crashlytics 활성화, 앱 내 링크/선택 동의 없음 |
+| P1 | 다중 자녀 프로필과 표시 이름 | 단일 프로필만 지원 |
+| P1 | 오류·빈 상태 분리 | 일부 ViewModel이 오류를 빈 배열로 바꿔 실제 빈 상태와 구분하지 못함 |
+| P1 | 홈 새로고침 UX | 상단 버튼만 제공, pull-to-refresh 없음 |
+| P1 | 앱 정보 | 개인정보처리방침·OSS 라이선스·버전 화면 없음 |
+| P2 | 캐시 우선 표시 | 네트워크 우선 + 실패 시 cache fallback |
+| P2 | 위젯별 자녀 선택 | 단일 프로필이므로 내일 시간표 옵션만 제공 |
 
-- SwiftUI 앱은 `ios/SchoolHelperIOS.xcodeproj` + SwiftPM 코어 테스트 병행 구조로 둠
-- 실제 `SchoolHelperWidget` WidgetKit target/scaffold를 포함함
-- SwiftPM 코어 테스트는 Repository/ViewModel/Widget snapshot/Notification coordination까지 확장함
-- 가정통신문 BFF 호출과 홈 카드 포맷을 Android와 맞춤
-- 홈 화면 위젯 실제 배치와 위젯 탭 후 시간표 진입을 실기기에서 확인함
-- 실기기 타이머 완료 알림/진동 수신을 확인함
-- full App Group 실기기 빌드와 위젯 데이터 공유를 확인함
+## 9. 검증 기준
 
-남은 검증:
+```bash
+cd ios
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
+./scripts/verify_ios_local_readiness.sh
+```
 
-- 시스템 딥링크 확인 다이얼로그 이후 최종 전환 케이스 추가 확인
-
-최근 검증:
-
-- 2026-05-28 실제 iPhone 9개 전체 UI 테스트 통과
-- `ONLY_TESTING= TEAM_ID=2TJFP5788P DERIVED_DATA_PATH=/tmp/misschool-ios-device-ui-tabs-test-3 ios/scripts/test_device_ui.sh`
-- `SchoolHelperIOSUITests`: 9 tests, 0 failures
-- 2026-05-28 live NEIS/BFF backend 데이터 smoke 통과
-- `DATE=20260528 MONTH=202605 ios/scripts/verify_live_school_data.py`
-- 2026-05-28 live NEIS/BFF simulator UI 렌더링 smoke 통과
-- `ios/scripts/test_live_ui.sh`
-
-현재는 **기능 parity를 우선하는 iPhone 앱 구현 + 코어 회귀 테스트 + simulator/device-preview 검증**을 기준으로 진행합니다.
-
-상세 parity 감사와 실기기 검증 기록은 공개 기능 명세와 분리된 내부 문서로 관리합니다.
+- Core 테스트는 프로필 검증, 학교 검색, 캐시, 화면 ViewModel, 타이머, 알림 권한, 위젯 스냅샷·timeline을 포함합니다.
+- simulator/실기기, App Group signing, 실제 알림 체감, live NEIS/BFF 검증은 `ios/README.md`의 전용 스크립트를 사용합니다.
+- 과거 실기기·live 검증 기록은 `docs/internal/ios-runtime-verification.md`에 보존하되, 현재 코드의 재검증 결과와 구분합니다.

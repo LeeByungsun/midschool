@@ -23,17 +23,25 @@
 
 - `../docs/project_specification.md`
 - `../docs/ios-project-specification.md`
-- `../.codex/skills/ios-architecture/SKILL.md`
 
-주요 기능:
+현재 주요 기능:
 
-- Setup
-- Home
-- Timetable
-- Meals
-- Schedule
-- Timer
-- Settings
+- 초·중·고 학교 검색과 단일 학생 프로필(학교·학년·반) 저장
+- 홈의 시간표·급식·일정·가정통신문 요약과 수동 새로고침
+- 날짜 이동형 시간표, 주간 급식, 월간 일정
+- 상태 복원·로컬 알림·완료 깜박임을 지원하는 타이머
+- 오늘/내일 시간표 WidgetKit 위젯과 딥링크
+- NEIS/BFF 연동 및 급식 12시간·시간표 24시간·일정 12시간 캐시
+
+Android 기준으로 아직 없는 기능과 출시 전 필수 보완 사항:
+
+- 자녀 표시 이름과 다중 자녀 프로필 전환
+- 개인정보처리방침·오픈소스 라이선스·앱 버전 진입점
+- 선택 동의형 Firebase 경계(현재 iOS는 설정 파일이 있으면 Crashlytics를 활성화)
+- 원격·캐시 실패 시 샘플 데이터를 보여 주는 `MockSchoolRepository` 운영 fallback 제거
+- 홈 당겨서 새로고침과 Android식 캐시 우선 표시
+
+정확한 현재 범위와 우선순위는 `../docs/ios-project-specification.md`를 기준으로 합니다.
 
 실행 참고:
 

@@ -4,7 +4,7 @@
 
 Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스쿨온**입니다. 기존 기술 식별자와 프로젝트 파일명은 호환성을 위해 유지합니다.
 
-이 문서는 기존 단일 Android 중심 기획서를 **공통 요구사항**, **Android 전용 사항**, **Web 전용 사항**으로 나누어 다시 정리한 버전입니다.
+이 문서는 기존 단일 Android 중심 기획서를 **공통 요구사항**, **Android 전용 사항**, **Web 전용 사항**, **iOS 전용 사항**으로 나누어 다시 정리한 버전입니다.
 
 ---
 
@@ -299,21 +299,24 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
 ### 5.1 iOS 화면 구성
 
 - **초기 설정 (`SetupView`, `SetupViewModel`)**
-  - 학교 검색/선택 및 학년/반 기본 설정 완료.
+  - 초·중·고 학교 검색/선택 및 학교·교육청 코드·학교 종류·학년/반을 단일 프로필로 저장한다.
+  - 자녀 표시 이름, 다중 프로필, 개인정보처리방침·Firebase 선택 동의 단계는 아직 없다.
 - **메인 탭 뷰 (`RootTabView`)**
   - 앱의 주요 탭들을 관리하는 하단 탭 바 인터페이스.
 - **홈 대시보드 (`HomeView`, `HomeViewModel`)**
   - 오늘 날짜, 오늘 급식 요약, 오늘 시간표 요약, 다가오는 일정 요약, 가정통신문 미리보기, 타이머 카드 표시.
+  - 상단 `새로고침` 버튼으로 다시 조회하며 Android의 당겨서 새로고침은 아직 없다.
 - **시간표 화면 (`TimetableView`, `TimetableViewModel`)**
   - 날짜 이동이 가능한 일간 시간표 조회 및 표시.
 - **급식 화면 (`MealsView`, `MealsViewModel`)**
-  - 주간 급식 목록 조회 및 알레르기/칼로리 상세 정보 표시.
+  - 평일 5일 주간 급식 목록과 메뉴·칼로리 표시.
 - **학사 일정 화면 (`ScheduleView`, `ScheduleViewModel`)**
   - 월 단위 학사 일정 캘린더/리스트 조회.
 - **설정 화면 (`SettingsView`, `SettingsViewModel`)**
-  - 학년/반 정보 변경, 학교 다시 검색, 타이머 상세 옵션(진동, 알림 표시) 및 위젯 설정 제어.
+  - 단일 프로필의 학년/반 변경, 학교 다시 검색, 타이머 표시·로컬 알림 옵션, 알림 권한, 위젯 미리보기와 내일 시간표 표시를 제어한다.
+  - 개인정보처리방침, 오픈소스 라이선스, 앱 버전, 다중 자녀 관리는 아직 없다.
 - **스터디 타이머 (`TimerView`, `TimerViewModel`)**
-  - 집중/휴식 등 프리셋 관리 및 커스텀 링 형태의 그래픽 타이머 제공.
+  - 집중 40분·휴식 10분·딥포커스 25분 프리셋과 숫자/링 표시, 시작·일시정지·리셋, 상태 복원을 제공한다.
   - 타이머 종료 시 홈 타이머 영역과 상세 타이머 화면 배경을 깜박여 무음/무진동 상황에서도 완료 상태를 전달.
 
 ### 5.2 iOS 전용 UX/기능
@@ -323,27 +326,46 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
   - 작은/중간/큰 위젯에서 화면 크기에 맞게 오늘/내일 시간표를 요약 표시.
   - 위젯 설정(AppIntentConfiguration)을 통해 '내일 시간표 표시' 제어 가능.
   - 위젯 본문 탭 시 딥링크(`schoolhelper://`)를 통해 시간표 또는 설정 화면으로 즉시 진입.
-  - iOS 17 이상의 `.containerBackground` 대응 필요.
+  - iOS 17 이상의 `.containerBackground`를 적용함.
+  - 현재 단일 프로필 구조이므로 Android처럼 위젯별 자녀 프로필 선택은 지원하지 않음.
 - **iOS 로컬 알림 (`TimerNotificationScheduler`)**
-  - `UNUserNotificationCenter`를 사용하여 타이머 만료 시 로컬 알림(Notification) 및 진동 알람 전송.
+  - `UNUserNotificationCenter`를 사용하여 타이머 만료 시 로컬 알림을 예약하고, 일시정지·리셋·알림 OFF 시 취소한다.
   - 스레드 안전성을 위해 메인 스레드에서 권한 요청 얼럿이 동작하도록 설계.
+  - 현재 진동 옵션은 interruption level에만 반영되며 기본 알림 사운드는 항상 지정되므로, 소리·진동을 독립 제어한다고 보장할 수 없음.
 
 ### 5.3 iOS 기술 스택
 
 - **iOS Firebase Crashlytics**
   - 앱 타깃은 Swift Package Manager로 `FirebaseCore`와 `FirebaseCrashlytics`를 연결합니다.
-  - `ios/SchoolHelper/Resources/GoogleService-Info.plist`가 있을 때만 `FirebaseApp.configure()`를 실행합니다.
+  - `ios/SchoolHelper/Resources/GoogleService-Info.plist`가 있을 때 `FirebaseApp.configure()` 후 Crashlytics 수집을 활성화합니다. 현재 저장소에는 설정 파일이 있습니다.
   - Xcode 빌드에서는 Firebase 설정 파일이 있으면 앱 번들로 복사하고, Crashlytics dSYM 업로드 Run Script를 실행합니다.
-  - Firebase 설정 파일이 없는 로컬 환경에서는 Firebase 초기화를 건너뜁니다.
+  - 현재 iOS에는 Analytics, 사전 선택 동의, 수집 토글, 개인정보처리방침 링크가 없으므로 배포 전 공개 방침·App Store 개인정보 응답과 실제 동작을 맞춰야 합니다.
 
 
 - **언어/런타임**: Swift 5.9 이상, SwiftUI
-- **최소 지원 버전**: iOS 16 이상
+- **최소 지원 버전**: iOS 17.0 이상
 - **의존성 및 빌드 관리**: Swift Package Manager (SPM) 및 Xcode Project (`SchoolHelper.xcodeproj`)
 - **아키텍처**: MVVM (SwiftUI View + ObservableObject ViewModel)
 - **비동기 처리**: Swift Concurrency (`async`/`await`, `Task`, `MainActor`) 및 Combine
 - **네트워킹**: `URLSession` 기반 API 통신 (`NEISClient`)
 - **로컬 저장소**: `UserDefaults` 기반 직렬화 저장 (`StudentPreferencesStore`, `TimerPreferencesStore` 등)
+
+### 5.4 iOS 데이터/캐시 동작
+
+- 학교 검색·급식·일정은 NEIS를 직접 호출하고, NEIS 키가 없는 시간표 조회는 web `/api/timetable` BFF를 사용합니다.
+- 가정통신문은 web `/api/notices` BFF를 사용하며 `sourceUrl`을 목록 URL로 우선 엽니다.
+- `NEIS_BASE_URL` 기본값은 `https://open.neis.go.kr/`, `WEB_BASE_URL` 기본값은 `https://midschool.vercel.app/`입니다.
+- 급식 12시간, 시간표 24시간, 학사 일정 12시간의 키 기반 캐시를 사용합니다.
+- Android의 로컬 우선 Flow와 달리 iOS는 네트워크 요청을 먼저 수행하고 실패 시 신선한 캐시를 사용합니다.
+- 원격과 캐시가 모두 실패하면 현재 `MockSchoolRepository`가 샘플 데이터를 반환할 수 있으므로 App Store 출시 전 오류/빈 상태로 교체해야 합니다.
+
+### 5.5 Android 기준 주요 차이
+
+- iOS는 단일 프로필이며 자녀 표시 이름·다중 프로필·위젯별 자녀 선택이 없습니다.
+- 홈은 상단 새로고침 버튼을 사용하며 pull-to-refresh는 없습니다.
+- 앱 내 개인정보처리방침·OSS 라이선스·버전 정보가 없습니다.
+- Firebase Crashlytics 선택 동의 경계와 공개 개인정보처리방침 정합성이 확보되지 않았습니다.
+- 상세 차이와 출시 우선순위는 `docs/ios-project-specification.md`를 기준으로 합니다.
 
 ---
 
@@ -376,10 +398,11 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
 
 ### 6.4 iOS 확장 포인트
 
-- Swift Concurrency 병렬성 활용 최적화 (주간 식단 및 위젯 시간표 비동기 병렬 Fetch 등)
-- 타이머 Task 순환 참조(Memory Leak) 방지 코드 안정성 강화
-- iOS 17 이상 전용 WidgetKit API (.containerBackground 등) 완벽 대응
-- 알림 권한 팝업 호출 스레드(Main Actor) 안전성 확보
+- 운영 환경의 `MockSchoolRepository` 샘플 fallback 제거
+- 개인정보처리방침·Crashlytics 선택 동의·App Store 개인정보 응답 정합성 확보
+- 자녀 표시 이름과 다중 자녀 프로필 지원
+- 홈 pull-to-refresh와 오류/빈 상태 분리
+- 개인정보처리방침·오픈소스 라이선스·앱 버전 화면 추가
 
 ---
 
