@@ -47,11 +47,13 @@ cd android
 ```bash
 android/scripts/build-install.sh
 android/scripts/build-install.sh qa
+android/scripts/build-install.sh qa-release
 android/scripts/build-install.sh debug
 ```
 
 스크립트는 연결된 단말을 확인하고 APK를 빌드한 뒤 덮어쓰기 설치하고 앱을 실행합니다.
 여러 단말이 연결된 경우 `ANDROID_SERIAL=<단말 번호>`를 함께 지정합니다.
+`qa-release`는 QA 패키지명과 디버그 서명을 유지하면서 릴리스와 같은 R8 난독화·리소스 축소를 검증할 때 사용합니다.
 서명된 릴리스 산출물은 별도의 릴리스 빌드·배포 절차를 사용합니다.
 
 ## 폴더 구조 요약
@@ -80,7 +82,7 @@ android/
 - 학교 생활 정보 조회의 기준 플랫폼
 - 자녀별 프로필과 학교/학년/반 설정
 - 앱 위젯 지원
-- 타이머 알림/진동 지원
+- 단말 소리 모드에 따른 타이머 완료음·진동 지원(상태바 알림은 생성하지 않음)
 - 홈 카드에서 타이머를 조작하는 XML 기반 화면 구성
 
 ## 관련 문서

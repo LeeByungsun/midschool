@@ -19,16 +19,16 @@
 2. `schoolon-privacy` 같은 **방침 전용 공개 저장소**를 사용합니다. 이미 만들었다면 다시 만들 필요가 없습니다. 문안을 `index.md`로 저장소 루트에 복사하고, 필요하면 별도의 `index.html`로 변환합니다.
 3. 저장소 **Settings → Pages → Build and deployment → Deploy from a branch**에서 `main` / `/ (root)`를 선택합니다.
 4. 게시된 `https://<GitHub 사용자명>.github.io/schoolon-privacy/`를 로그아웃/시크릿 창과 휴대전화에서 열어 확인합니다. GitHub 사용자·저장소 이름이 다르면 URL도 달라집니다.
-5. **동일한 공개 URL**을 Play Console의 개인정보처리방침 필드와 앱 내 개인정보처리방침 링크에 연결합니다. 현재 앱에는 방침 링크가 없으므로 출시 전 UI/문자열을 추가해야 합니다. Play Console **데이터 보안(Data safety)** 답변도 문안 및 실제 SDK 동작과 대조합니다.
+5. **동일한 공개 URL**을 Play Console의 개인정보처리방침 필드와 앱 내 개인정보처리방침 링크에 연결합니다. Android 앱은 초기 동의 단계와 설정 화면에서 아래 공개 URL을 열도록 구현되어 있습니다. Play Console **데이터 보안(Data safety)** 답변도 문안 및 실제 SDK 동작과 대조합니다.
 
 
-### 현재 저장소로 바로 게시하는 방법
+### 현재 공개 주소
 
-이 저장소를 공개로 유지할 수 있다면, GitHub Pages의 배포 원본을 `main` 브랜치의 `/docs` 폴더로 선택하세요. 배포 주소는 다음과 같습니다.
+개인정보처리방침 전용 저장소에서 게시하는 현재 공개 주소는 다음과 같습니다.
 
-`https://leebyungsun.github.io/midschool/privacy/`
+`https://leebyungsun.github.io/schoolon-privacy/`
 
-이 주소의 진입 페이지는 [`index.html`](index.html)이며, 페이지 제목과 표기 이름은 모두 **스쿨온**입니다.
+앱과 Play Console에는 이 주소를 동일하게 사용합니다. 저장소를 옮기거나 주소를 변경하면 앱 문자열, Play Console과 이 문서를 함께 갱신합니다.
 
 GitHub 저장소의 소스 페이지나 편집 가능한 문서 링크가 아니라 **게시된 Pages URL**을 사용하세요. Google Play는 누구나 접근 가능한 정상 웹페이지(지역 제한·PDF·수정 가능한 문서 제외)를 요구합니다. GitHub Pages는 `index.md`, `index.html`, `README.md`를 진입 파일로 인식합니다.
 

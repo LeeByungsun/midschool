@@ -63,10 +63,12 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
 
 - **데이터 소스**: [나이스(NEIS) 교육정보 개방 포털 API](https://open.neis.go.kr/)
 - **사용 API**
+  - 학교 검색: `hub/schoolInfo`
   - 급식: `hub/mealServiceDietInfo`
   - 학사 일정: `hub/SchoolSchedule`
   - 중학교 시간표: `hub/misTimetable`
   - 초등학교 시간표: `hub/elsTimetable`
+  - 고등학교 시간표: `hub/hisTimetable`
 - **캐시 전략**
   - 급식 캐시: 12시간
   - 시간표 캐시: 24시간
@@ -108,9 +110,9 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
   - 입력값은 포커스 이동 시 화면 상태에 반영한다. 검색 결과에서 선택한 유효한 학교와 필수 입력값은 `시작하기` 버튼을 눌렀을 때 저장한다. 입력 중인 검색어만으로 기존 학교 정보를 덮어쓰지 않는다.
   - 키보드가 표시되면 화면 높이를 조정하고 현재 입력칸 아래에 여유 공간이 보이도록 스크롤한다.
 - **설정 (`SettingsActivity`)**
-  - 자녀 프로필 추가·전환·수정·삭제, 학교 검색/변경, 타이머 표시/알림 설정을 제공한다. 마지막 자녀 프로필은 삭제할 수 없다.
+  - 자녀 프로필 추가·전환·수정·삭제, 학교 검색/변경, 타이머 표시 방식 설정과 완료음·진동 동작 안내를 제공한다. 마지막 자녀 프로필은 삭제할 수 없다.
   - 프로필 입력 변경은 포커스 이동 시 화면 초안에 반영한다. `저장하기`로 저장하거나, 뒤로 이동·프로필 전환 시 표시되는 미저장 변경 대화상자에서 저장·버리기·취소를 선택한다.
-  - 정보 제공 안내와 앱 정보 영역에서 공개 개인정보처리방침을 열 수 있다. 앱 정보 영역은 빌드에서 자동 수집한 오픈소스 라이선스 목록과 앱 버전도 제공한다.
+  - 정보 제공 안내와 앱 정보 영역에서 공개 개인정보처리방침을 열 수 있다. 앱 정보 영역은 빌드에서 자동 수집한 오픈소스 라이선스 목록과 `versionName(versionCode)` 형식의 앱 버전도 제공한다.
 - **메인 대시보드 (`MainActivity`)**
   - 주요 정보 요약 카드 및 타이머 표시
   - 오늘 시간표 요약과 급식 / 학사 일정 / 가정통신문 preview / 타이머 카드로 홈을 구성
@@ -132,12 +134,13 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
   - 위젯 본문 탭 시 앱으로 바로 진입 가능
   - 날짜 변경, 시간 변경, 시간대 변경, 재부팅 시 자동 갱신
   - 위젯 활성화 중에는 다음 로컬 자정 갱신 알람을 예약해 날짜 변경 브로드캐스트 누락 시에도 오늘/내일 시간표를 갱신
-  - 위젯 설정 화면에서 `내일 시간표 표시` 여부 제어
+  - 위젯 설정 화면에서 위젯별 자녀 프로필과 `내일 시간표 표시` 여부 제어
   - 작은 위젯 대응 및 과목명 길이 제한 적용
 
 - **Android 알림/백그라운드 동작**
-  - `TimerAlarmReceiver` 기반 타이머 완료 알림
-  - 로컬 노티피케이션 및 진동 지원
+  - `TimerAlarmReceiver` 기반 타이머 완료 처리
+  - 단말의 현재 소리 모드가 일반이면 시스템 알림음을, 진동이면 진동을 한 번 재생하고 무음이면 재생하지 않는다.
+  - 상태바 로컬 노티피케이션을 생성하거나 알림 권한을 요청하지 않는다.
 
 - **Android 전용 시각 구성**
   - 숫자형 타이머와 `TimerRingView` 커스텀 링 뷰 지원
@@ -187,7 +190,7 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
 - Android는 최신 요청이 실패했을 때 **같은 조회 키의 신선한 캐시가 남아 있으면 기존 화면을 유지**하고, 신선한 캐시가 없으면 Repository 오류를 그대로 전달합니다.
 - 학사 일정은 `PreferencesRepositoryImpl`이 월 단위(`yyyyMM`) `SchoolEvent` 목록을 `SharedPreferences`에 직렬화해 저장하며, **빈 월 결과도 유효한 캐시**로 유지해 네트워크 실패 시 같은 월의 "일정 없음" 상태를 안정적으로 복구합니다.
 - 가정통신문 조회용 Android 원격 경계는 `NoticeApiService` 와 `SchoolRepository.getNotices()` 로 분리합니다.
-- Android build config의 `WEB_BASE_URL`은 `android/local.properties`에서 주입하며 미설정 시 빈 문자열입니다. 가정통신문 API를 사용할 빌드에는 끝이 `/`인 웹 서버 기본 URL을 설정해야 합니다.
+- Android build config의 `WEB_BASE_URL`은 `android/local.properties`에서 주입하며, 값이 없거나 비어 있으면 `https://midschool.vercel.app/`을 사용합니다. 별도 웹 서버를 사용할 때는 끝이 `/`인 기본 URL을 설정해야 합니다.
 - Android notices 응답은 web notices 계약의 `items` / `message` 를 우선 소비하며, web 쪽은 machine-readable `status` / `errorCode` 보강을 포함해 Android 소비 안정성을 높입니다.
 - Android/iOS 홈의 가정통신문 CTA는 각 item의 `sourceUrl`을 목록 URL로 우선 사용하고, 누락 시 상세 `url`로 fallback합니다.
 
