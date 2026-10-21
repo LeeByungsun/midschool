@@ -50,7 +50,7 @@ struct ScheduleView: View {
                 }
             }
             .navigationTitle("일정")
-            .task {
+            .task(id: appState.profile) {
                 await viewModel.load(profile: appState.profile)
             }
         }

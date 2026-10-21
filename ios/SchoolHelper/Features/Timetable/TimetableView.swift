@@ -48,7 +48,7 @@ struct TimetableView: View {
                 }
             }
             .navigationTitle("시간표")
-            .task {
+            .task(id: appState.profile) {
                 await viewModel.load(profile: appState.profile)
             }
         }

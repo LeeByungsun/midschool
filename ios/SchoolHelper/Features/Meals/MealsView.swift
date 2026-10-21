@@ -51,7 +51,7 @@ struct MealsView: View {
                 }
             }
             .navigationTitle("급식")
-            .task {
+            .task(id: appState.profile) {
                 await viewModel.load(profile: appState.profile)
             }
         }
