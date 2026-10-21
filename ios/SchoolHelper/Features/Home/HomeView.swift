@@ -98,6 +98,9 @@ struct HomeView: View {
                     .disabled(!viewModel.noticeActionEnabled)
                 }
             }
+            .refreshable {
+                await refreshHome()
+            }
             .navigationTitle("스쿨온")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
