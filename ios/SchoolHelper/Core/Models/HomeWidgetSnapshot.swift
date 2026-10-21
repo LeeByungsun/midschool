@@ -7,4 +7,10 @@ struct HomeWidgetSnapshot: Equatable {
     var todayTimetable: String
     var tomorrowTimetable: String?
     var requiresSetup: Bool
+
+    func forSmallWidget() -> HomeWidgetSnapshot {
+        var snapshot = self
+        snapshot.tomorrowTimetable = nil
+        return snapshot
+    }
 }

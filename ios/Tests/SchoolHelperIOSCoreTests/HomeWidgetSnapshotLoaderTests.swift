@@ -2,6 +2,22 @@ import XCTest
 @testable import SchoolHelperIOSCore
 
 final class HomeWidgetSnapshotLoaderTests: XCTestCase {
+    func testSmallWidgetSnapshotAlwaysHidesTomorrowTimetable() {
+        let snapshot = HomeWidgetSnapshot(
+            headerDate: "📅 5월 26일 (화)",
+            schoolLabel: "미사중학교 1학년 2반",
+            timerSummary: "집중 • 25:00",
+            todayTimetable: "1교시 국어",
+            tomorrowTimetable: "1교시 영어",
+            requiresSetup: false
+        )
+
+        let smallSnapshot = snapshot.forSmallWidget()
+
+        XCTAssertEqual(smallSnapshot.todayTimetable, "1교시 국어")
+        XCTAssertNil(smallSnapshot.tomorrowTimetable)
+    }
+
     func testSnapshotRequiresSetupWhenProfileIsIncomplete() async {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)
