@@ -7,6 +7,11 @@ protocol SchoolRepository {
     func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem]
     func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent]
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview]
+    func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]?
+}
+
+extension SchoolRepository {
+    func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]? { nil }
 }
 
 protocol NEISServicing {
@@ -156,6 +161,16 @@ struct DefaultSchoolRepository: SchoolRepository {
             }
             throw error
         }
+    }
+
+    func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]? {
+        cacheStore.getTimetable(
+            officeCode: profile.officeCode,
+            schoolCode: profile.schoolCode,
+            grade: profile.grade,
+            classroom: profile.classroom,
+            date: formattedString(from: date, format: "yyyyMMdd")
+        )
     }
 
     func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {

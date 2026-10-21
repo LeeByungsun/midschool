@@ -3,6 +3,22 @@ import XCTest
 
 @MainActor
 final class FeatureViewModelTests: XCTestCase {
+    func testTimetableViewModelShowsCacheBeforeRemoteRefreshCompletes() async {
+        let date = fixtureDate(year: 2026, month: 5, day: 26)
+        let viewModel = TimetableViewModel(
+            repository: DelayedCacheFirstTimetableRepository(),
+            todayProvider: { date }
+        )
+        viewModel.date = date
+
+        let loading = Task { await viewModel.load(profile: .fixture()) }
+        try? await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertEqual(viewModel.items.map(\.subject), ["캐시 국어"])
+        await loading.value
+        XCTAssertEqual(viewModel.items.map(\.subject), ["최신 수학"])
+    }
+
     func testHomeViewModelShowsSetupMessagesWhenProfileIsIncomplete() async {
         let viewModel = HomeViewModel(
             repository: StubSchoolRepository(),
@@ -313,6 +329,21 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertFalse(timetableViewModel.hasLoadError)
         XCTAssertFalse(scheduleViewModel.hasLoadError)
     }
+}
+
+private struct DelayedCacheFirstTimetableRepository: SchoolRepository {
+    func searchSchools(query: String) async throws -> [SchoolInfo] { [] }
+    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] { [] }
+    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] { [] }
+    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
+        try await Task.sleep(nanoseconds: 80_000_000)
+        return [TimetableItem(date: "20260526", period: "1", subject: "최신 수학", grade: "1", classroom: "2")]
+    }
+    func cachedTimetable(for profile: StudentProfile, date: Date) -> [TimetableItem]? {
+        [TimetableItem(date: "20260526", period: "1", subject: "캐시 국어", grade: "1", classroom: "2")]
+    }
+    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] { [] }
+    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] { [] }
 }
 
 private struct FailingSchoolRepository: SchoolRepository {

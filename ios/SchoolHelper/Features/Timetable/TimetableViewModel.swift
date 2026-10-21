@@ -33,14 +33,25 @@ final class TimetableViewModel: ObservableObject {
             statusText = "학교와 학년/반을 먼저 설정해 주세요."
             return
         }
+        let cached = repository.cachedTimetable(for: profile, date: date)
+        if let cached {
+            items = cached
+            hasLoadError = false
+            statusText = cached.isEmpty ? "해당 날짜 시간표가 없어요." : ""
+        } else {
+            items = []
+            statusText = "시간표를 불러오는 중…"
+        }
         do {
             items = try await repository.fetchTimetable(for: profile, date: date)
             hasLoadError = false
             statusText = items.isEmpty ? "해당 날짜 시간표가 없어요." : ""
         } catch {
-            items = []
-            hasLoadError = true
-            statusText = "시간표를 불러오지 못했어요. 다시 시도해 주세요."
+            if cached == nil {
+                items = []
+                hasLoadError = true
+                statusText = "시간표를 불러오지 못했어요. 다시 시도해 주세요."
+            }
         }
     }
 

@@ -47,6 +47,12 @@ final class HomeViewModel: ObservableObject {
             return
         }
 
+        if let cached = repository.cachedTimetable(for: profile, date: currentDate) {
+            applyTimetableResult(.success(cached))
+        } else {
+            todaySummary = "오늘 시간표를 불러오는 중…"
+        }
+
         async let timetable = capture { try await repository.fetchTimetable(for: profile, date: currentDate) }
         async let meals = capture { try await repository.fetchTodayMeals(for: profile, date: currentDate) }
         async let events = capture { try await repository.fetchSchedule(for: profile, month: currentDate) }
