@@ -40,6 +40,12 @@ struct TimetableView: View {
                         Text(item.subject)
                     }
                 }
+
+                if viewModel.hasLoadError {
+                    Button("다시 시도") {
+                        Task { await viewModel.retry() }
+                    }
+                }
             }
             .navigationTitle("시간표")
             .task {

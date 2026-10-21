@@ -41,91 +41,10 @@ protocol NoticesServicing {
 extension NEISClient: SchoolSearchService, NEISServicing {}
 extension NoticesClient: NoticesServicing {}
 
-struct MockSchoolRepository: SchoolRepository {
-    func searchSchools(query: String) async throws -> [SchoolInfo] {
-        try await MockSchoolSearchService().searchSchools(query: query)
-    }
-
-    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        formatter.locale = Locale(identifier: "ko_KR")
-        let dateKey = formatter.string(from: date)
-        let menu = ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_DATE_MARKED_MEALS"] == "1"
-            ? "샘플 급식 \(dateKey)"
-            : "비빔밥\n미역국"
-        return [
-            MealInfo(
-                date: dateKey,
-                mealType: "점심",
-                menu: menu,
-                calorieInfo: "712 kcal"
-            )
-        ]
-    }
-
-    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        formatter.locale = Locale(identifier: "ko_KR")
-        let menuIncludesDate = ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_DATE_MARKED_MEALS"] == "1"
-        return (0..<5).map { offset in
-            let day = Calendar.current.date(byAdding: .day, value: offset, to: weekStart) ?? weekStart
-            let dateKey = formatter.string(from: day)
-            return MealInfo(
-                date: dateKey,
-                mealType: "점심",
-                menu: menuIncludesDate ? "샘플 급식 \(dateKey)" : "샘플 급식 \(offset + 1)",
-                calorieInfo: "\(680 + offset * 10) kcal"
-            )
-        }
-    }
-
-    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        let dateKey = formatter.string(from: date)
-        let subjectSuffix = ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_DATE_MARKED_TIMETABLE"] == "1"
-            ? " \(dateKey)"
-            : ""
-        let requestedPeriodCount = Int(ProcessInfo.processInfo.environment["SCHOOLHELPER_DEBUG_TIMETABLE_PERIODS"] ?? "") ?? 3
-        let periodCount = max(1, requestedPeriodCount)
-        let defaultSubjects = ["국어", "수학", "영어"]
-
-        return (1...periodCount).map { period in
-            let subject = defaultSubjects.indices.contains(period - 1)
-                ? defaultSubjects[period - 1]
-                : "수업\(period)"
-            return TimetableItem(
-                date: dateKey,
-                period: "\(period)",
-                subject: "\(subject)\(subjectSuffix)",
-                grade: profile.grade,
-                classroom: profile.classroom
-            )
-        }
-    }
-
-    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
-        [
-            SchoolEvent(date: "20260526", title: "체육대회", description: "운동장"),
-            SchoolEvent(date: "20260528", title: "중간고사", description: "교실별 시험")
-        ]
-    }
-
-    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] {
-        Array([
-            NoticePreview(id: "1", title: "현장학습 안내", date: "2026-05-26", author: "교무실", url: "https://example.com/notices/1", sourceUrl: "https://example.com/notices"),
-            NoticePreview(id: "2", title: "학부모 공지", date: "2026-05-25", author: "행정실", url: "https://example.com/notices/2", sourceUrl: "https://example.com/notices")
-        ].prefix(limit))
-    }
-}
-
 struct DefaultSchoolRepository: SchoolRepository {
     private let schoolSearchService: SchoolSearchService
     private let neisService: NEISServicing
     private let noticesService: NoticesServicing
-    private let fallback: SchoolRepository
     private let cacheStore: SchoolDataCacheStore
     private let calendar: Calendar
 
@@ -133,14 +52,12 @@ struct DefaultSchoolRepository: SchoolRepository {
         schoolSearchService: SchoolSearchService? = nil,
         neisClient: NEISClient = NEISClient(),
         noticesService: NoticesServicing = NoticesClient(),
-        fallback: SchoolRepository = MockSchoolRepository(),
         cacheStore: SchoolDataCacheStore = SchoolDataCacheStore(),
         calendar: Calendar = .current
     ) {
         self.schoolSearchService = schoolSearchService ?? neisClient
         self.neisService = neisClient
         self.noticesService = noticesService
-        self.fallback = fallback
         self.cacheStore = cacheStore
         self.calendar = calendar
     }
@@ -149,24 +66,18 @@ struct DefaultSchoolRepository: SchoolRepository {
         schoolSearchService: SchoolSearchService,
         neisService: NEISServicing,
         noticesService: NoticesServicing,
-        fallback: SchoolRepository = MockSchoolRepository(),
         cacheStore: SchoolDataCacheStore = SchoolDataCacheStore(),
         calendar: Calendar = .current
     ) {
         self.schoolSearchService = schoolSearchService
         self.neisService = neisService
         self.noticesService = noticesService
-        self.fallback = fallback
         self.cacheStore = cacheStore
         self.calendar = calendar
     }
 
     func searchSchools(query: String) async throws -> [SchoolInfo] {
-        do {
-            return try await schoolSearchService.searchSchools(query: query)
-        } catch {
-            return try await fallback.searchSchools(query: query)
-        }
+        try await schoolSearchService.searchSchools(query: query)
     }
 
     func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] {
@@ -185,8 +96,7 @@ struct DefaultSchoolRepository: SchoolRepository {
             if let cached = cacheStore.getMeals(officeCode: profile.officeCode, schoolCode: profile.schoolCode, date: key) {
                 return cached.map { $0.withDisplayMenu() }
             }
-            let fallbackMeals = try await fallback.fetchTodayMeals(for: profile, date: date)
-            return fallbackMeals.map { $0.withDisplayMenu() }
+            throw error
         }
     }
 
@@ -244,7 +154,7 @@ struct DefaultSchoolRepository: SchoolRepository {
             ) {
                 return cached
             }
-            return try await fallback.fetchTimetable(for: profile, date: date)
+            throw error
         }
     }
 
@@ -262,20 +172,16 @@ struct DefaultSchoolRepository: SchoolRepository {
             if let cached = cacheStore.getSchedule(officeCode: profile.officeCode, schoolCode: profile.schoolCode, month: key) {
                 return cached
             }
-            return try await fallback.fetchSchedule(for: profile, month: month)
+            throw error
         }
     }
 
     func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] {
-        do {
-            return try await noticesService.fetchNotices(
-                officeCode: profile.officeCode,
-                schoolCode: profile.schoolCode,
-                limit: limit
-            )
-        } catch {
-            return try await fallback.fetchNotices(for: profile, limit: limit)
-        }
+        try await noticesService.fetchNotices(
+            officeCode: profile.officeCode,
+            schoolCode: profile.schoolCode,
+            limit: limit
+        )
     }
 
     private func formattedString(from date: Date, format: String) -> String {

@@ -156,6 +156,9 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertTrue(mealsViewModel.items.isEmpty)
         XCTAssertTrue(timetableViewModel.items.isEmpty)
         XCTAssertTrue(scheduleViewModel.items.isEmpty)
+        XCTAssertFalse(mealsViewModel.hasLoadError)
+        XCTAssertFalse(timetableViewModel.hasLoadError)
+        XCTAssertFalse(scheduleViewModel.hasLoadError)
 
         await mealsViewModel.load(profile: StudentProfile.fixture(), referenceDate: fixtureDate(year: 2026, month: 5, day: 26))
         timetableViewModel.date = fixtureDate(year: 2026, month: 5, day: 26)
@@ -244,5 +247,116 @@ final class FeatureViewModelTests: XCTestCase {
                 SchoolEvent(date: "20260529", title: "행사 B", description: "강당")
             ]
         )
+    }
+
+    func testFeatureViewModelsDistinguishLoadFailuresFromEmptyData() async {
+        let repository = FailingSchoolRepository()
+        let profile = StudentProfile.fixture()
+        let referenceDate = fixtureDate(year: 2026, month: 5, day: 26)
+        let mealsViewModel = MealsViewModel(repository: repository, todayProvider: { referenceDate })
+        let timetableViewModel = TimetableViewModel(repository: repository, todayProvider: { referenceDate })
+        let scheduleViewModel = ScheduleViewModel(repository: repository, todayProvider: { referenceDate })
+
+        await mealsViewModel.load(profile: profile, referenceDate: referenceDate)
+        await timetableViewModel.load(profile: profile)
+        await scheduleViewModel.load(profile: profile, month: referenceDate)
+
+        XCTAssertEqual(mealsViewModel.statusText, "급식을 불러오지 못했어요. 다시 시도해 주세요.")
+        XCTAssertEqual(timetableViewModel.statusText, "시간표를 불러오지 못했어요. 다시 시도해 주세요.")
+        XCTAssertEqual(scheduleViewModel.statusText, "일정을 불러오지 못했어요. 다시 시도해 주세요.")
+        XCTAssertTrue(mealsViewModel.hasLoadError)
+        XCTAssertTrue(timetableViewModel.hasLoadError)
+        XCTAssertTrue(scheduleViewModel.hasLoadError)
+    }
+
+    func testHomeViewModelShowsPerSectionErrorsWhenLoadingFails() async {
+        let viewModel = HomeViewModel(
+            repository: FailingSchoolRepository(),
+            now: { fixtureDate(year: 2026, month: 5, day: 26) }
+        )
+
+        await viewModel.load(profile: .fixture())
+
+        XCTAssertEqual(viewModel.todaySummary, "시간표를 불러오지 못했어요. 새로고침해 주세요.")
+        XCTAssertEqual(viewModel.mealSummary, "급식을 불러오지 못했어요. 새로고침해 주세요.")
+        XCTAssertEqual(viewModel.mealMeta, "")
+        XCTAssertEqual(viewModel.eventSummary, "일정을 불러오지 못했어요. 새로고침해 주세요.")
+        XCTAssertEqual(viewModel.noticeSummary, "가정통신문을 불러오지 못했어요. 새로고침해 주세요.")
+        XCTAssertEqual(viewModel.noticeActionText, "새로고침 필요")
+        XCTAssertFalse(viewModel.noticeActionEnabled)
+        XCTAssertNil(viewModel.latestNoticeDestination())
+    }
+
+    func testRetryReloadsTheCurrentlySelectedPeriod() async {
+        let referenceDate = fixtureDate(year: 2026, month: 5, day: 26)
+        let repository = FailOnceSchoolRepository()
+        let mealsViewModel = MealsViewModel(repository: repository, todayProvider: { referenceDate })
+        let timetableViewModel = TimetableViewModel(repository: repository, todayProvider: { referenceDate })
+        let scheduleViewModel = ScheduleViewModel(repository: repository, todayProvider: { referenceDate })
+
+        await mealsViewModel.load(profile: .fixture(), referenceDate: referenceDate)
+        timetableViewModel.date = referenceDate
+        await timetableViewModel.load(profile: .fixture())
+        await scheduleViewModel.load(profile: .fixture(), month: referenceDate)
+
+        await mealsViewModel.retry()
+        await timetableViewModel.retry()
+        await scheduleViewModel.retry()
+
+        XCTAssertEqual(mealsViewModel.weekTitle, "5월 25일 - 5월 29일")
+        XCTAssertEqual(mealsViewModel.items.first?.menu, "재시도 급식")
+        XCTAssertEqual(timetableViewModel.dateTitle, "5월 26일 화요일")
+        XCTAssertEqual(timetableViewModel.items.first?.subject, "재시도 시간표")
+        XCTAssertEqual(scheduleViewModel.monthTitle, "2026년 5월")
+        XCTAssertEqual(scheduleViewModel.items.first?.title, "재시도 일정")
+        XCTAssertFalse(mealsViewModel.hasLoadError)
+        XCTAssertFalse(timetableViewModel.hasLoadError)
+        XCTAssertFalse(scheduleViewModel.hasLoadError)
+    }
+}
+
+private struct FailingSchoolRepository: SchoolRepository {
+    func searchSchools(query: String) async throws -> [SchoolInfo] { throw Failure.expected }
+    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] { throw Failure.expected }
+    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] { throw Failure.expected }
+    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] { throw Failure.expected }
+    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] { throw Failure.expected }
+    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] { throw Failure.expected }
+
+    private enum Failure: Error {
+        case expected
+    }
+}
+
+private final class FailOnceSchoolRepository: SchoolRepository {
+    private var mealCalls = 0
+    private var timetableCalls = 0
+    private var scheduleCalls = 0
+
+    func searchSchools(query: String) async throws -> [SchoolInfo] { [] }
+    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] { [] }
+
+    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] {
+        mealCalls += 1
+        guard mealCalls > 1 else { throw Failure.expected }
+        return [MealInfo(date: "20260526", mealType: "점심", menu: "재시도 급식", calorieInfo: "700 kcal")]
+    }
+
+    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
+        timetableCalls += 1
+        guard timetableCalls > 1 else { throw Failure.expected }
+        return [TimetableItem(date: "20260526", period: "1", subject: "재시도 시간표", grade: profile.grade, classroom: profile.classroom)]
+    }
+
+    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
+        scheduleCalls += 1
+        guard scheduleCalls > 1 else { throw Failure.expected }
+        return [SchoolEvent(date: "20260526", title: "재시도 일정", description: "")]
+    }
+
+    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] { [] }
+
+    private enum Failure: Error {
+        case expected
     }
 }

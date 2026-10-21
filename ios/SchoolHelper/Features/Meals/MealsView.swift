@@ -43,6 +43,12 @@ struct MealsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+
+                if viewModel.hasLoadError {
+                    Button("다시 시도") {
+                        Task { await viewModel.retry() }
+                    }
+                }
             }
             .navigationTitle("급식")
             .task {

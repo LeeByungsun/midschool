@@ -32,13 +32,13 @@
 - 상태 복원·로컬 알림·완료 깜박임을 지원하는 타이머
 - 오늘/내일 시간표 WidgetKit 위젯과 딥링크
 - NEIS/BFF 연동 및 급식 12시간·시간표 24시간·일정 12시간 캐시
+- 원격·캐시 실패와 실제 빈 결과를 구분하는 오류 안내 및 다시 시도
 
 Android 기준으로 아직 없는 기능과 출시 전 필수 보완 사항:
 
 - 자녀 표시 이름과 다중 자녀 프로필 전환
 - 개인정보처리방침·오픈소스 라이선스·앱 버전 진입점
 - 선택 동의형 Firebase 경계(현재 iOS는 설정 파일이 있으면 Crashlytics를 활성화)
-- 원격·캐시 실패 시 샘플 데이터를 보여 주는 `MockSchoolRepository` 운영 fallback 제거
 - 홈 당겨서 새로고침과 Android식 캐시 우선 표시
 
 정확한 현재 범위와 우선순위는 `../docs/ios-project-specification.md`를 기준으로 합니다.
@@ -218,4 +218,4 @@ LIVE_EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - `LIVE_NAVIGATION_TEST=1` 은 live UI 테스트 전용 Swift flag를 켜고 `testLiveDateNavigationUpdatesTitles` 만 실행합니다.
 - `EXTERNAL_LINK_TEST=1` 은 외부 앱 전환 테스트 전용 Swift flag를 켜고 `testNoticeButtonOpensExternalSafariURL` 만 실행합니다.
 - NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 `KEY` 없이 공개 조회를 시도합니다.
-- 학교 검색 fallback도 학교명 공백을 제거해 `미사 중학교` 같은 입력을 처리합니다.
+- 학교 검색은 첫 결과가 없으면 학교명의 공백을 제거해 `미사 중학교` 같은 입력을 한 번 더 조회합니다.

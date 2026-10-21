@@ -42,6 +42,12 @@ struct ScheduleView: View {
                         Text(item.description)
                     }
                 }
+
+                if viewModel.hasLoadError {
+                    Button("다시 시도") {
+                        Task { await viewModel.retry() }
+                    }
+                }
             }
             .navigationTitle("일정")
             .task {

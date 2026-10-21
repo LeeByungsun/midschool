@@ -47,56 +47,99 @@ final class HomeViewModel: ObservableObject {
             return
         }
 
-        async let timetable = repository.fetchTimetable(for: profile, date: currentDate)
-        async let meals = repository.fetchTodayMeals(for: profile, date: currentDate)
-        async let events = repository.fetchSchedule(for: profile, month: currentDate)
-        async let notices = repository.fetchNotices(for: profile, limit: 3)
+        async let timetable = capture { try await repository.fetchTimetable(for: profile, date: currentDate) }
+        async let meals = capture { try await repository.fetchTodayMeals(for: profile, date: currentDate) }
+        async let events = capture { try await repository.fetchSchedule(for: profile, month: currentDate) }
+        async let notices = capture { try await repository.fetchNotices(for: profile, limit: 3) }
 
-        let timetableItems = (try? await timetable) ?? []
-        let mealItems = (try? await meals) ?? []
-        let eventItems = (try? await events) ?? []
-        let noticeItems = (try? await notices) ?? []
+        applyTimetableResult(await timetable)
+        applyMealResult(await meals)
+        applyScheduleResult(await events, referenceDate: currentDate)
+        applyNoticeResult(await notices)
+    }
 
-        todaySummary = timetableItems.isEmpty ? "오늘 시간표가 없어요." : timetableItems.map { "\($0.period)교시 \($0.subject)" }.joined(separator: "\n")
-        mealSummary = mealItems.first.map(formatMealMenu) ?? "오늘 급식이 없어요."
-        mealMeta = mealItems.first.map(formatMealMeta) ?? ""
-        let visibleEventSummaries = eventItems
-            .filter { isVisibleSchedule($0) }
-            .filter { !isPastSchedule($0, referenceDate: currentDate) }
-            .prefix(3)
-            .map { event in
-                if event.description.isEmpty {
-                    return "\(formattedEventDate(event.date))  \(event.title)"
+    func latestNoticeDestination() -> URL? {
+        latestNoticeURL
+    }
+
+    private func capture<Value>(_ operation: () async throws -> Value) async -> Result<Value, Error> {
+        do {
+            return .success(try await operation())
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func applyTimetableResult(_ result: Result<[TimetableItem], Error>) {
+        switch result {
+        case .success(let items):
+            todaySummary = items.isEmpty
+                ? "오늘 시간표가 없어요."
+                : items.map { "\($0.period)교시 \($0.subject)" }.joined(separator: "\n")
+        case .failure:
+            todaySummary = "시간표를 불러오지 못했어요. 새로고침해 주세요."
+        }
+    }
+
+    private func applyMealResult(_ result: Result<[MealInfo], Error>) {
+        switch result {
+        case .success(let items):
+            mealSummary = items.first.map(formatMealMenu) ?? "오늘 급식이 없어요."
+            mealMeta = items.first.map(formatMealMeta) ?? ""
+        case .failure:
+            mealSummary = "급식을 불러오지 못했어요. 새로고침해 주세요."
+            mealMeta = ""
+        }
+    }
+
+    private func applyScheduleResult(_ result: Result<[SchoolEvent], Error>, referenceDate: Date) {
+        switch result {
+        case .success(let items):
+            let summaries = items
+                .filter { isVisibleSchedule($0) }
+                .filter { !isPastSchedule($0, referenceDate: referenceDate) }
+                .prefix(3)
+                .map { event in
+                    if event.description.isEmpty {
+                        return "\(formattedEventDate(event.date))  \(event.title)"
+                    }
+                    return "\(formattedEventDate(event.date))  \(event.title)\n\(event.description)"
                 }
-                return "\(formattedEventDate(event.date))  \(event.title)\n\(event.description)"
-            }
-        eventSummary = visibleEventSummaries.isEmpty
-            ? "가까운 일정이 없어요."
-            : visibleEventSummaries.joined(separator: "\n\n")
+            eventSummary = summaries.isEmpty
+                ? "가까운 일정이 없어요."
+                : summaries.joined(separator: "\n\n")
+        case .failure:
+            eventSummary = "일정을 불러오지 못했어요. 새로고침해 주세요."
+        }
+    }
 
-        if noticeItems.isEmpty {
+    private func applyNoticeResult(_ result: Result<[NoticePreview], Error>) {
+        switch result {
+        case .success(let items) where items.isEmpty:
             noticeSummary = "새 가정통신문이 없어요."
             noticeActionText = "확인 불가"
             noticeActionEnabled = false
             noticeRequiresSetup = false
             latestNoticeURL = nil
-        } else {
-            noticeSummary = noticeItems.prefix(3)
+        case .success(let items):
+            noticeSummary = items.prefix(3)
                 .map(formatNoticePreviewLine)
                 .filter { !$0.isEmpty }
                 .joined(separator: "\n")
-            latestNoticeURL = noticeItems.first.flatMap { notice in
+            latestNoticeURL = items.first.flatMap { notice in
                 let destination = notice.sourceUrl?.isEmpty == false ? notice.sourceUrl : notice.url
                 return URL(string: destination ?? notice.url)
             }
             noticeActionText = "가정통신문 목록 열기"
             noticeActionEnabled = latestNoticeURL != nil
             noticeRequiresSetup = false
+        case .failure:
+            noticeSummary = "가정통신문을 불러오지 못했어요. 새로고침해 주세요."
+            noticeActionText = "새로고침 필요"
+            noticeActionEnabled = false
+            noticeRequiresSetup = false
+            latestNoticeURL = nil
         }
-    }
-
-    func latestNoticeDestination() -> URL? {
-        latestNoticeURL
     }
 
     private func formattedEventDate(_ rawDate: String) -> String {

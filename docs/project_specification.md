@@ -357,7 +357,7 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
 - `NEIS_BASE_URL` 기본값은 `https://open.neis.go.kr/`, `WEB_BASE_URL` 기본값은 `https://midschool.vercel.app/`입니다.
 - 급식 12시간, 시간표 24시간, 학사 일정 12시간의 키 기반 캐시를 사용합니다.
 - Android의 로컬 우선 Flow와 달리 iOS는 네트워크 요청을 먼저 수행하고 실패 시 신선한 캐시를 사용합니다.
-- 원격과 캐시가 모두 실패하면 현재 `MockSchoolRepository`가 샘플 데이터를 반환할 수 있으므로 App Store 출시 전 오류/빈 상태로 교체해야 합니다.
+- 원격과 신선한 캐시가 모두 실패하면 오류를 화면 계층으로 전달합니다. 홈과 시간표·급식·일정 화면은 실제 빈 결과와 조회 실패를 구분하며, 샘플 데이터를 운영 fallback으로 사용하지 않습니다.
 
 ### 5.5 Android 기준 주요 차이
 
@@ -398,10 +398,9 @@ Android, iOS, Web의 공통 서비스 이름과 사용자 노출 표기는 **스
 
 ### 6.4 iOS 확장 포인트
 
-- 운영 환경의 `MockSchoolRepository` 샘플 fallback 제거
 - 개인정보처리방침·Crashlytics 선택 동의·App Store 개인정보 응답 정합성 확보
 - 자녀 표시 이름과 다중 자녀 프로필 지원
-- 홈 pull-to-refresh와 오류/빈 상태 분리
+- 홈 pull-to-refresh
 - 개인정보처리방침·오픈소스 라이선스·앱 버전 화면 추가
 
 ---

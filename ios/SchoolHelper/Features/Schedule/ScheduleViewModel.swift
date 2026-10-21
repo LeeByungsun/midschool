@@ -6,6 +6,7 @@ final class ScheduleViewModel: ObservableObject {
     @Published var monthTitle: String = ""
     @Published var statusText: String = ""
     @Published var items: [SchoolEvent] = []
+    @Published private(set) var hasLoadError = false
 
     private let repository: SchoolRepository
     private let todayProvider: () -> Date
@@ -28,13 +29,21 @@ final class ScheduleViewModel: ObservableObject {
         refreshMonthTitle()
         guard profile.isComplete else {
             items = []
+            hasLoadError = false
             statusText = "학교와 학년/반을 먼저 설정해 주세요."
             return
         }
-        items = ((try? await repository.fetchSchedule(for: profile, month: currentMonth)) ?? [])
-            .filter(isVisibleSchedule)
-            .sorted { $0.date < $1.date }
-        statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
+        do {
+            items = try await repository.fetchSchedule(for: profile, month: currentMonth)
+                .filter(isVisibleSchedule)
+                .sorted { $0.date < $1.date }
+            hasLoadError = false
+            statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
+        } catch {
+            items = []
+            hasLoadError = true
+            statusText = "일정을 불러오지 못했어요. 다시 시도해 주세요."
+        }
     }
 
     func showPreviousMonth() async {
@@ -49,6 +58,10 @@ final class ScheduleViewModel: ObservableObject {
 
     func showNextMonth() async {
         currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+        await load(profile: latestProfile, month: currentMonth)
+    }
+
+    func retry() async {
         await load(profile: latestProfile, month: currentMonth)
     }
 

@@ -7,6 +7,7 @@ final class TimetableViewModel: ObservableObject {
     @Published var dateTitle: String = ""
     @Published var statusText: String = ""
     @Published var items: [TimetableItem] = []
+    @Published private(set) var hasLoadError = false
 
     private let repository: SchoolRepository
     private let todayProvider: () -> Date
@@ -28,11 +29,19 @@ final class TimetableViewModel: ObservableObject {
         refreshDateTitle()
         guard profile.isComplete else {
             items = []
+            hasLoadError = false
             statusText = "학교와 학년/반을 먼저 설정해 주세요."
             return
         }
-        items = (try? await repository.fetchTimetable(for: profile, date: date)) ?? []
-        statusText = items.isEmpty ? "해당 날짜 시간표가 없어요." : ""
+        do {
+            items = try await repository.fetchTimetable(for: profile, date: date)
+            hasLoadError = false
+            statusText = items.isEmpty ? "해당 날짜 시간표가 없어요." : ""
+        } catch {
+            items = []
+            hasLoadError = true
+            statusText = "시간표를 불러오지 못했어요. 다시 시도해 주세요."
+        }
     }
 
     func showPreviousDay() async {
@@ -47,6 +56,10 @@ final class TimetableViewModel: ObservableObject {
 
     func showNextDay() async {
         date = calendar.date(byAdding: .day, value: 1, to: date) ?? date
+        await load(profile: latestProfile)
+    }
+
+    func retry() async {
         await load(profile: latestProfile)
     }
 

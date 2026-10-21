@@ -93,6 +93,44 @@ struct StubSchoolRepository: SchoolRepository {
     }
 }
 
+struct MockSchoolRepository: SchoolRepository {
+    func searchSchools(query: String) async throws -> [SchoolInfo] {
+        let normalizedQuery = query.components(separatedBy: .whitespacesAndNewlines).joined()
+        return [
+            SchoolInfo(
+                officeCode: "J10",
+                officeName: "경기도교육청",
+                schoolCode: "7692129",
+                schoolName: "미사중학교",
+                schoolKind: "중학교",
+                roadAddress: "경기도 하남시"
+            )
+        ].filter { $0.schoolName.contains(normalizedQuery) }
+    }
+
+    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] {
+        [MealInfo(date: "20260526", mealType: "점심", menu: "비빔밥\n미역국", calorieInfo: "712 kcal")]
+    }
+
+    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] {
+        ["20260526", "20260527", "20260528", "20260529", "20260530"].enumerated().map { offset, date in
+            MealInfo(date: date, mealType: "점심", menu: "샘플 급식 \(offset + 1)", calorieInfo: "700 kcal")
+        }
+    }
+
+    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
+        [TimetableItem(date: "20260526", period: "1", subject: "국어", grade: profile.grade, classroom: profile.classroom)]
+    }
+
+    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
+        [SchoolEvent(date: "20260526", title: "체육대회", description: "운동장")]
+    }
+
+    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] {
+        []
+    }
+}
+
 actor StubNotificationAuthorizationProvider: NotificationAuthorizationProviding {
     private var statuses: [NotificationAuthorizationStatus]
     private var requests = 0

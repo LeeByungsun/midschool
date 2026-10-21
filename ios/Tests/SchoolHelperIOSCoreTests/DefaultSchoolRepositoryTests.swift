@@ -2,17 +2,16 @@ import XCTest
 @testable import SchoolHelperIOSCore
 
 final class DefaultSchoolRepositoryTests: XCTestCase {
-    func testSearchSchoolsFallsBackToWhitespaceInsensitiveMockWhenRemoteFails() async throws {
+    func testSearchSchoolsPropagatesRemoteFailureInsteadOfReturningSampleSchools() async {
         let repository = DefaultSchoolRepository(
             schoolSearchService: StubSchoolSearchService(result: .failure(TestError.expected)),
             neisService: SpyNEISService(),
             noticesService: StubNoticesService(result: []),
-            fallback: MockSchoolRepository()
         )
 
-        let schools = try await repository.searchSchools(query: "미사 중학교")
-
-        XCTAssertEqual(schools.map(\.schoolName), ["미사중학교"])
+        await XCTAssertThrowsErrorAsync {
+            _ = try await repository.searchSchools(query: "미사 중학교")
+        }
     }
 
     func testFetchTodayMealsFormatsDateForRemoteService() async throws {
@@ -28,7 +27,7 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: neisService,
             noticesService: noticesService,
-            fallback: StubSchoolRepository()
+            cacheStore: SchoolDataCacheStore(defaults: makeIsolatedDefaults()),
         )
 
         let meals = try await repository.fetchTodayMeals(
@@ -52,7 +51,7 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: neisService,
             noticesService: noticesService,
-            fallback: StubSchoolRepository()
+            cacheStore: SchoolDataCacheStore(defaults: makeIsolatedDefaults())
         )
 
         let meals = try await repository.fetchWeekMeals(
@@ -82,7 +81,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: neisService,
             noticesService: noticesService,
-            fallback: StubSchoolRepository()
         )
 
         let meals = try await repository.fetchTodayMeals(
@@ -113,7 +111,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: neisService,
             noticesService: StubNoticesService(result: []),
-            fallback: StubSchoolRepository(),
             cacheStore: cacheStore
         )
 
@@ -133,10 +130,7 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
         )
     }
 
-    func testFetchScheduleFallsBackWhenRemoteServiceFails() async throws {
-        let fallbackEvents = [
-            SchoolEvent(date: "202605", title: "체육대회", description: "운동장")
-        ]
+    func testFetchSchedulePropagatesRemoteFailureWhenCacheIsMissing() async {
         let searchService = StubSchoolSearchService(result: .success([]))
         let neisService = SpyNEISService(scheduleError: TestError.expected)
         let noticesService = StubNoticesService(result: [])
@@ -144,17 +138,17 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: neisService,
             noticesService: noticesService,
-            fallback: StubSchoolRepository(schedule: fallbackEvents)
         )
 
-        let events = try await repository.fetchSchedule(
-            for: .fixture(),
-            month: fixtureDate(year: 2026, month: 5, day: 1)
-        )
+        await XCTAssertThrowsErrorAsync {
+            _ = try await repository.fetchSchedule(
+                for: .fixture(),
+                month: fixtureDate(year: 2026, month: 5, day: 1)
+            )
+        }
 
         let requestedScheduleMonths = await neisService.requestedScheduleMonths()
         XCTAssertEqual(requestedScheduleMonths, ["202605"])
-        XCTAssertEqual(events, fallbackEvents)
     }
 
     func testFetchTodayMealsUsesFreshCacheWhenRemoteFails() async throws {
@@ -173,7 +167,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: successfulNEIS,
             noticesService: noticesService,
-            fallback: StubSchoolRepository(),
             cacheStore: cacheStore
         )
 
@@ -183,7 +176,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: SpyNEISService(mealsError: TestError.expected),
             noticesService: noticesService,
-            fallback: StubSchoolRepository(todayMeals: [MealInfo(date: "20260526", mealType: "점심", menu: "fallback", calorieInfo: "0 kcal")]),
             cacheStore: cacheStore
         )
 
@@ -192,7 +184,7 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
         XCTAssertEqual(meals.map(\.menu), ["캐시될 급식"])
     }
 
-    func testFetchTodayMealsIgnoresExpiredCache() async throws {
+    func testFetchTodayMealsPropagatesRemoteFailureWhenCacheIsExpired() async throws {
         let defaults = makeIsolatedDefaults()
         var currentDate = fixtureDate(year: 2026, month: 5, day: 26)
         let cacheStore = SchoolDataCacheStore(defaults: defaults, now: { currentDate })
@@ -208,7 +200,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: successfulNEIS,
             noticesService: noticesService,
-            fallback: StubSchoolRepository(),
             cacheStore: cacheStore
         )
 
@@ -219,13 +210,12 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: SpyNEISService(mealsError: TestError.expected),
             noticesService: noticesService,
-            fallback: StubSchoolRepository(todayMeals: [MealInfo(date: "20260526", mealType: "점심", menu: "fallback", calorieInfo: "0 kcal")]),
             cacheStore: cacheStore
         )
 
-        let meals = try await failingRepository.fetchTodayMeals(for: profile, date: date)
-
-        XCTAssertEqual(meals.map(\.menu), ["fallback"])
+        await XCTAssertThrowsErrorAsync {
+            _ = try await failingRepository.fetchTodayMeals(for: profile, date: date)
+        }
     }
 
     func testFetchTimetableUsesFreshCacheWhenRemoteFails() async throws {
@@ -243,7 +233,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: successfulNEIS,
             noticesService: noticesService,
-            fallback: StubSchoolRepository(),
             cacheStore: cacheStore
         )
 
@@ -253,7 +242,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: SpyNEISService(timetableError: TestError.expected),
             noticesService: noticesService,
-            fallback: StubSchoolRepository(timetable: [TimetableItem(date: "20260526", period: "1", subject: "fallback", grade: "1", classroom: "2")]),
             cacheStore: cacheStore
         )
 
@@ -277,7 +265,6 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: successfulNEIS,
             noticesService: noticesService,
-            fallback: StubSchoolRepository(),
             cacheStore: cacheStore
         )
 
@@ -287,13 +274,39 @@ final class DefaultSchoolRepositoryTests: XCTestCase {
             schoolSearchService: searchService,
             neisService: SpyNEISService(scheduleError: TestError.expected),
             noticesService: noticesService,
-            fallback: StubSchoolRepository(schedule: [SchoolEvent(date: "202605", title: "fallback", description: "")]),
             cacheStore: cacheStore
         )
 
         let events = try await failingRepository.fetchSchedule(for: profile, month: month)
 
         XCTAssertEqual(events.map(\.title), ["체육대회"])
+    }
+
+    func testFetchTimetablePropagatesRemoteFailureWhenCacheIsMissing() async {
+        let repository = DefaultSchoolRepository(
+            schoolSearchService: StubSchoolSearchService(result: .success([])),
+            neisService: SpyNEISService(timetableError: TestError.expected),
+            noticesService: StubNoticesService(result: [])
+        )
+
+        await XCTAssertThrowsErrorAsync {
+            _ = try await repository.fetchTimetable(
+                for: .fixture(),
+                date: fixtureDate(year: 2026, month: 5, day: 26)
+            )
+        }
+    }
+
+    func testFetchNoticesPropagatesRemoteFailureInsteadOfReturningSamples() async {
+        let repository = DefaultSchoolRepository(
+            schoolSearchService: StubSchoolSearchService(result: .success([])),
+            neisService: SpyNEISService(),
+            noticesService: StubNoticesService(error: TestError.expected),
+        )
+
+        await XCTAssertThrowsErrorAsync {
+            _ = try await repository.fetchNotices(for: .fixture(), limit: 3)
+        }
     }
 
 }
@@ -307,14 +320,22 @@ private struct StubSchoolSearchService: SchoolSearchService {
 }
 
 private struct StubNoticesService: NoticesServicing {
-    let result: [NoticePreview]
+    let result: Result<[NoticePreview], Error>
+
+    init(result: [NoticePreview]) {
+        self.result = .success(result)
+    }
+
+    init(error: Error) {
+        self.result = .failure(error)
+    }
 
     func fetchNotices(
         officeCode: String,
         schoolCode: String,
         limit: Int
     ) async throws -> [NoticePreview] {
-        result
+        try result.get()
     }
 }
 
@@ -406,7 +427,7 @@ private func makeIsolatedDefaults() -> UserDefaults {
 
 
 extension DefaultSchoolRepositoryTests {
-    func testFetchWeekMealsFallbackUsesRequestedDates() async throws {
+    func testFetchWeekMealsPropagatesFailureWhenAnyDayHasNoCache() async {
         let searchService = StubSchoolSearchService(result: .success([]))
         let neisService = SpyNEISService(mealsError: TestError.expected)
         let noticesService = StubNoticesService(result: [])
@@ -414,18 +435,28 @@ extension DefaultSchoolRepositoryTests {
             schoolSearchService: searchService,
             neisService: neisService,
             noticesService: noticesService,
-            fallback: MockSchoolRepository()
+            cacheStore: SchoolDataCacheStore(defaults: makeIsolatedDefaults())
         )
 
-        let meals = try await repository.fetchWeekMeals(
-            for: .fixture(),
-            weekStart: fixtureDate(year: 2026, month: 5, day: 26)
-        )
+        await XCTAssertThrowsErrorAsync {
+            _ = try await repository.fetchWeekMeals(
+                for: .fixture(),
+                weekStart: fixtureDate(year: 2026, month: 5, day: 26)
+            )
+        }
+    }
+}
 
-        XCTAssertEqual(
-            meals.map(\.date),
-            ["20260526", "20260527", "20260528", "20260529", "20260530"]
-        )
+private func XCTAssertThrowsErrorAsync(
+    _ expression: () async throws -> Void,
+    file: StaticString = #filePath,
+    line: UInt = #line
+) async {
+    do {
+        try await expression()
+        XCTFail("Expected expression to throw", file: file, line: line)
+    } catch {
+        // Expected failure.
     }
 }
 
