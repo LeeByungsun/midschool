@@ -16,6 +16,32 @@ enum AppVersionLabel {
     }
 }
 
+struct OpenSourceLicense: Codable, Identifiable, Equatable {
+    let name: String
+    let version: String
+    let licenseName: String
+    let sourceURL: URL
+    let licenseText: String
+
+    var id: String { "\(name)-\(version)" }
+}
+
+enum OpenSourceLicenseCatalog {
+    static func load(bundle: Bundle = .main) -> [OpenSourceLicense] {
+        guard let url = bundle.url(forResource: "OpenSourceLicenses", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let licenses = try? decode(data: data) else {
+            return []
+        }
+        return licenses
+    }
+
+    static func decode(data: Data) throws -> [OpenSourceLicense] {
+        try JSONDecoder().decode([OpenSourceLicense].self, from: data)
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+}
+
 final class DiagnosticsConsentStore {
     private let defaults: UserDefaults
     private let key = "diagnostics_collection_enabled"

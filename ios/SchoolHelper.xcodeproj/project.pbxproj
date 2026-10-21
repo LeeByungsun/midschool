@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F1A2B3C4D5E6F70123456793 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F70123456792 /* GoogleService-Info.plist */; };
+		F3A2B3C4D5E6F70123456793 /* OpenSourceLicenses.json in Resources */ = {isa = PBXBuildFile; fileRef = F3A2B3C4D5E6F70123456792 /* OpenSourceLicenses.json */; };
 		F1A2B3C4D5E6F7012345678A /* FirebaseCrashReporting.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F70123456789 /* FirebaseCrashReporting.swift */; };
 		F1A2B3C4D5E6F7012345678D /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = F1A2B3C4D5E6F7012345678B /* FirebaseCore */; };
 		F1A2B3C4D5E6F7012345678E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = F1A2B3C4D5E6F7012345678C /* FirebaseCrashlytics */; };
@@ -157,6 +158,7 @@
 		8B413DCA981ED66EFC8789AC /* AppLaunchOverrides.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLaunchOverrides.swift; sourceTree = "<group>"; };
 		8C3AE71CC13E2BB653BC868B /* SchoolDataCacheStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolDataCacheStore.swift; sourceTree = "<group>"; };
 		8C8CC106143DDD06F242559C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F3A2B3C4D5E6F70123456792 /* OpenSourceLicenses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = OpenSourceLicenses.json; sourceTree = "<group>"; };
 		8DF14D69C063A580A08D1590 /* StudentProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudentProfile.swift; sourceTree = "<group>"; };
 		8F5BC66889471C47950D8105 /* AppStorageConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStorageConfig.swift; sourceTree = "<group>"; };
 		91C890D2C11D421F3EEF935D /* HomeWidgetTimelinePlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeWidgetTimelinePlanner.swift; sourceTree = "<group>"; };
@@ -256,6 +258,7 @@
 			isa = PBXGroup;
 			children = (
 				F1A2B3C4D5E6F70123456792 /* GoogleService-Info.plist */,
+				F3A2B3C4D5E6F70123456792 /* OpenSourceLicenses.json */,
 				8C8CC106143DDD06F242559C /* Assets.xcassets */,
 			);
 			path = Resources;
@@ -604,6 +607,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F1A2B3C4D5E6F70123456793 /* GoogleService-Info.plist in Resources */,
+				F3A2B3C4D5E6F70123456793 /* OpenSourceLicenses.json in Resources */,
 				8B2DC6CE6889E44777EF4355 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

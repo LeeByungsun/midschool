@@ -32,3 +32,21 @@ final class AppVersionLabelTests: XCTestCase {
         )
     }
 }
+
+final class OpenSourceLicenseCatalogTests: XCTestCase {
+    func testDecodesBundledLicenseMetadata() throws {
+        let data = Data(
+            """
+            [{"name":"Firebase iOS SDK","version":"12.14.0","licenseName":"Apache License 2.0","sourceURL":"https://github.com/firebase/firebase-ios-sdk","licenseText":"License text"}]
+            """.utf8
+        )
+
+        let licenses = try OpenSourceLicenseCatalog.decode(data: data)
+
+        XCTAssertEqual(licenses.count, 1)
+        XCTAssertEqual(licenses.first?.name, "Firebase iOS SDK")
+        XCTAssertEqual(licenses.first?.version, "12.14.0")
+        XCTAssertEqual(licenses.first?.licenseName, "Apache License 2.0")
+        XCTAssertEqual(licenses.first?.licenseText, "License text")
+    }
+}

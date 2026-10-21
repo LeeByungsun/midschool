@@ -141,6 +141,9 @@ struct SettingsView: View {
                 }
 
                 Section("앱 정보") {
+                    NavigationLink("오픈소스 라이선스") {
+                        OpenSourceLicensesView()
+                    }
                     LabeledContent("버전", value: AppVersionLabel.current())
                 }
 
@@ -198,6 +201,57 @@ struct SettingsView: View {
         appState.notifySettingsChanged()
         appState.saveProfile(profile)
         dismiss()
+    }
+}
+
+private struct OpenSourceLicensesView: View {
+    private let licenses = OpenSourceLicenseCatalog.load()
+
+    var body: some View {
+        List(licenses) { license in
+            NavigationLink {
+                OpenSourceLicenseDetailView(license: license)
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(license.name)
+                    Text("\(license.version) · \(license.licenseName)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .overlay {
+            if licenses.isEmpty {
+                ContentUnavailableView(
+                    "라이선스 정보를 불러오지 못했어요.",
+                    systemImage: "doc.text.magnifyingglass"
+                )
+            }
+        }
+        .navigationTitle("오픈소스 라이선스")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct OpenSourceLicenseDetailView: View {
+    let license: OpenSourceLicense
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("\(license.version) · \(license.licenseName)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Link("소스 저장소 열기", destination: license.sourceURL)
+                Text(license.licenseText)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+        }
+        .navigationTitle(license.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
