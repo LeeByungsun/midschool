@@ -2,9 +2,46 @@ import SwiftUI
 import AppIntents
 import WidgetKit
 
+struct ChildProfileEntity: AppEntity, Identifiable {
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "자녀")
+    static var defaultQuery = ChildProfileQuery()
+
+    let id: String
+    let displayName: String
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(displayName)")
+    }
+}
+
+struct ChildProfileQuery: EntityQuery {
+    func entities(for identifiers: [String]) async throws -> [ChildProfileEntity] {
+        entities().filter { identifiers.contains($0.id) }
+    }
+
+    func suggestedEntities() async throws -> [ChildProfileEntity] {
+        entities()
+    }
+
+    func defaultResult() async -> ChildProfileEntity? {
+        let store = StudentPreferencesStore()
+        let activeID = store.activeProfileID()
+        return entities().first(where: { $0.id == activeID }) ?? entities().first
+    }
+
+    private func entities() -> [ChildProfileEntity] {
+        StudentPreferencesStore().loadProfiles().map {
+            ChildProfileEntity(id: $0.id, displayName: $0.displayName)
+        }
+    }
+}
+
 struct SchoolHelperWidgetConfigurationIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "스쿨온 위젯 설정"
-    static var description = IntentDescription("위젯에서 내일 시간표를 보여줄지 선택합니다.")
+    static var description = IntentDescription("위젯에 표시할 자녀와 내일 시간표 여부를 선택합니다.")
+
+    @Parameter(title: "자녀")
+    var profile: ChildProfileEntity?
 
     @Parameter(title: "내일 시간표 표시", default: true)
     var showTomorrowTimetable: Bool
@@ -35,13 +72,20 @@ struct SchoolHelperWidgetProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: SchoolHelperWidgetConfigurationIntent, in context: Context) async -> SchoolHelperWidgetEntry {
-        let snapshot = await loader.load(showTomorrow: configuration.showTomorrowTimetable)
+        let snapshot = await loader.load(
+            showTomorrow: configuration.showTomorrowTimetable,
+            profileID: configuration.profile?.id
+        )
         return SchoolHelperWidgetEntry(date: Date(), snapshot: snapshot)
     }
 
     func timeline(for configuration: SchoolHelperWidgetConfigurationIntent, in context: Context) async -> Timeline<SchoolHelperWidgetEntry> {
         let now = Date()
-        let snapshot = await loader.load(now: now, showTomorrow: configuration.showTomorrowTimetable)
+        let snapshot = await loader.load(
+            now: now,
+            showTomorrow: configuration.showTomorrowTimetable,
+            profileID: configuration.profile?.id
+        )
         let entry = SchoolHelperWidgetEntry(date: now, snapshot: snapshot)
         let refreshDate = HomeWidgetTimelinePlanner.nextRefreshDate(
             now: now,

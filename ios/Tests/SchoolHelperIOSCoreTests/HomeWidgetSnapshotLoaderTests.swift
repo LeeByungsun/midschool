@@ -2,6 +2,34 @@ import XCTest
 @testable import SchoolHelperIOSCore
 
 final class HomeWidgetSnapshotLoaderTests: XCTestCase {
+    func testSnapshotUsesRequestedProfileAndFallsBackToActiveProfile() async {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let profileStore = StudentPreferencesStore(defaults: defaults)
+        let first = StudentProfile.fixture()
+        profileStore.save(first)
+        var second = StudentProfile.fixture()
+        second.id = "second-profile"
+        second.displayName = "민준"
+        second.schoolName = "민준중학교"
+        XCTAssertTrue(profileStore.add(second))
+        let loader = HomeWidgetSnapshotLoader(
+            profileStore: profileStore,
+            timerStore: TimerPreferencesStore(defaults: defaults),
+            widgetSettingsStore: WidgetSettingsStore(defaults: defaults),
+            repository: ProfileAwareWidgetRepository()
+        )
+        let date = fixtureDate(year: 2026, month: 5, day: 26)
+
+        let selected = await loader.load(now: date, profileID: first.id)
+        let fallback = await loader.load(now: date, profileID: "deleted-profile")
+
+        XCTAssertEqual(selected.schoolLabel, "미사중학교 1학년 2반")
+        XCTAssertEqual(selected.todayTimetable, "1교시 지율")
+        XCTAssertEqual(fallback.schoolLabel, "민준중학교 1학년 2반")
+        XCTAssertEqual(fallback.todayTimetable, "1교시 민준")
+    }
+
     func testSmallWidgetSnapshotAlwaysHidesTomorrowTimetable() {
         let snapshot = HomeWidgetSnapshot(
             headerDate: "📅 5월 26일 (화)",
@@ -261,6 +289,17 @@ final class HomeWidgetSnapshotLoaderTests: XCTestCase {
 
         XCTAssertNil(snapshot.tomorrowTimetable)
     }
+}
+
+private struct ProfileAwareWidgetRepository: SchoolRepository {
+    func searchSchools(query: String) async throws -> [SchoolInfo] { [] }
+    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] { [] }
+    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] { [] }
+    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] {
+        [TimetableItem(date: "20260526", period: "1", subject: profile.displayName, grade: profile.grade, classroom: profile.classroom)]
+    }
+    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] { [] }
+    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] { [] }
 }
 
 private struct WidgetTimetableRepository: SchoolRepository {

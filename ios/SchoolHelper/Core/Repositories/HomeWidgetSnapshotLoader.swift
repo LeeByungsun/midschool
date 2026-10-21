@@ -21,8 +21,14 @@ struct HomeWidgetSnapshotLoader {
         self.calendar = calendar
     }
 
-    func load(now: Date = Date(), showTomorrow: Bool? = nil) async -> HomeWidgetSnapshot {
-        let profile = profileStore.load()
+    func load(
+        now: Date = Date(),
+        showTomorrow: Bool? = nil,
+        profileID: String? = nil
+    ) async -> HomeWidgetSnapshot {
+        let profile = profileID
+            .flatMap { id in profileStore.loadProfiles().first(where: { $0.id == id }) }
+            ?? profileStore.load()
         let timerState = timerStore.load()
         let widgetSettings = widgetSettingsStore.load()
         let widgetRequestsTomorrow = showTomorrow ?? true
