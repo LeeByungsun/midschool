@@ -61,6 +61,21 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 swift test
 ```
 
+시뮬레이터 UI 테스트:
+
+```bash
+# 실행 중인 iOS 시뮬레이터에서 로컬 fixture 서버와 전체 결정적 UI 테스트 실행
+ios/scripts/test_simulator_ui.sh
+
+# 테스트 한 건만 실행
+ONLY_TESTING=SchoolHelperIOSUITests/SchoolHelperIOSUITests/testInitialSetupSearchSelectsSchoolAndSavesProfile \
+  ios/scripts/test_simulator_ui.sh
+```
+
+- 스크립트가 로컬 fixture 서버를 자동으로 시작하고 종료하므로 외부 NEIS/BFF 상태에 영향을 받지 않습니다.
+- 실행 중인 시뮬레이터가 여러 개이면 `DEVICE_ID=<UDID>` 로 대상을 지정할 수 있습니다.
+- Apple Silicon에서는 Firebase simulator 바이너리 충돌을 피하도록 활성 `arm64` 아키텍처만 빌드합니다.
+
 실제 iPhone 설치:
 
 ```bash

@@ -15,6 +15,8 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["학교 1개를 찾았어요."].waitForExistence(timeout: 20))
         XCTAssertTrue(app.staticTexts["선택된 학교"].waitForExistence(timeout: 5))
 
+        app.textFields["자녀 이름 (10자 이하)"].tap()
+        app.textFields["자녀 이름 (10자 이하)"].typeText("지율")
         app.textFields["학년"].tap()
         app.textFields["학년"].typeText("1")
         app.textFields["반"].tap()
@@ -22,7 +24,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
         app.buttons["저장하고 시작하기"].tap()
 
-        XCTAssertTrue(app.tabBars.buttons["홈"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["홈"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["미사중학교"].waitForExistence(timeout: 5))
     }
 
@@ -30,11 +32,11 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = makeSeededApp()
         app.launch()
 
-        XCTAssertTrue(app.tabBars.buttons["홈"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.tabBars.buttons["시간표"].exists)
-        XCTAssertTrue(app.tabBars.buttons["급식"].exists)
-        XCTAssertTrue(app.tabBars.buttons["일정"].exists)
-        XCTAssertFalse(app.tabBars.buttons["More"].exists)
+        XCTAssertTrue(app.buttons["홈"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["시간표"].exists)
+        XCTAssertTrue(app.buttons["급식"].exists)
+        XCTAssertTrue(app.buttons["일정"].exists)
+        XCTAssertFalse(app.buttons["More"].exists)
     }
 
     func testSeededTimetableShowsCoreContent() {
@@ -249,15 +251,15 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(scrollToStaticText(containing: "발아현미밥", in: app, maxSwipes: 8))
         XCTAssertTrue(scrollToStaticText(containing: "오케스트라", in: app, maxSwipes: 8))
 
-        app.tabBars.buttons["시간표"].tap()
+        app.buttons["시간표"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 10))
         XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 30))
 
-        app.tabBars.buttons["급식"].tap()
+        app.buttons["급식"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 10))
         XCTAssertTrue(scrollToStaticText(containing: "발아현미밥", in: app, maxSwipes: 8))
 
-        app.tabBars.buttons["일정"].tap()
+        app.buttons["일정"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 10))
         XCTAssertTrue(scrollToStaticText(containing: "노동절", in: app, maxSwipes: 8))
     }
@@ -273,19 +275,19 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = makeLiveApp()
         app.launch()
 
-        app.tabBars.buttons["시간표"].tap()
+        app.buttons["시간표"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 10))
         XCTAssertTrue(waitForStaticText(containing: "5월 28일 목요일", in: app, timeout: 30))
         app.buttons["다음"].tap()
         XCTAssertTrue(waitForStaticText(containing: "5월 29일 금요일", in: app, timeout: 10))
 
-        app.tabBars.buttons["급식"].tap()
+        app.buttons["급식"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 10))
         XCTAssertTrue(waitForStaticText(containing: "5월 25일 - 5월 29일", in: app, timeout: 30))
         app.buttons["다음 주"].tap()
         XCTAssertTrue(waitForStaticText(containing: "6월 1일 - 6월 5일", in: app, timeout: 10))
 
-        app.tabBars.buttons["일정"].tap()
+        app.buttons["일정"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 10))
         XCTAssertTrue(waitForStaticText(containing: "2026년 5월", in: app, timeout: 30))
         app.buttons["다음 달"].tap()
@@ -296,8 +298,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["SCHOOLHELPER_SEED_PROFILE_JSON"] = seededProfileJSON()
         app.launchEnvironment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"] = "1"
-        app.launchEnvironment["NEIS_BASE_URL"] = "http://[::1"
-        app.launchEnvironment["WEB_BASE_URL"] = "http://[::1"
+        configureFixtureServer(for: app)
         if let initialRoute {
             app.launchEnvironment["SCHOOLHELPER_INITIAL_ROUTE"] = initialRoute
         }
@@ -308,7 +309,15 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["SCHOOLHELPER_RESET_PROFILE"] = "1"
         app.launchEnvironment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"] = "1"
+        configureFixtureServer(for: app)
         return app
+    }
+
+    private func configureFixtureServer(for app: XCUIApplication) {
+        let baseURL = ProcessInfo.processInfo.environment["SCHOOLHELPER_UI_FIXTURE_BASE_URL"]
+            ?? "http://127.0.0.1:18080/"
+        app.launchEnvironment["NEIS_BASE_URL"] = baseURL
+        app.launchEnvironment["WEB_BASE_URL"] = baseURL
     }
 
     private func makeLiveApp() -> XCUIApplication {
