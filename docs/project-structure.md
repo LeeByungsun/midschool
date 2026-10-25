@@ -88,6 +88,8 @@ web/
 │   ├── page.tsx              # 홈 대시보드
 │   ├── setup/ settings/      # 학생 초기 설정과 변경
 │   ├── timetable/ meals/ schedule/ timer/ # 기능별 페이지
+│   ├── android/               # Android 앱 소개 및 Google Play 연결
+│   ├── robots.ts sitemap.ts   # 검색 엔진용 크롤링·사이트맵 메타데이터
 │   ├── layout.tsx
 │   └── globals.css
 ├── components/               # 페이지 조합, 카드, 공통 데이터 상태 UI

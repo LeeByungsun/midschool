@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://midschool.vercel.app"),
   title: "스쿨온",
   description: "시간표, 급식, 일정, 타이머를 한 화면에서 보는 스쿨온 웹앱",
 };
