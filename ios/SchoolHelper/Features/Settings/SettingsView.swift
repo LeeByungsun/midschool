@@ -25,6 +25,24 @@ struct SettingsView: View {
                 }
 
                 Section("자녀 관리") {
+                    if appState.profiles.count > 1 {
+                        Menu {
+                            ForEach(appState.profiles, id: \.id) { profile in
+                                Button {
+                                    appState.selectProfile(id: profile.id)
+                                } label: {
+                                    if profile.id == appState.profile.id {
+                                        Label(profile.displayName, systemImage: "checkmark")
+                                    } else {
+                                        Text(profile.displayName)
+                                    }
+                                }
+                            }
+                        } label: {
+                            Label("현재 자녀: \(appState.profile.displayName)", systemImage: "person.2")
+                        }
+                        .accessibilityIdentifier("settings-profile-switcher")
+                    }
                     Button("자녀 추가") {
                         isAddingProfile = true
                     }

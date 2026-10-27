@@ -212,6 +212,21 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["내일"].exists)
     }
 
+    func testSettingsShowsChildProfileSwitcherWhenMultipleProfilesExist() {
+        let app = XCUIApplication()
+        app.launchEnvironment["SCHOOLHELPER_SEED_PROFILES_JSON"] = """
+        [{"id":"child-a","displayName":"지율","grade":"1","classroom":"2","schoolName":"미사중학교","officeCode":"J10","schoolCode":"7692129","schoolKind":"중학교"},{"id":"child-b","displayName":"서윤","grade":"2","classroom":"3","schoolName":"다원중학교","officeCode":"J10","schoolCode":"7692130","schoolKind":"중학교"}]
+        """
+        app.launchEnvironment["SCHOOLHELPER_SKIP_NOTIFICATION_REQUEST"] = "1"
+        app.launchEnvironment["SCHOOLHELPER_INITIAL_ROUTE"] = "settings"
+        configureFixtureServer(for: app)
+        app.launch()
+
+        let profileSwitcher = app.buttons["settings-profile-switcher"]
+        XCTAssertTrue(profileSwitcher.waitForExistence(timeout: 5))
+        XCTAssertTrue(profileSwitcher.label.contains("서윤"))
+    }
+
     func testSettingsNotificationPermissionRequestUpdatesSummary() {
         let app = makeSeededApp(initialRoute: "settings")
         app.launchEnvironment["SCHOOLHELPER_NOTIFICATION_AUTHORIZATION_STATUS"] = "not_determined"

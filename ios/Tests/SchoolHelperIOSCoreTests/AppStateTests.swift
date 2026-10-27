@@ -273,4 +273,25 @@ final class AppStateTests: XCTestCase {
         ]))
     }
 
+    func testSelectingChildProfileUpdatesActiveProfileWithoutLeavingSettings() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let store = StudentPreferencesStore(defaults: defaults)
+        let first = StudentProfile.fixture()
+        var second = StudentProfile.fixture()
+        second.id = "second-profile"
+        second.displayName = "민준"
+        XCTAssertTrue(store.save(first))
+        XCTAssertTrue(store.add(second))
+        let appState = AppState(store: store, widgetTimelineReloader: SpyWidgetTimelineReloader())
+        appState.selectedRoute = .settings
+
+        XCTAssertTrue(appState.selectProfile(id: first.id))
+
+        XCTAssertEqual(appState.profile, first)
+        XCTAssertEqual(appState.profiles, [first, second])
+        XCTAssertEqual(store.activeProfileID(), first.id)
+        XCTAssertEqual(appState.selectedRoute, .settings)
+    }
+
 }

@@ -1,6 +1,16 @@
 import Foundation
 
 enum AppLaunchOverrides {
+    static func seededProfiles(from environment: [String: String] = ProcessInfo.processInfo.environment) -> [StudentProfile]? {
+        guard let raw = environment["SCHOOLHELPER_SEED_PROFILES_JSON"],
+              !raw.isEmpty,
+              let data = raw.data(using: .utf8)
+        else {
+            return nil
+        }
+        return try? JSONDecoder().decode([StudentProfile].self, from: data)
+    }
+
     static func seededProfile(from environment: [String: String] = ProcessInfo.processInfo.environment) -> StudentProfile? {
         if let raw = environment["SCHOOLHELPER_SEED_PROFILE_JSON"], !raw.isEmpty {
             guard let data = raw.data(using: .utf8) else { return nil }
