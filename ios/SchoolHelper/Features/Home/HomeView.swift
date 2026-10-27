@@ -9,128 +9,62 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("학생 정보") {
-                    Text(viewModel.dateLabel)
-                        .font(.headline)
-                    if appState.profiles.count > 1 {
-                        Menu {
-                            ForEach(appState.profiles, id: \.id) { profile in
-                                Button {
-                                    appState.selectProfile(id: profile.id)
-                                } label: {
-                                    if profile.id == appState.profile.id {
-                                        Label(profile.displayName, systemImage: "checkmark")
-                                    } else {
-                                        Text(profile.displayName)
-                                    }
-                                }
+            ScrollView {
+                VStack(spacing: 16) {
+                    profileAndSummaryCard
+
+                    Button {
+                        appState.selectedRoute = .meals
+                    } label: {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("오늘 급식")
+                                    .font(.headline.weight(.bold))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(.secondary)
                             }
-                        } label: {
-                            Label("자녀 선택", systemImage: "person.2")
+                            if !viewModel.mealMeta.isEmpty {
+                                Text(viewModel.mealMeta)
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.green.opacity(0.12), in: Capsule())
+                            }
+                            Text(viewModel.mealSummary)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .accessibilityIdentifier("home-profile-switcher")
+                        .homeCard()
                     }
-                    Text(appState.profile.displayName.isEmpty ? "자녀 이름 미설정" : appState.profile.displayName)
-                        .font(.headline)
-                    Text(appState.profile.schoolName.isEmpty ? "학교 미설정" : appState.profile.schoolName)
-                    Text(appState.profile.isComplete ? "\(appState.profile.grade)학년 \(appState.profile.classroom)반" : "학년/반 미완료")
-                        .foregroundStyle(.secondary)
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("home-meals-section")
+
+                    homeSummaryCard(
+                        title: "학사 일정",
+                        summary: viewModel.eventSummary,
+                        actionTitle: "월간 보기",
+                        identifier: "home-schedule-section"
+                    ) {
+                        appState.selectedRoute = .schedule
+                    }
+
+                    noticeCard
+
+                    timerCard
                 }
-
-                Section("타이머") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        timerDisplay
-
-                        HStack(spacing: 8) {
-                            ForEach(TimerPreset.allCases, id: \.self) { preset in
-                                Button {
-                                    timerViewModel.selectPreset(preset)
-                                } label: {
-                                    Text(preset.title)
-                                        .font(.caption.weight(.semibold))
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .tint(timerViewModel.state.preset == preset ? .blue : .gray.opacity(0.35))
-                            }
-                        }
-
-                        HStack(spacing: 12) {
-                            Button(timerViewModel.state.isRunning ? "일시정지" : "시작") {
-                                timerViewModel.toggle()
-                            }
-                            .buttonStyle(.borderedProminent)
-
-                            Button("리셋") {
-                                timerViewModel.reset()
-                            }
-                            .buttonStyle(.bordered)
-
-                            Spacer()
-
-                            NavigationLink("타이머 전체 보기") {
-                                TimerView()
-                            }
-                        }
-                    }
-                    .listRowBackground(timerCompletionRowBackground)
-                }
-
-                Section("오늘 시간표") {
-                    Text(viewModel.todaySummary)
-                    NavigationLink("시간표 전체 보기") {
-                        TimetableView()
-                            .environmentObject(appState)
-                    }
-                }
-
-                Section("오늘 급식") {
-                    Text(viewModel.mealSummary)
-                    if !viewModel.mealMeta.isEmpty {
-                        Text(viewModel.mealMeta)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    NavigationLink("주간 급식 보기") {
-                        MealsView()
-                            .environmentObject(appState)
-                    }
-                }
-
-                Section("다가오는 일정") {
-                    Text(viewModel.eventSummary)
-                    NavigationLink("일정 보기") {
-                        ScheduleView()
-                            .environmentObject(appState)
-                    }
-                }
-
-                Section("가정통신문") {
-                    Text(viewModel.noticeSummary)
-                    Button(viewModel.noticeActionText) {
-                        if let url = viewModel.latestNoticeDestination() {
-                            openURL(url)
-                        } else if viewModel.noticeRequiresSetup {
-                            appState.selectedRoute = .settings
-                        }
-                    }
-                    .disabled(!viewModel.noticeActionEnabled)
-                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
             }
             .refreshable {
                 await refreshHome()
             }
             .navigationTitle("스쿨온")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        appState.selectedRoute = .settings
-                    } label: {
-                        Label("설정", systemImage: "gearshape")
-                    }
-                }
-
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("새로고침") {
                         Task { await refreshHome() }
@@ -150,6 +84,192 @@ struct HomeView: View {
                 await updateCompletionBlink()
             }
         }
+    }
+
+    private var profileAndSummaryCard: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    profileSelector
+                    Text(appState.profile.schoolName.isEmpty ? "학교를 설정해 주세요" : appState.profile.schoolName)
+                        .font(.title2.bold())
+                        .accessibilityIdentifier("home-school-name")
+                    Text(viewModel.dateLabel)
+                        .font(.subheadline)
+                    Text(appState.profile.isComplete ? "\(appState.profile.grade)학년 \(appState.profile.classroom)반" : "학년과 반을 설정해 주세요")
+                        .font(.footnote)
+                }
+                .foregroundStyle(.white)
+
+                Spacer(minLength: 8)
+
+                Button {
+                    appState.selectedRoute = .settings
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 19, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 48, height: 48)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("설정 열기")
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("오늘의 학교생활")
+                    .font(.headline.bold())
+                    .foregroundStyle(.white)
+                    .accessibilityIdentifier("home-today-summary")
+                Text(viewModel.todaySummary)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.white.opacity(0.9))
+                    .lineLimit(2)
+                NavigationLink {
+                    TimetableView()
+                        .environmentObject(appState)
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("시간표 보러 가기")
+                            .font(.subheadline.weight(.bold))
+                        Image(systemName: "arrow.right")
+                            .font(.caption.weight(.bold))
+                    }
+                    .foregroundStyle(Color(red: 44 / 255, green: 109 / 255, blue: 176 / 255))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 11)
+                    .background(.white, in: Capsule())
+                }
+                .accessibilityIdentifier("home-timetable-action")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(18)
+            .background(Color(red: 59 / 255, green: 128 / 255, blue: 196 / 255), in: RoundedRectangle(cornerRadius: 20))
+        }
+        .padding(20)
+        .background(Color(red: 44 / 255, green: 109 / 255, blue: 176 / 255), in: RoundedRectangle(cornerRadius: 28))
+    }
+
+    @ViewBuilder
+    private var profileSelector: some View {
+        if appState.profiles.count > 1 {
+            Menu {
+                ForEach(appState.profiles, id: \.id) { profile in
+                    Button {
+                        appState.selectProfile(id: profile.id)
+                    } label: {
+                        if profile.id == appState.profile.id {
+                            Label(profile.displayName, systemImage: "checkmark")
+                        } else {
+                            Text(profile.displayName)
+                        }
+                    }
+                }
+            } label: {
+                Label(appState.profile.displayName.isEmpty ? "자녀 선택" : appState.profile.displayName, systemImage: "person.2")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .accessibilityIdentifier("home-profile-switcher")
+        } else {
+            Label(appState.profile.displayName.isEmpty ? "자녀 이름 미설정" : appState.profile.displayName, systemImage: "person")
+                .font(.subheadline.weight(.semibold))
+        }
+    }
+
+    private func homeSummaryCard(
+        title: String,
+        summary: String,
+        actionTitle: String,
+        identifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.headline.weight(.bold))
+                    .accessibilityIdentifier(identifier)
+                Spacer(minLength: 4)
+                Button(actionTitle, action: action)
+                    .font(.subheadline.weight(.semibold))
+                    .buttonStyle(.bordered)
+                    .tint(Color(red: 23 / 255, green: 59 / 255, blue: 102 / 255))
+            }
+            Text(summary)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .homeCard()
+    }
+
+    private var noticeCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Text("가정통신문")
+                    .font(.headline.weight(.bold))
+                    .accessibilityIdentifier("home-notices-section")
+                Spacer(minLength: 4)
+                Button(noticeActionTitle) {
+                    if let url = viewModel.latestNoticeDestination() {
+                        openURL(url)
+                    } else if viewModel.noticeRequiresSetup {
+                        appState.selectedRoute = .settings
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .buttonStyle(.bordered)
+                .tint(Color(red: 23 / 255, green: 59 / 255, blue: 102 / 255))
+                .disabled(!viewModel.noticeActionEnabled)
+            }
+            Text(viewModel.noticeSummary)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .homeCard()
+    }
+
+    private var timerCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("집중력 타이머")
+                .font(.headline.weight(.bold))
+                .accessibilityIdentifier("home-timer-section")
+            timerDisplay
+
+            HStack(spacing: 8) {
+                ForEach(TimerPreset.allCases, id: \.self) { preset in
+                    Button {
+                        timerViewModel.selectPreset(preset)
+                    } label: {
+                        Text(preset.title)
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(timerViewModel.state.preset == preset ? .blue : .gray.opacity(0.35))
+                }
+            }
+
+            HStack(spacing: 12) {
+                Button(timerViewModel.state.isRunning ? "일시정지" : "시작") {
+                    timerViewModel.toggle()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+
+                Button("초기화") {
+                    timerViewModel.reset()
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .homeCard(background: timerCompletionRowBackground)
+    }
+
+    private var noticeActionTitle: String {
+        if viewModel.noticeRequiresSetup {
+            return "학교 설정하러 가기"
+        }
+        return viewModel.noticeActionEnabled ? "목록 열기" : viewModel.noticeActionText
     }
 
     private func refreshHome() async {
@@ -219,5 +339,17 @@ struct HomeView: View {
         let minutes = timerViewModel.state.remainingSeconds / 60
         let seconds = timerViewModel.state.remainingSeconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+}
+
+private extension View {
+    func homeCard(background: Color = Color(.secondarySystemGroupedBackground)) -> some View {
+        padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(background, in: RoundedRectangle(cornerRadius: 24))
+            .overlay {
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(Color(.separator).opacity(0.18), lineWidth: 1)
+            }
     }
 }

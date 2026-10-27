@@ -39,6 +39,54 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertFalse(app.buttons["More"].exists)
     }
 
+    func testHomeSectionsFollowAndroidInformationAndActionOrder() {
+        let app = makeSeededApp()
+        app.launch()
+
+        let sectionIDs = [
+            "home-today-summary",
+            "home-meals-section",
+            "home-schedule-section",
+            "home-notices-section",
+            "home-timer-section"
+        ]
+        let sections = sectionIDs.map { app.descendants(matching: .any).matching(identifier: $0).firstMatch }
+        for section in sections {
+            XCTAssertTrue(section.waitForExistence(timeout: 5))
+        }
+        for index in 0..<(sections.count - 1) {
+            XCTAssertLessThan(sections[index].frame.minY, sections[index + 1].frame.minY)
+        }
+
+        XCTAssertTrue(app.buttons["시간표 보러 가기"].exists)
+        XCTAssertTrue(app.buttons["월간 보기"].exists)
+        XCTAssertTrue(app.buttons["목록 열기"].exists)
+        XCTAssertTrue(app.buttons["설정 열기"].exists)
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Android-style home section order"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
+    func testHomeSectionActionsOpenTheirMatchingDestinations() {
+        let app = makeSeededApp()
+        app.launch()
+
+        app.buttons["시간표 보러 가기"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 5))
+
+        app.buttons["홈"].tap()
+        app.buttons["home-meals-section"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["급식"].isSelected)
+
+        app.buttons["홈"].tap()
+        app.buttons["월간 보기"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["일정"].isSelected)
+    }
+
     func testSeededTimetableShowsCoreContent() {
         let app = makeSeededApp(initialRoute: "timetable")
         app.launch()
@@ -125,6 +173,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["일정"].isSelected)
         XCTAssertTrue(scrollToStaticText(containing: "체육대회", in: app))
         XCTAssertTrue(scrollToStaticText(containing: "중간고사", in: app))
     }
@@ -133,8 +182,8 @@ final class SchoolHelperIOSUITests: XCTestCase {
         let app = makeSeededApp()
         app.launch()
 
-        XCTAssertTrue(app.buttons["설정"].waitForExistence(timeout: 5))
-        app.buttons["설정"].tap()
+        XCTAssertTrue(app.buttons["설정 열기"].waitForExistence(timeout: 5))
+        app.buttons["설정 열기"].tap()
 
         XCTAssertTrue(app.buttons["닫기"].waitForExistence(timeout: 5))
         app.buttons["닫기"].tap()
@@ -199,8 +248,8 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars.staticTexts["스쿨온"].waitForExistence(timeout: 5))
         XCTAssertTrue(scrollToStaticText(containing: "현장학습 안내", in: app, maxSwipes: 5))
-        XCTAssertTrue(scrollToButton(named: "가정통신문 열기", in: app, maxSwipes: 5))
-        app.buttons["가정통신문 열기"].tap()
+        XCTAssertTrue(scrollToButton(named: "목록 열기", in: app, maxSwipes: 5))
+        app.buttons["목록 열기"].tap()
 
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 10))
@@ -223,8 +272,8 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars.staticTexts["스쿨온"].waitForExistence(timeout: 10))
         XCTAssertTrue(scrollToStaticText(containing: "오케스트라", in: app, maxSwipes: 8))
-        XCTAssertTrue(scrollToButton(named: "가정통신문 열기", in: app, maxSwipes: 3))
-        app.buttons["가정통신문 열기"].tap()
+        XCTAssertTrue(scrollToButton(named: "목록 열기", in: app, maxSwipes: 3))
+        app.buttons["목록 열기"].tap()
 
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 10))
