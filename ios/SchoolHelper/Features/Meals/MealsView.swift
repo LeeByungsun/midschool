@@ -8,39 +8,25 @@ struct MealsView: View {
         NavigationStack {
             List {
                 Section {
-                    HStack {
-                        Button("이전 주") {
-                            Task { await viewModel.showPreviousWeek() }
-                        }
-                        Spacer()
-                        VStack(spacing: 4) {
-                            Text(viewModel.weekTitle)
+                    ForEach(viewModel.items) { item in
+                        VStack(alignment: .leading) {
+                            Text(formattedMealDate(item.date))
                                 .font(.headline)
-                            if !viewModel.statusText.isEmpty {
-                                Text(viewModel.statusText)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        Spacer()
-                        Button("이번 주") {
-                            Task { await viewModel.showCurrentWeek() }
-                        }
-                        Button("다음 주") {
-                            Task { await viewModel.showNextWeek() }
+                            Text(item.menu)
+                            Text(item.calorieInfo)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    .buttonStyle(.borderless)
-                }
-
-                ForEach(viewModel.items) { item in
-                    VStack(alignment: .leading) {
-                        Text(formattedMealDate(item.date))
+                } header: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(viewModel.weekTitle)
                             .font(.headline)
-                        Text(item.menu)
-                        Text(item.calorieInfo)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        if !viewModel.statusText.isEmpty {
+                            Text(viewModel.statusText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
 

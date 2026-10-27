@@ -144,7 +144,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(scrollToStaticText(containing: "712 kcal", in: app))
     }
 
-    func testSeededMealsWeekNavigationUpdatesDisplayedWeekData() {
+    func testSeededMealsShowsCurrentWeekWithoutNavigationControls() {
         let app = makeSeededApp(initialRoute: "meals")
         app.launchEnvironment["SCHOOLHELPER_REFERENCE_DATE"] = "20260526"
         app.launchEnvironment["SCHOOLHELPER_DEBUG_DATE_MARKED_MEALS"] = "1"
@@ -152,21 +152,9 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 5))
         XCTAssertTrue(waitForStaticText(containing: "5월 25일 - 5월 29일", in: app, timeout: 5))
-        XCTAssertTrue(waitForStaticText(containing: "샘플 급식 20260525", in: app, timeout: 5))
-
-        app.buttons["이전 주"].tap()
-        XCTAssertTrue(waitForStaticText(containing: "5월 18일 - 5월 22일", in: app, timeout: 5))
-        XCTAssertTrue(waitForStaticText(containing: "샘플 급식 20260518", in: app, timeout: 5))
-        XCTAssertFalse(app.staticTexts["샘플 급식 20260525"].exists)
-
-        app.buttons["이번 주"].tap()
-        XCTAssertTrue(waitForStaticText(containing: "5월 25일 - 5월 29일", in: app, timeout: 5))
-        XCTAssertTrue(waitForStaticText(containing: "샘플 급식 20260525", in: app, timeout: 5))
-
-        app.buttons["다음 주"].tap()
-        XCTAssertTrue(waitForStaticText(containing: "6월 1일 - 6월 5일", in: app, timeout: 5))
-        XCTAssertTrue(waitForStaticText(containing: "샘플 급식 20260601", in: app, timeout: 5))
-        XCTAssertFalse(app.staticTexts["샘플 급식 20260525"].exists)
+        XCTAssertFalse(app.buttons["이전 주"].exists)
+        XCTAssertFalse(app.buttons["이번 주"].exists)
+        XCTAssertFalse(app.buttons["다음 주"].exists)
     }
 
     func testSeededScheduleShowsCoreContent() {
@@ -349,8 +337,9 @@ final class SchoolHelperIOSUITests: XCTestCase {
         app.buttons["급식"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["급식"].waitForExistence(timeout: 10))
         XCTAssertTrue(waitForStaticText(containing: "5월 25일 - 5월 29일", in: app, timeout: 30))
-        app.buttons["다음 주"].tap()
-        XCTAssertTrue(waitForStaticText(containing: "6월 1일 - 6월 5일", in: app, timeout: 10))
+        XCTAssertFalse(app.buttons["이전 주"].exists)
+        XCTAssertFalse(app.buttons["이번 주"].exists)
+        XCTAssertFalse(app.buttons["다음 주"].exists)
 
         app.buttons["일정"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 10))

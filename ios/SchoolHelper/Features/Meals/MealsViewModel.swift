@@ -59,21 +59,6 @@ final class MealsViewModel: ObservableObject {
         }
     }
 
-    func showPreviousWeek() async {
-        referenceDate = calendar.date(byAdding: .day, value: -7, to: referenceDate) ?? referenceDate
-        await load(profile: latestProfile, referenceDate: referenceDate)
-    }
-
-    func showCurrentWeek() async {
-        referenceDate = todayProvider()
-        await load(profile: latestProfile, referenceDate: referenceDate)
-    }
-
-    func showNextWeek() async {
-        referenceDate = calendar.date(byAdding: .day, value: 7, to: referenceDate) ?? referenceDate
-        await load(profile: latestProfile, referenceDate: referenceDate)
-    }
-
     func retry() async {
         await load(profile: latestProfile, referenceDate: referenceDate)
     }

@@ -223,12 +223,6 @@ final class FeatureViewModelTests: XCTestCase {
         let mealsViewModel = MealsViewModel(repository: repository, todayProvider: { referenceDate })
         await mealsViewModel.load(profile: profile, referenceDate: referenceDate)
         XCTAssertEqual(mealsViewModel.weekTitle, "5월 25일 - 5월 29일")
-        await mealsViewModel.showPreviousWeek()
-        XCTAssertEqual(mealsViewModel.weekTitle, "5월 18일 - 5월 22일")
-        await mealsViewModel.showCurrentWeek()
-        XCTAssertEqual(mealsViewModel.weekTitle, "5월 25일 - 5월 29일")
-        await mealsViewModel.showNextWeek()
-        XCTAssertEqual(mealsViewModel.weekTitle, "6월 1일 - 6월 5일")
 
         let scheduleViewModel = ScheduleViewModel(repository: repository)
         await scheduleViewModel.load(profile: profile, month: referenceDate)

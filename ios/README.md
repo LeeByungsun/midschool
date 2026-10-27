@@ -132,7 +132,7 @@ ios/scripts/test_live_external_link_ui.sh
 - notices는 `WEB_BASE_URL` 의 `/api/notices` BFF를 호출합니다. 기본값은 `https://midschool.vercel.app/` 입니다.
 - `verify_live_school_data.py` 는 기본적으로 첫 notice 상세 URL도 HTTP 2xx/3xx 및 제목 포함 여부로 확인합니다. 외부 학교 홈페이지 상태를 제외하려면 `VERIFY_NOTICE_URL=0` 을 지정합니다.
 - `test_live_ui.sh` 는 `SCHOOLHELPER_REFERENCE_DATE=20260528` launch override로 홈/시간표/급식/일정 화면의 live 표시를 검증합니다.
-- `test_live_navigation_ui.sh` 는 같은 기준일로 시간표 다음 날, 급식 다음 주, 일정 다음 달 제목 갱신을 검증합니다.
+- `test_live_navigation_ui.sh` 는 같은 기준일로 시간표 다음 날, 현재 주 급식 표시, 일정 다음 달 제목 갱신을 검증합니다.
 - `test_live_external_link_ui.sh` 는 live BFF notice의 `가정통신문 열기`가 Safari에서 `misaj-m.goegh.kr`/공지 텍스트로 열리는지 검증합니다.
 
 위젯 simulator 패키징 smoke:
