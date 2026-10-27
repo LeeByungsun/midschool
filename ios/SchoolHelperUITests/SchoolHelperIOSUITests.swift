@@ -75,6 +75,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
         app.buttons["시간표 보러 가기"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["시간표"].isSelected)
 
         app.buttons["홈"].tap()
         app.buttons["home-meals-section"].tap()

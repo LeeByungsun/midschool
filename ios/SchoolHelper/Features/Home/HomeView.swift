@@ -124,9 +124,8 @@ struct HomeView: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.white.opacity(0.9))
                     .lineLimit(2)
-                NavigationLink {
-                    TimetableView()
-                        .environmentObject(appState)
+                Button {
+                    appState.selectedRoute = .timetable
                 } label: {
                     HStack(spacing: 8) {
                         Text("시간표 보러 가기")
@@ -139,6 +138,7 @@ struct HomeView: View {
                     .padding(.vertical, 11)
                     .background(.white, in: Capsule())
                 }
+                .buttonStyle(.plain)
                 .accessibilityIdentifier("home-timetable-action")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
