@@ -83,7 +83,10 @@ final class TimerViewModel: ObservableObject {
 
     func toggle() {
         if state.isRunning {
-            pause()
+            // The app may have been suspended past one or more phase boundaries.
+            // Resolve the current phase before deciding whether it can be paused.
+            syncWithCurrentTime()
+            if state.isRunning { pause() }
         } else {
             if let session = state.pomodoro, session.isCompleted {
                 configurePomodoro(focusMinutes: session.focusMinutes, rounds: session.totalRounds)
@@ -225,7 +228,7 @@ final class TimerViewModel: ObservableObject {
         notificationScheduler.cancelPendingTimerCompletion()
         updateState {
             if let targetDate = $0.targetDate {
-                $0.remainingSeconds = max(0, Int(targetDate.timeIntervalSince(now())))
+                $0.remainingSeconds = max(0, Int(ceil(targetDate.timeIntervalSince(now()))))
             }
             $0.targetDate = nil
             $0.isRunning = false

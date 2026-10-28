@@ -263,4 +263,35 @@ final class TimerViewModelTests: XCTestCase {
         vm.refreshSettings()
         XCTAssertGreaterThan(scheduler.cancelCalls, previousCancelCount)
     }
+    func testPauseAfterBackgroundPhaseChangePausesCurrentRest() {
+        let suite = "PomodoroPauseAfterBackground." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let vm = TimerViewModel(store: TimerPreferencesStore(defaults: defaults), settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader(), now: { now }, sleep: { _ in })
+        vm.configurePomodoro(focusMinutes: 25, rounds: 2)
+        vm.toggle()
+        now.addTimeInterval(26 * 60)
+        vm.toggle()
+        XCTAssertFalse(vm.state.isRunning)
+        XCTAssertEqual(vm.state.pomodoro?.phase, .rest)
+        XCTAssertEqual(vm.state.pomodoro?.completedRounds, 1)
+        XCTAssertEqual(vm.state.remainingSeconds, 4 * 60)
+    }
+
+    func testPauseAfterCompletedSessionDoesNotStartNewSession() {
+        let suite = "PomodoroPauseAfterCompletion." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let vm = TimerViewModel(store: TimerPreferencesStore(defaults: defaults), settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader(), now: { now }, sleep: { _ in })
+        vm.configurePomodoro(focusMinutes: 25, rounds: 2)
+        vm.toggle()
+        now.addTimeInterval(55 * 60)
+        vm.toggle()
+        XCTAssertFalse(vm.state.isRunning)
+        XCTAssertEqual(vm.state.pomodoro?.isCompleted, true)
+    }
 }
