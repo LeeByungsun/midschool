@@ -64,13 +64,6 @@ struct HomeView: View {
                 await refreshHome()
             }
             .navigationTitle("스쿨온")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("새로고침") {
-                        Task { await refreshHome() }
-                    }
-                }
-            }
             .task(id: appState.profile) {
                 await refreshHome()
             }

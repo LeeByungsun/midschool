@@ -37,6 +37,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(app.buttons["급식"].exists)
         XCTAssertTrue(app.buttons["일정"].exists)
         XCTAssertFalse(app.buttons["More"].exists)
+        XCTAssertFalse(app.buttons["새로고침"].exists)
     }
 
     func testHomeSectionsFollowAndroidInformationAndActionOrder() {
