@@ -8,6 +8,8 @@ final class TimerPreferencesStore {
         self.defaults = defaults
     }
 
+    var hasSavedState: Bool { defaults.data(forKey: key) != nil }
+
     func load() -> TimerSessionState {
         guard
             let data = defaults.data(forKey: key),

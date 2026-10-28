@@ -28,7 +28,15 @@ final class TimerViewModel: ObservableObject {
         self.widgetTimelineReloader = widgetTimelineReloader
         self.now = now
         self.sleep = sleep
-        self.state = store.load()
+        if store.hasSavedState {
+            self.state = store.load()
+        } else {
+            let session = PomodoroSession()
+            let initial = TimerSessionState(preset: .deepFocus, totalSeconds: session.phaseDurationSeconds,
+                                            remainingSeconds: session.phaseDurationSeconds, pomodoro: session)
+            self.state = initial
+            store.save(initial)
+        }
         self.displayMode = settingsStore.load().displayMode
         refreshRunningState()
     }
@@ -95,6 +103,12 @@ final class TimerViewModel: ObservableObject {
         }
         store.save(state)
         widgetTimelineReloader.reloadAllTimelines()
+    }
+
+    func reloadFromStore() {
+        countdownTask?.cancel()
+        state = store.load()
+        refreshRunningState()
     }
 
     func refreshRunningState() {

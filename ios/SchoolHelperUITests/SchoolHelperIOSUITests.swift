@@ -247,7 +247,8 @@ final class SchoolHelperIOSUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["25분 집중"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["40분 집중"].exists)
-        XCTAssertTrue(app.buttons["쉬는 시간"].exists)
+        XCTAssertTrue(app.buttons["2회"].exists)
+        XCTAssertTrue(app.buttons["4회"].exists)
         XCTAssertTrue(app.buttons["초기화"].exists)
         XCTAssertFalse(app.buttons["리셋"].exists)
         app.buttons["timer-240-preset-deepFocus"].tap()
@@ -258,6 +259,25 @@ final class SchoolHelperIOSUITests: XCTestCase {
         screenshot.name = "timer-android-style"
         screenshot.lifetime = .keepAlways
         add(screenshot)
+    }
+
+    func testTimerDetailAndHomeShareRunningSession() {
+        let app = makeSeededApp(initialRoute: "timer")
+        app.launch()
+        let rounds = app.buttons["timer-240-rounds-2"]
+        XCTAssertTrue(rounds.waitForExistence(timeout: 5))
+        rounds.tap()
+        app.buttons["timer-240-preset-deepFocus"].tap()
+        app.buttons["timer-240-primary"].tap()
+        XCTAssertEqual(app.buttons["timer-240-primary"].label, "일시정지")
+        app.buttons["닫기"].tap()
+        let homePrimary = app.buttons["timer-220-primary"]
+        for _ in 0..<5 where !homePrimary.isHittable { app.swipeUp() }
+        XCTAssertTrue(homePrimary.waitForExistence(timeout: 5))
+        XCTAssertEqual(homePrimary.label, "일시정지")
+        XCTAssertTrue(app.buttons["timer-220-rounds-2"].isSelected)
+        homePrimary.tap()
+        XCTAssertEqual(homePrimary.label, "이어하기")
     }
 
     func testTimerModalShowsCloseButtonWhenLaunchedDirectly() {

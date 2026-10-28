@@ -2,7 +2,7 @@ import SwiftUI
 
 struct TimerView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel = TimerViewModel()
+    @EnvironmentObject private var viewModel: TimerViewModel
     @State private var completionBlinkOn = false
     private let showsDismissButton: Bool
 
@@ -42,7 +42,7 @@ struct TimerView: View {
     }
 
     private var isTimerCompleted: Bool {
-        !viewModel.state.isRunning && viewModel.state.remainingSeconds == 0
+        viewModel.state.pomodoro?.isCompleted ?? (!viewModel.state.isRunning && viewModel.state.remainingSeconds == 0)
     }
 
     private var timerCompletionBackground: Color {
@@ -75,7 +75,6 @@ struct TimerControls: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var viewModel: TimerViewModel
     let ringSize: CGFloat
-    private let presets: [TimerPreset] = [.deepFocus, .focus, .shortBreak]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -91,32 +90,31 @@ struct TimerControls: View {
                     .accessibilityIdentifier("timer-\(Int(ringSize))-time")
                     .frame(maxWidth: .infinity)
             }
-            Text(presetTitle(viewModel.state.preset))
+            Text(phaseTitle)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             HStack(spacing: 8) {
-                ForEach(presets, id: \.self) { preset in
-                    Button { viewModel.selectPreset(preset) } label: {
-                        Text(presetTitle(preset))
-                            .font(.subheadline.weight(.semibold))
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity, minHeight: 48)
-                            .background(viewModel.state.preset == preset ? Color(red: 221 / 255, green: 235 / 255, blue: 1) : Color(.systemBackground), in: RoundedRectangle(cornerRadius: 18))
-                            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(.separator).opacity(0.3)))
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(viewModel.state.preset == preset ? Color(red: 28 / 255, green: 36 / 255, blue: 48 / 255) : Color.primary)
-                    .accessibilityAddTraits(viewModel.state.preset == preset ? .isSelected : [])
-                    .accessibilityIdentifier("timer-\(Int(ringSize))-preset-\(preset.rawValue)")
+                choiceButton("25분 집중", selected: viewModel.state.pomodoro?.focusMinutes == 25, id: "preset-deepFocus") {
+                    viewModel.configurePomodoro(focusMinutes: 25, rounds: viewModel.state.pomodoro?.totalRounds ?? 4)
+                }
+                choiceButton("40분 집중", selected: viewModel.state.pomodoro?.focusMinutes == 40, id: "preset-focus") {
+                    viewModel.configurePomodoro(focusMinutes: 40, rounds: viewModel.state.pomodoro?.totalRounds ?? 4)
+                }
+                choiceButton("2회", selected: viewModel.state.pomodoro?.totalRounds == 2, id: "rounds-2") {
+                    viewModel.configurePomodoro(focusMinutes: viewModel.state.pomodoro?.focusMinutes ?? (viewModel.state.preset == .deepFocus ? 25 : 40), rounds: 2)
+                }
+                choiceButton("4회", selected: viewModel.state.pomodoro?.totalRounds == 4, id: "rounds-4") {
+                    viewModel.configurePomodoro(focusMinutes: viewModel.state.pomodoro?.focusMinutes ?? (viewModel.state.preset == .deepFocus ? 25 : 40), rounds: 4)
                 }
             }
             HStack(spacing: 12) {
                 Button { viewModel.toggle() } label: {
-                    Text(viewModel.state.isRunning ? "일시정지" : (viewModel.state.remainingSeconds > 0 && viewModel.state.remainingSeconds < viewModel.state.totalSeconds ? "이어하기" : "시작"))
+                    Text(primaryTitle)
                         .frame(maxWidth: .infinity, minHeight: 48)
                         .background(timerBlue, in: RoundedRectangle(cornerRadius: 16))
                         .foregroundStyle(.white)
                 }
+                .accessibilityIdentifier("timer-\(Int(ringSize))-primary")
                 Button { viewModel.reset() } label: {
                     Text("초기화")
                         .frame(maxWidth: .infinity, minHeight: 48)
@@ -129,12 +127,39 @@ struct TimerControls: View {
         }
     }
 
-    private func presetTitle(_ preset: TimerPreset) -> String {
-        switch preset {
-        case .deepFocus: return "25분 집중"
-        case .focus: return "40분 집중"
-        case .shortBreak: return "쉬는 시간"
+    private var phaseTitle: String {
+        guard let session = viewModel.state.pomodoro else {
+            switch viewModel.state.preset {
+            case .deepFocus: return "25분 집중"
+            case .focus: return "40분 집중"
+            case .shortBreak: return "쉬는 시간"
+            }
         }
+        let round = session.phase == .rest ? session.completedRounds : min(session.completedRounds + 1, session.totalRounds)
+        return "\(session.phase == .focus ? "집중" : "쉬는 시간") \(round)/\(session.totalRounds)"
+    }
+
+    private var primaryTitle: String {
+        if viewModel.state.isRunning { return "일시정지" }
+        if viewModel.state.pomodoro?.isCompleted == true { return "새 세션 시작" }
+        return viewModel.state.remainingSeconds > 0 && viewModel.state.remainingSeconds < viewModel.state.totalSeconds ? "이어하기" : "시작"
+    }
+
+    private func choiceButton(_ title: String, selected: Bool, id: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 3)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .background(selected ? Color(red: 221 / 255, green: 235 / 255, blue: 1) : Color(.systemBackground), in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(.separator).opacity(0.3)))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(selected ? Color(red: 28 / 255, green: 36 / 255, blue: 48 / 255) : Color.primary)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("timer-\(Int(ringSize))-\(id)")
+        .disabled(viewModel.state.isRunning)
     }
 
     private var timeText: String {

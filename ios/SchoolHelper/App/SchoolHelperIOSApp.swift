@@ -35,6 +35,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 struct SchoolHelperIOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var appState = AppState()
+    @StateObject private var timerViewModel = TimerViewModel()
     @StateObject private var notificationPermissionCoordinator = NotificationPermissionCoordinator()
     private let timerPreferencesStore = TimerPreferencesStore()
     private let timerSettingsStore = TimerSettingsStore()
@@ -48,11 +49,13 @@ struct SchoolHelperIOSApp: App {
         WindowGroup {
             RootTabView()
                 .environmentObject(appState)
+                .environmentObject(timerViewModel)
                 .onOpenURL { url in
                     appState.handleDeepLink(url)
                 }
                 .task {
                     applyTimerLaunchOverrideIfNeeded()
+                    timerViewModel.reloadFromStore()
                     appState.refresh()
                     await notificationPermissionCoordinator.refreshIfNeeded(
                         isSetupComplete: appState.isSetupComplete

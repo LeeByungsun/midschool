@@ -179,4 +179,26 @@ final class TimerViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.state.pomodoro?.totalRounds, 2)
         XCTAssertEqual(viewModel.state.pomodoro?.completedRounds, 0)
     }
+    func testNewTimerDefaultsToTwentyFiveMinutesAndFourRounds() {
+        let suite = "PomodoroDefault." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let vm = TimerViewModel(store: TimerPreferencesStore(defaults: defaults), settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader())
+        XCTAssertEqual(vm.state.pomodoro?.focusMinutes, 25)
+        XCTAssertEqual(vm.state.pomodoro?.totalRounds, 4)
+        XCTAssertEqual(vm.state.remainingSeconds, 1500)
+    }
+
+    func testSavedLegacyPausedTimerDoesNotGetResetOnInitialization() {
+        let suite = "LegacyTimer." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = TimerPreferencesStore(defaults: defaults)
+        let legacy = TimerSessionState(preset: .focus, totalSeconds: 2400, remainingSeconds: 850, isRunning: false)
+        store.save(legacy)
+        let vm = TimerViewModel(store: store, settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader())
+        XCTAssertEqual(vm.state, legacy)
+    }
 }

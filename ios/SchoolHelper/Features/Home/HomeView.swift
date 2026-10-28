@@ -4,7 +4,7 @@ struct HomeView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.openURL) private var openURL
     @StateObject private var viewModel = HomeViewModel()
-    @StateObject private var timerViewModel = TimerViewModel()
+    @EnvironmentObject private var timerViewModel: TimerViewModel
     @State private var completionBlinkOn = false
 
     var body: some View {
@@ -245,7 +245,7 @@ struct HomeView: View {
     }
 
     private var isTimerCompleted: Bool {
-        !timerViewModel.state.isRunning && timerViewModel.state.remainingSeconds == 0
+        timerViewModel.state.pomodoro?.isCompleted ?? (!timerViewModel.state.isRunning && timerViewModel.state.remainingSeconds == 0)
     }
 
     private var timerCompletionRowBackground: Color {
