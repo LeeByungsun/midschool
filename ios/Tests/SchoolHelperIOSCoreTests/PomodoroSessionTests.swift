@@ -68,4 +68,24 @@ final class PomodoroSessionTests: XCTestCase {
         store.save(state)
         XCTAssertEqual(store.load(), state)
     }
+    func testCompletionScheduleCoversEveryPhaseWithoutFinalBreak() {
+        let session = PomodoroSession(focusMinutes: 25, totalRounds: 2)
+        let first = Date(timeIntervalSince1970: 1_700_000_000)
+        let plan = session.completionSchedule(firstDeadline: first)
+        XCTAssertEqual(plan.map(\.phase), [.focus, .rest, .focus])
+        XCTAssertEqual(plan.map(\.deadline), [first, first.addingTimeInterval(300), first.addingTimeInterval(1800)])
+        XCTAssertEqual(plan.map(\.completedRound), [1, 1, 2])
+    }
+
+    func testCompletionScheduleFromRestHandlesFourRounds() {
+        var session = PomodoroSession(focusMinutes: 40, totalRounds: 4)
+        session.completePhase()
+        let first = Date(timeIntervalSince1970: 1_700_000_000)
+        let plan = session.completionSchedule(firstDeadline: first)
+        XCTAssertEqual(plan.count, 6)
+        XCTAssertEqual(plan.first?.phase, .rest)
+        XCTAssertEqual(plan.last?.phase, .focus)
+        XCTAssertEqual(plan.last?.completedRound, 4)
+        XCTAssertEqual(plan.last?.deadline, first.addingTimeInterval(3 * 2400 + 2 * 600))
+    }
 }

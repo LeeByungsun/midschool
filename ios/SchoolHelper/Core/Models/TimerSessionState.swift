@@ -47,3 +47,29 @@ struct PomodoroSession: Codable, Equatable {
         }
     }
 }
+
+struct PomodoroPhaseCompletion: Equatable {
+    let phase: PomodoroSession.Phase
+    let deadline: Date
+    let completedRound: Int
+}
+
+extension PomodoroSession {
+    /// Compute remaining phase boundaries so iOS can schedule alerts before suspension.
+    func completionSchedule(firstDeadline: Date) -> [PomodoroPhaseCompletion] {
+        var session = self
+        var deadline = firstDeadline
+        var result: [PomodoroPhaseCompletion] = []
+        // Four focus rounds plus three rests is the maximum valid session.
+        for _ in 0..<7 {
+            guard !session.isCompleted else { break }
+            let round = session.phase == .focus ? session.completedRounds + 1 : session.completedRounds
+            result.append(PomodoroPhaseCompletion(phase: session.phase, deadline: deadline, completedRound: round))
+            session.completePhase()
+            if !session.isCompleted {
+                deadline = deadline.addingTimeInterval(TimeInterval(session.phaseDurationSeconds))
+            }
+        }
+        return result
+    }
+}
