@@ -2,22 +2,29 @@ import Foundation
 import UserNotifications
 import Dispatch
 
+struct TimerNotificationEvent: Equatable {
+    let date: Date
+    let presetTitle: String
+}
+
 protocol TimerNotificationScheduling {
     func requestAuthorizationIfNeeded()
     func scheduleTimerCompletion(at date: Date, presetTitle: String, vibrationEnabled: Bool)
+    func scheduleTimerCompletions(_ events: [TimerNotificationEvent], vibrationEnabled: Bool)
     func cancelPendingTimerCompletion()
 }
 
 enum TimerNotificationPresentationPolicy {
     static let timerCompletionIdentifier = "schoolhelper.timer.complete"
     static let vibrationEnabledKey = "timerVibrationEnabled"
+    static let timerIdentifiers = [timerCompletionIdentifier] + (1...6).map { "\(timerCompletionIdentifier).\($0)" }
 
     static func shouldPlaySound(identifier: String) -> Bool {
-        identifier == timerCompletionIdentifier
+        timerIdentifiers.contains(identifier)
     }
 
     static func shouldPlayHaptic(identifier: String, userInfo: [AnyHashable: Any]) -> Bool {
-        identifier == timerCompletionIdentifier && userInfo[vibrationEnabledKey] as? Bool == true
+        shouldPlaySound(identifier: identifier) && userInfo[vibrationEnabledKey] as? Bool == true
     }
 }
 
@@ -43,75 +50,79 @@ final class TimerNotificationScheduler: TimerNotificationScheduling {
         }
     }
 
+    // All instances share the generation: a settings-screen cancellation also invalidates
+    // permission callbacks started by the timer's scheduler instance.
+    private static let schedulingLock = NSLock()
+    private static var generation = 0
+
     func scheduleTimerCompletion(at date: Date, presetTitle: String, vibrationEnabled: Bool) {
-        center.getNotificationSettings { [center] settings in
-            let isAllowed: Bool
+        scheduleTimerCompletions([TimerNotificationEvent(date: date, presetTitle: presetTitle)], vibrationEnabled: vibrationEnabled)
+    }
+
+    func scheduleTimerCompletions(_ events: [TimerNotificationEvent], vibrationEnabled: Bool) {
+        Self.schedulingLock.lock()
+        Self.generation += 1
+        let generation = Self.generation
+        center.removePendingNotificationRequests(withIdentifiers: TimerNotificationPresentationPolicy.timerIdentifiers)
+        Self.schedulingLock.unlock()
+
+        center.getNotificationSettings { [self] settings in
             switch settings.authorizationStatus {
             case .authorized, .provisional:
-                isAllowed = true
+                scheduleAuthorized(events, vibrationEnabled: vibrationEnabled, generation: generation)
 #if os(iOS)
             case .ephemeral:
-                isAllowed = true
+                scheduleAuthorized(events, vibrationEnabled: vibrationEnabled, generation: generation)
 #endif
+            case .notDetermined where !shouldSkipNotificationRequest():
+                center.requestAuthorization(options: [.alert, .sound, .badge]) { [self] granted, _ in
+                    if granted { scheduleAuthorized(events, vibrationEnabled: vibrationEnabled, generation: generation) }
+                }
             default:
-                isAllowed = false
+                writeSmokeStatus(["authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
+                                  "scheduled": "false", "reason": "notification authorization is not granted",
+                                  "identifier": TimerNotificationPresentationPolicy.timerCompletionIdentifier])
             }
+        }
+    }
 
-            guard isAllowed else {
-                self.writeSmokeStatus([
-                    "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
-                    "scheduled": "false",
-                    "reason": "notification authorization is not granted",
-                    "identifier": TimerNotificationPresentationPolicy.timerCompletionIdentifier,
-                ])
-                return
-            }
-
-            let remaining = max(1, date.timeIntervalSinceNow)
+    private func scheduleAuthorized(_ events: [TimerNotificationEvent], vibrationEnabled: Bool, generation: Int) {
+        Self.schedulingLock.lock()
+        defer { Self.schedulingLock.unlock() }
+        guard Self.generation == generation else { return }
+        for (index, event) in events.prefix(TimerNotificationPresentationPolicy.timerIdentifiers.count).enumerated() {
+            let remaining = event.date.timeIntervalSinceNow
+            guard remaining > 0 else { continue }
+            let identifier = TimerNotificationPresentationPolicy.timerIdentifiers[index]
             let content = UNMutableNotificationContent()
             content.title = "타이머가 끝났어요"
-            content.body = "\(presetTitle) 시간이 완료됐어요."
+            content.body = "\(event.presetTitle) 시간이 완료됐어요."
             content.sound = .default
             content.userInfo[TimerNotificationPresentationPolicy.vibrationEnabledKey] = vibrationEnabled
             if #available(iOS 15.0, *) {
                 content.interruptionLevel = vibrationEnabled ? .timeSensitive : .active
             }
-
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: remaining, repeats: false)
-            let request = UNNotificationRequest(
-                identifier: TimerNotificationPresentationPolicy.timerCompletionIdentifier,
-                content: content,
-                trigger: trigger
-            )
-
-            center.removePendingNotificationRequests(withIdentifiers: [TimerNotificationPresentationPolicy.timerCompletionIdentifier])
-            center.add(request) { [center] error in
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, remaining), repeats: false)
+            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+            center.add(request) { [self] error in
+                guard index == 0 else { return }
                 if let error {
-                    self.writeSmokeStatus([
-                        "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
-                        "scheduled": "false",
-                        "error": error.localizedDescription,
-                        "identifier": TimerNotificationPresentationPolicy.timerCompletionIdentifier,
-                    ])
-                    return
-                }
-
-                center.getPendingNotificationRequests { requests in
-                    self.writeSmokeStatus([
-                        "authorizationStatus": Self.authorizationStatusName(settings.authorizationStatus),
-                        "scheduled": "true",
-                        "pending": requests.contains { $0.identifier == TimerNotificationPresentationPolicy.timerCompletionIdentifier } ? "true" : "false",
-                        "identifier": TimerNotificationPresentationPolicy.timerCompletionIdentifier,
-                        "remainingSeconds": String(Int(remaining.rounded())),
-                        "presetTitle": presetTitle,
-                    ])
+                    writeSmokeStatus(["scheduled": "false", "error": error.localizedDescription, "identifier": identifier])
+                } else {
+                    center.getPendingNotificationRequests { [self] requests in
+                        writeSmokeStatus(["scheduled": "true", "pending": requests.contains { $0.identifier == identifier } ? "true" : "false",
+                                          "identifier": identifier, "remainingSeconds": String(Int(remaining.rounded())), "presetTitle": event.presetTitle])
+                    }
                 }
             }
         }
     }
 
     func cancelPendingTimerCompletion() {
-        center.removePendingNotificationRequests(withIdentifiers: [TimerNotificationPresentationPolicy.timerCompletionIdentifier])
+        Self.schedulingLock.lock()
+        Self.generation += 1
+        center.removePendingNotificationRequests(withIdentifiers: TimerNotificationPresentationPolicy.timerIdentifiers)
+        Self.schedulingLock.unlock()
     }
 
     private func shouldSkipNotificationRequest() -> Bool {

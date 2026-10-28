@@ -201,4 +201,66 @@ final class TimerViewModelTests: XCTestCase {
             notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader())
         XCTAssertEqual(vm.state, legacy)
     }
+    func testPomodoroStartPreplansEveryRemainingPhaseAndPauseCancels() {
+        let suite = "PomodoroPlan." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let scheduler = SpyTimerNotificationScheduler()
+        let vm = TimerViewModel(store: TimerPreferencesStore(defaults: defaults), settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: scheduler, widgetTimelineReloader: SpyWidgetTimelineReloader(), now: { now }, sleep: { _ in })
+        vm.configurePomodoro(focusMinutes: 25, rounds: 2)
+        vm.toggle()
+        XCTAssertEqual(scheduler.batchCalls.last?.events.count, 3)
+        XCTAssertEqual(scheduler.batchCalls.last?.events.map(\.date), [now.addingTimeInterval(1500), now.addingTimeInterval(1800), now.addingTimeInterval(3300)])
+        let cancelCount = scheduler.cancelCalls
+        now.addTimeInterval(60)
+        vm.toggle()
+        XCTAssertGreaterThan(scheduler.cancelCalls, cancelCount)
+        now.addTimeInterval(20)
+        vm.toggle()
+        XCTAssertEqual(scheduler.batchCalls.last?.events.first?.date, now.addingTimeInterval(1440))
+        XCTAssertEqual(scheduler.batchCalls.last?.events.count, 3)
+    }
+
+    func testPomodoroDoesNotEndEarlyInLastFractionalSecond() {
+        let suite = "PomodoroFraction." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let vm = TimerViewModel(store: TimerPreferencesStore(defaults: defaults), settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader(), now: { now }, sleep: { _ in })
+        vm.configurePomodoro(focusMinutes: 25, rounds: 2)
+        vm.toggle()
+        now.addTimeInterval(1499.5)
+        vm.syncWithCurrentTime()
+        XCTAssertTrue(vm.state.isRunning)
+        XCTAssertEqual(vm.state.remainingSeconds, 1)
+        now.addTimeInterval(0.5)
+        vm.syncWithCurrentTime()
+        XCTAssertEqual(vm.state.pomodoro?.phase, .rest)
+        XCTAssertTrue(vm.state.isRunning)
+    }
+    func testEnablingNotificationsDuringRunningSessionReschedulesAllRemainingPhases() {
+        let suite = "PomodoroSettings." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = TimerSettingsStore(defaults: defaults)
+        settings.save(TimerSettings(notificationEnabled: false))
+        let scheduler = SpyTimerNotificationScheduler()
+        let vm = TimerViewModel(store: TimerPreferencesStore(defaults: defaults), settingsStore: settings,
+            notificationScheduler: scheduler, widgetTimelineReloader: SpyWidgetTimelineReloader(),
+            now: { Date(timeIntervalSince1970: 1_700_000_000) }, sleep: { _ in })
+        vm.configurePomodoro(focusMinutes: 25, rounds: 2)
+        vm.toggle()
+        XCTAssertTrue(scheduler.batchCalls.isEmpty)
+        settings.save(TimerSettings(notificationEnabled: true, vibrationEnabled: false))
+        vm.refreshSettings()
+        XCTAssertEqual(scheduler.batchCalls.last?.events.count, 3)
+        XCTAssertEqual(scheduler.batchCalls.last?.vibrationEnabled, false)
+        settings.save(TimerSettings(notificationEnabled: false))
+        let previousCancelCount = scheduler.cancelCalls
+        vm.refreshSettings()
+        XCTAssertGreaterThan(scheduler.cancelCalls, previousCancelCount)
+    }
 }

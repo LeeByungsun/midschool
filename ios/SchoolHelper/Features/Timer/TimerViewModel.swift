@@ -12,6 +12,7 @@ final class TimerViewModel: ObservableObject {
     private let widgetTimelineReloader: WidgetTimelineReloading
     private let now: () -> Date
     private let sleep: @Sendable (UInt64) async -> Void
+    private var appliedTimerSettings: TimerSettings
     private var countdownTask: Task<Void, Never>?
 
     init(
@@ -37,7 +38,9 @@ final class TimerViewModel: ObservableObject {
             self.state = initial
             store.save(initial)
         }
-        self.displayMode = settingsStore.load().displayMode
+        let currentSettings = settingsStore.load()
+        self.displayMode = currentSettings.displayMode
+        self.appliedTimerSettings = currentSettings
         refreshRunningState()
     }
 
@@ -121,7 +124,21 @@ final class TimerViewModel: ObservableObject {
     }
 
     func refreshSettings() {
-        displayMode = settingsStore.load().displayMode
+        let settings = settingsStore.load()
+        let notificationChanged = settings.notificationEnabled != appliedTimerSettings.notificationEnabled ||
+            settings.vibrationEnabled != appliedTimerSettings.vibrationEnabled
+        appliedTimerSettings = settings
+        displayMode = settings.displayMode
+        guard notificationChanged, state.isRunning else { return }
+        if !settings.notificationEnabled {
+            notificationScheduler.cancelPendingTimerCompletion()
+        } else {
+            syncWithCurrentTime()
+            if state.isRunning {
+                notificationScheduler.requestAuthorizationIfNeeded()
+                scheduleNotifications(settings: settings)
+            }
+        }
     }
 
     var progressFraction: Double {
@@ -148,18 +165,14 @@ final class TimerViewModel: ObservableObject {
                 $0.targetDate = session.isCompleted ? nil : deadline
                 $0.isRunning = !session.isCompleted
             }
-            notificationScheduler.cancelPendingTimerCompletion()
             if session.isCompleted {
                 countdownTask?.cancel()
-            } else if settingsStore.load().notificationEnabled {
-                notificationScheduler.scheduleTimerCompletion(at: deadline, presetTitle: state.preset.title,
-                    vibrationEnabled: settingsStore.load().vibrationEnabled)
             }
             store.save(state)
             widgetTimelineReloader.reloadAllTimelines()
             return
         }
-        let remaining = max(0, Int(targetDate.timeIntervalSince(currentTime)))
+        let remaining = max(0, Int(ceil(targetDate.timeIntervalSince(currentTime))))
         updateState {
             $0.remainingSeconds = remaining
             if remaining == 0 {
@@ -186,16 +199,25 @@ final class TimerViewModel: ObservableObject {
         if timerSettings.notificationEnabled {
             notificationScheduler.requestAuthorizationIfNeeded()
         }
-        if let targetDate = state.targetDate, timerSettings.notificationEnabled {
-            notificationScheduler.scheduleTimerCompletion(
-                at: targetDate,
-                presetTitle: state.preset.title,
-                vibrationEnabled: timerSettings.vibrationEnabled
-            )
+        if timerSettings.notificationEnabled {
+            scheduleNotifications(settings: timerSettings)
         }
         store.save(state)
         widgetTimelineReloader.reloadAllTimelines()
         startCountdownLoop()
+    }
+
+    private func scheduleNotifications(settings: TimerSettings) {
+        guard let targetDate = state.targetDate else { return }
+        if let session = state.pomodoro {
+            let events = session.completionSchedule(firstDeadline: targetDate).map {
+                TimerNotificationEvent(date: $0.deadline, presetTitle: $0.phase == .focus ? "집중" : "쉬는 시간")
+            }
+            notificationScheduler.scheduleTimerCompletions(events, vibrationEnabled: settings.vibrationEnabled)
+        } else {
+            notificationScheduler.scheduleTimerCompletion(at: targetDate, presetTitle: state.preset.title,
+                                                           vibrationEnabled: settings.vibrationEnabled)
+        }
     }
 
     private func pause() {

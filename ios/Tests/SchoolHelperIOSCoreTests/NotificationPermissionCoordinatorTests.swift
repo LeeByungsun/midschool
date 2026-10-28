@@ -19,6 +19,12 @@ final class NotificationPermissionCoordinatorTests: XCTestCase {
                 userInfo: [TimerNotificationPresentationPolicy.vibrationEnabledKey: false]
             )
         )
+        XCTAssertEqual(TimerNotificationPresentationPolicy.timerIdentifiers.count, 7)
+        for item in TimerNotificationPresentationPolicy.timerIdentifiers {
+            XCTAssertTrue(TimerNotificationPresentationPolicy.shouldPlaySound(identifier: item))
+            XCTAssertTrue(TimerNotificationPresentationPolicy.shouldPlayHaptic(identifier: item, userInfo: [TimerNotificationPresentationPolicy.vibrationEnabledKey: true]))
+        }
+        XCTAssertFalse(TimerNotificationPresentationPolicy.shouldPlaySound(identifier: identifier + ".7"))
         XCTAssertFalse(TimerNotificationPresentationPolicy.shouldPlaySound(identifier: "other"))
     }
 

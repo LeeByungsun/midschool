@@ -169,6 +169,7 @@ final class SpyTimerNotificationScheduler: TimerNotificationScheduling {
     private(set) var requestAuthorizationCalls = 0
     private(set) var cancelCalls = 0
     private(set) var scheduleCalls: [(date: Date, presetTitle: String, vibrationEnabled: Bool)] = []
+    private(set) var batchCalls: [(events: [TimerNotificationEvent], vibrationEnabled: Bool)] = []
 
     func requestAuthorizationIfNeeded() {
         requestAuthorizationCalls += 1
@@ -176,6 +177,10 @@ final class SpyTimerNotificationScheduler: TimerNotificationScheduling {
 
     func scheduleTimerCompletion(at date: Date, presetTitle: String, vibrationEnabled: Bool) {
         scheduleCalls.append((date, presetTitle, vibrationEnabled))
+    }
+
+    func scheduleTimerCompletions(_ events: [TimerNotificationEvent], vibrationEnabled: Bool) {
+        batchCalls.append((events, vibrationEnabled))
     }
 
     func cancelPendingTimerCompletion() {
