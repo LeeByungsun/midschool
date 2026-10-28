@@ -60,11 +60,6 @@ final class ScheduleViewModel: ObservableObject {
         await load(profile: latestProfile, month: currentMonth)
     }
 
-    func showCurrentMonth() async {
-        currentMonth = todayProvider()
-        await load(profile: latestProfile, month: currentMonth)
-    }
-
     func showNextMonth() async {
         currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
         await load(profile: latestProfile, month: currentMonth)

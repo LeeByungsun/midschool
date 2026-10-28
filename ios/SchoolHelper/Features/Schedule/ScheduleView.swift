@@ -23,9 +23,6 @@ struct ScheduleView: View {
                             }
                         }
                         Spacer()
-                        Button("이번 달") {
-                            Task { await viewModel.showCurrentMonth() }
-                        }
                         Button("다음 달") {
                             Task { await viewModel.showNextMonth() }
                         }

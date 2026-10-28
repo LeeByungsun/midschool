@@ -162,6 +162,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars.staticTexts["일정"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["일정"].isSelected)
+        XCTAssertFalse(app.buttons["이번 달"].exists)
         XCTAssertTrue(scrollToStaticText(containing: "체육대회", in: app))
         XCTAssertTrue(scrollToStaticText(containing: "중간고사", in: app))
     }
