@@ -167,6 +167,16 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(scrollToStaticText(containing: "중간고사", in: app))
     }
 
+    func testScheduleNextMonthUpdatesDisplayedMonthAndEvents() {
+        let app = makeSeededApp(initialRoute: "schedule")
+        app.launchEnvironment["SCHOOLHELPER_REFERENCE_DATE"] = "20261028"
+        app.launch()
+        XCTAssertTrue(waitForStaticText(containing: "2026년 10월", in: app, timeout: 5))
+        app.buttons["다음 달"].tap()
+        XCTAssertTrue(waitForStaticText(containing: "2026년 11월", in: app, timeout: 5))
+        XCTAssertTrue(waitForStaticText(containing: "11월 23일", in: app, timeout: 5))
+    }
+
     func testSettingsModalCanOpenAndCloseFromHome() {
         let app = makeSeededApp()
         app.launch()

@@ -211,6 +211,17 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(scheduleViewModel.items.count, 1)
     }
 
+    func testScheduleKeepsLatestMonthWhenEarlierRequestFinishesLast() async {
+        let october = fixtureDate(year: 2026, month: 10, day: 28)
+        let viewModel = ScheduleViewModel(repository: OutOfOrderScheduleRepository(), todayProvider: { october })
+        let initial = Task { await viewModel.load(profile: .fixture()) }
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        await viewModel.showNextMonth()
+        await initial.value
+        XCTAssertEqual(viewModel.monthTitle, "2026년 11월")
+        XCTAssertEqual(viewModel.items.map(\.title), ["11월 일정"])
+    }
+
     func testDateNavigationViewModelsUpdateTitlesAndReload() async {
         let repository = StubSchoolRepository(
             weekMeals: [MealInfo(date: "20260526", mealType: "점심", menu: "급식", calorieInfo: "650 kcal")],
@@ -442,4 +453,17 @@ private final class FailOnceSchoolRepository: SchoolRepository {
     private enum Failure: Error {
         case expected
     }
+}
+
+private struct OutOfOrderScheduleRepository: SchoolRepository {
+    func searchSchools(query: String) async throws -> [SchoolInfo] { [] }
+    func fetchTodayMeals(for profile: StudentProfile, date: Date) async throws -> [MealInfo] { [] }
+    func fetchWeekMeals(for profile: StudentProfile, weekStart: Date) async throws -> [MealInfo] { [] }
+    func fetchTimetable(for profile: StudentProfile, date: Date) async throws -> [TimetableItem] { [] }
+    func fetchSchedule(for profile: StudentProfile, month: Date) async throws -> [SchoolEvent] {
+        let number = Calendar(identifier: .gregorian).component(.month, from: month)
+        if number == 10 { try await Task.sleep(nanoseconds: 150_000_000) }
+        return [SchoolEvent(date: "2026\(number)01", title: "\(number)월 일정", description: "")]
+    }
+    func fetchNotices(for profile: StudentProfile, limit: Int) async throws -> [NoticePreview] { [] }
 }

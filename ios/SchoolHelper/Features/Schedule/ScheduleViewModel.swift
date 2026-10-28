@@ -13,6 +13,7 @@ final class ScheduleViewModel: ObservableObject {
     private let calendar = Calendar(identifier: .gregorian)
     private var latestProfile = StudentProfile()
     private var currentMonth: Date
+    private var loadGeneration = 0
 
     init(
         repository: SchoolRepository = DefaultSchoolRepository(),
@@ -24,6 +25,8 @@ final class ScheduleViewModel: ObservableObject {
     }
 
     func load(profile: StudentProfile, month: Date? = nil) async {
+        loadGeneration += 1
+        let generation = loadGeneration
         latestProfile = profile
         currentMonth = month ?? todayProvider()
         refreshMonthTitle()
@@ -40,13 +43,17 @@ final class ScheduleViewModel: ObservableObject {
             statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
         } else {
             items = []
+            hasLoadError = false
             statusText = "일정을 불러오는 중…"
         }
         do {
-            items = filteredAndSorted(try await repository.fetchSchedule(for: profile, month: currentMonth))
+            let events = try await repository.fetchSchedule(for: profile, month: currentMonth)
+            guard generation == loadGeneration, !Task.isCancelled else { return }
+            items = filteredAndSorted(events)
             hasLoadError = false
             statusText = items.isEmpty ? "선택한 달 일정이 없어요." : ""
         } catch {
+            guard generation == loadGeneration, !Task.isCancelled else { return }
             if cached == nil {
                 items = []
                 hasLoadError = true

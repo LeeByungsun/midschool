@@ -27,6 +27,7 @@ struct ScheduleView: View {
                             Task { await viewModel.showNextMonth() }
                         }
                     }
+                    .buttonStyle(.borderless)
                 }
 
                 ForEach(viewModel.items) { item in
