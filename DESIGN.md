@@ -5,7 +5,7 @@
 - **상태:** 활성
 - **작성일:** 2026-09-15
 - **Android 구현 대조:** 2026-10-21, `394266b` 이후 문서 정합성 점검 기준. 현재 구현과 향후 권고를 구분해 읽습니다.
-- **iOS 구현 대조:** 2026-10-21, `7c05c97` 기준. Android 디자인을 목표 기준으로 참고하되 현재 SwiftUI 구현과의 차이는 아래에 별도로 기록합니다.
+- **iOS 구현 대조:** 2026-10-28, `3ab791e` 기준. Android 디자인을 목표 기준으로 참고하되 현재 SwiftUI 구현과의 차이는 아래에 별도로 기록합니다.
 - **Android 앱 이름:** 스쿨온 (`android/app/src/main/res/values/strings.xml`의 `app_name`).
 - **제품 화면:** Android 앱(XML + DataBinding), iOS 앱(SwiftUI), 웹(Next.js)
 - **검토 근거:** `android/app/src/main/res/layout/activity_main.xml`, `activity_setup.xml`, `activity_settings.xml`, `activity_timetable.xml`, `activity_schedule.xml`, `activity_meal.xml`, `activity_timer.xml`, `item_timetable_entry.xml`, `android/app/src/main/res/values/{colors,dimens,themes}.xml`, `docs/android-ui-refresh-mockup.md`, `docs/project_specification.md`, `web/components/app-page.tsx`, `web/components/dashboard-card.tsx`, `web/components/data-state.tsx`, iOS 앱 구조. Storybook 또는 승인된 스크린샷 기준선은 발견되지 않았습니다. 2026-09-15 QA 기록에는 단말(SM-A346N, 1080×2340, 시스템 글자 크기 1.15배) 촬영 화면을 검토했고, 조정 후 홈 화면 캡처의 상태 표시줄 가독성과 기존 홈 히어로 영역의 큰 시각적 비중을 확인했다고 적혀 있습니다. 이는 이번 소스 대조에서 새로 수행한 실기기 검증이 아닙니다.
@@ -33,7 +33,7 @@
 
 ## 정보 구조
 
-아래 기본 흐름은 현재 기준 플랫폼인 Android의 정보 구조입니다. iOS는 현재 단일 학교·학년·반 프로필이며 홈의 `타이머 전체 보기`, 상단 `새로고침`, 하단 탭 구조를 유지합니다.
+아래 기본 흐름은 현재 기준 플랫폼인 Android의 정보 구조입니다. iOS는 다중 자녀 프로필과 하단 탭 구조를 지원하며, 홈에서는 당겨서 새로고침과 카드 내 타이머 조작을 제공합니다. iOS의 현행 상세 범위는 `docs/ios-project-specification.md`를 기준으로 합니다.
 
 - **진입:** 스플래시 → 초기 설정(자녀 이름·학교·학년/반 또는 선택 정보 수집 동의 단계가 미완료된 경우) → 홈.
 - **홈:** 자녀 전환·학교/학급·날짜 맥락과 오늘 요약 및 시간표 진입 버튼 → 급식, 학사 일정, 가정통신문, 집중력 타이머 카드. 타이머는 홈 카드에서 바로 조작하며, 현재 홈에는 타이머 상세 진입 버튼이 없습니다.
@@ -90,7 +90,7 @@
 - **Android:** 360–412dp 너비와 세로 화면의 한 손 사용을 우선 최적화합니다. 좁은 화면에서는 페이지 여백을 유동적으로 유지하며, 시간표는 세로 스크롤 목록으로 둡니다.
 - **웹:** 기존의 최대 너비 대시보드를 유지하고, 카드 가독성이 확보될 때만 한 열에서 두 열로 전환합니다. 시간표를 좁은 열에 억지로 배치하지 않습니다.
 - **iOS:** 기존 SwiftUI 내비게이션/탭 구조를 유지합니다. 정보 위계와 문구는 공유하되, 플랫폼별 제어 요소의 스타일을 강제로 같게 만들지는 않습니다.
-- **iOS 현재 차이:** 홈은 pull-to-refresh 대신 상단 새로고침 버튼을 사용하고 타이머 상세 진입이 있습니다. 설정에는 다중 자녀·법적 정보·앱 버전이 없으므로 Android 화면을 그대로 구현된 것으로 간주하지 않습니다.
+- **iOS 현재 차이:** 홈은 당겨서 새로고침을 제공하고 상단 새로고침 버튼은 없습니다. 타이머는 홈 카드에서 25분/40분 집중과 2회/4회 반복을 선택하며, 홈에는 상세 화면 진입 버튼이 없습니다. 설정에는 다중 자녀 관리·법적 정보·앱 버전·오픈소스 라이선스가 있습니다. 플랫폼 차이는 `docs/ios-project-specification.md`를 기준으로 합니다.
 - 터치 제어는 48dp 영역을 사용합니다. 웹의 호버/포커스 상태는 보조적이며, 이해를 위해 필수여서는 안 됩니다.
 
 ## 상호작용 상태

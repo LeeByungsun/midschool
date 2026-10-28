@@ -27,19 +27,16 @@
 현재 주요 기능:
 
 - 초·중·고 학교 검색과 여러 자녀 프로필(표시 이름·학교·학년·반) 저장·전환
-- 홈의 시간표·급식·일정·가정통신문 요약과 당겨서/버튼 새로고침
+- 홈의 시간표·급식·일정·가정통신문 요약과 당겨서 새로고침
 - 날짜 이동형 시간표, 주간 급식, 월간 일정
-- 상태 복원·로컬 알림·완료 깜박임을 지원하는 타이머
+- 25분/40분 집중·2회/4회 반복, 상태 복원·단계별 로컬 알림·완료 깜박임을 지원하는 타이머
 - 자녀별 오늘/내일 시간표 WidgetKit 위젯과 딥링크
 - NEIS/BFF 연동 및 급식 12시간·시간표 24시간·일정 12시간 캐시
 - 원격·캐시 실패와 실제 빈 결과를 구분하는 오류 안내 및 다시 시도
 - 초기 설정·설정 화면의 개인정보처리방침 링크와 기본 OFF 오류 진단 동의
 - 설정 화면의 앱 버전과 앱에 연결된 오픈소스 라이선스 원문
 
-Android 기준으로 아직 없는 기능과 출시 전 필수 보완 사항:
-
-
-프로필 저장소는 여러 프로필과 활성 프로필 ID를 보존하고 기존 단일 프로필 데이터를 자동 이전합니다. 설정에서 자녀를 추가·수정·삭제하고 홈에서 활성 자녀를 전환할 수 있습니다.
+프로필 저장소는 여러 프로필과 활성 프로필 ID를 보존하고 기존 단일 프로필 데이터를 자동 이전합니다. 설정에서 자녀를 추가·수정·삭제하고 홈에서 활성 자녀를 전환할 수 있습니다. 현재 iOS 미지원 항목과 플랫폼 차이는 `../docs/ios-project-specification.md`의 Android 기준 차이 표를 참고하세요.
 
 정확한 현재 범위와 우선순위는 `../docs/ios-project-specification.md`를 기준으로 합니다.
 
@@ -60,6 +57,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   -destination 'platform=iOS Simulator,name=iPhone 16' build
 swift test
 ```
+
+이후 `ios/scripts/...` 예시는 저장소 루트에서 실행합니다. 위 명령으로 `ios/`에 들어갔다면 먼저 `cd ..`로 돌아가세요.
 
 시뮬레이터 UI 테스트:
 
@@ -128,7 +127,7 @@ ios/scripts/test_live_external_link_ui.sh
 ```
 
 - 기본값은 `SCHOOL_NAME=미사중학교`, `OFFICE_CODE=J10`, `SCHOOL_CODE=7692129`, `GRADE=1`, `CLASSROOM=2` 입니다.
-- `NEIS_API_KEY` 는 앱에 저장하지 않고 이 스크립트에서도 환경변수로만 선택 주입합니다. 키가 없으면 iOS 앱과 동일하게 `KEY` 없이 공개 조회를 시도합니다.
+- 이 스크립트는 `NEIS_API_KEY`를 선택적으로 환경변수에서 읽고, 키가 없으면 NEIS에 `KEY` 없이 직접 요청합니다. 앱에서는 키가 없는 시간표·학사 일정에 각각 `/api/timetable`, `/api/schedule`을 사용하므로 스크립트와 경로가 다릅니다.
 - notices는 `WEB_BASE_URL` 의 `/api/notices` BFF를 호출합니다. 기본값은 `https://midschool.vercel.app/` 입니다.
 - `verify_live_school_data.py` 는 기본적으로 첫 notice 상세 URL도 HTTP 2xx/3xx 및 제목 포함 여부로 확인합니다. 외부 학교 홈페이지 상태를 제외하려면 `VERIFY_NOTICE_URL=0` 을 지정합니다.
 - `test_live_ui.sh` 는 `SCHOOLHELPER_REFERENCE_DATE=20260528` launch override로 홈/시간표/급식/일정 화면의 live 표시를 검증합니다.
@@ -232,5 +231,5 @@ LIVE_EXTERNAL_LINK_TEST=1 TEAM_ID=YOUR_TEAM_ID ios/scripts/test_device_ui.sh
 - `LIVE_UI_TEST=1` 은 live UI 테스트 전용 Swift flag를 켜고 `testLiveSchoolDataDisplaysBackendContent` 만 실행합니다.
 - `LIVE_NAVIGATION_TEST=1` 은 live UI 테스트 전용 Swift flag를 켜고 `testLiveDateNavigationUpdatesTitles` 만 실행합니다.
 - `EXTERNAL_LINK_TEST=1` 은 외부 앱 전환 테스트 전용 Swift flag를 켜고 `testNoticeButtonOpensExternalSafariURL` 만 실행합니다.
-- NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 `KEY` 없이 공개 조회를 시도합니다.
+- NEIS API 키는 앱에 저장하지 않고 런타임 환경변수에서만 읽습니다. 키가 없으면 학교 검색·급식은 직접 조회하고 시간표·학사 일정은 서버 경로를 이용합니다.
 - 학교 검색은 첫 결과가 없으면 학교명의 공백을 제거해 `미사 중학교` 같은 입력을 한 번 더 조회합니다.
