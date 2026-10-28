@@ -90,6 +90,9 @@ struct NEISClient {
         schoolCode: String,
         month: String
     ) async throws -> [SchoolEvent] {
+        if config?.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+            return try await fetchScheduleFromBFF(officeCode: officeCode, schoolCode: schoolCode, month: month)
+        }
         let response: NeisResponse<ScheduleRowDto> = try await fetchNeisJSON(
             endpoint: "hub/SchoolSchedule",
             params: ["AA_YMD": month],
@@ -107,6 +110,28 @@ struct NEISClient {
                 title: $0.title ?? "",
                 description: $0.description ?? ""
             )
+        }
+    }
+
+    private func fetchScheduleFromBFF(officeCode: String, schoolCode: String, month: String) async throws -> [SchoolEvent] {
+        guard let config else { throw ClientError.invalidConfiguration }
+        guard var components = URLComponents(
+            url: config.noticesBaseURL.appendingPathComponent("api/schedule"),
+            resolvingAgainstBaseURL: false
+        ) else { throw ClientError.invalidRequest("api/schedule") }
+        components.queryItems = [
+            URLQueryItem(name: "officeCode", value: officeCode),
+            URLQueryItem(name: "schoolCode", value: schoolCode),
+            URLQueryItem(name: "date", value: month),
+        ]
+        guard let url = components.url else { throw ClientError.invalidRequest("api/schedule") }
+        let (data, response) = try await session.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse else { throw ClientError.invalidResponse }
+        guard 200..<300 ~= httpResponse.statusCode else { throw ClientError.network(httpResponse.statusCode) }
+        do {
+            return try JSONDecoder().decode(ApiListResponse<SchoolEvent>.self, from: data).items
+        } catch {
+            throw ClientError.invalidResponse
         }
     }
 

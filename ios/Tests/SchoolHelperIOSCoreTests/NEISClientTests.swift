@@ -55,6 +55,26 @@ final class NEISClientTests: XCTestCase {
         XCTAssertEqual(schools.map(\.schoolName), ["미사중학교"])
     }
 
+    func testFetchScheduleWithoutApiKeyUsesBFFAndKeepsAllEvents() async throws {
+        let client = NEISClient(session: URLSession(configuration: stubbedConfiguration()), config: .init(
+            baseURL: URL(string: "https://neis.example.com/")!, apiKey: "",
+            noticesBaseURL: URL(string: "https://web.example.com/")!
+        ))
+        StubURLProtocol.requestHandler = { request in
+            XCTAssertEqual(request.url?.host, "web.example.com")
+            XCTAssertEqual(request.url?.path, "/api/schedule")
+            let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems ?? []
+            XCTAssertEqual(query.first { $0.name == "officeCode" }?.value, "J10")
+            XCTAssertEqual(query.first { $0.name == "schoolCode" }?.value, "7679399")
+            XCTAssertEqual(query.first { $0.name == "date" }?.value, "202611")
+            let events = (1...8).map { "{\"date\":\"202611\($0)\",\"title\":\"일정 \($0)\",\"description\":\"\"}" }.joined(separator: ",")
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!, Data("{\"items\":[\(events)]}".utf8))
+        }
+        let items = try await client.fetchSchedule(officeCode: "J10", schoolCode: "7679399", month: "202611")
+        XCTAssertEqual(items.count, 8)
+        XCTAssertEqual(items.last?.title, "일정 8")
+    }
+
     func testFetchTimetableWithoutApiKeyUsesBFFAndKeepsSixthPeriod() async throws {
         let session = URLSession(configuration: stubbedConfiguration())
         let client = NEISClient(

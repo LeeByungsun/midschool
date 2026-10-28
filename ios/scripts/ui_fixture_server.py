@@ -75,6 +75,14 @@ class FixtureHandler(BaseHTTPRequestHandler):
             )
             return
 
+        if request.path == "/api/schedule":
+            month = query.get("date", [""])[0]
+            self.respond({"items": [
+                {"date": f"{month}23", "title": "체육대회", "description": "운동장"},
+                {"date": f"{month}24", "title": "중간고사", "description": "교실"},
+            ]})
+            return
+
         if request.path == "/api/timetable":
             date = query.get("date", [""])[0]
             subjects = ["국어", "수학", "과학", "영어", "사회", "수업6", "수업7"]
