@@ -60,6 +60,7 @@ struct HomeView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 24)
             }
+            .background(Color(.systemGroupedBackground))
             .refreshable {
                 await refreshHome()
             }
@@ -278,7 +279,7 @@ private extension View {
             .background(background, in: RoundedRectangle(cornerRadius: 24))
             .overlay {
                 RoundedRectangle(cornerRadius: 24)
-                    .stroke(Color(.separator).opacity(0.18), lineWidth: 1)
+                    .stroke(Color(.separator), lineWidth: 1)
             }
     }
 }
