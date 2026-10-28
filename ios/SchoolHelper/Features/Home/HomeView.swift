@@ -226,34 +226,7 @@ struct HomeView: View {
             Text("집중력 타이머")
                 .font(.headline.weight(.bold))
                 .accessibilityIdentifier("home-timer-section")
-            timerDisplay
-
-            HStack(spacing: 8) {
-                ForEach(TimerPreset.allCases, id: \.self) { preset in
-                    Button {
-                        timerViewModel.selectPreset(preset)
-                    } label: {
-                        Text(preset.title)
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity, minHeight: 48)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(timerViewModel.state.preset == preset ? .blue : .gray.opacity(0.35))
-                }
-            }
-
-            HStack(spacing: 12) {
-                Button(timerViewModel.state.isRunning ? "일시정지" : "시작") {
-                    timerViewModel.toggle()
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-
-                Button("초기화") {
-                    timerViewModel.reset()
-                }
-                .buttonStyle(.bordered)
-            }
+            TimerControls(viewModel: timerViewModel, ringSize: 220)
         }
         .homeCard(background: timerCompletionRowBackground)
     }
@@ -268,39 +241,6 @@ struct HomeView: View {
     private func refreshHome() async {
         await viewModel.load(profile: appState.profile)
         timerViewModel.refreshRunningState()
-    }
-
-    private var timerDisplay: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(timerViewModel.state.preset.title)
-                .font(.headline)
-
-            if timerViewModel.displayMode == .count {
-                Text(timeText)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-            } else {
-                HStack(spacing: 16) {
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                            .frame(width: 88, height: 88)
-                        Circle()
-                            .trim(from: 0, to: timerViewModel.progressFraction)
-                            .stroke(Color.blue, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-                            .frame(width: 88, height: 88)
-                        Text(timeText)
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                    }
-
-                    Text(timerViewModel.state.isRunning ? "남은 시간" : "준비 완료")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
     }
 
     private var isTimerCompleted: Bool {
@@ -328,11 +268,7 @@ struct HomeView: View {
         }
     }
 
-    private var timeText: String {
-        let minutes = timerViewModel.state.remainingSeconds / 60
-        let seconds = timerViewModel.state.remainingSeconds % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
+
 }
 
 private extension View {

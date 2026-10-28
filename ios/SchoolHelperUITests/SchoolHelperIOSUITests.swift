@@ -242,12 +242,30 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertFalse(app.buttons["알림 권한 요청"].exists)
     }
 
+    func testTimerUsesAndroidLabelsAndPresets() {
+        let app = makeSeededApp(initialRoute: "timer")
+        app.launch()
+        XCTAssertTrue(app.buttons["25분 집중"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["40분 집중"].exists)
+        XCTAssertTrue(app.buttons["쉬는 시간"].exists)
+        XCTAssertTrue(app.buttons["초기화"].exists)
+        XCTAssertFalse(app.buttons["리셋"].exists)
+        app.buttons["timer-240-preset-deepFocus"].tap()
+        let timer = app.descendants(matching: .any)["timer-240-time"]
+        XCTAssertTrue(timer.waitForExistence(timeout: 5))
+        XCTAssertTrue(timer.label.contains("25:00"), "Timer label: \(timer.label)")
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "timer-android-style"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
     func testTimerModalShowsCloseButtonWhenLaunchedDirectly() {
         let app = makeSeededApp(initialRoute: "timer")
         app.launch()
 
         XCTAssertTrue(app.buttons["닫기"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.navigationBars.staticTexts["타이머"].exists)
+        XCTAssertTrue(app.navigationBars.staticTexts["집중력 타이머"].exists)
     }
 
     func testNoticeButtonOpensExternalSafariURL() throws {
