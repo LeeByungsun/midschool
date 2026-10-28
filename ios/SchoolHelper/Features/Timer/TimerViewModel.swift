@@ -37,6 +37,25 @@ final class TimerViewModel: ObservableObject {
         countdownTask?.cancel()
     }
 
+    func configurePomodoro(focusMinutes: Int, rounds: Int) {
+        guard !state.isRunning else { return }
+        setPomodoro(focusMinutes: focusMinutes, rounds: rounds)
+    }
+
+    private func setPomodoro(focusMinutes: Int, rounds: Int) {
+        countdownTask?.cancel()
+        notificationScheduler.cancelPendingTimerCompletion()
+        let session = PomodoroSession(focusMinutes: focusMinutes, totalRounds: rounds)
+        state = TimerSessionState(
+            preset: session.focusMinutes == 25 ? .deepFocus : .focus,
+            totalSeconds: session.phaseDurationSeconds,
+            remainingSeconds: session.phaseDurationSeconds,
+            targetDate: nil, isRunning: false, pomodoro: session
+        )
+        store.save(state)
+        widgetTimelineReloader.reloadAllTimelines()
+    }
+
     func selectPreset(_ preset: TimerPreset) {
         countdownTask?.cancel()
         notificationScheduler.cancelPendingTimerCompletion()
@@ -55,6 +74,9 @@ final class TimerViewModel: ObservableObject {
         if state.isRunning {
             pause()
         } else {
+            if let session = state.pomodoro, session.isCompleted {
+                configurePomodoro(focusMinutes: session.focusMinutes, rounds: session.totalRounds)
+            }
             start()
         }
     }
@@ -62,6 +84,10 @@ final class TimerViewModel: ObservableObject {
     func reset() {
         countdownTask?.cancel()
         notificationScheduler.cancelPendingTimerCompletion()
+        if let session = state.pomodoro {
+            setPomodoro(focusMinutes: session.focusMinutes, rounds: session.totalRounds)
+            return
+        }
         updateState {
             $0.remainingSeconds = $0.totalSeconds
             $0.targetDate = nil
@@ -91,7 +117,35 @@ final class TimerViewModel: ObservableObject {
 
     func syncWithCurrentTime() {
         guard state.isRunning, let targetDate = state.targetDate else { return }
-        let remaining = max(0, Int(targetDate.timeIntervalSince(now())))
+        let currentTime = now()
+        if var session = state.pomodoro, targetDate <= currentTime {
+            var deadline = targetDate
+            repeat {
+                session.completePhase()
+                if !session.isCompleted {
+                    deadline = deadline.addingTimeInterval(TimeInterval(session.phaseDurationSeconds))
+                }
+            } while !session.isCompleted && deadline <= currentTime
+            updateState {
+                $0.pomodoro = session
+                $0.totalSeconds = session.phaseDurationSeconds
+                $0.remainingSeconds = session.isCompleted ? session.phaseDurationSeconds : max(0, Int(deadline.timeIntervalSince(currentTime)))
+                $0.preset = session.phase == .rest ? .shortBreak : (session.focusMinutes == 25 ? .deepFocus : .focus)
+                $0.targetDate = session.isCompleted ? nil : deadline
+                $0.isRunning = !session.isCompleted
+            }
+            notificationScheduler.cancelPendingTimerCompletion()
+            if session.isCompleted {
+                countdownTask?.cancel()
+            } else if settingsStore.load().notificationEnabled {
+                notificationScheduler.scheduleTimerCompletion(at: deadline, presetTitle: state.preset.title,
+                    vibrationEnabled: settingsStore.load().vibrationEnabled)
+            }
+            store.save(state)
+            widgetTimelineReloader.reloadAllTimelines()
+            return
+        }
+        let remaining = max(0, Int(targetDate.timeIntervalSince(currentTime)))
         updateState {
             $0.remainingSeconds = remaining
             if remaining == 0 {

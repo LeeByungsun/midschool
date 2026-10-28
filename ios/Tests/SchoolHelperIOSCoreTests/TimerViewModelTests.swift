@@ -106,4 +106,77 @@ final class TimerViewModelTests: XCTestCase {
         XCTAssertEqual(scheduler.requestAuthorizationCalls, 0)
         XCTAssertTrue(scheduler.scheduleCalls.isEmpty)
     }
+    func testPomodoroAutomaticallyTransitionsAndCompletesAfterTwoRounds() {
+        let suite = "PomodoroTimer." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let store = TimerPreferencesStore(defaults: defaults)
+        let viewModel = TimerViewModel(store: store, settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader(),
+            now: { now }, sleep: { _ in })
+        viewModel.configurePomodoro(focusMinutes: 25, rounds: 2)
+        viewModel.toggle()
+        now.addTimeInterval(25 * 60)
+        viewModel.syncWithCurrentTime()
+        XCTAssertTrue(viewModel.state.isRunning)
+        XCTAssertEqual(viewModel.state.pomodoro?.phase, .rest)
+        XCTAssertEqual(viewModel.state.pomodoro?.completedRounds, 1)
+        XCTAssertEqual(viewModel.state.remainingSeconds, 5 * 60)
+        now.addTimeInterval(5 * 60)
+        viewModel.syncWithCurrentTime()
+        XCTAssertEqual(viewModel.state.pomodoro?.phase, .focus)
+        XCTAssertTrue(viewModel.state.isRunning)
+        now.addTimeInterval(25 * 60)
+        viewModel.syncWithCurrentTime()
+        XCTAssertFalse(viewModel.state.isRunning)
+        XCTAssertEqual(viewModel.state.pomodoro?.completedRounds, 2)
+        XCTAssertEqual(viewModel.state.pomodoro?.isCompleted, true)
+        XCTAssertEqual(store.load(), viewModel.state)
+    }
+
+    func testPomodoroRestoresAcrossMultipleElapsedPhases() {
+        let suite = "PomodoroRestore." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let store = TimerPreferencesStore(defaults: defaults)
+        let first = TimerViewModel(store: store, settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader(),
+            now: { now }, sleep: { _ in })
+        first.configurePomodoro(focusMinutes: 40, rounds: 4)
+        first.toggle()
+        now.addTimeInterval(40 * 60 + 10 * 60 + 3 * 60)
+        let restored = TimerViewModel(store: store, settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader(),
+            now: { now }, sleep: { _ in })
+        XCTAssertEqual(restored.state.pomodoro?.phase, .focus)
+        XCTAssertEqual(restored.state.pomodoro?.completedRounds, 1)
+        XCTAssertEqual(restored.state.remainingSeconds, 37 * 60)
+        XCTAssertTrue(restored.state.isRunning)
+    }
+    func testPomodoroPauseResumeAndResetPreserveSelection() {
+        let suite = "PomodoroPause." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let viewModel = TimerViewModel(store: TimerPreferencesStore(defaults: defaults),
+            settingsStore: TimerSettingsStore(defaults: defaults), notificationScheduler: SpyTimerNotificationScheduler(),
+            widgetTimelineReloader: SpyWidgetTimelineReloader(), now: { now }, sleep: { _ in })
+        viewModel.configurePomodoro(focusMinutes: 25, rounds: 2)
+        viewModel.toggle()
+        now.addTimeInterval(60)
+        viewModel.toggle()
+        XCTAssertFalse(viewModel.state.isRunning)
+        XCTAssertEqual(viewModel.state.remainingSeconds, 24 * 60)
+        viewModel.toggle()
+        XCTAssertTrue(viewModel.state.isRunning)
+        viewModel.configurePomodoro(focusMinutes: 40, rounds: 4)
+        XCTAssertEqual(viewModel.state.pomodoro?.focusMinutes, 25)
+        viewModel.reset()
+        XCTAssertFalse(viewModel.state.isRunning)
+        XCTAssertEqual(viewModel.state.remainingSeconds, 25 * 60)
+        XCTAssertEqual(viewModel.state.pomodoro?.totalRounds, 2)
+        XCTAssertEqual(viewModel.state.pomodoro?.completedRounds, 0)
+    }
 }
