@@ -6,6 +6,8 @@ struct TimerSessionState: Codable, Equatable {
     var remainingSeconds: Int = TimerPreset.focus.durationSeconds
     var targetDate: Date?
     var isRunning: Bool = false
+    // Nil represents a legacy one-shot timer; keep its countdown until it finishes.
+    var pomodoro: PomodoroSession? = nil
 }
 
 /// Session rules mirror Android: focus and rest alternate automatically until the final focus round.
