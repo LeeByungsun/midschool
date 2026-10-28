@@ -23,9 +23,6 @@ struct TimetableView: View {
                             }
                         }
                         Spacer()
-                        Button("오늘") {
-                            Task { await viewModel.showToday() }
-                        }
                         Button("다음") {
                             Task { await viewModel.showNextDay() }
                         }

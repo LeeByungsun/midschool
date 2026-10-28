@@ -236,7 +236,7 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 26일 화요일")
         await timetableViewModel.showPreviousDay()
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 25일 월요일")
-        await timetableViewModel.showToday()
+        await timetableViewModel.showNextDay()
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 26일 화요일")
         await timetableViewModel.showNextDay()
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 27일 수요일")

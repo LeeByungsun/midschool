@@ -93,6 +93,7 @@ final class SchoolHelperIOSUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.navigationBars.staticTexts["시간표"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["오늘"].exists)
         XCTAssertTrue(waitForStaticText(containing: "국어", in: app, timeout: 5))
         XCTAssertTrue(waitForStaticText(containing: "수학", in: app, timeout: 5))
     }
@@ -125,10 +126,8 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertTrue(waitForStaticText(containing: "국어 20260525", in: app, timeout: 5))
         XCTAssertFalse(app.staticTexts["국어 20260526"].exists)
 
-        app.buttons["오늘"].tap()
+        app.buttons["다음"].tap()
         XCTAssertTrue(waitForStaticText(containing: "5월 26일 화요일", in: app, timeout: 5))
-        XCTAssertTrue(waitForStaticText(containing: "국어 20260526", in: app, timeout: 5))
-
         app.buttons["다음"].tap()
         XCTAssertTrue(waitForStaticText(containing: "5월 27일 수요일", in: app, timeout: 5))
         XCTAssertTrue(waitForStaticText(containing: "국어 20260527", in: app, timeout: 5))

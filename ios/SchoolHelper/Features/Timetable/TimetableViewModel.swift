@@ -60,11 +60,6 @@ final class TimetableViewModel: ObservableObject {
         await load(profile: latestProfile)
     }
 
-    func showToday() async {
-        date = todayProvider()
-        await load(profile: latestProfile)
-    }
-
     func showNextDay() async {
         date = calendar.date(byAdding: .day, value: 1, to: date) ?? date
         await load(profile: latestProfile)
