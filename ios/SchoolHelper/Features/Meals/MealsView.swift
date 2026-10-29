@@ -2,6 +2,9 @@ import SwiftUI
 
 struct MealsView: View {
     @EnvironmentObject private var appState: AppState
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var today = AppLaunchOverrides.referenceDate() ?? Date()
     @StateObject private var viewModel = MealsViewModel()
 
     var body: some View {
@@ -12,11 +15,13 @@ struct MealsView: View {
                         VStack(alignment: .leading) {
                             Text(formattedMealDate(item.date))
                                 .font(.headline)
+                                .accessibilityLabel(item.isOnDate(today) ? "오늘 \(formattedMealDate(item.date))" : formattedMealDate(item.date))
                             Text(item.menu)
                             Text(item.calorieInfo)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
+                        .listRowBackground(item.isOnDate(today) ? Color.blue.opacity(colorScheme == .dark ? 0.25 : 0.12) : nil)
                     }
                 } header: {
                     VStack(alignment: .leading, spacing: 4) {
@@ -37,6 +42,12 @@ struct MealsView: View {
                 }
             }
             .navigationTitle("급식")
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+                today = AppLaunchOverrides.referenceDate() ?? Date()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { today = AppLaunchOverrides.referenceDate() ?? Date() }
+            }
             .task(id: appState.profile) {
                 await viewModel.load(profile: appState.profile)
             }

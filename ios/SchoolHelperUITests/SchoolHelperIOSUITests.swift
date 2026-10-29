@@ -157,6 +157,20 @@ final class SchoolHelperIOSUITests: XCTestCase {
         XCTAssertFalse(app.buttons["다음 주"].exists)
     }
 
+    func testMealsHighlightsTodayAndExposesTodayToVoiceOver() {
+        let app = makeSeededApp(initialRoute: "meals")
+        app.launchEnvironment["SCHOOLHELPER_REFERENCE_DATE"] = "20260526"
+        app.launch()
+        let today = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "오늘 5월 26일")).firstMatch
+        XCTAssertTrue(today.waitForExistence(timeout: 5))
+        let other = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "오늘 5월 27일")).firstMatch
+        XCTAssertFalse(other.exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "meal-today-highlight"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
     func testSeededScheduleShowsCoreContent() {
         let app = makeSeededApp(initialRoute: "schedule")
         app.launch()

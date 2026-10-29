@@ -253,6 +253,16 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 27일 수요일")
     }
 
+    func testMealDateMatchesTodayInLocalGregorianCalendar() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
+        let now = Date(timeIntervalSince1970: 0) // 1970-01-01 09:00 in Seoul
+        let meal = MealInfo(date: "19700101", mealType: "중식", menu: "밥", calorieInfo: "")
+        XCTAssertTrue(meal.isOnDate(now, calendar: calendar))
+        XCTAssertFalse(meal.isOnDate(now.addingTimeInterval(24 * 60 * 60), calendar: calendar))
+        XCTAssertFalse(MealInfo(date: "", mealType: "", menu: "", calorieInfo: "").isOnDate(now, calendar: calendar))
+    }
+
     func testMealMenuRemovesLeadingPercentMarkersOnly() {
         let raw = " %혼합잡곡밥(5)<br/>% 김치(9)<br/>100% 오렌지주스"
         XCTAssertEqual(MealMenuFormatter.displayMenu(from: raw), "혼합잡곡밥 (5)\n김치 (9)\n100% 오렌지주스")
