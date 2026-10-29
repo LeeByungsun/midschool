@@ -294,4 +294,19 @@ final class TimerViewModelTests: XCTestCase {
         XCTAssertFalse(vm.state.isRunning)
         XCTAssertEqual(vm.state.pomodoro?.isCompleted, true)
     }
+    func testStartingCompletedLegacyTimerRestoresDuration() {
+        let suite = "LegacyCompleted." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = TimerPreferencesStore(defaults: defaults)
+        store.save(TimerSessionState(preset: .shortBreak, totalSeconds: 30, remainingSeconds: 0, isRunning: false))
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let vm = TimerViewModel(store: store, settingsStore: TimerSettingsStore(defaults: defaults),
+            notificationScheduler: SpyTimerNotificationScheduler(), widgetTimelineReloader: SpyWidgetTimelineReloader(),
+            now: { now }, sleep: { _ in })
+        vm.toggle()
+        XCTAssertTrue(vm.state.isRunning)
+        XCTAssertEqual(vm.state.remainingSeconds, 30)
+        XCTAssertEqual(vm.state.targetDate, now.addingTimeInterval(30))
+    }
 }

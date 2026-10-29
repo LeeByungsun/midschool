@@ -90,6 +90,11 @@ final class TimerViewModel: ObservableObject {
         } else {
             if let session = state.pomodoro, session.isCompleted {
                 configurePomodoro(focusMinutes: session.focusMinutes, rounds: session.totalRounds)
+            } else if state.pomodoro == nil && state.remainingSeconds <= 0 {
+                updateState {
+                    $0.totalSeconds = max(1, $0.totalSeconds)
+                    $0.remainingSeconds = $0.totalSeconds
+                }
             }
             start()
         }
