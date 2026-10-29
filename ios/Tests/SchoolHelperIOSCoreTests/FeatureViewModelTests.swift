@@ -253,6 +253,11 @@ final class FeatureViewModelTests: XCTestCase {
         XCTAssertEqual(timetableViewModel.dateTitle, "5월 27일 수요일")
     }
 
+    func testMealMenuRemovesLeadingPercentMarkersOnly() {
+        let raw = " %혼합잡곡밥(5)<br/>% 김치(9)<br/>100% 오렌지주스"
+        XCTAssertEqual(MealMenuFormatter.displayMenu(from: raw), "혼합잡곡밥 (5)\n김치 (9)\n100% 오렌지주스")
+    }
+
     func testMealsViewModelFormatsHtmlMenuForMealScreen() async {
         let repository = StubSchoolRepository(
             weekMeals: [

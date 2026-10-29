@@ -23,7 +23,10 @@ enum MealMenuFormatter {
                 options: .regularExpression
             )
             .components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .map { line in
+                line.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: #"^%+\s*"#, with: "", options: .regularExpression)
+            }
             .filter { !$0.isEmpty }
             .map(formatMealLine)
             .joined(separator: "\n")
